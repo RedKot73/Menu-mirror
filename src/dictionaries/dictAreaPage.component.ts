@@ -1,5 +1,7 @@
-
-import { Component, inject, OnInit } from "@angular/core";
+import { Component, inject, ViewChild, AfterViewInit, effect } from "@angular/core";
+import { MatButtonModule } from '@angular/material/button';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatSort, MatSortModule } from '@angular/material/sort';
 import { SimpleDictService, SimpleDictDto } from "./simpleDict.service";
 export type DictArea = SimpleDictDto;
 
@@ -7,20 +9,44 @@ export type DictArea = SimpleDictDto;
     selector: "page-dict-area",
     template: `
         <h2>Напрямок ЛБЗ</h2>
-        <button (click)="reload()">Обновить</button>
-        <ul>
-            @for(area of items(); track area.id) {
-                <li>
-                    {{ area.value }} @if(area.comment) {<span>({{ area.comment }})</span>}
-                </li>
-            }
-        </ul>
+        <button mat-raised-button color="primary" (click)="reload()">Обновить</button>
+        <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" style="width:100%; margin-top: 1em;">
+            <!-- Value Column -->
+            <ng-container matColumnDef="value">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Значення </th>
+                <td mat-cell *matCellDef="let area"> {{area.value}} </td>
+            </ng-container>
+
+            <!-- Comment Column -->
+            <ng-container matColumnDef="comment">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Коментар </th>
+                <td mat-cell *matCellDef="let area"> {{area.comment}} </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
     `,
+    imports: [MatTableModule, MatButtonModule, MatSortModule],
 })
-export class dictAreaPage {
+export class dictAreaPage implements AfterViewInit {
     readonly api = '/api/dict-areas';
     dictService = inject(SimpleDictService);
     items = this.dictService.createItemsSignal(this.api);
+    dataSource = new MatTableDataSource<DictArea>([]);
+    displayedColumns = ['value', 'comment'];
+
+    @ViewChild(MatSort) sort!: MatSort;
+
+    constructor() {
+        effect(() => {
+            this.dataSource.data = this.items();
+        });
+    }
+
+    ngAfterViewInit() {
+        this.dataSource.sort = this.sort;
+    }
 
     reload() {
         this.dictService.getAll(this.api).subscribe(items => this.items.set(items));
