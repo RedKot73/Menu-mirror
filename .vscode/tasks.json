@@ -19,6 +19,30 @@
           }
         }
       }
+    },
+    {
+      "label": "ng serve (proxy)",
+      "type": "shell",
+      "command": "ng",
+      "args": [
+        "serve",
+        "--proxy-config",
+        "proxy.conf.json"
+      ],
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "(.*?)"
+          },
+          "endsPattern": {
+            "regexp": "bundle generation complete"
+          }
+        }
+      }
     }
   ]
 }
