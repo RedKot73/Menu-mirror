@@ -4,12 +4,6 @@ import { dictAreaPage } from '../dictionaries/dictAreaPage.component';
 import { LoginPage } from '../Login/LoginPage.component';
 
 // Simple standalone stub components for each route
-/*
-@Component({
-    selector: 'page-dict-area',
-    template: '<h2>Напрямок ЛБЗ</h2><p>Сторінка "Напрямок ЛБЗ" (заглушка)</p>'
-}) class dictAreaPage { }
-*/
 @Component({
     selector: 'page-military-type', standalone: true,
     template: '<h2>Вид збройних сил</h2><p>Сторінка "Вид збройних сил" (заглушка)</p>'

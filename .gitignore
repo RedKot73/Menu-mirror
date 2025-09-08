@@ -40,3 +40,6 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+S5Server/bin/Debug/net9.0/Azure.Core.dll
+/S5Server/bin/Debug/net9.0
+/S5Server/obj

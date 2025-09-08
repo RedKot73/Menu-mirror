@@ -9,11 +9,11 @@ import { MatInputModule } from '@angular/material/input';
 @Component({
     selector: 'page-login', standalone: true,
     template: `<h2>Вхід в систему</h2>
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <form [formGroup]="loginForm" >
         <mat-form-field>
             <mat-label>Ім'я користувача</mat-label>
             <input matInput formControlName="username" />
-                    </mat-form-field>
+        </mat-form-field>
         <br />
         <mat-form-field>
             <mat-label>Пароль</mat-label>
@@ -30,7 +30,4 @@ export class LoginPage {
         username: new FormControl('', Validators.required),
         password: new FormControl('', Validators.required)
     })
-    onSubmit() {
-        console.log('Login form submitted:', this.loginForm.value);
-    }
 }
