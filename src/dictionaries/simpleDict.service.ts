@@ -42,9 +42,10 @@ export class SimpleDictService {
     });
   }
 
-  // Пример сигнала для хранения данных (можно использовать в компонентах)
-  readonly items = signal<SimpleDictDto[]>([]);
-  loadAll(api: string) {
-    this.getAll(api).subscribe(this.items.set);
+  // Для каждого справочника создавайте отдельный сигнал через этот метод
+  createItemsSignal(api: string) {
+    const items = signal<SimpleDictDto[]>([]);
+    this.getAll(api).subscribe(items.set);
+    return items;
   }
 }
