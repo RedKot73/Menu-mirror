@@ -67,13 +67,13 @@ namespace S5Server.Models
         /// <summary>
         /// Звання
         /// </summary>
-        [ForeignKey(nameof(DictRank)), Display(Name = DictRank.Caption)]
+        [ForeignKey(nameof(DictRank))]
         public string RankId { get; set; } = string.Empty;
 
         /// <summary>
         /// Звання
         /// </summary>
-        [ValidateNever, Display(Name = DictRank.Caption)]
+        [ValidateNever]
         public DictRank Rank { get; set; } = default!;
 
         /// <summary>

@@ -28,11 +28,11 @@ import { MatMenuModule } from '@angular/material/menu';
       </mat-menu>
 
       <mat-menu #dictGeneralInfo="matMenu">
-        <button mat-menu-item routerLink="/military-type">Вид збройних сил</button>
-        <button mat-menu-item routerLink="/position">Посади</button>
-        <button mat-menu-item routerLink="/rank">Військові звання</button>
-        <button mat-menu-item routerLink="/fighter-status">Статуси особового складу</button>
-        <button mat-menu-item routerLink="/unit-type">Типи підрозділів</button>
+        <button mat-menu-item routerLink="/dictForcesTypes">Види збройних сил</button>
+        <button mat-menu-item routerLink="/dictPosition">Посади</button>
+        <button mat-menu-item routerLink="/dictSoldierStates">Статуси особового складу</button>
+        <button mat-menu-item routerLink="/dictUnitTypes">Типи підрозділів</button>
+        <button mat-menu-item routerLink="/dictRanks">Військові звання</button>
       </mat-menu>
     </mat-toolbar>
   `,

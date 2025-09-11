@@ -75,6 +75,18 @@ namespace S5Server.Data
                 entity.Property(e => e.Comment).HasColumnType("TEXT");
                 entity.HasIndex(e => e.Value).IsUnique();
             });
+
+            
+            modelBuilder.Entity<DictRank>(entity =>
+            {
+                entity.ToTable("dict_rank");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+                entity.Property(e => e.Value).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.ShortValue).IsRequired().HasColumnType("TEXT(50)");
+                entity.Property(e => e.Comment).HasColumnType("TEXT");
+                entity.HasIndex(e => e.Value).IsUnique();
+            });
         }
 
         /// <summary>
@@ -97,5 +109,9 @@ namespace S5Server.Data
         /// Тип підрозділу
         /// </summary>
         public DbSet<DictUnitType> DictUnitTypes { get; set; }
+        /// <summary>
+        /// Довідник Військове звання
+        /// </summary>
+        public DbSet<DictRank> DictRank { get; set; }        
     }
 }

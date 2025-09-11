@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 using S5Server.Data;
 using S5Server.Models;
+using S5Server.Utils;
 
 namespace S5Server.Controllers;
 
@@ -16,16 +17,16 @@ public record SimpleDictDto(string Id, string Value, string? Comment);
 public abstract class SimpleDictApiController<TEntity> : ControllerBase
     where TEntity : SimpleDictBase, ISimpleDict, new()
 {
-    protected readonly MainDbContext Db;
-    protected readonly DbSet<TEntity> Set;
+    protected readonly MainDbContext _db;
+    protected readonly DbSet<TEntity> _set;
 
     protected SimpleDictApiController(MainDbContext db, DbSet<TEntity> set)
     {
-        Db = db;
-        Set = set;
+        _db = db;
+        _set = set;
     }
 
-    protected IQueryable<TEntity> Query() => Set.AsNoTracking();
+    protected IQueryable<TEntity> Query() => _set.AsNoTracking();
 
     protected static SimpleDictDto ToDto(TEntity e) => new(e.Id, e.Value, e.Comment);
     protected static void ApplyDto(TEntity e, SimpleDictDto dto)
@@ -36,7 +37,8 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
 
     /// <summary>Полный список (опционально фильтр по подстроке)</summary>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<SimpleDictDto>>> GetAll([FromQuery] string? search)
+    public async Task<ActionResult<IEnumerable<SimpleDictDto>>> GetAll([FromQuery] string? search,
+        CancellationToken ct = default)
     {
         var q = Query();
         if (!string.IsNullOrWhiteSpace(search))
@@ -45,15 +47,15 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         var list = await q
             .OrderBy(x => x.Value)
             .Select(x => ToDto(x))
-            .ToListAsync();
+            .ToListAsync(ct);
 
         return Ok(list);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<SimpleDictDto>> Get(string id)
+    public async Task<ActionResult<SimpleDictDto>> Get(string id, CancellationToken ct = default)
     {
-        var e = await Query().FirstOrDefaultAsync(x => x.Id == id);
+        var e = await Query().FirstOrDefaultAsync(x => x.Id == id, ct);
         return e == null ? NotFound() : Ok(ToDto(e));
     }
 
@@ -61,18 +63,21 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
     public async Task<ActionResult<SimpleDictDto>> Create([FromBody] SimpleDictDto dto,
         CancellationToken ct = default)
     {
+        if (dto is null) return BadRequest("Пустое тело запроса.");
+        if (string.IsNullOrWhiteSpace(dto.Value)) return BadRequest("Value не может быть пустым.");
+
         var entity = new TEntity
         {
             Id = Guid.NewGuid().ToString("D"),
             Value = dto.Value,
             Comment = dto.Comment
         };
-        Set.Add(entity);
+        _set.Add(entity);
         try
         {
-            await Db.SaveChangesAsync(ct);
+            await _db.SaveChangesAsync(ct);
         }
-        catch (DbUpdateException ex) when (IsUniqueViolation(ex))
+        catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
             return Conflict($"Значение \"{entity.Value}\" уже существует.");
         }
@@ -88,23 +93,21 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
             return BadRequest("Пустое тело запроса.");
         if (string.IsNullOrWhiteSpace(dto.Value))
             return BadRequest("Value не может быть пустым.");
-        var e = await Set.AsTracking()
+        var e = await _set.AsTracking()
             .FirstOrDefaultAsync(x => x.Id == id, ct);
         if (e == null)
             return NotFound();
 
-        var oldValue = e.Value;
-        var oldComment = e.Comment;
-
+        var snapshot = ToDto(e);
         ApplyDto(e, dto);
-
-        if (e.Value == oldValue && e.Comment == oldComment)
+        // Ничего не изменилось
+        if (snapshot == ToDto(e))
             return NoContent();
         try
         {
-            await Db.SaveChangesAsync(ct);
+            await _db.SaveChangesAsync(ct);
         }
-        catch (DbUpdateException ex) when (IsUniqueViolation(ex))
+        catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
             return Conflict($"Значение \"{e.Value}\" уже существует.");
         }
@@ -115,10 +118,10 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
     public async Task<IActionResult> Delete(string id,
         CancellationToken ct = default)
     {
-        var e = await Set.FirstOrDefaultAsync(x => x.Id == id, ct);
+        var e = await _set.FirstOrDefaultAsync(x => x.Id == id, ct);
         if (e == null) return NotFound();
-        Set.Remove(e);
-        await Db.SaveChangesAsync(ct);
+        _set.Remove(e);
+        await _db.SaveChangesAsync(ct);
         return NoContent();
     }
 
@@ -141,12 +144,5 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
             .ToListAsync();
 
         return Ok(data);
-    }
-
-    private static bool IsUniqueViolation(DbUpdateException ex)
-    {
-        if (ex.InnerException is Microsoft.Data.Sqlite.SqliteException sqliteEx)
-            return sqliteEx.SqliteErrorCode == 19 && sqliteEx.SqliteExtendedErrorCode == 2067;
-        return ex.InnerException?.Message.Contains("UNIQUE", StringComparison.OrdinalIgnoreCase) == true;
     }
 }

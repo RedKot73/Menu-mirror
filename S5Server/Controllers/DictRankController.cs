@@ -1,78 +1,105 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
 using S5Server.Data;
 using S5Server.Models;
 using S5Server.Utils;
 
 namespace S5Server.Controllers;
 
-public record DictUnitTypeDto(
+public record DictRankDto(
     string Id,
     string Value,
     string ShortValue,
-    string? Comment);
+    string? Comment,
+    string? NatoCode,
+    string? Category,
+    string? SubCategory,
+    int OrderVal);
 
 [ApiController]
-[Route("api/dict-unit-types")]
-public class DictUnitTypesController : ControllerBase
+[Route("api/[controller]")]
+public class DictRankController : ControllerBase
 {
     private readonly MainDbContext _db;
-    private readonly DbSet<DictUnitType> _set;
-    public DictUnitTypesController(MainDbContext db)
+    private readonly DbSet<DictRank> _set;
+
+    public DictRankController(MainDbContext db)
     {
         _db = db;
-        _set = db.DictUnitTypes;
+        _set = db.DictRank;
     }
 
-    private IQueryable<DictUnitType> Query() => _set.AsNoTracking();
-    protected static DictUnitTypeDto ToDto(DictUnitType e) => new(e.Id, e.Value, e.ShortValue, e.Comment);
-    protected static void ApplyDto(DictUnitType e, DictUnitTypeDto dto)
+    private IQueryable<DictRank> Query() => _set.AsNoTracking();
+
+    private static DictRankDto ToDto(DictRank e) =>
+        new(e.Id, e.Value, e.ShortValue, e.Comment, e.NATOCode, e.Category, e.SubCategory, e.OrderVal);
+
+    private static void ApplyDto(DictRank e, DictRankDto dto)
     {
         e.Value = dto.Value.Trim();
         e.ShortValue = dto.ShortValue.Trim();
-        e.Comment = dto.Comment?.Trim();
+        e.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
+        e.NATOCode = string.IsNullOrWhiteSpace(dto.NatoCode) ? null : dto.NatoCode.Trim();
+        e.Category = string.IsNullOrWhiteSpace(dto.Category) ? null : dto.Category.Trim();
+        e.SubCategory = string.IsNullOrWhiteSpace(dto.SubCategory) ? null : dto.SubCategory.Trim();
+        e.OrderVal = dto.OrderVal;
     }
 
-    /// <summary>Полный список (опционально фильтр по подстроке)</summary>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<SimpleDictDto>>> GetAll([FromQuery] string? search,
+    public async Task<ActionResult<IEnumerable<DictRankDto>>> GetAll(
+        [FromQuery] string? search,
+        [FromQuery] string? category,
+        [FromQuery] string? subCategory,
         CancellationToken ct = default)
     {
         var q = Query();
+
         if (!string.IsNullOrWhiteSpace(search))
+        {
             q = q.Where(x =>
                 x.Value.Contains(search) ||
-                x.ShortValue.Contains(search));
+                x.ShortValue.Contains(search) ||
+                (x.NATOCode != null && x.NATOCode.Contains(search)));
+        }
+        if (!string.IsNullOrWhiteSpace(category))
+            q = q.Where(x => x.Category == category);
+        if (!string.IsNullOrWhiteSpace(subCategory))
+            q = q.Where(x => x.SubCategory == subCategory);
 
         var list = await q
-            .OrderBy(x => x.Value)
+            .OrderBy(x => x.OrderVal)
+            .ThenBy(x => x.Value)
             .Select(x => ToDto(x))
             .ToListAsync(ct);
 
         return Ok(list);
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<SimpleDictDto>> Get(string id, CancellationToken ct = default)
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<DictRankDto>> Get(string id, CancellationToken ct = default)
     {
         var e = await Query().FirstOrDefaultAsync(x => x.Id == id, ct);
-        return e == null ? NotFound() : Ok(ToDto(e));
+        return e is null ? NotFound() : Ok(ToDto(e));
     }
+
     [HttpPost]
-    public async Task<ActionResult<DictRankDto>> Create([FromBody] DictUnitTypeDto dto,
+    public async Task<ActionResult<DictRankDto>> Create([FromBody] DictRankDto dto,
         CancellationToken ct = default)
     {
         if (dto is null) return BadRequest("Пустое тело запроса.");
         if (string.IsNullOrWhiteSpace(dto.Value)) return BadRequest("Value не может быть пустым.");
         if (string.IsNullOrWhiteSpace(dto.ShortValue)) return BadRequest("ShortValue не может быть пустым.");
 
-        var entity = new DictUnitType
+        var entity = new DictRank
         {
             Id = Guid.NewGuid().ToString("D"),
             Value = dto.Value.Trim(),
             ShortValue = dto.ShortValue.Trim(),
             Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim(),
+            NATOCode = string.IsNullOrWhiteSpace(dto.NatoCode) ? null : dto.NatoCode.Trim(),
+            Category = string.IsNullOrWhiteSpace(dto.Category) ? null : dto.Category.Trim(),
+            SubCategory = string.IsNullOrWhiteSpace(dto.SubCategory) ? null : dto.SubCategory.Trim(),
+            OrderVal = dto.OrderVal == 0 ? 1 : dto.OrderVal,
         };
 
         _set.Add(entity);
@@ -87,8 +114,9 @@ public class DictUnitTypesController : ControllerBase
 
         return CreatedAtAction(nameof(Get), new { id = entity.Id }, ToDto(entity));
     }
+
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(string id, [FromBody] DictUnitTypeDto dto,
+    public async Task<IActionResult> Update(string id, [FromBody] DictRankDto dto,
         CancellationToken ct = default)
     {
         if (dto is null) return BadRequest("Пустое тело запроса.");
@@ -126,6 +154,7 @@ public class DictUnitTypesController : ControllerBase
         await _db.SaveChangesAsync(ct);
         return NoContent();
     }
+
     // Укороченный список для автокомплита
     [HttpGet("lookup")]
     public async Task<ActionResult<IEnumerable<object>>> Lookup(
@@ -140,7 +169,8 @@ public class DictUnitTypesController : ControllerBase
 
         var data = await Query()
             .Where(x => x.Value.Contains(term) || x.ShortValue.Contains(term))
-            .OrderBy(x => x.Value)
+            .OrderBy(x => x.OrderVal)
+            .ThenBy(x => x.Value)
             .Take(limit)
             .Select(x => new { x.Id, Name = x.ShortValue })
             .ToListAsync(ct);

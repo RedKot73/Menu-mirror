@@ -2,19 +2,23 @@ import { Component, inject, ViewChild, AfterViewInit, effect } from "@angular/co
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { SimpleDictService, SimpleDictDto } from "../ServerService/simpleDict.service";
-export type DictArea = SimpleDictDto;
+import { ShortDictService, ShortDictDto } from "../ServerService/shortDict.service";
+export type DictArea = ShortDictDto;
 
 @Component({
-    selector: "page-dict-area",
+    selector: "page-dict-unit-types",
     template: `
-        <h2>Напрямок ЛБЗ</h2>
+        <h2>Типи підрозділів</h2>
         <button mat-raised-button color="primary" (click)="reload()">Обновить</button>
         <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" style="width:100%; margin-top: 1em;">
             <!-- Value Column -->
             <ng-container matColumnDef="value">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header> Значення </th>
                 <td mat-cell *matCellDef="let area"> {{area.value}} </td>
+            </ng-container>
+            <ng-container matColumnDef="shortValue">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Скорочення </th>
+                <td mat-cell *matCellDef="let area"> {{area.shortValue}} </td>
             </ng-container>
 
             <!-- Comment Column -->
@@ -29,12 +33,12 @@ export type DictArea = SimpleDictDto;
     `,
     imports: [MatTableModule, MatButtonModule, MatSortModule],
 })
-export class dictAreaPage implements AfterViewInit {
-    readonly api = '/api/dict-areas';
-    dictService = inject(SimpleDictService);
+export class dictUnitTypes implements AfterViewInit {
+    readonly api = 'api/dict-unit-types';
+    dictService = inject(ShortDictService);
     items = this.dictService.createItemsSignal(this.api);
     dataSource = new MatTableDataSource<DictArea>([]);
-    displayedColumns = ['value', 'comment'];
+    displayedColumns = ['value', 'shortValue', 'comment'];
 
     @ViewChild(MatSort) sort!: MatSort;
 

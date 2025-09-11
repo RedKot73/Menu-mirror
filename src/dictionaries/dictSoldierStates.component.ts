@@ -6,9 +6,9 @@ import { SimpleDictService, SimpleDictDto } from "../ServerService/simpleDict.se
 export type DictArea = SimpleDictDto;
 
 @Component({
-    selector: "page-dict-area",
+    selector: "page-dict-soldier-states",
     template: `
-        <h2>Напрямок ЛБЗ</h2>
+        <h2>Статуси особового складу</h2>
         <button mat-raised-button color="primary" (click)="reload()">Обновить</button>
         <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" style="width:100%; margin-top: 1em;">
             <!-- Value Column -->
@@ -29,8 +29,8 @@ export type DictArea = SimpleDictDto;
     `,
     imports: [MatTableModule, MatButtonModule, MatSortModule],
 })
-export class dictAreaPage implements AfterViewInit {
-    readonly api = '/api/dict-areas';
+export class dictSoldierStates implements AfterViewInit {
+    readonly api = '/api/dict-soldier-states';
     dictService = inject(SimpleDictService);
     items = this.dictService.createItemsSignal(this.api);
     dataSource = new MatTableDataSource<DictArea>([]);

@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Mvc.ViewEngines;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.EntityFrameworkCore;
 
 namespace S5Server.Utils
 {
@@ -88,46 +86,12 @@ namespace S5Server.Utils
             return false;
         }
 
-
-        public static async Task<string> RenderViewAsync<TModel>(this Controller controller,
-            string viewName, TModel model, ICompositeViewEngine viewEngine,
-            bool partial = false) where TModel : class
+        // Общая проверка нарушения уникальности (SQLite + fallback по тексту ошибки)
+        public static bool IsUniqueViolation(DbUpdateException ex)
         {
-            ArgumentNullException.ThrowIfNull(model);
-
-            if (string.IsNullOrEmpty(viewName))
-            {
-                viewName = controller.ControllerContext.ActionDescriptor.ActionName;
-            }
-            /*
-            ArgumentNullException.ThrowIfNull(context);
-            ArgumentException.ThrowIfNullOrEmpty(viewName);
-             */
-            controller.ViewData.ModelState.Merge(controller.ModelState);
-            controller.ViewData.Model = model;
-
-            using var writer = new StringWriter();
-            var viewResult = viewEngine.FindView(controller.ControllerContext, viewName, !partial);
-            if (viewResult.View == null)
-            {
-                viewResult = viewEngine.GetView(null, viewName, !partial);
-                if (viewResult.View == null)
-                {
-                    throw new ArgumentNullException($"{viewName} does not match any available view");
-                }
-            }
-
-            var viewContext = new ViewContext(
-                controller.ControllerContext,
-                viewResult.View,
-                controller.ViewData,
-                controller.TempData,
-                writer,
-                new HtmlHelperOptions()
-            );
-
-            await viewResult.View.RenderAsync(viewContext);
-            return writer.GetStringBuilder().ToString().Replace("\r", "").Replace("\n", "").Trim();
+            if (ex.InnerException is Microsoft.Data.Sqlite.SqliteException sqliteEx)
+                return sqliteEx.SqliteErrorCode == 19 && sqliteEx.SqliteExtendedErrorCode == 2067;
+            return ex.InnerException?.Message.Contains("UNIQUE", StringComparison.OrdinalIgnoreCase) == true;
         }
     }
 }
