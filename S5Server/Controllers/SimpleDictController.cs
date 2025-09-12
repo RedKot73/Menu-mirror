@@ -9,6 +9,7 @@ namespace S5Server.Controllers;
 
 // DTO для внешнего API
 public record SimpleDictDto(string Id, string Value, string? Comment);
+public record SimpleDictCreateDto(string Value, string? Comment);
 
 /// <summary>
 /// Generic API контроллер для простых справочников (без пагинации, без Razor)
@@ -60,7 +61,7 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<SimpleDictDto>> Create([FromBody] SimpleDictDto dto,
+    public async Task<ActionResult<SimpleDictDto>> Create([FromBody] SimpleDictCreateDto dto,
         CancellationToken ct = default)
     {
         if (dto is null) return BadRequest("Пустое тело запроса.");
