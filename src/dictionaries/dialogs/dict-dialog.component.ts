@@ -1,17 +1,18 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import {
-    MatDialogModule,
-    MAT_DIALOG_DATA,
-    MatDialogRef,
-} from '@angular/material/dialog';
+import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input'; 
+import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
+
 import { SimpleDictDto } from '../../ServerService/simpleDict.service';
 
 @Component({
     selector: 'dict-dialog',
+    standalone: true,
+//    imports: [MatFormFieldModule, MatInputModule, MatButtonModule, MatDialogModule, FormsModule],
+    imports: [MatFormFieldModule, MatInputModule, MatDialogModule, MatButtonModule, FormsModule],
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
     <h2 mat-dialog-title>{{ data.id ? 'Редагувати' : 'Створити новий' }}</h2>
     <div mat-dialog-content>
@@ -26,16 +27,14 @@ import { SimpleDictDto } from '../../ServerService/simpleDict.service';
     </div>
     <div mat-dialog-actions>
       <button mat-button (click)="onCancel()">Відміна</button>
-      <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!data.value.trim()" cdkFocusInitial>Зберегти</button>
+      <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!data.value.trim()">Зберегти</button>
     </div>`,
     styles: [],
-    imports: [MatFormFieldModule, MatInputModule, MatButtonModule, MatDialogModule, FormsModule],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: true,
 })
 export class DictDialogComponent {
     dialogRef = inject(MatDialogRef<DictDialogComponent>);
     data: SimpleDictDto;
+    
 
     constructor() {
         // Создаём копию объекта, чтобы не мутировать оригинал

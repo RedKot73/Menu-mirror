@@ -4,9 +4,11 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { SimpleDictService, SimpleDictDto } from "../ServerService/simpleDict.service";
+
 import { DictDialogComponent } from './dialogs/dict-dialog.component';
 import { ConfirmDialogComponent } from "./dialogs/ConfirmDialog.component";
+
+import { SimpleDictService, SimpleDictDto } from "../ServerService/simpleDict.service";
 
 export type DictArea = SimpleDictDto;
 
