@@ -13,6 +13,7 @@ export type DictArea = SimpleDictDto;
 
 @Component({
     selector: "page-dict-forces-types",
+    imports: [MatTableModule, MatButtonModule, MatSortModule, MatIconModule],
     template: `
         <h2>Види збройних сил</h2>
         <button mat-raised-button color="primary" (click)="reload()" style="margin-left: 1em;">Оновити</button>
@@ -44,7 +45,6 @@ export type DictArea = SimpleDictDto;
             <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         </table>
     `,
-    imports: [MatTableModule, MatButtonModule, MatSortModule, MatIconModule],
 })
 export class dictForcesType implements AfterViewInit {
     readonly api = '/api/dict-forces-types';
@@ -69,7 +69,7 @@ export class dictForcesType implements AfterViewInit {
     reload() {
         this.dictService.getAll(this.api).subscribe(items => this.items.set(items));
     }
-    
+
     // CREATE
     add() {
         const dialogRef = this.dialog.open(DictDialogComponent, {
