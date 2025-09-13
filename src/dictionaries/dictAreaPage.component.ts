@@ -2,10 +2,11 @@ import { Component, inject, ViewChild, AfterViewInit, effect } from "@angular/co
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { SimpleDictService, SimpleDictDto } from "../ServerService/simpleDict.service";
 import { MatDialog } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { SimpleDictService, SimpleDictDto } from "../ServerService/simpleDict.service";
 import { DictDialogComponent } from './dialogs/dict-dialog.component';
-import { MatIconModule } from '@angular/material/icon'; 
+import { ConfirmDialogComponent } from "./dialogs/ConfirmDialog.component";
 
 export type DictArea = SimpleDictDto;
 
@@ -98,8 +99,24 @@ export class dictAreaPage implements AfterViewInit {
 
     // DELETE
     delete(area: DictArea) {
-        if (confirm(`Вы уверены, что хотите удалить запись "${area.value}"?`)) {
-            this.dictService.delete(this.api, area.id).subscribe(() => this.reload());
-        }
+        const ref = this.dialog.open(ConfirmDialogComponent, {
+            width: '360px',
+            maxWidth: '95vw',
+            //disableClose: true,   // чтобы не закрывалось по клику вне/ESC
+            autoFocus: false,
+            data: {
+                title: 'Видалення запису',
+                message: `Ви впевнені, що хочете видалити запис "${area.value}"?`,
+                confirmText: 'Видалити',
+                cancelText: 'Відмінити',
+                color: 'warn',
+                icon: 'warning'
+            }
+        });
+        ref.afterClosed().subscribe(confirmed => {
+            if (confirmed) {
+                this.dictService.delete(this.api, area.id).subscribe(() => this.reload());
+            }
+        });
     }
 }
