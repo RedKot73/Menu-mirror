@@ -40,10 +40,10 @@ import { SimpleDictDto } from '../../ServerService/simpleDict.service';
         .actions { gap: 8px; }
   `],
 })
-export class DictDialogComponent {
+export class SimpleDictDialogComponent {
     constructor(
         @Inject(MAT_DIALOG_DATA) public data: SimpleDictDto,
-        private ref: MatDialogRef<DictDialogComponent>
+        private ref: MatDialogRef<SimpleDictDialogComponent>
     ) { }
 
     onCancel() { this.ref.close(); }

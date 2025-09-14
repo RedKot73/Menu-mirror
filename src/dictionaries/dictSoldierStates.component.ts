@@ -5,7 +5,7 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 
-import { DictDialogComponent } from './dialogs/dict-dialog.component';
+import { SimpleDictDialogComponent } from './dialogs/SimpleDict-dialog.component';
 import { ConfirmDialogComponent } from "./dialogs/ConfirmDialog.component";
 import { SimpleDictService, SimpleDictDto } from "../ServerService/simpleDict.service";
 
@@ -72,7 +72,7 @@ export class dictSoldierStates implements AfterViewInit {
 
     // CREATE
     add() {
-        const dialogRef = this.dialog.open(DictDialogComponent, {
+        const dialogRef = this.dialog.open(SimpleDictDialogComponent, {
             width: '400px',
             data: { value: '', comment: '' } // Передаем пустой объект для создания
         });
@@ -86,7 +86,7 @@ export class dictSoldierStates implements AfterViewInit {
 
     // UPDATE
     edit(area: DictArea) {
-        const dialogRef = this.dialog.open(DictDialogComponent, {
+        const dialogRef = this.dialog.open(SimpleDictDialogComponent, {
             width: '400px',
             data: { ...area } // Передаем копию объекта для редактирования
         });
