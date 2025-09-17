@@ -4,12 +4,12 @@ import { HttpClient } from '@angular/common/http';
 export interface DictRankDto {
     id: string;
     value: string;
-    ShortValue: string;
+    shortValue: string;
     comment?: string | null;
-    NatoCode?: string | null;
-    Category?: string | null;
-    SubCategory?: string | null;
-    OrderVal: number;
+    natoCode?: string | null;
+    category?: string | null;
+    subCategory?: string | null;
+    orderVal: number;
 }
 
 export interface DictRankLookup {

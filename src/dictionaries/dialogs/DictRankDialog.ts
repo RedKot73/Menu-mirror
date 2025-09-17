@@ -5,10 +5,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 
-import { SimpleDictDto } from '../../ServerService/simpleDict.service';
+import { DictRankDto } from "../../ServerService/dictRanks.service";
 
 @Component({
-    selector: 'dict-dialog',
+    selector: 'dict-rank-dialog',
     standalone: true,
     imports: [MatFormFieldModule, MatInputModule, MatDialogModule, MatButtonModule, FormsModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -18,6 +18,26 @@ import { SimpleDictDto } from '../../ServerService/simpleDict.service';
       <mat-form-field appearance="outline" floatLabel="always">
         <mat-label>Значення</mat-label>
         <input matInput [(ngModel)]="data.value" required>
+      </mat-form-field>
+      <mat-form-field appearance="outline" floatLabel="always">
+        <mat-label>Скорочення</mat-label>
+        <input matInput [(ngModel)]="data.shortValue" required>
+      </mat-form-field>
+      <mat-form-field appearance="outline" floatLabel="always">
+        <mat-label>Код NATO</mat-label>
+        <input matInput [(ngModel)]="data.natoCode" required>
+      </mat-form-field>
+      <mat-form-field appearance="outline" floatLabel="always">
+        <mat-label>Категорія</mat-label>
+        <input matInput [(ngModel)]="data.category" required>
+      </mat-form-field>
+      <mat-form-field appearance="outline" floatLabel="always">
+        <mat-label>Під категорія</mat-label>
+        <input matInput [(ngModel)]="data.subCategory" required>
+      </mat-form-field>
+      <mat-form-field appearance="outline" floatLabel="always">
+        <mat-label>Порядок</mat-label>
+        <input matInput [(ngModel)]="data.orderVal" required>
       </mat-form-field>
       <mat-form-field appearance="outline" floatLabel="always">
         <mat-label>Коментар</mat-label>
@@ -40,10 +60,10 @@ import { SimpleDictDto } from '../../ServerService/simpleDict.service';
         .actions { gap: 8px; }
   `],
 })
-export class SimpleDictDialogComponent {
+export class DictRankDialogComponent {
     constructor(
-        @Inject(MAT_DIALOG_DATA) public data: SimpleDictDto,
-        private ref: MatDialogRef<SimpleDictDialogComponent>
+        @Inject(MAT_DIALOG_DATA) public data: DictRankDto,
+        private ref: MatDialogRef<DictRankDialogComponent>
     ) { }
 
     onCancel() { this.ref.close(); }

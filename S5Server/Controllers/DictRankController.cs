@@ -15,6 +15,14 @@ public record DictRankDto(
     string? Category,
     string? SubCategory,
     int OrderVal);
+public record DictRankCreateDto(
+    string Value,
+    string ShortValue,
+    string? Comment,
+    string? NatoCode,
+    string? Category,
+    string? SubCategory,
+    int OrderVal);
 
 [ApiController]
 [Route("api/[controller]")]
@@ -83,7 +91,7 @@ public class DictRankController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<DictRankDto>> Create([FromBody] DictRankDto dto,
+    public async Task<ActionResult<DictRankDto>> Create([FromBody] DictRankCreateDto dto,
         CancellationToken ct = default)
     {
         if (dto is null) return BadRequest("Пустое тело запроса.");
