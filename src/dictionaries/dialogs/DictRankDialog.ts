@@ -25,19 +25,19 @@ import { DictRankDto } from "../../ServerService/dictRanks.service";
       </mat-form-field>
       <mat-form-field appearance="outline" floatLabel="always">
         <mat-label>Код NATO</mat-label>
-        <input matInput [(ngModel)]="data.natoCode" required>
+        <input matInput [(ngModel)]="data.natoCode" >
       </mat-form-field>
       <mat-form-field appearance="outline" floatLabel="always">
         <mat-label>Категорія</mat-label>
-        <input matInput [(ngModel)]="data.category" required>
+        <input matInput [(ngModel)]="data.category" >
       </mat-form-field>
       <mat-form-field appearance="outline" floatLabel="always">
         <mat-label>Під категорія</mat-label>
-        <input matInput [(ngModel)]="data.subCategory" required>
+        <input matInput [(ngModel)]="data.subCategory" >
       </mat-form-field>
       <mat-form-field appearance="outline" floatLabel="always">
         <mat-label>Порядок</mat-label>
-        <input matInput [(ngModel)]="data.orderVal" required>
+        <input matInput [(ngModel)]="data.orderVal" type="number" required>
       </mat-form-field>
       <mat-form-field appearance="outline" floatLabel="always">
         <mat-label>Коментар</mat-label>
