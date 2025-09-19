@@ -51,10 +51,11 @@ import { DictRankDto } from "../../ServerService/dictRanks.service";
     styles: [`
         .title { text-align: center; margin: 0; }
         .content {
-        display: grid;
-        gap: 12px;
-        min-width: 280px;
-        max-width: 520px;
+            display: grid;
+            gap: 12px;
+            min-width: 280px;
+            max-width: 520px;
+            padding-top: 10px !important;
         }
         .content .mat-mdc-form-field { width: 100%; }
         .actions { gap: 8px; }
