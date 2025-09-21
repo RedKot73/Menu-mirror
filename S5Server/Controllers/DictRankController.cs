@@ -34,7 +34,7 @@ public class DictRankController : ControllerBase
     public DictRankController(MainDbContext db)
     {
         _db = db;
-        _set = db.DictRank;
+        _set = db.DictRanks;
     }
 
     private IQueryable<DictRank> Query() => _set.AsNoTracking();

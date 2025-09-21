@@ -55,7 +55,7 @@ import { DictRankDto } from "../../ServerService/dictRanks.service";
             gap: 12px;
             min-width: 280px;
             max-width: 520px;
-            padding-top: 10px !important;
+            padding-top: 10px !important; /* убирает перекрытие заголовка и контента */
         }
         .content .mat-mdc-form-field { width: 100%; }
         .actions { gap: 8px; }

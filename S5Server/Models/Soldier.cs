@@ -42,26 +42,26 @@ namespace S5Server.Models
         /// <summary>
         /// Підрозділ
         /// </summary>
-        [ForeignKey(nameof(Unit)), Display(Name = Unit.Caption),
+        [ForeignKey(nameof(Unit)),
             Required(ErrorMessage = UIConstant.RequiredMsg)]
         public string UnitId { get; set; } = string.Empty;
 
         /// <summary>
         /// Підрозділ
         /// </summary>
-        [ValidateNever, Display(Name = Unit.Caption),
+        [ValidateNever, 
             Required(ErrorMessage = UIConstant.RequiredMsg)]
         public virtual Unit Unit { get; set; } = default!;
 
         /// <summary>
         /// Приданий до підрозділу
         /// </summary>
-        [ForeignKey(nameof(AssignedUnit)), Display(Name = Unit.AssignedUnitCaption)]
+        [ForeignKey(nameof(AssignedUnit))]
         public string? AssignedUnitId { get; set; }
         /// <summary>
         /// Приданий до підрозділу
         /// </summary>
-        [ValidateNever, Display(Name = Unit.AssignedUnitCaption)]
+        [ValidateNever]
         public Unit? AssignedUnit { get; set; }
 
         /// <summary>
