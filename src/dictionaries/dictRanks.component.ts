@@ -95,7 +95,6 @@ export class dictRanks implements AfterViewInit {
     add() {
         const dialogRef = this.dialog.open(DictRankDialogComponent, {
             width: '400px',
-            //data: { value: '', shortValue: '', natoCode: '', category: '', subCategory: '', orderVal: '', comment: '' } // Передаем пустой объект для создания
             data: { value: '', shortValue: '', natoCode: '', category: '', subCategory: '', orderVal: '', comment: '' } // Передаем пустой объект для создания
         });
 

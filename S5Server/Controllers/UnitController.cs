@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+п»їusing Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using S5Server.Data;
@@ -27,7 +27,7 @@ namespace S5Server.Controllers
 
         private IQueryable<Unit> Query() => _set.AsNoTracking();
 
-        // DTO для передачи Unit (можно расширить по необходимости)
+        // DTO РґР»СЏ РїРµСЂРµРґР°С‡Рё Unit (РјРѕР¶РЅРѕ СЂР°СЃС€РёСЂРёС‚СЊ РїРѕ РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё)
         public record UnitDto(
             string Id,
             string? ParentId,
@@ -40,7 +40,7 @@ namespace S5Server.Controllers
             int OrderVal,
             string? Comment
         );
-        // DTO для создания Unit (аналогично DictRankCreateDto)
+        // DTO РґР»СЏ СЃРѕР·РґР°РЅРёСЏ Unit (Р°РЅР°Р»РѕРіРёС‡РЅРѕ DictRankCreateDto)
         public record UnitCreateDto(
             string? ParentId,
             string? AssignedUnitId,
@@ -117,9 +117,9 @@ namespace S5Server.Controllers
         public async Task<ActionResult<UnitDto>> Create([FromBody] UnitCreateDto dto,
             CancellationToken ct = default)
         {
-            if (dto is null) return BadRequest("Пустое тело запроса.");
-            if (string.IsNullOrWhiteSpace(dto.Name)) return BadRequest("Name не может быть пустым.");
-            if (string.IsNullOrWhiteSpace(dto.ShortName)) return BadRequest("ShortName не может быть пустым.");
+            if (dto is null) return BadRequest("РџСѓСЃС‚РѕРµ С‚РµР»Рѕ Р·Р°РїСЂРѕСЃР°.");
+            if (string.IsNullOrWhiteSpace(dto.Name)) return BadRequest("Name РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РїСѓСЃС‚С‹Рј.");
+            if (string.IsNullOrWhiteSpace(dto.ShortName)) return BadRequest("ShortName РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РїСѓСЃС‚С‹Рј.");
 
             var entity = new Unit
             {
@@ -142,7 +142,7 @@ namespace S5Server.Controllers
             }
             catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
             {
-                return Conflict($"Підрозділ \"{entity.Name}\" вже існує.");
+                return Conflict($"РџС–РґСЂРѕР·РґС–Р» \"{entity.Name}\" РІР¶Рµ С–СЃРЅСѓС”.");
             }
 
             return CreatedAtAction(nameof(Get), new { id = entity.Id }, ToDto(entity));
@@ -152,8 +152,8 @@ namespace S5Server.Controllers
         public async Task<IActionResult> Update(string id,
             [FromBody] UnitDto dto, CancellationToken ct = default)
         {
-            if (dto is null) return BadRequest("Пустое тело запроса.");
-            if (string.IsNullOrWhiteSpace(dto.Name)) return BadRequest("Name не может быть пустым.");
+            if (dto is null) return BadRequest("РџСѓСЃС‚РѕРµ С‚РµР»Рѕ Р·Р°РїСЂРѕСЃР°.");
+            if (string.IsNullOrWhiteSpace(dto.Name)) return BadRequest("Name РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РїСѓСЃС‚С‹Рј.");
 
             var e = await _set.AsTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
             if (e is null) return NotFound();
@@ -169,7 +169,7 @@ namespace S5Server.Controllers
             }
             catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
             {
-                return Conflict($"Підрозділ \"{e.Name}\" вже існує.");
+                return Conflict($"РџС–РґСЂРѕР·РґС–Р» \"{e.Name}\" РІР¶Рµ С–СЃРЅСѓС”.");
             }
 
             return NoContent();
@@ -187,7 +187,7 @@ namespace S5Server.Controllers
         }
 
         /// <summary>
-        /// Проверка наличия дочерних подразделений
+        /// РџСЂРѕРІРµСЂРєР° РЅР°Р»РёС‡РёСЏ РґРѕС‡РµСЂРЅРёС… РїРѕРґСЂР°Р·РґРµР»РµРЅРёР№
         /// </summary>
         [HttpGet("{id}/has-children")]
         public async Task<ActionResult<bool>> HasChildren(string id, CancellationToken ct = default)
@@ -197,7 +197,7 @@ namespace S5Server.Controllers
         }
 
         /// <summary>
-        /// Получить дочерние подразделения
+        /// РџРѕР»СѓС‡РёС‚СЊ РґРѕС‡РµСЂРЅРёРµ РїРѕРґСЂР°Р·РґРµР»РµРЅРёСЏ
         /// </summary>
         [HttpGet("{id}/children")]
         public async Task<ActionResult<IEnumerable<UnitDto>>> GetChildren(string id,
@@ -214,7 +214,7 @@ namespace S5Server.Controllers
         }
 
         /// <summary>
-        /// Проверка наличия приданных подразделений
+        /// РџСЂРѕРІРµСЂРєР° РЅР°Р»РёС‡РёСЏ РїСЂРёРґР°РЅРЅС‹С… РїРѕРґСЂР°Р·РґРµР»РµРЅРёР№
         /// </summary>
         [HttpGet("{id}/has-assigned")]
         public async Task<ActionResult<bool>> HasAssignedUnits(string id, CancellationToken ct = default)
@@ -224,7 +224,7 @@ namespace S5Server.Controllers
         }
 
         /// <summary>
-        /// Получить приданные подразделения
+        /// РџРѕР»СѓС‡РёС‚СЊ РїСЂРёРґР°РЅРЅС‹Рµ РїРѕРґСЂР°Р·РґРµР»РµРЅРёСЏ
         /// </summary>
         [HttpGet("{id}/assigned")]
         public async Task<ActionResult<IEnumerable<UnitDto>>> GetAssignedUnits(string id,
@@ -241,16 +241,16 @@ namespace S5Server.Controllers
         }
 
         /// <summary>
-        /// Добавить существующее дочернее подразделение
+        /// Р”РѕР±Р°РІРёС‚СЊ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РµРµ РґРѕС‡РµСЂРЅРµРµ РїРѕРґСЂР°Р·РґРµР»РµРЅРёРµ
         /// </summary>
         [HttpPost("{parentId}/add-exists-child/{childId}")]
         public async Task<IActionResult> AddExistsChild(string parentId, string childId, CancellationToken ct = default)
         {
             if (parentId == childId)
-                return BadRequest("Підрозділ не може бути дочірнім сам до себе.");
+                return BadRequest("РџС–РґСЂРѕР·РґС–Р» РЅРµ РјРѕР¶Рµ Р±СѓС‚Рё РґРѕС‡С–СЂРЅС–Рј СЃР°Рј РґРѕ СЃРµР±Рµ.");
 
             var child = await _set.FirstOrDefaultAsync(x => x.Id == childId, ct);
-            if (child == null) return NotFound("Дочірній підозділ не знайдено.");
+            if (child == null) return NotFound("Р”РѕС‡С–СЂРЅС–Р№ РїС–РґРѕР·РґС–Р» РЅРµ Р·РЅР°Р№РґРµРЅРѕ.");
 
             child.ParentId = parentId;
             await _db.SaveChangesAsync(ct);
@@ -258,14 +258,14 @@ namespace S5Server.Controllers
         }
 
         /// <summary>
-        /// Удалить дочерний дочернее подразделение
+        /// РЈРґР°Р»РёС‚СЊ РґРѕС‡РµСЂРЅРёР№ РґРѕС‡РµСЂРЅРµРµ РїРѕРґСЂР°Р·РґРµР»РµРЅРёРµ
         /// </summary>
         [HttpPost("{parentId}/remove-child/{childId}")]
         public async Task<IActionResult> RemoveChild(string parentId, string childId, CancellationToken ct = default)
         {
             var child = await _set.FirstOrDefaultAsync(x => x.Id == childId &&
                 x.ParentId == parentId, ct);
-            if (child == null) return NotFound("Дочірній підозділ не знайдено.");
+            if (child == null) return NotFound("Р”РѕС‡С–СЂРЅС–Р№ РїС–РґРѕР·РґС–Р» РЅРµ Р·РЅР°Р№РґРµРЅРѕ.");
 
             child.ParentId = null;
             await _db.SaveChangesAsync(ct);
@@ -273,16 +273,16 @@ namespace S5Server.Controllers
         }
 
         /// <summary>
-        /// Добавить приданный подраздел
+        /// Р”РѕР±Р°РІРёС‚СЊ РїСЂРёРґР°РЅРЅС‹Р№ РїРѕРґСЂР°Р·РґРµР»
         /// </summary>
         [HttpPost("{unitId}/add-assigned/{assignedId}")]
         public async Task<IActionResult> AddAssignedUnit(string unitId, string assignedId, CancellationToken ct = default)
         {
             if (unitId == assignedId)
-                return BadRequest("Підрозділ не може бути приданим сам до себе.");
+                return BadRequest("РџС–РґСЂРѕР·РґС–Р» РЅРµ РјРѕР¶Рµ Р±СѓС‚Рё РїСЂРёРґР°РЅРёРј СЃР°Рј РґРѕ СЃРµР±Рµ.");
 
             var assigned = await _set.FirstOrDefaultAsync(x => x.Id == assignedId, ct);
-            if (assigned == null) return NotFound("Приданий підрозділ не знайдено.");
+            if (assigned == null) return NotFound("РџСЂРёРґР°РЅРёР№ РїС–РґСЂРѕР·РґС–Р» РЅРµ Р·РЅР°Р№РґРµРЅРѕ.");
 
             assigned.AssignedUnitId = unitId;
             await _db.SaveChangesAsync(ct);
@@ -290,13 +290,13 @@ namespace S5Server.Controllers
         }
 
         /// <summary>
-        /// Удалить приданный подраздел (отвязать)
+        /// РЈРґР°Р»РёС‚СЊ РїСЂРёРґР°РЅРЅС‹Р№ РїРѕРґСЂР°Р·РґРµР» (РѕС‚РІСЏР·Р°С‚СЊ)
         /// </summary>
         [HttpPost("{unitId}/remove-assigned/{assignedId}")]
         public async Task<IActionResult> RemoveAssignedUnit(string unitId, string assignedId, CancellationToken ct = default)
         {
             var assigned = await _set.FirstOrDefaultAsync(x => x.Id == assignedId && x.AssignedUnitId == unitId, ct);
-            if (assigned == null) return NotFound("Приданный підрозділ не знайдено.");
+            if (assigned == null) return NotFound("РџСЂРёРґР°РЅРЅС‹Р№ РїС–РґСЂРѕР·РґС–Р» РЅРµ Р·РЅР°Р№РґРµРЅРѕ.");
 
             assigned.AssignedUnitId = null;
             await _db.SaveChangesAsync(ct);
