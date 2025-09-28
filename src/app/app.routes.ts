@@ -5,8 +5,9 @@ import { dictForcesType } from '../dictionaries/dictForcesType.component';
 import { dictPosition } from '../dictionaries/dictPosition.component';
 import { dictSoldierStates } from '../dictionaries/dictSoldierStates.component';
 import { dictUnitTypes } from '../dictionaries/dictUnitTypes.component';
-import { LoginPage } from '../Login/LoginPage.component';
 import { dictRanks } from '../dictionaries/dictRanks.component';
+import { UnitsComponent } from '../app/Unit/Unit.component'//'../Unit/UnitComponent.component';
+import { LoginPage } from '../Login/LoginPage.component';
 
 // Simple standalone stub components for each route
 @Component({
@@ -17,10 +18,6 @@ import { dictRanks } from '../dictionaries/dictRanks.component';
     selector: 'page-general-info', standalone: true,
     template: '<h2>Загальні</h2><p>Сторінка "Загальні" (заглушка)</p>'
 }) class GeneralInfoPage { }
-@Component({
-    selector: 'page-units', standalone: true,
-    template: '<h2>Підрозділи</h2><p>Сторінка "Підрозділи" (заглушка)</p>'
-}) class UnitsPage { }
 @Component({
     selector: 'page-orders', standalone: true,
     template: '<h2>Розпорядження</h2><p>Сторінка "Розпорядження" (заглушка)</p>'
@@ -43,7 +40,7 @@ export const routes: Routes = [
     { path: 'dictUnitTypes', title: 'Типи підрозділів', component: dictUnitTypes },
     { path: 'drone-forces', title: 'Сили безпілотних систем', component: DroneForcesPage },
     { path: 'general-info', title: 'Загальні', component: GeneralInfoPage },
-    { path: 'units', title: 'Підрозділи', component: UnitsPage },
+    { path: 'units', title: 'Підрозділи', component: UnitsComponent },
     { path: 'orders', title: 'Розпорядження', component: OrdersPage },
     { path: 'reports', title: 'Донесення', component: ReportsPage },
     { path: 'users', title: 'Користувачі', component: UsersPage },
