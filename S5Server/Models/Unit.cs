@@ -73,6 +73,7 @@ namespace S5Server.Models
         /// </summary>
         [ValidateNever]
         public DictUnitType? UnitType { get; set; } = default!;
+        public int OrderVal { get; set; } = 1;
 
         public string? Comment { get; set; }
 

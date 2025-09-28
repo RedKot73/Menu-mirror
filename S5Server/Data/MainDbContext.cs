@@ -85,6 +85,7 @@ namespace S5Server.Data
                 entity.Property(e => e.ShortValue).IsRequired().HasColumnType("TEXT(50)");
                 entity.Property(e => e.Comment).HasColumnType("TEXT");
                 entity.HasIndex(e => e.Value).IsUnique();
+                entity.Property(e => e.OrderVal).HasColumnType("INTEGER");
             });
 
             modelBuilder.Entity<Unit>(entity =>
@@ -100,6 +101,7 @@ namespace S5Server.Data
                 entity.Property(e => e.Name).IsRequired().HasColumnType("TEXT(100)");
                 entity.Property(e => e.ShortName).HasColumnType("TEXT(100)");
                 entity.Property(e => e.MilitaryNumber).HasColumnType("TEXT(100)");
+                entity.Property(e => e.OrderVal).HasColumnType("INTEGER");
                 entity.Property(e => e.Comment).HasColumnType("TEXT");
 
                 // Керівний підрозділ
