@@ -33,69 +33,70 @@ export interface UnitCreateDto {
     providedIn: 'root'
 })
 export class UnitService {
+    readonly api = '/api/Unit';
     private http = inject(HttpClient);
 
-    createItemsSignal(apiUrl: string) {
+    createItemsSignal() {
         return signal<UnitDto[]>([]);
     }
 
     // CRUD операции
-    getAll(apiUrl: string, search?: string, parentId?: string): Observable<UnitDto[]> {
+    getAll(search?: string, parentId?: string): Observable<UnitDto[]> {
         let params: any = {};
         if (search) params.search = search;
         if (parentId) params.parentId = parentId;
         
-        return this.http.get<UnitDto[]>(apiUrl, { params });
+        return this.http.get<UnitDto[]>(this.api, { params });
     }
 
-    getById(apiUrl: string, id: string): Observable<UnitDto> {
-        return this.http.get<UnitDto>(`${apiUrl}/${id}`);
+    getById(id: string): Observable<UnitDto> {
+        return this.http.get<UnitDto>(`${this.api}/${id}`);
     }
 
-    create(apiUrl: string, item: UnitCreateDto): Observable<UnitDto> {
-        return this.http.post<UnitDto>(apiUrl, item);
+    create(item: UnitCreateDto): Observable<UnitDto> {
+        return this.http.post<UnitDto>(this.api, item);
     }
 
-    update(apiUrl: string, id: string, item: UnitDto): Observable<void> {
-        return this.http.put<void>(`${apiUrl}/${id}`, item);
+    update(id: string, item: UnitDto): Observable<void> {
+        return this.http.put<void>(`${this.api}/${id}`, item);
     }
 
-    delete(apiUrl: string, id: string): Observable<void> {
-        return this.http.delete<void>(`${apiUrl}/${id}`);
+    delete(id: string): Observable<void> {
+        return this.http.delete<void>(`${this.api}/${id}`);
     }
 
     // Методы для работы с иерархией
-    hasChildren(apiUrl: string, id: string): Observable<boolean> {
-        return this.http.get<boolean>(`${apiUrl}/${id}/has-children`);
+    hasChildren(id: string): Observable<boolean> {
+        return this.http.get<boolean>(`${this.api}/${id}/has-children`);
     }
 
-    getChildren(apiUrl: string, id: string): Observable<UnitDto[]> {
-        return this.http.get<UnitDto[]>(`${apiUrl}/${id}/children`);
+    getChildren(id: string): Observable<UnitDto[]> {
+        return this.http.get<UnitDto[]>(`${this.api}/${id}/children`);
     }
 
-    hasAssignedUnits(apiUrl: string, id: string): Observable<boolean> {
-        return this.http.get<boolean>(`${apiUrl}/${id}/has-assigned`);
+    hasAssignedUnits(id: string): Observable<boolean> {
+        return this.http.get<boolean>(`${this.api}/${id}/has-assigned`);
     }
 
-    getAssignedUnits(apiUrl: string, id: string): Observable<UnitDto[]> {
-        return this.http.get<UnitDto[]>(`${apiUrl}/${id}/assigned`);
+    getAssignedUnits(id: string): Observable<UnitDto[]> {
+        return this.http.get<UnitDto[]>(`${this.api}/${id}/assigned`);
     }
 
     // Методы для управления дочерними подразделениями
-    addExistingChild(apiUrl: string, parentId: string, childId: string): Observable<void> {
-        return this.http.post<void>(`${apiUrl}/${parentId}/add-exists-child/${childId}`, {});
+    addExistingChild(parentId: string, childId: string): Observable<void> {
+        return this.http.post<void>(`${this.api}/${parentId}/add-exists-child/${childId}`, {});
     }
 
-    removeChild(apiUrl: string, parentId: string, childId: string): Observable<void> {
-        return this.http.post<void>(`${apiUrl}/${parentId}/remove-child/${childId}`, {});
+    removeChild(parentId: string, childId: string): Observable<void> {
+        return this.http.post<void>(`${this.api}/${parentId}/remove-child/${childId}`, {});
     }
 
     // Методы для управления приданными подразделениями
-    addAssignedUnit(apiUrl: string, unitId: string, assignedId: string): Observable<void> {
-        return this.http.post<void>(`${apiUrl}/${unitId}/add-assigned/${assignedId}`, {});
+    addAssignedUnit(unitId: string, assignedId: string): Observable<void> {
+        return this.http.post<void>(`${this.api}/${unitId}/add-assigned/${assignedId}`, {});
     }
 
-    removeAssignedUnit(apiUrl: string, unitId: string, assignedId: string): Observable<void> {
-        return this.http.post<void>(`${apiUrl}/${unitId}/remove-assigned/${assignedId}`, {});
+    removeAssignedUnit(unitId: string, assignedId: string): Observable<void> {
+        return this.http.post<void>(`${this.api}/${unitId}/remove-assigned/${assignedId}`, {});
     }
 }

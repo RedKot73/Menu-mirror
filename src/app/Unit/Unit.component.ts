@@ -132,12 +132,11 @@ export type Unit = UnitDto;
     `
 })
 export class UnitsComponent implements AfterViewInit {
-    readonly api = '/api/Unit';
     // Константа для представления отсутствующего значения (из C# ControllerFunctions.NullGuid)
     readonly NULL_GUID = '00000000-0000-0000-0000-000000000001';
     
     unitService = inject(UnitService);
-    items = this.unitService.createItemsSignal(this.api);
+    items = this.unitService.createItemsSignal();
     allUnits = signal<UnitDto[]>([]);
     dataSource = new MatTableDataSource<Unit>([]);
     displayedColumns = ['parentId', 'parentShortName', 'name', 'shortName', 'militaryNumber',
@@ -159,7 +158,7 @@ export class UnitsComponent implements AfterViewInit {
     ngAfterViewInit() {
         this.dataSource.sort = this.sort;
         // Загружаем все подразделения
-        this.unitService.getAll(this.api).subscribe(items => {
+        this.unitService.getAll().subscribe(items => {
             this.items.set(items);
             this.allUnits.set(items);
         });
@@ -180,7 +179,7 @@ export class UnitsComponent implements AfterViewInit {
             parentIdForServer = this.selectedParentId || undefined;
         }
 
-        this.unitService.getAll(this.api, this.searchText, parentIdForServer)
+        this.unitService.getAll(this.searchText, parentIdForServer)
             .subscribe(items => {
                 this.items.set(items);
             });
@@ -227,7 +226,7 @@ export class UnitsComponent implements AfterViewInit {
                     orderVal: result.orderVal,
                     comment: result.comment
                 };
-                this.unitService.create(this.api, createDto).subscribe(() => this.reload());
+                this.unitService.create(createDto).subscribe(() => this.reload());
             }
         });
     }
@@ -241,7 +240,7 @@ export class UnitsComponent implements AfterViewInit {
 
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
-                this.unitService.update(this.api, result.id, result).subscribe(() => this.reload());
+                this.unitService.update(result.id, result).subscribe(() => this.reload());
             }
         });
     }
@@ -264,14 +263,14 @@ export class UnitsComponent implements AfterViewInit {
         
         ref.afterClosed().subscribe(confirmed => {
             if (confirmed) {
-                this.unitService.delete(this.api, unit.id).subscribe(() => this.reload());
+                this.unitService.delete(unit.id).subscribe(() => this.reload());
             }
         });
     }
 
     // Показать дочерние подразделения
     showChildren(unit: Unit) {
-        this.unitService.getChildren(this.api, unit.id).subscribe(children => {
+        this.unitService.getChildren(unit.id).subscribe(children => {
             if (children.length === 0) {
                 // Показать уведомление, что дочерних подразделений нет
                 this.dialog.open(ConfirmDialogComponent, {
@@ -296,7 +295,7 @@ export class UnitsComponent implements AfterViewInit {
 
     // Показать приданные подразделения
     showAssigned(unit: Unit) {
-        this.unitService.getAssignedUnits(this.api, unit.id).subscribe(assigned => {
+        this.unitService.getAssignedUnits(unit.id).subscribe(assigned => {
             if (assigned.length === 0) {
                 // Показать уведомление, что приданных подразделений нет
                 this.dialog.open(ConfirmDialogComponent, {
