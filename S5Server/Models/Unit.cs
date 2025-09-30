@@ -13,7 +13,7 @@ namespace S5Server.Models
         string? ParentShortName,
         string? AssignedUnitId,
         string Name,
-        string? ShortName,
+        string ShortName,
         string? MilitaryNumber,
         string? ForceTypeId,
         string? UnitTypeId,
@@ -73,7 +73,7 @@ namespace S5Server.Models
         /// Скорочена назва підрозділу
         /// </summary>
         [StringLength(100), Required(ErrorMessage = UIConstant.RequiredMsg)]
-        public string? ShortName { get; set; }
+        public string ShortName { get; set; } = string.Empty;
 
         /// <summary>
         /// Номер військової частини (В/Ч)

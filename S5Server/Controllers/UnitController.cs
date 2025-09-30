@@ -74,8 +74,8 @@ namespace S5Server.Controllers
             if (!string.IsNullOrWhiteSpace(search))
             {
                 q = q.Where(x =>
-                    x.Name.Contains(search) ||
-                    (x.ShortName != null && x.ShortName.Contains(search)));
+                    //x.Name.Contains(search) ||
+                    x.ShortName.Contains(search));
             }
             
             if (!string.IsNullOrWhiteSpace(parentId))

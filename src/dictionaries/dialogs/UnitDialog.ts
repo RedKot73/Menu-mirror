@@ -44,7 +44,7 @@ import { UnitDto, UnitService } from "../../ServerService/unit.service";
         <mat-select [(ngModel)]="data.parentId">
           <mat-option [value]="null">Без підпорядкування</mat-option>
           @for (unit of availableParentUnits; track unit.id) {
-            <mat-option [value]="unit.id">{{ unit.name }} ({{ unit.shortName }})</mat-option>
+            <mat-option [value]="unit.id">{{ unit.shortName }}</mat-option>
           }
         </mat-select>
       </mat-form-field>
@@ -54,7 +54,7 @@ import { UnitDto, UnitService } from "../../ServerService/unit.service";
         <mat-select [(ngModel)]="data.assignedUnitId">
           <mat-option [value]="null">Не приданий</mat-option>
           @for (unit of availableAssignedUnits; track unit.id) {
-            <mat-option [value]="unit.id">{{ unit.name }} ({{ unit.shortName }})</mat-option>
+            <mat-option [value]="unit.id">{{ unit.shortName }}</mat-option>
           }
         </mat-select>
       </mat-form-field>
@@ -121,8 +121,7 @@ export class UnitDialogComponent implements OnInit {
     }
 
     private loadAvailableUnits() {
-        const api = '/api/Unit';
-        this.unitService.getAll(api).subscribe(units => {
+        this.unitService.getAll().subscribe(units => {
             // Исключаем само редактируемое подразделение из списков выбора
             const filteredUnits = units.filter(u => u.id !== this.data.id);
             

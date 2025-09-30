@@ -13,6 +13,8 @@ import { FormsModule } from '@angular/forms';
 import { UnitDialogComponent } from '../../dictionaries/dialogs/UnitDialog';
 import { ConfirmDialogComponent } from "../../dictionaries/dialogs/ConfirmDialog.component";
 import { UnitService, UnitDto, UnitCreateDto } from "../../ServerService/unit.service";
+import { UnitFiltersComponent } from './unit-filters.component';
+import { NULL_GUID } from './unit.constants';
 
 export type Unit = UnitDto;
 
@@ -27,33 +29,20 @@ export type Unit = UnitDto;
         MatInputModule,
         MatSelectModule,
         MatOptionModule,
-        FormsModule
+        FormsModule,
+        UnitFiltersComponent
     ],
     styleUrl: './Unit.component.scss',
     template: `
         <h2>Підрозділи</h2>
         
-        <!-- Фильтры -->
-        <div class="filters">
-            <mat-form-field appearance="outline">
-                <mat-label>Пошук</mat-label>
-                <input matInput [(ngModel)]="searchText" (input)="onSearchChange()" placeholder="Назва або скорочення">
-            </mat-form-field>
-            
-            <mat-form-field appearance="outline">
-                <mat-label>Фільтр по батьківському підрозділу</mat-label>
-                <mat-select [(ngModel)]="selectedParentId" (selectionChange)="onParentFilterChange()">
-                    <mat-option [value]="">Всі підрозділи</mat-option>
-                    <mat-option [value]="NULL_GUID">Без підпорядкування</mat-option>
-                    @for (unit of allUnits(); track unit.id) {
-                        <mat-option [value]="unit.id">{{ unit.shortName }}</mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
-            
-            <button mat-raised-button color="primary" (click)="reload()">Оновити</button>
-            <button mat-raised-button color="primary" (click)="add()">Створити</button>
-        </div>
+        <unit-filters 
+            [allUnits]="allUnits()"
+            (searchChanged)="onSearchChange($event)"
+            (parentFilterChanged)="onParentFilterChange($event)"
+            (reload)="reload()"
+            (add)="add()">
+        </unit-filters>
 
         <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" style="width:100%; margin-top: 1em;">
             <ng-container matColumnDef="parentId">
@@ -132,9 +121,6 @@ export type Unit = UnitDto;
     `
 })
 export class UnitsComponent implements AfterViewInit {
-    // Константа для представления отсутствующего значения (из C# ControllerFunctions.NullGuid)
-    readonly NULL_GUID = '00000000-0000-0000-0000-000000000001';
-    
     unitService = inject(UnitService);
     items = this.unitService.createItemsSignal();
     allUnits = signal<UnitDto[]>([]);
@@ -171,9 +157,9 @@ export class UnitsComponent implements AfterViewInit {
         if (this.selectedParentId === '') {
             // Все подразделения - не передаем parentId
             parentIdForServer = undefined;
-        } else if (this.selectedParentId === this.NULL_GUID) {
+        } else if (this.selectedParentId === NULL_GUID) {
             // Только корневые подразделения (без родителей) - передаем NULL_GUID
-            parentIdForServer = this.NULL_GUID;
+            parentIdForServer = NULL_GUID;
         } else {
             // Конкретный родительский ID
             parentIdForServer = this.selectedParentId || undefined;
@@ -185,13 +171,13 @@ export class UnitsComponent implements AfterViewInit {
             });
     }
 
-    onSearchChange() {
-        // Применяем фильтр с задержкой
-        setTimeout(() => this.reload(), 300);
+    onSearchChange(searchText: string) {
+        this.searchText = searchText;
+        this.reload();
     }
 
-    onParentFilterChange() {
-        //console.log('Selected Parent ID:', this.selectedParentId);
+    onParentFilterChange(parentId: string | null) {
+        this.selectedParentId = parentId;
         this.reload();
     }
 

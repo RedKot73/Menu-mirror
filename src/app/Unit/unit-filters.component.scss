@@ -1,0 +1,11 @@
+.filters {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.filters mat-form-field {
+    min-width: 200px;
+}
