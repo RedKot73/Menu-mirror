@@ -8,7 +8,8 @@ namespace S5Server.Utils
     public static class ControllerFunctions
     {
         //Id для записи БД представляющую отсутствующее значение
-        public static readonly Guid NullGuid = new("00000000-0000-0000-0000-000000000001");
+        //public static readonly Guid NullGuid = new("00000000-0000-0000-0000-000000000001");
+        public static readonly string NullGuid = "00000000-0000-0000-0000-000000000001";
 
         public static Dictionary<string, string> GetErrorsFromModelState(ModelStateDictionary modelState)
         {

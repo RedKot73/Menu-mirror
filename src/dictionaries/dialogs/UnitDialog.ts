@@ -25,12 +25,12 @@ import { UnitDto, UnitService } from "../../ServerService/unit.service";
     <h2 mat-dialog-title>{{ data.id ? 'Редагувати підрозділ' : 'Створити новий підрозділ' }}</h2>
     <div mat-dialog-content class="content">
       <mat-form-field appearance="outline" floatLabel="always">
-        <mat-label>Назва підрозділу *</mat-label>
+        <mat-label>Назва підрозділу</mat-label>
         <input matInput [(ngModel)]="data.name" required>
       </mat-form-field>
       
       <mat-form-field appearance="outline" floatLabel="always">
-        <mat-label>Скорочена назва *</mat-label>
+        <mat-label>Скорочена назва</mat-label>
         <input matInput [(ngModel)]="data.shortName" required>
       </mat-form-field>
       

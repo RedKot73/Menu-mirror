@@ -5,6 +5,8 @@ import { Observable, tap } from 'rxjs';
 export interface UnitDto {
     id: string;
     parentId?: string;
+    //parentName?: string,
+    parentShortName?: string,
     assignedUnitId?: string;
     name: string;
     shortName?: string;

@@ -5,6 +5,35 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace S5Server.Models
 {
+    // DTO для передачи Unit
+    public record UnitDto(
+        string Id,
+        string? ParentId,
+        //string? ParentName,
+        string? ParentShortName,
+        string? AssignedUnitId,
+        string Name,
+        string? ShortName,
+        string? MilitaryNumber,
+        string? ForceTypeId,
+        string? UnitTypeId,
+        int OrderVal,
+        string? Comment
+    );
+    // DTO для создания Unit
+    public record UnitCreateDto(
+        string? ParentId,
+        string? AssignedUnitId,
+        string Name,
+        string ShortName,
+        string? MilitaryNumber,
+        string? ForceTypeId,
+        string? UnitTypeId,
+        int OrderVal,
+        string? Comment
+    );
+
+
     /// <summary>
     /// Підрозділ
     /// </summary>

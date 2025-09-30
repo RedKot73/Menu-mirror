@@ -5,11 +5,6 @@ using S5Server.Data;
 using S5Server.Models;
 using S5Server.Utils;
 
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace S5Server.Controllers
 {
     [ApiController]
@@ -27,36 +22,12 @@ namespace S5Server.Controllers
 
         private IQueryable<Unit> Query() => _set.AsNoTracking();
 
-        // DTO для передачи Unit (можно расширить по необходимости)
-        public record UnitDto(
-            string Id,
-            string? ParentId,
-            string? AssignedUnitId,
-            string Name,
-            string? ShortName,
-            string? MilitaryNumber,
-            string? ForceTypeId,
-            string? UnitTypeId,
-            int OrderVal,
-            string? Comment
-        );
-        // DTO для создания Unit (аналогично DictRankCreateDto)
-        public record UnitCreateDto(
-            string? ParentId,
-            string? AssignedUnitId,
-            string Name,
-            string ShortName,
-            string? MilitaryNumber,
-            string? ForceTypeId,
-            string? UnitTypeId,
-            int OrderVal,
-            string? Comment
-        );
-
         private static UnitDto ToDto(Unit e) =>
             new(
                 e.Id,
                 e.ParentId,
+                //e.Parent?.Name,           
+                e.Parent?.ShortName,      
                 e.AssignedUnitId,
                 e.Name,
                 e.ShortName,
@@ -80,13 +51,25 @@ namespace S5Server.Controllers
             e.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
         }
 
+        /// <summary>
+        /// Получить список всех подразделений с возможностью фильтрации по названию и родителю.
+        /// </summary>
+        /// <param name="search">Строка поиска по названию или краткому названию подразделения.</param>
+        /// <param name="parentId">Идентификатор родительского подразделения для фильтрации.
+        /// if null - подразделения верхнего уровня (без родительского)</param>
+        /// if EmptyString - все подразделения, без учета parentId
+        /// else - подразделения с заданным parentId
+        /// <param name="ct">Токен отмены операции.</param>
+        /// <returns>Список DTO подразделений, отсортированный по порядку и названию.</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UnitDto>>> GetAll(
             [FromQuery] string? search,
             [FromQuery] string? parentId,
             CancellationToken ct = default)
         {
-            var q = Query();
+            var q = Query()
+                .Include(t => t.Parent)
+                .Where(t => t.Id != ControllerFunctions.NullGuid);//Кореневий псевдо-підрозділ не показуємо
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -94,9 +77,10 @@ namespace S5Server.Controllers
                     x.Name.Contains(search) ||
                     (x.ShortName != null && x.ShortName.Contains(search)));
             }
+            
             if (!string.IsNullOrWhiteSpace(parentId))
                 q = q.Where(x => x.ParentId == parentId);
-
+            
             var list = await q
                 .OrderBy(x => x.OrderVal)
                 .ThenBy(x => x.Name)
@@ -296,7 +280,7 @@ namespace S5Server.Controllers
         public async Task<IActionResult> RemoveAssignedUnit(string unitId, string assignedId, CancellationToken ct = default)
         {
             var assigned = await _set.FirstOrDefaultAsync(x => x.Id == assignedId && x.AssignedUnitId == unitId, ct);
-            if (assigned == null) return NotFound("Приданный підрозділ не знайдено.");
+            if (assigned == null) return NotFound("Приданий підрозділ не знайдено.");
 
             assigned.AssignedUnitId = null;
             await _db.SaveChangesAsync(ct);

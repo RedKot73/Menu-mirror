@@ -29,6 +29,7 @@ export type Unit = UnitDto;
         MatOptionModule,
         FormsModule
     ],
+    styleUrl: './Unit.component.scss',
     template: `
         <h2>Підрозділи</h2>
         
@@ -42,10 +43,10 @@ export type Unit = UnitDto;
             <mat-form-field appearance="outline">
                 <mat-label>Фільтр по батьківському підрозділу</mat-label>
                 <mat-select [(ngModel)]="selectedParentId" (selectionChange)="onParentFilterChange()">
-                    <mat-option [value]="null">Всі підрозділи</mat-option>
-                    <mat-option value="">Тільки кореневі підрозділи</mat-option>
+                    <mat-option [value]="">Всі підрозділи</mat-option>
+                    <mat-option [value]="NULL_GUID">Без підпорядкування</mat-option>
                     @for (unit of allUnits(); track unit.id) {
-                        <mat-option [value]="unit.id">{{ unit.name }} ({{ unit.shortName }})</mat-option>
+                        <mat-option [value]="unit.id">{{ unit.shortName }}</mat-option>
                     }
                 </mat-select>
             </mat-form-field>
@@ -55,6 +56,15 @@ export type Unit = UnitDto;
         </div>
 
         <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" style="width:100%; margin-top: 1em;">
+            <ng-container matColumnDef="parentId">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Батьківський Id </th>
+                <td mat-cell *matCellDef="let unit"> {{unit.parentId}} </td>
+            </ng-container>
+            <ng-container matColumnDef="parentShortName">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Батьківський підрозділ </th>
+                <td mat-cell *matCellDef="let unit"> {{unit.parentShortName}} </td>
+            </ng-container>
+
             <!-- Name Column -->
             <ng-container matColumnDef="name">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header> Назва </th>
@@ -119,50 +129,19 @@ export type Unit = UnitDto;
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         </table>
-    `,
-    styles: [`
-        .filters {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-        }
-        .filters mat-form-field {
-            min-width: 200px;
-        }
-        .unit-name {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .hierarchy-icon {
-            color: #1976d2;
-            font-size: 18px;
-            width: 18px;
-            height: 18px;
-        }
-        .assigned-icon {
-            color: #388e3c;
-            font-size: 18px;
-            width: 18px;
-            height: 18px;
-        }
-        .mat-mdc-table {
-            width: 100%;
-        }
-        .mat-mdc-row:hover {
-            background-color: #f5f5f5;
-        }
-    `]
+    `
 })
 export class UnitsComponent implements AfterViewInit {
     readonly api = '/api/Unit';
+    // Константа для представления отсутствующего значения (из C# ControllerFunctions.NullGuid)
+    readonly NULL_GUID = '00000000-0000-0000-0000-000000000001';
+    
     unitService = inject(UnitService);
     items = this.unitService.createItemsSignal(this.api);
     allUnits = signal<UnitDto[]>([]);
     dataSource = new MatTableDataSource<Unit>([]);
-    displayedColumns = ['name', 'shortName', 'militaryNumber', 'orderVal', 'comment', 'actions'];
+    displayedColumns = ['parentId', 'parentShortName', 'name', 'shortName', 'militaryNumber',
+        'orderVal', 'comment', 'actions'];
     dialog = inject(MatDialog);
     
     // Фильтры
@@ -179,19 +158,32 @@ export class UnitsComponent implements AfterViewInit {
 
     ngAfterViewInit() {
         this.dataSource.sort = this.sort;
-        this.reload();
+        // Загружаем все подразделения
+        this.unitService.getAll(this.api).subscribe(items => {
+            this.items.set(items);
+            this.allUnits.set(items);
+        });
     }
 
     reload() {
-        this.unitService.getAll(this.api, this.searchText, this.selectedParentId || undefined)
+        // Определяем значение parentId для передачи на сервер
+        let parentIdForServer: string | undefined;
+        
+        if (this.selectedParentId === '') {
+            // Все подразделения - не передаем parentId
+            parentIdForServer = undefined;
+        } else if (this.selectedParentId === this.NULL_GUID) {
+            // Только корневые подразделения (без родителей) - передаем NULL_GUID
+            parentIdForServer = this.NULL_GUID;
+        } else {
+            // Конкретный родительский ID
+            parentIdForServer = this.selectedParentId || undefined;
+        }
+
+        this.unitService.getAll(this.api, this.searchText, parentIdForServer)
             .subscribe(items => {
                 this.items.set(items);
             });
-            
-        // Также загружаем все подразделения для фильтра
-        this.unitService.getAll(this.api).subscribe(allUnits => {
-            this.allUnits.set(allUnits);
-        });
     }
 
     onSearchChange() {
@@ -200,6 +192,7 @@ export class UnitsComponent implements AfterViewInit {
     }
 
     onParentFilterChange() {
+        //console.log('Selected Parent ID:', this.selectedParentId);
         this.reload();
     }
 
