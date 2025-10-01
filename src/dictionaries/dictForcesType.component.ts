@@ -7,9 +7,8 @@ import { MatIconModule } from '@angular/material/icon';
 
 import { SimpleDictDialogComponent } from './dialogs/SimpleDict-dialog.component';
 import { ConfirmDialogComponent } from "./dialogs/ConfirmDialog.component";
-import { SimpleDictService, SimpleDictDto } from "../ServerService/simpleDict.service";
+import { DictForcesTypeService, DictForcesType } from "../ServerService/dictForcesType.service";
 
-export type DictArea = SimpleDictDto;
 
 @Component({
     selector: "page-dict-forces-types",
@@ -46,11 +45,11 @@ export type DictArea = SimpleDictDto;
         </table>
     `,
 })
-export class dictForcesType implements AfterViewInit {
-    readonly api = '/api/dict-forces-types';
-    dictService = inject(SimpleDictService);
-    items = this.dictService.createItemsSignal(this.api);
-    dataSource = new MatTableDataSource<DictArea>([]);
+export class DictForcesTypeComponent implements AfterViewInit {
+    // API endpoint перенесен в сервис
+    dictForcesTypeService = inject(DictForcesTypeService);
+    items = this.dictForcesTypeService.createItemsSignal();
+    dataSource = new MatTableDataSource<DictForcesType>([]);
     displayedColumns = ['value', 'comment', 'actions'];
     dialog = inject(MatDialog);
 
@@ -64,10 +63,11 @@ export class dictForcesType implements AfterViewInit {
 
     ngAfterViewInit() {
         this.dataSource.sort = this.sort;
+        this.reload();
     }
 
     reload() {
-        this.dictService.getAll(this.api).subscribe(items => this.items.set(items));
+        this.dictForcesTypeService.getAll().subscribe(items => this.items.set(items));
     }
 
     // CREATE
@@ -79,27 +79,27 @@ export class dictForcesType implements AfterViewInit {
 
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
-                this.dictService.create(this.api, result).subscribe(() => this.reload());
+                this.dictForcesTypeService.create(result).subscribe(() => this.reload());
             }
         });
     }
 
     // UPDATE
-    edit(area: DictArea) {
+    edit(forcesType: DictForcesType) {
         const dialogRef = this.dialog.open(SimpleDictDialogComponent, {
             width: '400px',
-            data: { ...area } // Передаем копию объекта для редактирования
+            data: { ...forcesType } // Передаем копию объекта для редактирования
         });
 
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
-                this.dictService.update(this.api, result.id, result).subscribe(() => this.reload());
+                this.dictForcesTypeService.update(result.id, result).subscribe(() => this.reload());
             }
         });
     }
 
     // DELETE
-    delete(area: DictArea) {
+    delete(forcesType: DictForcesType) {
         const ref = this.dialog.open(ConfirmDialogComponent, {
             width: '360px',
             maxWidth: '95vw',
@@ -107,7 +107,7 @@ export class dictForcesType implements AfterViewInit {
             autoFocus: false,
             data: {
                 title: 'Видалення запису',
-                message: `Ви впевнені, що хочете видалити запис "${area.value}"?`,
+                message: `Ви впевнені, що хочете видалити запис "${forcesType.value}"?`,
                 confirmText: 'Видалити',
                 cancelText: 'Відмінити',
                 color: 'warn',
@@ -116,7 +116,7 @@ export class dictForcesType implements AfterViewInit {
         });
         ref.afterClosed().subscribe(confirmed => {
             if (confirmed) {
-                this.dictService.delete(this.api, area.id).subscribe(() => this.reload());
+                this.dictForcesTypeService.delete(forcesType.id).subscribe(() => this.reload());
             }
         });
     }

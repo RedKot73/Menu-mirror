@@ -45,15 +45,6 @@ export type Unit = UnitDto;
         </unit-filters>
 
         <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" style="width:100%; margin-top: 1em;">
-            <ng-container matColumnDef="parentId">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> Батьківський Id </th>
-                <td mat-cell *matCellDef="let unit"> {{unit.parentId}} </td>
-            </ng-container>
-            <ng-container matColumnDef="parentShortName">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> Батьківський підрозділ </th>
-                <td mat-cell *matCellDef="let unit"> {{unit.parentShortName}} </td>
-            </ng-container>
-
             <!-- Name Column -->
             <ng-container matColumnDef="name">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header> Назва </th>
@@ -81,8 +72,19 @@ export type Unit = UnitDto;
                 <th mat-header-cell *matHeaderCellDef mat-sort-header> В/Ч </th>
                 <td mat-cell *matCellDef="let unit"> {{unit.militaryNumber}} </td>
             </ng-container>
-            
-            <!-- OrderVal Column -->
+            <ng-container matColumnDef="forceType">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Тип сил </th>
+                <td mat-cell *matCellDef="let unit"> {{unit.forceType}} </td>
+            </ng-container>
+            <ng-container matColumnDef="unitType">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Тип підрозділу </th>
+                <td mat-cell *matCellDef="let unit"> {{unit.unitType}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="parentShortName">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Батьківський </th>
+                <td mat-cell *matCellDef="let unit"> {{unit.parentShortName}} </td>
+            </ng-container>
             <ng-container matColumnDef="orderVal">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header> Порядок </th>
                 <td mat-cell *matCellDef="let unit"> {{unit.orderVal}} </td>
@@ -125,8 +127,8 @@ export class UnitsComponent implements AfterViewInit {
     items = this.unitService.createItemsSignal();
     allUnits = signal<UnitDto[]>([]);
     dataSource = new MatTableDataSource<Unit>([]);
-    displayedColumns = ['parentId', 'parentShortName', 'name', 'shortName', 'militaryNumber',
-        'orderVal', 'comment', 'actions'];
+    displayedColumns = ['name', 'shortName', 'militaryNumber',
+        'forceType', 'unitType', 'parentShortName', 'orderVal', 'comment', 'actions'];
     dialog = inject(MatDialog);
     
     // Фильтры
@@ -190,8 +192,8 @@ export class UnitsComponent implements AfterViewInit {
                 name: '', 
                 shortName: '', 
                 militaryNumber: '', 
-                forceTypeId: '',
-                unitTypeId: '',
+                forceTypeId: undefined,
+                unitTypeId: undefined,
                 parentId: undefined,
                 assignedUnitId: undefined,
                 orderVal: 1, 

@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
 import { Component } from '@angular/core';
 import { dictAreaPage } from '../dictionaries/dictAreaPage.component';
-import { dictForcesType } from '../dictionaries/dictForcesType.component';
+import { DictForcesTypeComponent } from '../dictionaries/dictForcesType.component';
 import { dictPosition } from '../dictionaries/dictPosition.component';
 import { dictSoldierStates } from '../dictionaries/dictSoldierStates.component';
-import { dictUnitTypes } from '../dictionaries/dictUnitTypes.component';
+import { DictUnitTypesComponent } from '../dictionaries/dictUnitTypes.component';
 import { dictRanks } from '../dictionaries/dictRanks.component';
 import { UnitsComponent } from '../app/Unit/Unit.component'//'../Unit/UnitComponent.component';
 import { LoginPage } from '../Login/LoginPage.component';
@@ -33,11 +33,11 @@ import { LoginPage } from '../Login/LoginPage.component';
 
 export const routes: Routes = [
     { path: 'dictArea', title: 'Напрямок ЛБЗ', component: dictAreaPage },
-    { path: 'dictForcesTypes', title: 'Види збройних сил', component: dictForcesType },
+    { path: 'dictForcesTypes', title: 'Види збройних сил', component: DictForcesTypeComponent },
     { path: 'dictPosition', title: 'Посади', component: dictPosition },
     { path: 'dictRanks', title: 'Військові звання', component: dictRanks },
     { path: 'dictSoldierStates', title: 'Статуси особового складу', component: dictSoldierStates },
-    { path: 'dictUnitTypes', title: 'Типи підрозділів', component: dictUnitTypes },
+    { path: 'dictUnitTypes', title: 'Типи підрозділів', component: DictUnitTypesComponent },
     { path: 'drone-forces', title: 'Сили безпілотних систем', component: DroneForcesPage },
     { path: 'general-info', title: 'Загальні', component: GeneralInfoPage },
     { path: 'units', title: 'Підрозділи', component: UnitsComponent },

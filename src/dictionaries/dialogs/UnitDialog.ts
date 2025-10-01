@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Inject, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Inject, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -6,8 +6,11 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
+import { forkJoin } from 'rxjs';
 
+import { DictForcesTypeService, DictForcesType } from "../../ServerService/dictForcesType.service";
 import { UnitDto, UnitService } from "../../ServerService/unit.service";
+import { DictUnitTypeService, DictUnitType } from "../../ServerService/dictUnitType.service";
 
 @Component({
     selector: 'unit-dialog',
@@ -61,12 +64,22 @@ import { UnitDto, UnitService } from "../../ServerService/unit.service";
       
       <mat-form-field appearance="outline" floatLabel="always">
         <mat-label>Вид збройних сил</mat-label>
-        <input matInput [(ngModel)]="data.forceTypeId" placeholder="ID виду збройних сил">
+        <mat-select [(ngModel)]="data.forceTypeId">
+          <mat-option [value]="null">Відсутній</mat-option>
+          @for (force of dictForcesTypes; track force.id) {
+            <mat-option [value]="force.id">{{ force.value }}</mat-option>
+          }
+        </mat-select>
       </mat-form-field>
       
       <mat-form-field appearance="outline" floatLabel="always">
         <mat-label>Тип підрозділу</mat-label>
-        <input matInput [(ngModel)]="data.unitTypeId" placeholder="ID типу підрозділу">
+        <mat-select [(ngModel)]="data.unitTypeId">
+          <mat-option [value]="null">Відсутній</mat-option>
+          @for (unitType of dictUnitTypes; track unitType.id) {
+            <mat-option [value]="unitType.id">{{ unitType.value }}</mat-option>
+          }
+        </mat-select>
       </mat-form-field>
       
       <mat-form-field appearance="outline" floatLabel="always">
@@ -104,8 +117,13 @@ import { UnitDto, UnitService } from "../../ServerService/unit.service";
 })
 export class UnitDialogComponent implements OnInit {
     private unitService = inject(UnitService);
+    private dictForcesTypeService = inject(DictForcesTypeService);
+    private dictUnitTypeService = inject(DictUnitTypeService);
+    private cdr = inject(ChangeDetectorRef);
     availableParentUnits: UnitDto[] = [];
     availableAssignedUnits: UnitDto[] = [];
+    dictForcesTypes: DictForcesType[] = [];
+    dictUnitTypes: DictUnitType[] = [];
 
     constructor(
         @Inject(MAT_DIALOG_DATA) public data: UnitDto,
@@ -117,16 +135,26 @@ export class UnitDialogComponent implements OnInit {
 
     ngOnInit() {
         // Загружаем список всех подразделений для выбора родительского и приданного
-        this.loadAvailableUnits();
+        this.loadData();
     }
 
-    private loadAvailableUnits() {
-        this.unitService.getAll().subscribe(units => {
+    private loadData() {
+        // Используем forkJoin для одновременной загрузки всех данных
+        forkJoin({
+            units: this.unitService.getAll(),
+            forces: this.dictForcesTypeService.getAll(),
+            unitTypes: this.dictUnitTypeService.getAll()
+        }).subscribe(({ units, forces, unitTypes }) => {
             // Исключаем само редактируемое подразделение из списков выбора
             const filteredUnits = units.filter(u => u.id !== this.data.id);
             
             this.availableParentUnits = filteredUnits;
             this.availableAssignedUnits = filteredUnits;
+            this.dictForcesTypes = forces;
+            this.dictUnitTypes = unitTypes;
+            
+            // Принудительно обновляем представление после загрузки всех данных
+            this.cdr.detectChanges();
         });
     }
 

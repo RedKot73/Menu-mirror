@@ -12,7 +12,9 @@ export interface UnitDto {
     shortName?: string;
     militaryNumber?: string;
     forceTypeId?: string;
+    forceType?: string;
     unitTypeId?: string;
+    unitType?: string;
     orderVal: number;
     comment?: string;
 }

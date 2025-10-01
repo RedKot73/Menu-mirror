@@ -9,14 +9,15 @@ namespace S5Server.Models
     public record UnitDto(
         string Id,
         string? ParentId,
-        //string? ParentName,
         string? ParentShortName,
         string? AssignedUnitId,
         string Name,
         string ShortName,
         string? MilitaryNumber,
         string? ForceTypeId,
+        string? ForceType,
         string? UnitTypeId,
+        string? UnitType,
         int OrderVal,
         string? Comment
     );
@@ -135,5 +136,35 @@ namespace S5Server.Models
         /// </summary>
         [NotMapped]
         public List<Soldier> AssignedSoldiers { get; set; } = default!;
+
+        public static UnitDto ToDto(Unit e) =>
+            new(
+                e.Id,
+                e.ParentId,
+                e.Parent?.ShortName,
+                e.AssignedUnitId,
+                e.Name,
+                e.ShortName,
+                e.MilitaryNumber,
+                e.ForceTypeId,
+                e.ForceType?.ShortValue,
+                e.UnitTypeId,
+                e.UnitType?.ShortValue,
+                e.OrderVal,
+                e.Comment
+            );
+
+        public static void ApplyDto(Unit e, UnitDto dto)
+        {
+            e.ParentId = dto.ParentId;
+            e.AssignedUnitId = dto.AssignedUnitId;
+            e.Name = dto.Name.Trim();
+            e.ShortName = dto.ShortName.Trim();
+            e.MilitaryNumber = dto.MilitaryNumber?.Trim();
+            e.ForceTypeId = dto.ForceTypeId;
+            e.UnitTypeId = dto.UnitTypeId;
+            e.OrderVal = dto.OrderVal;
+            e.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
+        }
     }
 }

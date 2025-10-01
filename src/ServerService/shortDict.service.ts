@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 export interface ShortDictDto {
     id: string;
     value: string;
-    ShortValue: string;
+    shortValue: string;
     comment?: string | null;
 }
 

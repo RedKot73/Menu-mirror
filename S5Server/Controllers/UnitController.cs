@@ -22,35 +22,6 @@ namespace S5Server.Controllers
 
         private IQueryable<Unit> Query() => _set.AsNoTracking();
 
-        private static UnitDto ToDto(Unit e) =>
-            new(
-                e.Id,
-                e.ParentId,
-                //e.Parent?.Name,           
-                e.Parent?.ShortName,      
-                e.AssignedUnitId,
-                e.Name,
-                e.ShortName,
-                e.MilitaryNumber,
-                e.ForceTypeId,
-                e.UnitTypeId,
-                e.OrderVal,
-                e.Comment
-            );
-
-        private static void ApplyDto(Unit e, UnitDto dto)
-        {
-            e.ParentId = dto.ParentId;
-            e.AssignedUnitId = dto.AssignedUnitId;
-            e.Name = dto.Name.Trim();
-            e.ShortName = dto.ShortName?.Trim();
-            e.MilitaryNumber = dto.MilitaryNumber?.Trim();
-            e.ForceTypeId = dto.ForceTypeId;
-            e.UnitTypeId = dto.UnitTypeId;
-            e.OrderVal = dto.OrderVal;
-            e.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
-        }
-
         /// <summary>
         /// Получить список всех подразделений с возможностью фильтрации по названию и родителю.
         /// </summary>
@@ -69,6 +40,8 @@ namespace S5Server.Controllers
         {
             var q = Query()
                 .Include(t => t.Parent)
+                .Include(t => t.ForceType)
+                .Include(t => t.UnitType)
                 .Where(t => t.Id != ControllerFunctions.NullGuid);//Кореневий псевдо-підрозділ не показуємо
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -84,7 +57,7 @@ namespace S5Server.Controllers
             var list = await q
                 .OrderBy(x => x.OrderVal)
                 .ThenBy(x => x.Name)
-                .Select(x => ToDto(x))
+                .Select(x => Unit.ToDto(x))
                 .ToListAsync(ct);
 
             return Ok(list);
@@ -94,7 +67,7 @@ namespace S5Server.Controllers
         public async Task<ActionResult<UnitDto>> Get(string id, CancellationToken ct = default)
         {
             var e = await Query().FirstOrDefaultAsync(x => x.Id == id, ct);
-            return e is null ? NotFound() : Ok(ToDto(e));
+            return e is null ? NotFound() : Ok(Unit.ToDto(e));
         }
 
         [HttpPost]
@@ -129,7 +102,7 @@ namespace S5Server.Controllers
                 return Conflict($"Підрозділ \"{entity.Name}\" вже існує.");
             }
 
-            return CreatedAtAction(nameof(Get), new { id = entity.Id }, ToDto(entity));
+            return CreatedAtAction(nameof(Get), new { id = entity.Id }, Unit.ToDto(entity));
         }
 
         [HttpPut("{id}")]
@@ -142,9 +115,9 @@ namespace S5Server.Controllers
             var e = await _set.AsTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
             if (e is null) return NotFound();
 
-            var snapshot = ToDto(e);
-            ApplyDto(e, dto);
-            if (snapshot == ToDto(e))
+            var snapshot = Unit.ToDto(e);
+            Unit.ApplyDto(e, dto);
+            if (snapshot == Unit.ToDto(e))
                 return NoContent();
 
             try
@@ -191,7 +164,7 @@ namespace S5Server.Controllers
                 .Where(x => x.ParentId == id)
                 .OrderBy(x => x.OrderVal)
                 .ThenBy(x => x.Name)
-                .Select(x => ToDto(x))
+                .Select(x => Unit.ToDto(x))
                 .ToListAsync(ct);
 
             return Ok(children);
@@ -218,7 +191,7 @@ namespace S5Server.Controllers
                 .Where(x => x.AssignedUnitId == id)
                 .OrderBy(x => x.OrderVal)
                 .ThenBy(x => x.Name)
-                .Select(x => ToDto(x))
+                .Select(x => Unit.ToDto(x))
                 .ToListAsync(ct);
 
             return Ok(assigned);

@@ -7,12 +7,6 @@ using S5Server.Utils;
 
 namespace S5Server.Controllers;
 
-public record DictUnitTypeDto(
-    string Id,
-    string Value,
-    string ShortValue,
-    string? Comment);
-
 [ApiController]
 [Route("api/dict-unit-types")]
 public class DictUnitTypesController : ControllerBase
@@ -26,13 +20,6 @@ public class DictUnitTypesController : ControllerBase
     }
 
     private IQueryable<DictUnitType> Query() => _set.AsNoTracking();
-    protected static DictUnitTypeDto ToDto(DictUnitType e) => new(e.Id, e.Value, e.ShortValue, e.Comment);
-    protected static void ApplyDto(DictUnitType e, DictUnitTypeDto dto)
-    {
-        e.Value = dto.Value.Trim();
-        e.ShortValue = dto.ShortValue.Trim();
-        e.Comment = dto.Comment?.Trim();
-    }
 
     /// <summary>Полный список (опционально фильтр по подстроке)</summary>
     [HttpGet]
@@ -47,7 +34,7 @@ public class DictUnitTypesController : ControllerBase
 
         var list = await q
             .OrderBy(x => x.Value)
-            .Select(x => ToDto(x))
+            .Select(x => DictUnitType.ToDto(x))
             .ToListAsync(ct);
 
         return Ok(list);
@@ -57,10 +44,10 @@ public class DictUnitTypesController : ControllerBase
     public async Task<ActionResult<SimpleDictDto>> Get(string id, CancellationToken ct = default)
     {
         var e = await Query().FirstOrDefaultAsync(x => x.Id == id, ct);
-        return e == null ? NotFound() : Ok(ToDto(e));
+        return e == null ? NotFound() : Ok(DictUnitType.ToDto(e));
     }
     [HttpPost]
-    public async Task<ActionResult<DictRankDto>> Create([FromBody] DictUnitTypeDto dto,
+    public async Task<ActionResult<DictRankDto>> Create([FromBody] DictUnitTypeCreateDto dto,
         CancellationToken ct = default)
     {
         if (dto is null) return BadRequest("Пустое тело запроса.");
@@ -85,7 +72,7 @@ public class DictUnitTypesController : ControllerBase
             return Conflict($"Значение \"{entity.Value}\" уже существует.");
         }
 
-        return CreatedAtAction(nameof(Get), new { id = entity.Id }, ToDto(entity));
+        return CreatedAtAction(nameof(Get), new { id = entity.Id }, DictUnitType.ToDto(entity));
     }
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(string id, [FromBody] DictUnitTypeDto dto,
@@ -98,10 +85,10 @@ public class DictUnitTypesController : ControllerBase
         var e = await _set.AsTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
         if (e is null) return NotFound();
 
-        var snapshot = ToDto(e);
-        ApplyDto(e, dto);
+        var snapshot = DictUnitType.ToDto(e);
+        DictUnitType.ApplyDto(e, dto);
         // Ничего не изменилось
-        if (snapshot == ToDto(e))
+        if (snapshot == DictUnitType.ToDto(e))
             return NoContent();
 
         try
