@@ -2,14 +2,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
-using Serilog;
-
 using S5Server.Data;
 using S5Server.Models;
 
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 // Add services to the container.
 builder.Logging.ClearProviders();
 builder.Logging.AddSerilog();
@@ -27,8 +26,20 @@ var sqliteBuilder = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
     Cache = Microsoft.Data.Sqlite.SqliteCacheMode.Default,
 };
 string connectionString = sqliteBuilder.ConnectionString;
+
+/*
+// Создаём и открываем подключение
+var sqliteConnection = new SqliteConnection(connectionString);
+sqliteConnection.Open();
+// Регистрируем свою коллацию
+sqliteConnection.CreateCollation("UNICODE_NOCASE", (x, y) =>
+{
+    return string.Compare(x, y, StringComparison.OrdinalIgnoreCase);
+});
+*/
 builder.Services.AddDbContext<MainDbContext>(options =>
     options.UseSqlite(connectionString));
+    //options.UseSqlite(sqliteConnection));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentity<TVezhaUser<string>, IdentityRole>(options =>

@@ -40,6 +40,7 @@ namespace S5Server.Controllers
         {
             var q = Query()
                 .Include(t => t.Parent)
+                .Include(t => t.AssignedUnit)
                 .Include(t => t.ForceType)
                 .Include(t => t.UnitType)
                 .Where(t => t.Id != ControllerFunctions.NullGuid);//Кореневий псевдо-підрозділ не показуємо
@@ -61,6 +62,32 @@ namespace S5Server.Controllers
                 .ToListAsync(ct);
 
             return Ok(list);
+        }
+        // Укороченный список для автокомплита
+        [HttpGet("lookup")]
+        public async Task<ActionResult<IEnumerable<LookupDto>>> Lookup(
+            [FromQuery] string term,
+            [FromQuery] int limit = 10,
+            CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(term))
+                return Ok(Array.Empty<LookupDto>());
+
+            if (limit is < 1 or > 100) limit = 10;
+            //term = term.ToLowerInvariant();
+
+            var pattern = $"%{term.ToLowerInvariant()}%";
+            var data = await Query()
+                //.Where(x => x.ShortName.ToLower().Contains(term))
+                .Where(x => x.ShortName.Contains(term))
+                //.Where(x => EF.Functions.Like(x.ShortName.ToLower(), pattern))
+                //.Where(x => EF.Functions.Like(EF.Functions.Collate(x.ShortName, "UNICODE_NOCASE"), pattern))
+                .OrderBy(x => x.ShortName)
+                .Take(limit)
+                .Select(x => new LookupDto(x.Id, x.ShortName))
+                .ToListAsync(ct);
+
+            return Ok(data);
         }
 
         [HttpGet("{id}")]

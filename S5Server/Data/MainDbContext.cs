@@ -17,6 +17,10 @@ namespace S5Server.Data
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+            /*
+            optionsBuilder.EnableSensitiveDataLogging() // Показывает значения параметров
+                .LogTo(Console.WriteLine, LogLevel.Information); // Выводит SQL в консоль
+            */
             base.OnConfiguring(optionsBuilder);
         }
 

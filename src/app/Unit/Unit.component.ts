@@ -85,6 +85,11 @@ export type Unit = UnitDto;
                 <th mat-header-cell *matHeaderCellDef mat-sort-header> Батьківський </th>
                 <td mat-cell *matCellDef="let unit"> {{unit.parentShortName}} </td>
             </ng-container>
+            <ng-container matColumnDef="assignedShortName">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Приданий до </th>
+                <td mat-cell *matCellDef="let unit"> {{unit.assignedShortName}} </td>
+            </ng-container>
+
             <ng-container matColumnDef="orderVal">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header> Порядок </th>
                 <td mat-cell *matCellDef="let unit"> {{unit.orderVal}} </td>
@@ -128,7 +133,7 @@ export class UnitsComponent implements AfterViewInit {
     allUnits = signal<UnitDto[]>([]);
     dataSource = new MatTableDataSource<Unit>([]);
     displayedColumns = ['name', 'shortName', 'militaryNumber',
-        'forceType', 'unitType', 'parentShortName', 'orderVal', 'comment', 'actions'];
+        'forceType', 'unitType', 'parentShortName', 'assignedShortName', 'orderVal', 'comment', 'actions'];
     dialog = inject(MatDialog);
     
     // Фильтры

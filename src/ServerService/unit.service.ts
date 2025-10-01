@@ -5,9 +5,9 @@ import { Observable, tap } from 'rxjs';
 export interface UnitDto {
     id: string;
     parentId?: string;
-    //parentName?: string,
-    parentShortName?: string,
+    parentShortName?: string;
     assignedUnitId?: string;
+    assignedShortName?: string;
     name: string;
     shortName?: string;
     militaryNumber?: string;
@@ -31,6 +31,11 @@ export interface UnitCreateDto {
     comment?: string;
 }
 
+export interface LookupDto {
+    id: string;
+    value: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -49,6 +54,12 @@ export class UnitService {
         if (parentId) params.parentId = parentId;
         
         return this.http.get<UnitDto[]>(this.api, { params });
+    }
+
+    // Lookup для автокомплита
+    lookup(term: string, limit: number = 10): Observable<LookupDto[]> {
+        const params = { term, limit: limit.toString() };
+        return this.http.get<LookupDto[]>(`${this.api}/lookup`, { params });
     }
 
     getById(id: string): Observable<UnitDto> {
