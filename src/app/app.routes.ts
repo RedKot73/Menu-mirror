@@ -1,23 +1,7 @@
 import { Routes } from '@angular/router';
 import { Component } from '@angular/core';
-import { dictAreaPage } from '../dictionaries/dictAreaPage.component';
-import { DictForcesTypeComponent } from '../dictionaries/dictForcesType.component';
-import { dictPosition } from '../dictionaries/dictPosition.component';
-import { dictSoldierStates } from '../dictionaries/dictSoldierStates.component';
-import { DictUnitTypesComponent } from '../dictionaries/dictUnitTypes.component';
-import { dictRanks } from '../dictionaries/dictRanks.component';
-import { UnitsComponent } from '../app/Unit/Unit.component'//'../Unit/UnitComponent.component';
-import { LoginPage } from '../Login/LoginPage.component';
 
 // Simple standalone stub components for each route
-@Component({
-    selector: 'page-drone-forces', standalone: true,
-    template: '<h2>Сили безпілотних систем</h2><p>Сторінка "Сили безпілотних систем" (заглушка)</p>'
-}) class DroneForcesPage { }
-@Component({
-    selector: 'page-general-info', standalone: true,
-    template: '<h2>Загальні</h2><p>Сторінка "Загальні" (заглушка)</p>'
-}) class GeneralInfoPage { }
 @Component({
     selector: 'page-orders', standalone: true,
     template: '<h2>Розпорядження</h2><p>Сторінка "Розпорядження" (заглушка)</p>'
@@ -32,19 +16,42 @@ import { LoginPage } from '../Login/LoginPage.component';
 }) class UsersPage { }
 
 export const routes: Routes = [
-    { path: 'dictArea', title: 'Напрямок ЛБЗ', component: dictAreaPage },
-    { path: 'dictForcesTypes', title: 'Види збройних сил', component: DictForcesTypeComponent },
-    { path: 'dictPosition', title: 'Посади', component: dictPosition },
-    { path: 'dictRanks', title: 'Військові звання', component: dictRanks },
-    { path: 'dictSoldierStates', title: 'Статуси особового складу', component: dictSoldierStates },
-    { path: 'dictUnitTypes', title: 'Типи підрозділів', component: DictUnitTypesComponent },
-    { path: 'drone-forces', title: 'Сили безпілотних систем', component: DroneForcesPage },
-    { path: 'general-info', title: 'Загальні', component: GeneralInfoPage },
-    { path: 'units', title: 'Підрозділи', component: UnitsComponent },
+    // Lazy loading для справочников
+    {
+        path: 'dictArea',
+        loadComponent: () => import('../dictionaries/dictAreaPage.component').then(m => m.dictAreaPage),
+        title: 'Напрямок ЛБЗ'
+    },
+    {
+        path: 'dictForcesTypes',
+        loadComponent: () => import('../dictionaries/dictForcesType.component').then(m => m.DictForcesTypeComponent),
+        title: 'Види збройних сил'
+    },
+    {
+        path: 'dictPosition',
+        loadComponent: () => import('../dictionaries/dictPosition.component').then(m => m.dictPosition),
+        title: 'Посади'
+    },
+    {
+        path: 'dictRanks',
+        loadComponent: () => import('../dictionaries/dictRanks.component').then(m => m.dictRanks),
+        title: 'Військові звання'
+    },
+    {
+        path: 'dictSoldierStates',
+        loadComponent: () => import('../dictionaries/dictSoldierStates.component').then(m => m.dictSoldierStates),
+        title: 'Статуси особового складу'
+    },
+    {
+        path: 'dictUnitTypes',
+        loadComponent: () => import('../dictionaries/dictUnitTypes.component').then(m => m.DictUnitTypesComponent),
+        title: 'Типи підрозділів'
+    },
+    { path: 'units', title: 'Підрозділи', loadComponent: () => import('../app/Unit/Unit.component').then(m => m.UnitsComponent) },
     { path: 'orders', title: 'Розпорядження', component: OrdersPage },
     { path: 'reports', title: 'Донесення', component: ReportsPage },
     { path: 'users', title: 'Користувачі', component: UsersPage },
-    { path: 'login', title: 'Вхід в систему', component: LoginPage },
+    { path: 'login', title: 'Вхід в систему', loadComponent: () => import('../Login/LoginPage.component').then(m => m.LoginPage) },
     { path: '', pathMatch: 'full', redirectTo: 'login' },
     { path: '**', redirectTo: '' }
 ];
