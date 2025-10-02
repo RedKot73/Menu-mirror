@@ -10,8 +10,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { FormsModule } from '@angular/forms';
 
-import { UnitDialogComponent } from '../../dictionaries/dialogs/UnitDialog';
-import { ConfirmDialogComponent } from "../../dictionaries/dialogs/ConfirmDialog.component";
+import { UnitDialogComponent } from '../dialogs/UnitDialog';
+import { ConfirmDialogComponent } from "../dialogs/ConfirmDialog.component";
 import { UnitService, UnitDto, UnitCreateDto } from "../../ServerService/unit.service";
 import { UnitFiltersComponent } from './unit-filters.component';
 import { NULL_GUID } from './unit.constants';

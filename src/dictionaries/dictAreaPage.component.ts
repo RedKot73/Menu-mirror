@@ -5,8 +5,8 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 
-import { SimpleDictDialogComponent } from './dialogs/SimpleDict-dialog.component';
-import { ConfirmDialogComponent } from "./dialogs/ConfirmDialog.component";
+import { SimpleDictDialogComponent } from '../app/dialogs/SimpleDict-dialog.component';
+import { ConfirmDialogComponent } from "../app/dialogs/ConfirmDialog.component";
 
 import { SimpleDictService, SimpleDictDto } from "../ServerService/simpleDict.service";
 

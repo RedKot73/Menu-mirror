@@ -5,8 +5,8 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 
-import { DictRankDialogComponent } from './dialogs/DictRankDialog';
-import { ConfirmDialogComponent } from "./dialogs/ConfirmDialog.component";
+import { DictRankDialogComponent } from '../app/dialogs/DictRankDialog';
+import { ConfirmDialogComponent } from "../app/dialogs/ConfirmDialog.component";
 import { DictRankService, DictRankDto } from "../ServerService/dictRanks.service";
 
 export type DictRank = DictRankDto;
