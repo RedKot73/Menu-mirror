@@ -12,8 +12,9 @@ import { debounceTime, distinctUntilChanged, switchMap, startWith, finalize } fr
 import { AsyncPipe } from '@angular/common';
 
 import { DictForcesTypeService, DictForcesType } from "../../ServerService/dictForcesType.service";
-import { UnitDto, UnitService, LookupDto } from "../../ServerService/unit.service";
+import { UnitDto, UnitService } from "../../ServerService/unit.service";
 import { DictUnitTypeService, DictUnitType } from "../../ServerService/dictUnitType.service";
+import { LookupDto } from '../shared/models/lookup.models';
 
 @Component({
     selector: 'unit-dialog',

@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { LookupDto } from '../app/shared/models/lookup.models';
 
 export interface UnitDto {
     id: string;
@@ -29,11 +30,6 @@ export interface UnitCreateDto {
     unitTypeId?: string;
     orderVal: number;
     comment?: string;
-}
-
-export interface LookupDto {
-    id: string;
-    value: string;
 }
 
 @Injectable({
