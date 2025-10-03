@@ -21,13 +21,5 @@ namespace S5Server.Models
     [Table("dict_unit_type")]
     public class DictUnitType : ShortDictBase, IShortDictBase
     {
-        public static DictUnitTypeDto ToDto(DictUnitType e) =>
-            new(e.Id, e.Value, e.ShortValue, e.Comment);
-        public static void ApplyDto(DictUnitType e, DictUnitTypeDto dto)
-        {
-            e.Value = dto.Value.Trim();
-            e.ShortValue = dto.ShortValue.Trim();
-            e.Comment = dto.Comment?.Trim();
-        }
     }
 }

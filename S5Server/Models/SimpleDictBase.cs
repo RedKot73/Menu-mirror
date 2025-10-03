@@ -28,9 +28,24 @@ namespace S5Server.Models
         string ShortValue { get; set; }
     }
 
+    /// <summary>
+    /// DTO для справочников с ShortValue
+    /// </summary>
+    public record ShortDictDto(string Id, string Value, string ShortValue, string? Comment);
+    public record ShortDictCreateDto(string Value, string ShortValue, string? Comment);
+
     public class ShortDictBase : SimpleDictBase, IShortDictBase
     {
         [StringLength(50), Required(ErrorMessage = UIConstant.RequiredMsg)]
         public string ShortValue { get; set; } = string.Empty;
+
+        public static ShortDictDto ToDto<T>(T e) where T: ShortDictBase  => new(e.Id, e.Value, e.ShortValue, e.Comment);
+        public static void ApplyDto(ShortDictBase e, ShortDictDto dto)
+        {
+            e.Value = dto.Value.Trim();
+            e.ShortValue = dto.ShortValue.Trim();
+            e.Comment = dto.Comment?.Trim();
+        }
+
     }
 }

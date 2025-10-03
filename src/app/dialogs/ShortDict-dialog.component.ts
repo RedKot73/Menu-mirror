@@ -9,6 +9,7 @@ import { ShortDictDto } from '../../ServerService/shortDict.service';
 
 @Component({
     selector: 'short-dict-dialog',
+    standalone: true,
     imports: [MatFormFieldModule, MatInputModule, MatDialogModule, MatButtonModule, FormsModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `

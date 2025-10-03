@@ -5,7 +5,7 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 
-import { SimpleDictDialogComponent } from '../app/dialogs/SimpleDict-dialog.component';
+import { ShortDictDialogComponent } from '../app/dialogs/ShortDict-dialog.component';
 import { ConfirmDialogComponent } from "../app/dialogs/ConfirmDialog.component";
 import { DictForcesTypeService, DictForcesType } from "../ServerService/dictForcesType.service";
 
@@ -22,6 +22,10 @@ import { DictForcesTypeService, DictForcesType } from "../ServerService/dictForc
             <ng-container matColumnDef="value">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header> Значення </th>
                 <td mat-cell *matCellDef="let area"> {{area.value}} </td>
+            </ng-container>
+            <ng-container matColumnDef="shortValue">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Скорочення </th>
+                <td mat-cell *matCellDef="let area"> {{area.shortValue}} </td>
             </ng-container>
             <!-- Comment Column -->
             <ng-container matColumnDef="comment">
@@ -50,7 +54,7 @@ export class DictForcesTypeComponent implements AfterViewInit {
     dictForcesTypeService = inject(DictForcesTypeService);
     items = this.dictForcesTypeService.createItemsSignal();
     dataSource = new MatTableDataSource<DictForcesType>([]);
-    displayedColumns = ['value', 'comment', 'actions'];
+    displayedColumns = ['value', 'shortValue', 'comment', 'actions'];
     dialog = inject(MatDialog);
 
     @ViewChild(MatSort) sort!: MatSort;
@@ -72,7 +76,7 @@ export class DictForcesTypeComponent implements AfterViewInit {
 
     // CREATE
     add() {
-        const dialogRef = this.dialog.open(SimpleDictDialogComponent, {
+        const dialogRef = this.dialog.open(ShortDictDialogComponent, {
             width: '400px',
             data: { value: '', comment: '' } // Передаем пустой объект для создания
         });
@@ -86,7 +90,7 @@ export class DictForcesTypeComponent implements AfterViewInit {
 
     // UPDATE
     edit(forcesType: DictForcesType) {
-        const dialogRef = this.dialog.open(SimpleDictDialogComponent, {
+        const dialogRef = this.dialog.open(ShortDictDialogComponent, {
             width: '400px',
             data: { ...forcesType } // Передаем копию объекта для редактирования
         });

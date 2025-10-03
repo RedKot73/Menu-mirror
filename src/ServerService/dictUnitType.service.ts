@@ -1,9 +1,9 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { ShortDictDto, ShortDictLookup } from './shortDict.service';
+import { ShortDictDto } from './shortDict.service';
+import { LookupDto } from '../app/shared/models/lookup.models';
 
 export type DictUnitType = ShortDictDto;
-export type DictUnitTypeLookup = ShortDictLookup;
 
 @Injectable({ providedIn: 'root' })
 export class DictUnitTypeService {
@@ -32,7 +32,7 @@ export class DictUnitTypeService {
     }
 
     lookup(term: string, limit = 10) {
-        return this.http.get<DictUnitTypeLookup[]>(`${this.api}/lookup`, {
+        return this.http.get<LookupDto[]>(`${this.api}/lookup`, {
             params: { term, limit },
         });
     }

@@ -1,15 +1,11 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { LookupDto } from '../app/shared/models/lookup.models';
 
 export interface SimpleDictDto {
   id: string;
   value: string;
   comment?: string | null;
-}
-
-export interface SimpleDictLookup {
-  id: string;
-  name: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -37,7 +33,7 @@ export class SimpleDictService {
   }
 
   lookup(api: string, term: string, limit = 10) {
-    return this.http.get<SimpleDictLookup[]>(`${api}/lookup`, {
+    return this.http.get<LookupDto[]>(`${api}/lookup`, {
       params: { term, limit },
     });
   }

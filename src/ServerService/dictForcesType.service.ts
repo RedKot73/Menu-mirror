@@ -1,8 +1,9 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { SimpleDictDto, SimpleDictLookup } from './simpleDict.service';
+import { ShortDictDto } from './shortDict.service';
+import { LookupDto } from '../app/shared/models/lookup.models';
 
-export type DictForcesType = SimpleDictDto;
+export type DictForcesType = ShortDictDto;
 
 @Injectable({ providedIn: 'root' })
 export class DictForcesTypeService {
@@ -11,18 +12,18 @@ export class DictForcesTypeService {
     constructor(private http: HttpClient) {}
 
   getAll() {
-    return this.http.get<SimpleDictDto[]>(this.api);
+    return this.http.get<ShortDictDto[]>(this.api);
   }
 
   get(id: string) {
-      return this.http.get<SimpleDictDto>(`${this.api}/${id}`);
+      return this.http.get<ShortDictDto>(`${this.api}/${id}`);
   }
 
-  create(dto: Omit<SimpleDictDto, 'id'>) {
-      return this.http.post<SimpleDictDto>(this.api, dto);
+create(dto: Omit<ShortDictDto, 'id'>) {
+      return this.http.post<ShortDictDto>(this.api, dto);
   }
 
-  update(id: string, dto: Omit<SimpleDictDto, 'id'>) {
+  update(id: string, dto: Omit<ShortDictDto, 'id'>) {
       return this.http.put<void>(`${this.api}/${id}`, dto);
   }
 
@@ -31,13 +32,13 @@ export class DictForcesTypeService {
   }
 
   lookup(term: string, limit = 10) {
-      return this.http.get<SimpleDictLookup[]>(`${this.api}/lookup`, {
+      return this.http.get<LookupDto[]>(`${this.api}/lookup`, {
       params: { term, limit },
     });
   }
 
   // Создает сигнал для элементов справочника
   createItemsSignal() {
-    return signal<SimpleDictDto[]>([]);
+      return signal<ShortDictDto[]>([]);
   }
 }

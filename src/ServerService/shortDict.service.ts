@@ -1,16 +1,12 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { LookupDto } from '../app/shared/models/lookup.models';
 
 export interface ShortDictDto {
     id: string;
     value: string;
     shortValue: string;
     comment?: string | null;
-}
-
-export interface ShortDictLookup {
-    id: string;
-    name: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -38,7 +34,7 @@ export class ShortDictService {
     }
 
     lookup(api: string, term: string, limit = 10) {
-        return this.http.get<ShortDictLookup[]>(`${api}/lookup`, {
+        return this.http.get<LookupDto[]>(`${api}/lookup`, {
             params: { term, limit },
         });
     }

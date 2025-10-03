@@ -64,10 +64,7 @@ public class DictRankController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            q = q.Where(x =>
-                x.Value.Contains(search) ||
-                x.ShortValue.Contains(search) ||
-                (x.NATOCode != null && x.NATOCode.Contains(search)));
+            q = q.Where(x => x.ShortValue.Contains(search));
         }
         if (!string.IsNullOrWhiteSpace(category))
             q = q.Where(x => x.Category == category);
