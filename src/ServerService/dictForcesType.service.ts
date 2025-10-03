@@ -19,7 +19,7 @@ export class DictForcesTypeService {
       return this.http.get<ShortDictDto>(`${this.api}/${id}`);
   }
 
-create(dto: Omit<ShortDictDto, 'id'>) {
+  create(dto: Omit<ShortDictDto, 'id'>) {
       return this.http.post<ShortDictDto>(this.api, dto);
   }
 
@@ -39,6 +39,6 @@ create(dto: Omit<ShortDictDto, 'id'>) {
 
   // Создает сигнал для элементов справочника
   createItemsSignal() {
-      return signal<ShortDictDto[]>([]);
+    return signal<ShortDictDto[]>([]);
   }
 }
