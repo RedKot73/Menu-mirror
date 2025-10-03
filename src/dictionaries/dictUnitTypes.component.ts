@@ -50,6 +50,8 @@ import { DictUnitTypeService, DictUnitType } from "../ServerService/dictUnitType
 })
 export class DictUnitTypesComponent implements AfterViewInit {
     // API endpoint перенесен в сервис
+    // сервис является общим для нескольких модулей,
+    // поэтому его функционал вынесен в отдельный сервис
     dictUnitTypeService = inject(DictUnitTypeService);
     items = this.dictUnitTypeService.createItemsSignal();
     dataSource = new MatTableDataSource<DictUnitType>([]);

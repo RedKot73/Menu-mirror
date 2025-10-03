@@ -51,6 +51,8 @@ import { DictForcesTypeService, DictForcesType } from "../ServerService/dictForc
 })
 export class DictForcesTypeComponent implements AfterViewInit {
     // API endpoint перенесен в сервис
+    // сервис является общим для нескольких модулей,
+    // поэтому его функционал вынесен в отдельный сервис
     dictForcesTypeService = inject(DictForcesTypeService);
     items = this.dictForcesTypeService.createItemsSignal();
     dataSource = new MatTableDataSource<DictForcesType>([]);

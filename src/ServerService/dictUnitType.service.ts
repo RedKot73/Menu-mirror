@@ -5,6 +5,8 @@ import { LookupDto } from '../app/shared/models/lookup.models';
 
 export type DictUnitType = ShortDictDto;
 
+// сервис является общим для нескольких модулей,
+// поэтому его функционал вынесен в отдельный сервис
 @Injectable({ providedIn: 'root' })
 export class DictUnitTypeService {
     readonly api = '/api/dict-unit-types';
