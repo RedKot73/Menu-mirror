@@ -2,9 +2,6 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
-//import { MatSidenavModule } from '@angular/material/sidenav';
-//import { MatListModule } from '@angular/material/list';
-//import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 
 @Component({
@@ -13,6 +10,7 @@ import { MatMenuModule } from '@angular/material/menu';
     <mat-toolbar class="sidenav-container">
       <button matButton [matMenuTriggerFor]="dictionaries">Довідники</button>
       <button matButton routerLink="/units" >Підрозділи</button>
+      <button matButton routerLink="/unitsTree" >Tree Підрозділи</button>
       <button matButton routerLink="/orders" >Розпорядження</button>
       <button matButton routerLink="/reports" >Донесення</button>
       <button matButton routerLink="/users" >Користувачі</button>
@@ -60,9 +58,6 @@ import { MatMenuModule } from '@angular/material/menu';
     RouterLink,
     MatToolbarModule,
     MatButtonModule,
-    //MatSidenavModule,
-    //MatListModule,
-    //MatIconModule,
     MatMenuModule,
   ]
 })

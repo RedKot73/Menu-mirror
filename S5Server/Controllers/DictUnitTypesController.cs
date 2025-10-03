@@ -9,7 +9,7 @@ namespace S5Server.Controllers;
 
 [ApiController]
 [Route("api/dict-unit-types")]
-public class DictUnitTypesController : ShortDictApiController<DictForcesType>
+public class DictUnitTypesController : ShortDictApiController<DictUnitType>
 {
-    public DictUnitTypesController(MainDbContext db) : base(db, db.DictForcesTypes) { }
+    public DictUnitTypesController(MainDbContext db) : base(db, db.DictUnitTypes) { }
 }
