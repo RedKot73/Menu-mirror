@@ -8,14 +8,15 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { UnitService, UnitDto } from "../../ServerService/unit.service";
+import { UnitService, UnitDto, UnitTreeItemDto } from "../../ServerService/unit.service";
 import { UnitDialogComponent } from '../dialogs/UnitDialog';
 import { ConfirmDialogComponent } from "../dialogs/ConfirmDialog.component";
+import { NULL_GUID } from './unit.constants';
 
-interface UnitTreeNode extends UnitDto {
+interface UnitTreeNode extends UnitTreeItemDto {
     children?: UnitTreeNode[];
-    level?: number;
-    isExpanded?: boolean;
+    isLoading?: boolean;
+    isLoaded?: boolean;
 }
 
 @Component({
@@ -52,10 +53,15 @@ interface UnitTreeNode extends UnitDto {
                             <div class="node-content">
                                 <button mat-icon-button matTreeNodeToggle 
                                         [attr.aria-label]="'Розгорнути/згорнути ' + node.name"
-                                        class="toggle-button">
-                                    <mat-icon class="mat-icon-rtl-mirror">
-                                        {{expansionModel.isSelected(node.id) ? 'expand_more' : 'chevron_right'}}
-                                    </mat-icon>
+                                        class="toggle-button"
+                                        (click)="toggleNode(node)">
+                                    @if (node.isLoading) {
+                                        <mat-spinner diameter="20"></mat-spinner>
+                                    } @else {
+                                        <mat-icon class="mat-icon-rtl-mirror">
+                                            {{expansionModel.isSelected(node.id) ? 'expand_more' : 'chevron_right'}}
+                                        </mat-icon>
+                                    }
                                 </button>
                                 
                                 <div class="unit-info">
@@ -94,7 +100,7 @@ interface UnitTreeNode extends UnitDto {
                                     <button mat-icon-button color="warn" 
                                             (click)="delete(node); $event.stopPropagation()"
                                             matTooltip="Видалити"
-                                            [disabled]="hasChildren(node)">
+                                            [disabled]="node.hasChildren">
                                         <mat-icon>delete</mat-icon>
                                     </button>
                                 </div>
@@ -167,77 +173,81 @@ export class UnitTreeComponent implements OnInit {
     expansionKey = (node: UnitTreeNode) => node.id;
 
     ngOnInit() {
-        this.loadTreeData();
+        this.loadRootData();
     }
 
-    hasChild = (_: number, node: UnitTreeNode) => !!node.children && node.children.length > 0;
-    hasChildren = (node: UnitTreeNode) => !!node.children && node.children.length > 0;
+    hasChild = (_: number, node: UnitTreeNode) => node.hasChildren;
 
-    async loadTreeData() {
+    async loadRootData() {
         this.loading.set(true);
         try {
-            const allUnits = await firstValueFrom(this.unitService.getAll());
-            if (allUnits) {
-                const treeData = this.buildTree(allUnits);
-                this.dataSource.data = treeData;
+            // Загружаем дочерние элементы корневого псевдо-подразделения (NULL_GUID)
+            const rootItems = await firstValueFrom(this.unitService.getTreeItems(undefined, NULL_GUID));
+            if (rootItems) {
+                const treeNodes = rootItems.map(item => ({
+                    ...item,
+                    children: item.hasChildren ? [] : undefined,
+                    isLoaded: false,
+                    isLoading: false
+                } as UnitTreeNode));
+                this.dataSource.data = treeNodes;
             }
         } catch (error) {
-            console.error('Помилка завантаження даних дерева:', error);
+            console.error('Помилка завантаження кореневих даних:', error);
         } finally {
             this.loading.set(false);
         }
     }
 
-    private buildTree(units: UnitDto[]): UnitTreeNode[] {
-        const unitMap = new Map<string, UnitTreeNode>();
-        const rootNodes: UnitTreeNode[] = [];
-
-        // Создаем мапу всех узлов
-        units.forEach(unit => {
-            unitMap.set(unit.id, { ...unit, children: [] });
-        });
-
-        // Строим дерево
-        units.forEach(unit => {
-            const node = unitMap.get(unit.id)!;
+    async toggleNode(node: UnitTreeNode) {
+        if (this.expansionModel.isSelected(node.id)) {
+            // Узел раскрыт, скрываем его
+            this.expansionModel.deselect(node.id);
+        } else {
+            // Узел скрыт, раскрываем его
+            this.expansionModel.select(node.id);
             
-            if (unit.parentId && unitMap.has(unit.parentId)) {
-                // Добавляем как дочерний элемент
-                const parent = unitMap.get(unit.parentId)!;
-                if (!parent.children) {
-                    parent.children = [];
-                }
-                parent.children.push(node);
-            } else {
-                // Корневой элемент
-                rootNodes.push(node);
+            // Если у узла есть дочерние элементы и они еще не загружены
+            if (node.hasChildren && !node.isLoaded && !node.isLoading) {
+                await this.loadChildren(node);
             }
-        });
-
-        // Сортируем на каждом уровне
-        this.sortTreeNodes(rootNodes);
-        return rootNodes;
+        }
     }
 
-    private sortTreeNodes(nodes: UnitTreeNode[]) {
-        nodes.sort((a, b) => {
-            // Сначала по orderVal, потом по имени
-            if (a.orderVal !== b.orderVal) {
-                return a.orderVal - b.orderVal;
+    async loadChildren(parentNode: UnitTreeNode) {
+        if (parentNode.isLoading || parentNode.isLoaded) return;
+        
+        parentNode.isLoading = true;
+        
+        try {
+            const children = await firstValueFrom(this.unitService.getTreeItems(undefined, parentNode.id));
+            
+            if (children) {
+                const childNodes = children.map(item => ({
+                    ...item,
+                    children: item.hasChildren ? [] : undefined,
+                    isLoaded: false,
+                    isLoading: false
+                } as UnitTreeNode));
+                
+                parentNode.children = childNodes;
+                parentNode.isLoaded = true;
+                
+                // Обновляем данные в дереве
+                this.dataSource.data = [...this.dataSource.data];
             }
-            return a.name.localeCompare(b.name);
-        });
-
-        // Рекурсивно сортируем дочерние элементы
-        nodes.forEach(node => {
-            if (node.children && node.children.length > 0) {
-                this.sortTreeNodes(node.children);
-            }
-        });
+        } catch (error) {
+            console.error('Помилка завантаження дочірніх елементів:', error);
+        } finally {
+            parentNode.isLoading = false;
+        }
     }
 
     refresh() {
-        this.loadTreeData();
+        // Сбрасываем состояние expansion model
+        this.expansionModel.clear();
+        // Перезагружаем корневые данные
+        this.loadRootData();
     }
 
     addChild(parentNode: UnitTreeNode) {
@@ -294,7 +304,7 @@ export class UnitTreeComponent implements OnInit {
     }
 
     delete(node: UnitTreeNode) {
-        if (this.hasChildren(node)) {
+        if (node.hasChildren) {
             this.dialog.open(ConfirmDialogComponent, {
                 width: '360px',
                 data: {

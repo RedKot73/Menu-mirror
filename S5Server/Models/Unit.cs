@@ -21,6 +21,74 @@ namespace S5Server.Models
         string? UnitType,
         int OrderVal,
         string? Comment
+    )
+    {
+        public static UnitDto ToDto(Unit e) =>
+            new(
+                e.Id,
+                e.ParentId,
+                e.Parent?.ShortName,
+                e.AssignedUnitId,
+                e.AssignedUnit?.ShortName,
+                e.Name,
+                e.ShortName,
+                e.MilitaryNumber,
+                e.ForceTypeId,
+                e.ForceType?.ShortValue,
+                e.UnitTypeId,
+                e.UnitType?.ShortValue,
+                e.OrderVal,
+                e.Comment
+            );
+
+        public static void ApplyDto(Unit e, UnitDto dto)
+        {
+            e.ParentId = dto.ParentId;
+            e.AssignedUnitId = dto.AssignedUnitId;
+            e.Name = dto.Name.Trim();
+            e.ShortName = dto.ShortName.Trim();
+            e.MilitaryNumber = dto.MilitaryNumber?.Trim();
+            e.ForceTypeId = dto.ForceTypeId;
+            e.UnitTypeId = dto.UnitTypeId;
+            e.OrderVal = dto.OrderVal;
+            e.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
+        }
+    }
+
+    /// <summary>
+    /// Расширенный DTO для дерева: добавляет признак наличия дочірних підрозділів.
+    /// </summary>
+    public record UnitTreeItemDto(
+        string Id,
+        string? ParentId,
+        string? ParentShortName,
+        string? AssignedUnitId,
+        string? AssignedShortName,
+        string Name,
+        string ShortName,
+        string? MilitaryNumber,
+        string? ForceTypeId,
+        string? ForceType,
+        string? UnitTypeId,
+        string? UnitType,
+        int OrderVal,
+        string? Comment,
+        bool HasChildren = false
+    ) : UnitDto(
+        Id,
+        ParentId,
+        ParentShortName,
+        AssignedUnitId,
+        AssignedShortName,
+        Name,
+        ShortName,
+        MilitaryNumber,
+        ForceTypeId,
+        ForceType,
+        UnitTypeId,
+        UnitType,
+        OrderVal,
+        Comment
     );
     // DTO для создания Unit
     public record UnitCreateDto(
@@ -37,7 +105,13 @@ namespace S5Server.Models
 
 
     /// <summary>
-    /// Підрозділ
+    /// Підрозділ (організаційно-штатна бойова одиниця).
+    /// Ієрархія: Parent / ChildUnits.
+    /// Придання: AssignedUnit / AssignedUnits.
+    /// Довідники: ForceType (вид ЗС), UnitType (тип підрозділу).
+    /// Додаткові звʼязки: AdjacentUnits (суміжні), 
+    /// Soldiers (особовий склад),
+    /// AssignedSoldiers (приданий особовий склад).
     /// </summary>
     [Table("units")]
     public class Unit
@@ -137,36 +211,5 @@ namespace S5Server.Models
         /// </summary>
         [NotMapped]
         public List<Soldier> AssignedSoldiers { get; set; } = default!;
-
-        public static UnitDto ToDto(Unit e) =>
-            new(
-                e.Id,
-                e.ParentId,
-                e.Parent?.ShortName,
-                e.AssignedUnitId,
-                e.AssignedUnit?.ShortName,
-                e.Name,
-                e.ShortName,
-                e.MilitaryNumber,
-                e.ForceTypeId,
-                e.ForceType?.ShortValue,
-                e.UnitTypeId,
-                e.UnitType?.ShortValue,
-                e.OrderVal,
-                e.Comment
-            );
-
-        public static void ApplyDto(Unit e, UnitDto dto)
-        {
-            e.ParentId = dto.ParentId;
-            e.AssignedUnitId = dto.AssignedUnitId;
-            e.Name = dto.Name.Trim();
-            e.ShortName = dto.ShortName.Trim();
-            e.MilitaryNumber = dto.MilitaryNumber?.Trim();
-            e.ForceTypeId = dto.ForceTypeId;
-            e.UnitTypeId = dto.UnitTypeId;
-            e.OrderVal = dto.OrderVal;
-            e.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
-        }
     }
 }

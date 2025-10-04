@@ -33,7 +33,7 @@ namespace S5Server.Controllers
         /// <param name="ct">Токен отмены операции.</param>
         /// <returns>Список DTO подразделений, отсортированный по порядку и названию.</returns>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UnitDto>>> GetAll(
+        public async Task<ActionResult<IEnumerable<UnitTreeItemDto>>> GetAll(
             [FromQuery] string? search,
             [FromQuery] string? parentId,
             CancellationToken ct = default)
@@ -44,12 +44,12 @@ namespace S5Server.Controllers
                 .Include(t => t.ForceType)
                 .Include(t => t.UnitType)
                 .Where(t => t.Id != ControllerFunctions.NullGuid);//Кореневий псевдо-підрозділ не показуємо
+                //as IQueryable<Unit>
+                ;
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                q = q.Where(x =>
-                    //x.Name.Contains(search) ||
-                    x.ShortName.Contains(search));
+                q = q.Where(x => x.ShortName.Contains(search));
             }
             
             if (!string.IsNullOrWhiteSpace(parentId))
@@ -57,8 +57,25 @@ namespace S5Server.Controllers
             
             var list = await q
                 .OrderBy(x => x.OrderVal)
-                .ThenBy(x => x.Name)
-                .Select(x => Unit.ToDto(x))
+                .ThenBy(x => x.ShortName)
+                //.Select(x => UnitDto.ToDto(x))
+                .Select(u => new UnitTreeItemDto(
+                    u.Id,
+                    u.ParentId,
+                    u.Parent != null ? u.Parent.ShortName : null,
+                    u.AssignedUnitId,
+                    u.AssignedUnit != null ? u.AssignedUnit.ShortName : null,
+                    u.Name,
+                    u.ShortName,
+                    u.MilitaryNumber,
+                    u.ForceTypeId,
+                    u.ForceType != null ? u.ForceType.ShortValue : null,
+                    u.UnitTypeId,
+                    u.UnitType != null ? u.UnitType.ShortValue : null,
+                    u.OrderVal,
+                    u.Comment,
+                    _set.Any(c => c.ParentId == u.Id)//поле HasChildren
+                ))
                 .ToListAsync(ct);
 
             return Ok(list);
@@ -82,7 +99,8 @@ namespace S5Server.Controllers
                 .Where(x => x.ShortName.Contains(term))
                 //.Where(x => EF.Functions.Like(x.ShortName.ToLower(), pattern))
                 //.Where(x => EF.Functions.Like(EF.Functions.Collate(x.ShortName, "UNICODE_NOCASE"), pattern))
-                .OrderBy(x => x.ShortName)
+                .OrderBy(x => x.OrderVal)
+                .ThenBy(x => x.ShortName)
                 .Take(limit)
                 .Select(x => new LookupDto(x.Id, x.ShortName))
                 .ToListAsync(ct);
@@ -94,7 +112,7 @@ namespace S5Server.Controllers
         public async Task<ActionResult<UnitDto>> Get(string id, CancellationToken ct = default)
         {
             var e = await Query().FirstOrDefaultAsync(x => x.Id == id, ct);
-            return e is null ? NotFound() : Ok(Unit.ToDto(e));
+            return e is null ? NotFound() : Ok(UnitDto.ToDto(e));
         }
 
         [HttpPost]
@@ -129,7 +147,7 @@ namespace S5Server.Controllers
                 return Conflict($"Підрозділ \"{entity.Name}\" вже існує.");
             }
 
-            return CreatedAtAction(nameof(Get), new { id = entity.Id }, Unit.ToDto(entity));
+            return CreatedAtAction(nameof(Get), new { id = entity.Id }, UnitDto.ToDto(entity));
         }
 
         [HttpPut("{id}")]
@@ -142,9 +160,9 @@ namespace S5Server.Controllers
             var e = await _set.AsTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
             if (e is null) return NotFound();
 
-            var snapshot = Unit.ToDto(e);
-            Unit.ApplyDto(e, dto);
-            if (snapshot == Unit.ToDto(e))
+            var snapshot = UnitDto.ToDto(e);
+            UnitDto.ApplyDto(e, dto);
+            if (snapshot == UnitDto.ToDto(e))
                 return NoContent();
 
             try
@@ -191,7 +209,7 @@ namespace S5Server.Controllers
                 .Where(x => x.ParentId == id)
                 .OrderBy(x => x.OrderVal)
                 .ThenBy(x => x.Name)
-                .Select(x => Unit.ToDto(x))
+                .Select(x => UnitDto.ToDto(x))
                 .ToListAsync(ct);
 
             return Ok(children);
@@ -218,7 +236,7 @@ namespace S5Server.Controllers
                 .Where(x => x.AssignedUnitId == id)
                 .OrderBy(x => x.OrderVal)
                 .ThenBy(x => x.Name)
-                .Select(x => Unit.ToDto(x))
+                .Select(x => UnitDto.ToDto(x))
                 .ToListAsync(ct);
 
             return Ok(assigned);

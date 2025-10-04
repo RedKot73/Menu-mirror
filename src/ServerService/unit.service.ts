@@ -20,6 +20,10 @@ export interface UnitDto {
     comment?: string;
 }
 
+export interface UnitTreeItemDto extends UnitDto {
+    hasChildren: boolean;
+}
+
 export interface UnitCreateDto {
     parentId?: string;
     assignedUnitId?: string;
@@ -50,6 +54,15 @@ export class UnitService {
         if (parentId) params.parentId = parentId;
         
         return this.http.get<UnitDto[]>(this.api, { params });
+    }
+
+    // Специальный метод для дерева с ленивой загрузкой
+    getTreeItems(search?: string, parentId?: string): Observable<UnitTreeItemDto[]> {
+        let params: any = {};
+        if (search) params.search = search;
+        if (parentId !== undefined) params.parentId = parentId;
+        
+        return this.http.get<UnitTreeItemDto[]>(this.api, { params });
     }
 
     // Lookup для автокомплита
