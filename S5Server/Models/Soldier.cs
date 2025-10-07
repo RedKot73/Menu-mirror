@@ -35,8 +35,7 @@ namespace S5Server.Models
         /// <summary>
         /// Позивний
         /// </summary>
-        [StringLength(50), Display(Name = "Позивний")
-            /*, Required(ErrorMessage = UIConstant.RequiredMsg)*/]
+        [StringLength(50), Display(Name = "Позивний")]
         public string? NickName { get; set; }// = string.Empty;
 
         /// <summary>
@@ -102,9 +101,11 @@ namespace S5Server.Models
         /// <summary>
         /// Мережевий аккаунт
         /// </summary>
+        /*
         [ForeignKey(nameof(VezhaUser)), Display(Name = DictPosition.Caption)]
         public string VezhaUserId { get; set; } = string.Empty;
-        [ValidateNever, InverseProperty("Soldier"), Display(Name = "Мережевий аккаунт")]
+        */
+        //[ValidateNever, InverseProperty("Soldier"), Display(Name = "Мережевий аккаунт")]
         public TVezhaUser<string>? VezhaUser { get; set; }
 
         /// <summary>

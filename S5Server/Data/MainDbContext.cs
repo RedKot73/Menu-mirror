@@ -133,6 +133,83 @@ namespace S5Server.Data
                       .HasForeignKey(u => u.UnitTypeId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
+
+            modelBuilder.Entity<Soldier>(entity =>
+            {
+                entity.ToTable("soldiers");
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+                entity.Property(e => e.FirstName).IsRequired().HasColumnType("TEXT(50)");
+                entity.Property(e => e.MidleName).HasColumnType("TEXT(50)");
+                entity.Property(e => e.LastName).HasColumnType("TEXT(50)");
+                entity.Property(e => e.NickName).HasColumnType("TEXT(50)");
+                entity.Property(e => e.UnitId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.AssignedUnitId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.RankId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.PositionId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.StateId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.Comment).HasColumnType("TEXT");
+
+                // Основний підрозділ (обов'язковий)
+                entity.HasOne(s => s.Unit)
+                      .WithMany(u => u.Soldiers)
+                      .HasForeignKey(s => s.UnitId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Приданий до підрозділу (опціонально)
+                entity.HasOne(s => s.AssignedUnit)
+                      .WithMany(u => u.AssignedSoldiers)
+                      .HasForeignKey(s => s.AssignedUnitId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                // Звання
+                entity.HasOne(s => s.Rank)
+                      .WithMany()
+                      .HasForeignKey(s => s.RankId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Посада
+                entity.HasOne(s => s.Position)
+                      .WithMany()
+                      .HasForeignKey(s => s.PositionId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Статус
+                entity.HasOne(s => s.State)
+                      .WithMany()
+                      .HasForeignKey(s => s.StateId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Мережевий акаунт (може бути відсутній)
+                entity.HasOne(s => s.VezhaUser)
+                      .WithOne(s => s.Soldier)
+                      //.HasForeignKey(s => s.VezhaUserId)
+                      .OnDelete(DeleteBehavior.SetNull);
+                /*
+                // Індекси
+                entity.HasIndex(e => e.UnitId);
+                entity.HasIndex(e => e.AssignedUnitId);
+                entity.HasIndex(e => e.RankId);
+                entity.HasIndex(e => e.PositionId);
+                entity.HasIndex(e => e.StateId);
+                */
+            });
+
+            modelBuilder.Entity<TVezhaUser<string>>(entity =>
+            {
+                // SoldierId колонка в AspNetUsers
+                entity.Property(u => u.SoldierId)
+                      .HasColumnType("TEXT(36)")
+                      .IsRequired();
+
+                entity.HasOne(u => u.Soldier)
+                      .WithOne(s => s.VezhaUser) // можно .WithOne() если в Soldier уберёте навигацию
+                      .HasForeignKey<TVezhaUser<string>>(u => u.SoldierId)
+                      .OnDelete(DeleteBehavior.Restrict); // или SetNull если nullable
+
+                entity.HasIndex(u => u.SoldierId).IsUnique(); // 1:0..1
+            });
         }
 
         /// <summary>
@@ -163,5 +240,9 @@ namespace S5Server.Data
         /// Підрозділи
         /// </summary>
         public DbSet<Unit> Units { get; set; }
+        /// <summary>
+        /// Військовослужбовці (бійці)
+        /// </summary>
+        public DbSet<Soldier> Soldiers { get; set; }
     }
 }

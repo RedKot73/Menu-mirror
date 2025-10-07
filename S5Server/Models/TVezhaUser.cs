@@ -24,7 +24,7 @@ public class TVezhaUser<TKey> : IdentityUser<TKey> where TKey : IEquatable<TKey>
     /// Солдат
     /// </summary>
     [Display(Name = Soldier.Caption)]
-    public virtual Soldier Soldier { get; set; } = default!;
+    public Soldier Soldier { get; set; } = default!;
     /*
     [ValidateNever, Display(Name = "Підрозділи, до яких є доступ")]
     public virtual ICollection<TUserUnits>? UserUnits { get; set; }
