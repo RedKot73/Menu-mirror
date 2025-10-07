@@ -45,17 +45,15 @@ import { NULL_GUID } from './unit.constants';
                 <mat-tree [dataSource]="dataSource" [childrenAccessor]="childrenAccessor" [expansionKey]="expansionKey" class="unit-tree">
                     <!-- Универсальный узел дерева -->
                     <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle class="tree-node">
-                        <li class="mat-tree-node">
-                            <unit-tree-node 
-                                [node]="node"
-                                [isExpanded]="expansionModel.isSelected(node.id)"
-                                (toggleNode)="toggleNode($event)"
-                                (selectNode)="selectUnit($event)"
-                                (addChild)="addChild($event)"
-                                (editNode)="edit($event)"
-                                (deleteNode)="delete($event)">
-                            </unit-tree-node>
-                        </li>
+                        <unit-tree-node 
+                            [node]="node"
+                            [isExpanded]="expansionModel.isSelected(node.id)"
+                            (toggleNode)="toggleNode($event)"
+                            (selectNode)="selectUnit($event)"
+                            (addChild)="addChild($event)"
+                            (editNode)="edit($event)"
+                            (deleteNode)="delete($event)">
+                        </unit-tree-node>
                     </mat-tree-node>
                 </mat-tree>
             }
@@ -156,6 +154,80 @@ export class UnitTreeComponent implements OnInit {
         this.loadRootData();
     }
 
+    // Вспомогательные методы для локального обновления дерева
+    /**
+     * Универсальный метод для поиска узла по ID и выполнения callback-функции
+     * @param nodeId ID узла для поиска
+     * @param processor Callback-функция для обработки найденного узла
+     * @param nodes Массив узлов для поиска (по умолчанию корневые узлы)
+     * @returns Результат выполнения processor или null если узел не найден
+     */
+    private findAndProcessNodeById<T>(
+        nodeId: string, 
+        processor: (node: UnitTreeNode) => T,
+        nodes: UnitTreeNode[] = this.dataSource.data
+    ): T | null {
+        for (const node of nodes) {
+            if (node.id === nodeId) {
+                return processor(node);
+            }
+            if (node.children && node.children.length > 0) {
+                const result = this.findAndProcessNodeById(nodeId, processor, node.children);
+                if (result !== null) return result;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Универсальный метод для поиска и удаления узла с callback-паттерном
+     * @param nodeId ID узла для удаления
+     * @param nodes Массив узлов для поиска
+     * @returns true если узел найден и удален
+     */
+    private removeNodeById(nodeId: string, nodes: UnitTreeNode[] = this.dataSource.data): boolean {
+        return this.findAndProcessNodesById(nodeId, (parentArray, index) => {
+            parentArray.splice(index, 1);
+            return true;
+        }, nodes) ?? false;
+    }
+
+    /**
+     * Специализированный метод для операций с массивами узлов (удаление, перемещение и т.д.)
+     * @param nodeId ID узла для поиска
+     * @param processor Callback-функция получающая родительский массив и индекс узла
+     * @param nodes Массив узлов для поиска
+     * @returns Результат выполнения processor или null если узел не найден
+     */
+    private findAndProcessNodesById<T>(
+        nodeId: string,
+        processor: (parentArray: UnitTreeNode[], index: number) => T,
+        nodes: UnitTreeNode[] = this.dataSource.data
+    ): T | null {
+        for (let i = 0; i < nodes.length; i++) {
+            if (nodes[i].id === nodeId) {
+                return processor(nodes, i);
+            }
+            if (nodes[i].children && nodes[i].children!.length > 0) {
+                const result = this.findAndProcessNodesById(nodeId, processor, nodes[i].children!);
+                if (result !== null) return result;
+            }
+        }
+        return null;
+    }
+
+    private updateNodeById(nodeId: string, updatedData: Partial<UnitTreeNode>): boolean {
+        return this.findAndProcessNodeById(nodeId, (node) => {
+            Object.assign(node, updatedData);
+            return true;
+        }) ?? false;
+    }
+
+    private forceTreeUpdate() {
+        // Принудительно обновляем дерево
+        this.dataSource.data = [...this.dataSource.data];
+    }
+
     selectUnit(node: UnitTreeNode) {
         this.unitSelected.emit({
             id: node.id,
@@ -204,9 +276,26 @@ export class UnitTreeComponent implements OnInit {
                     orderVal: result.orderVal,
                     comment: result.comment
                 }).subscribe(() => {
-                    this.refresh();
-                    // Разворачиваем родительский узел
-                    this.expansionModel.select(parentNode.id);
+                    // Эффективное локальное обновление
+                    if (parentNode.hasChildren) {
+                        // Если у родителя уже есть загруженные дети, перезагружаем их
+                        if (parentNode.isLoaded) {
+                            parentNode.isLoaded = false; // Сбрасываем флаг загрузки
+                            this.loadChildren(parentNode).then(() => {
+                                this.expansionModel.select(parentNode.id); // Разворачиваем
+                            });
+                        } else {
+                            // Если дети не загружены, просто разворачиваем - loadChildren вызовется автоматически
+                            this.expansionModel.select(parentNode.id);
+                        }
+                    } else {
+                        // Родитель стал иметь детей, обновляем его статус
+                        parentNode.hasChildren = true;
+                        parentNode.children = [];
+                        parentNode.isLoaded = false;
+                        this.forceTreeUpdate();
+                        this.expansionModel.select(parentNode.id);
+                    }
                 });
             }
         });
@@ -221,7 +310,20 @@ export class UnitTreeComponent implements OnInit {
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
                 this.unitService.update(result.id, result).subscribe(() => {
-                    this.refresh();
+                    // Эффективное локальное обновление
+                    this.updateNodeById(result.id, {
+                        name: result.name,
+                        shortName: result.shortName,
+                        militaryNumber: result.militaryNumber,
+                        forceType: result.forceType,
+                        unitType: result.unitType,
+                        forceTypeId: result.forceTypeId,
+                        unitTypeId: result.unitTypeId,
+                        assignedUnitId: result.assignedUnitId,
+                        orderVal: result.orderVal,
+                        comment: result.comment
+                    });
+                    this.forceTreeUpdate();
                 });
             }
         });
@@ -259,7 +361,9 @@ export class UnitTreeComponent implements OnInit {
         ref.afterClosed().subscribe(confirmed => {
             if (confirmed) {
                 this.unitService.delete(node.id).subscribe(() => {
-                    this.refresh();
+                    // Эффективное локальное удаление
+                    this.removeNodeById(node.id, this.dataSource.data);
+                    this.forceTreeUpdate();
                 });
             }
         });
