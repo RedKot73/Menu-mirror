@@ -5,7 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 
-import { DictRankDto } from "../../ServerService/dictRanks.service";
+import { DictRank } from "../../ServerService/dictRanks.service";
 
 @Component({
     selector: 'dict-rank-dialog',
@@ -63,7 +63,7 @@ import { DictRankDto } from "../../ServerService/dictRanks.service";
 })
 export class DictRankDialogComponent {
     constructor(
-        @Inject(MAT_DIALOG_DATA) public data: DictRankDto,
+        @Inject(MAT_DIALOG_DATA) public data: DictRank,
         private ref: MatDialogRef<DictRankDialogComponent>
     ) { }
 

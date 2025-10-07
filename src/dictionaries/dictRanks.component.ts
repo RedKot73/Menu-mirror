@@ -7,9 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 import { DictRankDialogComponent } from '../app/dialogs/DictRankDialog';
 import { ConfirmDialogComponent } from "../app/dialogs/ConfirmDialog.component";
-import { DictRankService, DictRankDto } from "../ServerService/dictRanks.service";
-
-export type DictRank = DictRankDto;
+import { DictRankService, DictRank } from "../ServerService/dictRanks.service";
 
 @Component({
     selector: "page-dict-ranks",
@@ -68,9 +66,8 @@ export type DictRank = DictRankDto;
     `,
 })
 export class dictRanks implements AfterViewInit {
-    readonly api = '/api/DictRank';
     dictService = inject(DictRankService);
-    items = this.dictService.createItemsSignal(this.api);
+    items = this.dictService.createItemsSignal();
     dataSource = new MatTableDataSource<DictRank>([]);
     displayedColumns = ['value', 'shortValue', 'natoCode', 'category', 'subCategory', 'orderVal', 'comment', 'actions'];
     dialog = inject(MatDialog);
@@ -88,7 +85,7 @@ export class dictRanks implements AfterViewInit {
     }
 
     reload() {
-        this.dictService.getAll(this.api).subscribe(items => this.items.set(items));
+        this.dictService.getAll().subscribe(items => this.items.set(items));
     }
 
     // CREATE
@@ -100,7 +97,7 @@ export class dictRanks implements AfterViewInit {
 
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
-                this.dictService.create(this.api, result).subscribe(() => this.reload());
+                this.dictService.create(result).subscribe(() => this.reload());
             }
         });
     }
@@ -114,7 +111,7 @@ export class dictRanks implements AfterViewInit {
 
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
-                this.dictService.update(this.api, result.id, result).subscribe(() => this.reload());
+                this.dictService.update(result.id, result).subscribe(() => this.reload());
             }
         });
     }
@@ -137,7 +134,7 @@ export class dictRanks implements AfterViewInit {
         });
         ref.afterClosed().subscribe(confirmed => {
             if (confirmed) {
-                this.dictService.delete(this.api, value.id).subscribe(() => this.reload());
+                this.dictService.delete(value.id).subscribe(() => this.reload());
             }
         });
     }

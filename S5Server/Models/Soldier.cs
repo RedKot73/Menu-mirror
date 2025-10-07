@@ -6,6 +6,96 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 namespace S5Server.Models
 {
     /// <summary>
+    /// DTO для передачи Soldier
+    /// </summary>
+    public record SoldierDto(
+        string Id,
+        string FirstName,
+        string? MidleName,
+        string? LastName,
+        string Fio,
+        string? NickName,
+        string UnitId,
+        string UnitShortName,
+        string? AssignedUnitId,
+        string? AssignedUnitShortName,
+        string RankId,
+        string RankShortValue,
+        string PositionId,
+        string PositionValue,
+        string StateId,
+        string StateValue,
+        string? Comment
+    )
+    {
+        public static SoldierDto ToDto(Soldier e) =>
+            new(
+                e.Id,
+                e.FirstName,
+                e.MidleName,
+                e.LastName,
+                e.FIO,
+                e.NickName,
+                e.UnitId,
+                e.Unit?.ShortName ?? e.Unit?.Name ?? string.Empty,
+                e.AssignedUnitId,
+                e.AssignedUnit?.ShortName ?? e.AssignedUnit?.Name,
+                e.RankId,
+                e.Rank?.ShortValue ?? e.Rank?.Value ?? string.Empty,
+                e.PositionId,
+                e.Position?.Value ?? string.Empty,
+                e.StateId,
+                e.State?.Value ?? string.Empty,
+                e.Comment
+            );
+
+        public static void ApplyDto(Soldier e, SoldierDto dto)
+        {
+            e.FirstName = dto.FirstName.Trim();
+            e.MidleName = string.IsNullOrWhiteSpace(dto.MidleName) ? null : dto.MidleName.Trim();
+            e.LastName = string.IsNullOrWhiteSpace(dto.LastName) ? null : dto.LastName.Trim();
+            e.NickName = string.IsNullOrWhiteSpace(dto.NickName) ? null : dto.NickName.Trim();
+            e.UnitId = dto.UnitId;
+            e.AssignedUnitId = dto.AssignedUnitId;
+            e.RankId = dto.RankId;
+            e.PositionId = dto.PositionId;
+            e.StateId = dto.StateId;
+            e.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
+        }
+    }
+
+    /// <summary>
+    /// DTO для создания Soldier
+    /// </summary>
+    public record SoldierCreateDto(
+        string FirstName,
+        string? MidleName,
+        string? LastName,
+        string? NickName,
+        string UnitId,
+        string? AssignedUnitId,
+        string RankId,
+        string PositionId,
+        string StateId,
+        string? Comment
+    )
+    {
+        public Soldier ToEntity() => new Soldier
+        {
+            FirstName = FirstName.Trim(),
+            MidleName = string.IsNullOrWhiteSpace(MidleName) ? null : MidleName.Trim(),
+            LastName = string.IsNullOrWhiteSpace(LastName) ? null : LastName.Trim(),
+            NickName = string.IsNullOrWhiteSpace(NickName) ? null : NickName.Trim(),
+            UnitId = UnitId,
+            AssignedUnitId = AssignedUnitId,
+            RankId = RankId,
+            PositionId = PositionId,
+            StateId = StateId,
+            Comment = string.IsNullOrWhiteSpace(Comment) ? null : Comment?.Trim()
+        };
+    }
+
+    /// <summary>
     /// Боєць
     /// </summary>
     [Table("soldiers"), Display(Name = Caption)]

@@ -1,56 +1,56 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { LookupDto } from '../app/shared/models/lookup.models';
 
-export interface DictRankDto {
+export interface DictRank {
     id: string;
     value: string;
     shortValue: string;
-    comment?: string | null;
-    natoCode?: string | null;
-    category?: string | null;
-    subCategory?: string | null;
+    comment?: string;
+    natoCode?: string;
+    category?: string;
+    subCategory?: string;
     orderVal: number;
 }
 
-export interface DictRankLookup {
-    id: string;
-    name: string;
-}
-
-@Injectable({ providedIn: 'root' })
+@Injectable({ 
+    providedIn: 'root' 
+})
 export class DictRankService {
-    constructor(private http: HttpClient) { }
+    readonly api = '/api/DictRank';
+    private http = inject(HttpClient);
 
-    getAll(api: string) {
-        return this.http.get<DictRankDto[]>(api);
+    getAll(): Observable<DictRank[]> {
+        return this.http.get<DictRank[]>(this.api);
+    }
+
+    lookup(term: string, limit: number = 10): Observable<LookupDto[]> {
+        const params = { term, limit: limit.toString() };
+        return this.http.get<LookupDto[]>(`${this.api}/lookup`, { params });
+    }
+
+    getById(id: string): Observable<DictRank> {
+        return this.http.get<DictRank>(`${this.api}/${id}`);
+    }
+
+    create(item: Omit<DictRank, 'id'>): Observable<DictRank> {
+        return this.http.post<DictRank>(this.api, item);
+    }
+
+    update(id: string, item: Omit<DictRank, 'id'>): Observable<void> {
+        return this.http.put<void>(`${this.api}/${id}`, item);
+    }
+
+    delete(id: string): Observable<void> {
+        return this.http.delete<void>(`${this.api}/${id}`);
+    }
+
+    createItemsSignal(): any {
+        return signal<DictRank[]>([]);
     }
 
     get(api: string, id: string) {
-        return this.http.get<DictRankDto>(`${api}/${id}`);
-    }
-
-    create(api: string, dto: Omit<DictRankDto, 'id'>) {
-        return this.http.post<DictRankDto>(api, dto);
-    }
-
-    update(api: string, id: string, dto: Omit<DictRankDto, 'id'>) {
-        return this.http.put(`${api}/${id}`, dto);
-    }
-
-    delete(api: string, id: string) {
-        return this.http.delete(`${api}/${id}`);
-    }
-
-    lookup(api: string, term: string, limit = 10) {
-        return this.http.get<DictRankLookup[]>(`${api}/lookup`, {
-            params: { term, limit },
-        });
-    }
-
-    // Для каждого справочника создавайте отдельный сигнал через этот метод
-    createItemsSignal(api: string) {
-        const items = signal<DictRankDto[]>([]);
-        this.getAll(api).subscribe(items.set);
-        return items;
+        return this.http.get<DictRank>(`${api}/${id}`);
     }
 }

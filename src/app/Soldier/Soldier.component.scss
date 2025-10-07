@@ -1,0 +1,46 @@
+.soldier-name {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.fio {
+    font-weight: 500;
+    color: #1976d2;
+}
+
+.nickname {
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+}
+
+.assigned-icon {
+    font-size: 16px;
+    color: #ff9800;
+    margin-left: 4px;
+}
+
+.state-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+}
+
+// Responsive table
+@media (max-width: 768px) {
+    .mat-column-comment {
+        display: none;
+    }
+}
+
+@media (max-width: 600px) {
+    .mat-column-assignedUnitShortName,
+    .mat-column-positionValue {
+        display: none;
+    }
+}
