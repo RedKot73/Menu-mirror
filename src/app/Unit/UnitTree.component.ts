@@ -8,17 +8,11 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { UnitService, UnitDto, UnitTreeItemDto } from "../../ServerService/unit.service";
+import { UnitService, UnitTreeItemDto } from "../../ServerService/unit.service";
 import { UnitDialogComponent } from '../dialogs/UnitDialog';
 import { ConfirmDialogComponent } from "../dialogs/ConfirmDialog.component";
-import { UnitTreeNodeComponent } from './unit-tree-node.component';
+import { UnitTreeNodeComponent, UnitTreeNode } from './unit-tree-node.component';
 import { NULL_GUID } from './unit.constants';
-
-interface UnitTreeNode extends UnitTreeItemDto {
-    children?: UnitTreeNode[];
-    isLoading?: boolean;
-    isLoaded?: boolean;
-}
 
 @Component({
     selector: 'unit-tree',
@@ -98,7 +92,8 @@ export class UnitTreeComponent implements OnInit {
                     ...item,
                     children: item.hasChildren ? [] : undefined,
                     isLoaded: false,
-                    isLoading: false
+                    isLoading: false,
+                    level: 0
                 } as UnitTreeNode));
                 this.dataSource.data = treeNodes;
             }
@@ -137,7 +132,8 @@ export class UnitTreeComponent implements OnInit {
                     ...item,
                     children: item.hasChildren ? [] : undefined,
                     isLoaded: false,
-                    isLoading: false
+                    isLoading: false,
+                    level: parentNode.level + 1
                 } as UnitTreeNode));
                 
                 parentNode.children = childNodes;

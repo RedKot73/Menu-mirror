@@ -7,7 +7,8 @@ import { MatMenuModule } from '@angular/material/menu';
 
 import { UnitTreeItemDto } from "../../ServerService/unit.service";
 
-interface UnitTreeNode extends UnitTreeItemDto {
+export interface UnitTreeNode extends UnitTreeItemDto {
+    level: number;
     children?: UnitTreeNode[];
     isLoading?: boolean;
     isLoaded?: boolean;
@@ -25,7 +26,9 @@ interface UnitTreeNode extends UnitTreeItemDto {
     ],
     styleUrl: './unit-tree-node.component.scss',
     template: `
-        <div class="node-content" [class.leaf-node]="!node().hasChildren">
+        <div class="node-content" 
+             [class.leaf-node]="!node().hasChildren"
+             [style.padding-left.px]="node().level * 20">
             <!-- Кнопка разворачивания только для узлов с детьми -->
             @if (node().hasChildren) {
                 <button mat-icon-button 
@@ -41,7 +44,7 @@ interface UnitTreeNode extends UnitTreeItemDto {
                     }
                 </button>
             } @else {
-                <!-- Отступ для листовых узлов -->
+                <!-- Отступ для листовых узлов теперь через padding-left -->
                 <div class="leaf-spacer"></div>
             }
             

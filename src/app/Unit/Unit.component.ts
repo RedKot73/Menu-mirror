@@ -49,6 +49,14 @@ export type Unit = UnitDto;
                     (unitSelected)="onUnitSelected($event)"
                     class="unit-tree">
                 </unit-tree>
+                
+                <!-- Разделитель для изменения размера -->
+                @if (!isMobile() && sidenavMode() === 'side') {
+                    <div class="sidenav-resizer" 
+                         [class.resizing]="isResizing()"
+                         (mousedown)="onResizeStart($event)">
+                    </div>
+                }
             </mat-sidenav>
 
             <!-- Основной контент -->
@@ -176,6 +184,8 @@ export class UnitsComponent {
     // State signals
     selectedUnit = signal<UnitDto | null>(null);
     sidenavOpen = signal<boolean>(this.getSavedSidenavState());
+    sidenavWidth = signal<number>(this.getSavedSidenavWidth());
+    isResizing = signal<boolean>(false);
     
     // Computed signals
     selectedUnitTitle = computed(() => {
@@ -198,6 +208,43 @@ export class UnitsComponent {
                 this.sidenavOpen.set(false);
             }
         });
+
+        // Применяем ширину sidenav через CSS переменную
+        effect(() => {
+            document.documentElement.style.setProperty(
+                '--sidenav-width', 
+                `${this.sidenavWidth()}px`
+            );
+        });
+    }
+
+    // Обработчики изменения размера
+    onResizeStart(event: MouseEvent) {
+        event.preventDefault();
+        this.isResizing.set(true);
+        
+        const startX = event.clientX;
+        const startWidth = this.sidenavWidth();
+        
+        const onMouseMove = (e: MouseEvent) => {
+            const deltaX = e.clientX - startX;
+            const newWidth = Math.min(600, Math.max(250, startWidth + deltaX));
+            this.sidenavWidth.set(newWidth);
+        };
+        
+        const onMouseUp = () => {
+            this.isResizing.set(false);
+            this.saveSidenavWidth(this.sidenavWidth());
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        };
+        
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
     }
 
     private getSavedSidenavState(): boolean {
@@ -205,8 +252,17 @@ export class UnitsComponent {
         return saved !== null ? saved === 'true' : true;
     }
 
+    private getSavedSidenavWidth(): number {
+        const saved = localStorage.getItem('unitSidenavWidth');
+        return saved !== null ? parseInt(saved, 10) : 350;
+    }
+
     private saveSidenavState(open: boolean) {
         localStorage.setItem('unitSidenavOpen', open.toString());
+    }
+
+    private saveSidenavWidth(width: number) {
+        localStorage.setItem('unitSidenavWidth', width.toString());
     }
 
     toggleSidenav() {

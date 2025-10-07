@@ -2,13 +2,17 @@
 .unit-container {
     height: 100vh;
     display: flex;
+    position: relative;
 }
 
 // Левая панель (sidenav)
 .unit-sidenav {
-    width: 350px;
+    width: var(--sidenav-width, 350px);
+    min-width: 250px;
+    max-width: 600px;
     border-right: 1px solid var(--mat-divider-color);
     background: var(--mat-app-background-color);
+    position: relative;
     
     .sidenav-header {
         display: flex;
@@ -29,6 +33,36 @@
         height: calc(100vh - 73px); // Вычитаем высоту header
         overflow: auto;
         padding: 8px;
+    }
+}
+
+// Разделитель для изменения размера
+.sidenav-resizer {
+    position: absolute;
+    top: 0;
+    right: -3px;
+    width: 6px;
+    height: 100%;
+    cursor: col-resize;
+    background: transparent;
+    z-index: 10;
+    
+    &:hover,
+    &.resizing {
+        background: var(--mat-primary-color);
+        opacity: 0.3;
+    }
+    
+    &::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 2px;
+        height: 20px;
+        background: var(--mat-divider-color);
+        border-radius: 1px;
     }
 }
 
