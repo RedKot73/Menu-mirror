@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, output } from '@angular/core';
 import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,6 +11,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { UnitService, UnitDto, UnitTreeItemDto } from "../../ServerService/unit.service";
 import { UnitDialogComponent } from '../dialogs/UnitDialog';
 import { ConfirmDialogComponent } from "../dialogs/ConfirmDialog.component";
+import { UnitTreeNodeComponent } from './unit-tree-node.component';
 import { NULL_GUID } from './unit.constants';
 
 interface UnitTreeNode extends UnitTreeItemDto {
@@ -27,7 +28,8 @@ interface UnitTreeNode extends UnitTreeItemDto {
         MatButtonModule,
         MatIconModule,
         MatProgressSpinnerModule,
-        MatTooltipModule
+        MatTooltipModule,
+        UnitTreeNodeComponent
     ],
     styleUrl: './UnitTree.component.scss',
     template: `
@@ -47,113 +49,18 @@ interface UnitTreeNode extends UnitTreeItemDto {
                 </div>
             } @else {
                 <mat-tree [dataSource]="dataSource" [childrenAccessor]="childrenAccessor" [expansionKey]="expansionKey" class="unit-tree">
-                    <!-- Узел с дочерними элементами -->
-                    <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodeToggle class="tree-node">
+                    <!-- Универсальный узел дерева -->
+                    <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle class="tree-node">
                         <li class="mat-tree-node">
-                            <div class="node-content">
-                                <button mat-icon-button matTreeNodeToggle 
-                                        [attr.aria-label]="'Розгорнути/згорнути ' + node.name"
-                                        class="toggle-button"
-                                        (click)="toggleNode(node)">
-                                    @if (node.isLoading) {
-                                        <mat-spinner diameter="20"></mat-spinner>
-                                    } @else {
-                                        <mat-icon class="mat-icon-rtl-mirror">
-                                            {{expansionModel.isSelected(node.id) ? 'expand_more' : 'chevron_right'}}
-                                        </mat-icon>
-                                    }
-                                </button>
-                                
-                                <div class="unit-info">
-                                    <div class="unit-main">
-                                        <span class="unit-name">{{ node.name }}</span>
-                                        <span class="unit-short">{{ node.shortName }}</span>
-                                        @if (node.militaryNumber) {
-                                            <span class="military-number">В/Ч {{ node.militaryNumber }}</span>
-                                        }
-                                    </div>
-                                    <div class="unit-details">
-                                        @if (node.forceType) {
-                                            <span class="force-type">{{ node.forceType }}</span>
-                                        }
-                                        @if (node.unitType) {
-                                            <span class="unit-type">{{ node.unitType }}</span>
-                                        }
-                                        @if (node.assignedUnitId) {
-                                            <mat-icon class="assigned-icon" 
-                                                     matTooltip="Приданий підрозділ">assignment_ind</mat-icon>
-                                        }
-                                    </div>
-                                </div>
-                                
-                                <div class="node-actions">
-                                    <button mat-icon-button color="primary" 
-                                            (click)="addChild(node); $event.stopPropagation()"
-                                            matTooltip="Додати дочірній підрозділ">
-                                        <mat-icon>add</mat-icon>
-                                    </button>
-                                    <button mat-icon-button color="accent" 
-                                            (click)="edit(node); $event.stopPropagation()"
-                                            matTooltip="Редагувати">
-                                        <mat-icon>edit</mat-icon>
-                                    </button>
-                                    <button mat-icon-button color="warn" 
-                                            (click)="delete(node); $event.stopPropagation()"
-                                            matTooltip="Видалити"
-                                            [disabled]="node.hasChildren">
-                                        <mat-icon>delete</mat-icon>
-                                    </button>
-                                </div>
-                            </div>
-                        </li>
-                    </mat-tree-node>
-
-                    <!-- Листовой узел -->
-                    <mat-tree-node *matTreeNodeDef="let node" class="tree-node">
-                        <li class="mat-tree-node">
-                            <div class="node-content leaf-node">
-                                <div class="leaf-spacer"></div>
-                                
-                                <div class="unit-info">
-                                    <div class="unit-main">
-                                        <span class="unit-name">{{ node.name }}</span>
-                                        <span class="unit-short">{{ node.shortName }}</span>
-                                        @if (node.militaryNumber) {
-                                            <span class="military-number">В/Ч {{ node.militaryNumber }}</span>
-                                        }
-                                    </div>
-                                    <div class="unit-details">
-                                        @if (node.forceType) {
-                                            <span class="force-type">{{ node.forceType }}</span>
-                                        }
-                                        @if (node.unitType) {
-                                            <span class="unit-type">{{ node.unitType }}</span>
-                                        }
-                                        @if (node.assignedUnitId) {
-                                            <mat-icon class="assigned-icon" 
-                                                     matTooltip="Приданий підрозділ">assignment_ind</mat-icon>
-                                        }
-                                    </div>
-                                </div>
-                                
-                                <div class="node-actions">
-                                    <button mat-icon-button color="primary" 
-                                            (click)="addChild(node)"
-                                            matTooltip="Додати дочірній підрозділ">
-                                        <mat-icon>add</mat-icon>
-                                    </button>
-                                    <button mat-icon-button color="accent" 
-                                            (click)="edit(node)"
-                                            matTooltip="Редагувати">
-                                        <mat-icon>edit</mat-icon>
-                                    </button>
-                                    <button mat-icon-button color="warn" 
-                                            (click)="delete(node)"
-                                            matTooltip="Видалити">
-                                        <mat-icon>delete</mat-icon>
-                                    </button>
-                                </div>
-                            </div>
+                            <unit-tree-node 
+                                [node]="node"
+                                [isExpanded]="expansionModel.isSelected(node.id)"
+                                (toggleNode)="toggleNode($event)"
+                                (selectNode)="selectUnit($event)"
+                                (addChild)="addChild($event)"
+                                (editNode)="edit($event)"
+                                (deleteNode)="delete($event)">
+                            </unit-tree-node>
                         </li>
                     </mat-tree-node>
                 </mat-tree>
@@ -164,6 +71,9 @@ interface UnitTreeNode extends UnitTreeItemDto {
 export class UnitTreeComponent implements OnInit {
     private unitService = inject(UnitService);
     private dialog = inject(MatDialog);
+
+    // Output для выбора подразделения
+    unitSelected = output<UnitTreeItemDto>();
 
     dataSource = new MatTreeNestedDataSource<UnitTreeNode>();
     loading = signal(false);
@@ -248,6 +158,24 @@ export class UnitTreeComponent implements OnInit {
         this.expansionModel.clear();
         // Перезагружаем корневые данные
         this.loadRootData();
+    }
+
+    selectUnit(node: UnitTreeNode) {
+        this.unitSelected.emit({
+            id: node.id,
+            name: node.name,
+            shortName: node.shortName,
+            militaryNumber: node.militaryNumber,
+            forceType: node.forceType,
+            unitType: node.unitType,
+            forceTypeId: node.forceTypeId,
+            unitTypeId: node.unitTypeId,
+            parentId: node.parentId,
+            assignedUnitId: node.assignedUnitId,
+            orderVal: node.orderVal,
+            comment: node.comment,
+            hasChildren: node.hasChildren
+        });
     }
 
     addChild(parentNode: UnitTreeNode) {

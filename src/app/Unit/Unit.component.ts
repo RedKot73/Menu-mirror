@@ -1,195 +1,233 @@
-import { Component, inject, ViewChild, AfterViewInit, effect, signal } from "@angular/core";
+import { Component, inject, signal, computed, effect } from "@angular/core";
 import { MatButtonModule } from '@angular/material/button';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatOptionModule } from '@angular/material/core';
-import { FormsModule } from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatChipsModule } from '@angular/material/chips';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 
 import { UnitDialogComponent } from '../dialogs/UnitDialog';
 import { ConfirmDialogComponent } from "../dialogs/ConfirmDialog.component";
 import { UnitService, UnitDto, UnitCreateDto } from "../../ServerService/unit.service";
-import { UnitFiltersComponent } from './unit-filters.component';
-import { NULL_GUID } from './unit.constants';
+import { UnitTreeComponent } from './UnitTree.component';
 
 export type Unit = UnitDto;
 
 @Component({
     selector: "page-units",
     imports: [
-        MatTableModule, 
-        MatButtonModule, 
-        MatSortModule, 
+        MatButtonModule,
+        MatSidenavModule,
+        MatToolbarModule, 
         MatIconModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatSelectModule,
-        MatOptionModule,
-        FormsModule,
-        UnitFiltersComponent
+        MatCardModule,
+        MatDividerModule,
+        MatChipsModule,
+        UnitTreeComponent
     ],
     styleUrl: './Unit.component.scss',
     template: `
-        <h2>Підрозділи</h2>
-        
-        <unit-filters 
-            [allUnits]="allUnits()"
-            (searchChanged)="onSearchChange($event)"
-            (parentFilterChanged)="onParentFilterChange($event)"
-            (reload)="reload()"
-            (add)="add()">
-        </unit-filters>
-
-        <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" style="width:100%; margin-top: 1em;">
-            <!-- Name Column -->
-            <ng-container matColumnDef="name">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> Назва </th>
-                <td mat-cell *matCellDef="let unit"> 
-                    <div class="unit-name">
-                        <span>{{ unit.name }}</span>
-                        @if (unit.parentId) {
-                            <mat-icon class="hierarchy-icon" title="Дочірній підрозділ">subdirectory_arrow_right</mat-icon>
-                        }
-                        @if (unit.assignedUnitId) {
-                            <mat-icon class="assigned-icon" title="Приданий підрозділ">assignment_ind</mat-icon>
-                        }
-                    </div>
-                </td>
-            </ng-container>
-            
-            <!-- ShortName Column -->
-            <ng-container matColumnDef="shortName">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> Скорочення </th>
-                <td mat-cell *matCellDef="let unit"> {{unit.shortName}} </td>
-            </ng-container>
-            
-            <!-- MilitaryNumber Column -->
-            <ng-container matColumnDef="militaryNumber">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> В/Ч </th>
-                <td mat-cell *matCellDef="let unit"> {{unit.militaryNumber}} </td>
-            </ng-container>
-            <ng-container matColumnDef="forceType">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> Тип сил </th>
-                <td mat-cell *matCellDef="let unit"> {{unit.forceType}} </td>
-            </ng-container>
-            <ng-container matColumnDef="unitType">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> Тип підрозділу </th>
-                <td mat-cell *matCellDef="let unit"> {{unit.unitType}} </td>
-            </ng-container>
-
-            <ng-container matColumnDef="parentShortName">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> Батьківський </th>
-                <td mat-cell *matCellDef="let unit"> {{unit.parentShortName}} </td>
-            </ng-container>
-            <ng-container matColumnDef="assignedShortName">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> Приданий до </th>
-                <td mat-cell *matCellDef="let unit"> {{unit.assignedShortName}} </td>
-            </ng-container>
-
-            <ng-container matColumnDef="orderVal">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> Порядок </th>
-                <td mat-cell *matCellDef="let unit"> {{unit.orderVal}} </td>
-            </ng-container>
-
-            <!-- Comment Column -->
-            <ng-container matColumnDef="comment">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> Коментар </th>
-                <td mat-cell *matCellDef="let unit"> {{unit.comment}} </td>
-            </ng-container>
-            
-            <!-- Actions Column -->
-            <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef> Дії </th>
-                <td mat-cell *matCellDef="let unit">
-                    <button mat-icon-button color="primary" (click)="showChildren(unit)" 
-                            title="Показати дочірні підрозділи">
-                        <mat-icon>account_tree</mat-icon>
+        <mat-sidenav-container class="unit-container">
+            <!-- Левая панель с деревом подразделений -->
+            <mat-sidenav 
+                #sidenav 
+                [mode]="sidenavMode()"
+                [opened]="sidenavOpen()"
+                class="unit-sidenav">
+                
+                <div class="sidenav-header">
+                    <button mat-icon-button (click)="toggleSidenav()">
+                        <mat-icon>close</mat-icon>
                     </button>
-                    <button mat-icon-button color="primary" (click)="showAssigned(unit)" 
-                            title="Показати придані підрозділи">
-                        <mat-icon>assignment_ind</mat-icon>
-                    </button>
-                    <button mat-icon-button color="accent" (click)="edit(unit)">
-                        <mat-icon>edit</mat-icon>
-                    </button>
-                    <button mat-icon-button color="warn" (click)="delete(unit)">
-                        <mat-icon>delete</mat-icon>
-                    </button>
-                </td>
-            </ng-container>
+                </div>
+                
+                <!-- Дерево подразделений -->
+                <unit-tree 
+                    (unitSelected)="onUnitSelected($event)"
+                    class="unit-tree">
+                </unit-tree>
+            </mat-sidenav>
 
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
+            <!-- Основной контент -->
+            <mat-sidenav-content class="unit-content">
+                <!-- Toolbar с кнопкой toggle -->
+                <mat-toolbar color="primary" class="unit-toolbar">
+                    <button 
+                        mat-icon-button 
+                        (click)="toggleSidenav()"
+                        [class.hidden]="sidenavOpen() && !isMobile()">
+                        <mat-icon>menu</mat-icon>
+                    </button>
+                </mat-toolbar>
+
+                <!-- Основное содержимое -->
+                <div class="main-content">
+                    @if (selectedUnit(); as unit) {
+                        <!-- Детальная информация о подразделении -->
+                        <mat-card class="unit-details-card">
+                            <mat-card-header>
+                                <mat-card-title>{{ unit.name }}</mat-card-title>
+                                <mat-card-subtitle>{{ unit.shortName }}</mat-card-subtitle>
+                            </mat-card-header>
+                            
+                            <mat-card-content>
+                                <div class="unit-info-grid">
+                                    <div class="info-item">
+                                        <strong>Військова частина:</strong>
+                                        <span>{{ unit.militaryNumber || 'Не вказано' }}</span>
+                                    </div>
+                                    
+                                    <div class="info-item">
+                                        <strong>Тип сил:</strong>
+                                        <span>{{ unit.forceType || 'Не вказано' }}</span>
+                                    </div>
+                                    
+                                    <div class="info-item">
+                                        <strong>Тип підрозділу:</strong>
+                                        <span>{{ unit.unitType || 'Не вказано' }}</span>
+                                    </div>
+                                    
+                                    <div class="info-item">
+                                        <strong>Порядок:</strong>
+                                        <span>{{ unit.orderVal }}</span>
+                                    </div>
+                                    
+                                    @if (unit.parentShortName) {
+                                        <div class="info-item">
+                                            <strong>Батьківський підрозділ:</strong>
+                                            <span>{{ unit.parentShortName }}</span>
+                                        </div>
+                                    }
+                                    
+                                    @if (unit.assignedShortName) {
+                                        <div class="info-item">
+                                            <strong>Приданий до:</strong>
+                                            <span>{{ unit.assignedShortName }}</span>
+                                        </div>
+                                    }
+                                    
+                                    @if (unit.comment) {
+                                        <div class="info-item full-width">
+                                            <strong>Коментар:</strong>
+                                            <span>{{ unit.comment }}</span>
+                                        </div>
+                                    }
+                                </div>
+                                
+                                <!-- Статусы и индикаторы -->
+                                <div class="unit-status-chips">
+                                    @if (unit.parentId) {
+                                        <mat-chip-set>
+                                            <mat-chip>
+                                                <mat-icon matChipAvatar>subdirectory_arrow_right</mat-icon>
+                                                Дочірній підрозділ
+                                            </mat-chip>
+                                        </mat-chip-set>
+                                    }
+                                    @if (unit.assignedUnitId) {
+                                        <mat-chip-set>
+                                            <mat-chip>
+                                                <mat-icon matChipAvatar>assignment_ind</mat-icon>
+                                                Приданий підрозділ
+                                            </mat-chip>
+                                        </mat-chip-set>
+                                    }
+                                </div>
+                            </mat-card-content>
+                            
+                            <mat-card-actions>
+                                <button mat-button (click)="showChildren(unit)">
+                                    <mat-icon>account_tree</mat-icon>
+                                    Дочірні підрозділи
+                                </button>
+                                <button mat-button (click)="showAssigned(unit)">
+                                    <mat-icon>assignment_ind</mat-icon>
+                                    Придані підрозділи
+                                </button>
+                            </mat-card-actions>
+                        </mat-card>
+                    } @else {
+                        <!-- Состояние когда ничего не выбрано -->
+                        <div class="empty-state">
+                            <mat-icon class="empty-icon">account_tree</mat-icon>
+                            <h2>Оберіть підрозділ</h2>
+                            <p>Виберіть підрозділ у дереві ліворуч для перегляду детальної інформації</p>
+                            @if (!sidenavOpen()) {
+                                <button mat-raised-button color="primary" (click)="toggleSidenav()">
+                                    <mat-icon>menu</mat-icon>
+                                    Показати дерево підрозділів
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+            </mat-sidenav-content>
+        </mat-sidenav-container>
     `
 })
-export class UnitsComponent implements AfterViewInit {
+export class UnitsComponent {
     unitService = inject(UnitService);
-    items = this.unitService.createItemsSignal();
-    allUnits = signal<UnitDto[]>([]);
-    dataSource = new MatTableDataSource<Unit>([]);
-    displayedColumns = ['name', 'shortName', 'militaryNumber',
-        'forceType', 'unitType', 'parentShortName', 'assignedShortName', 'orderVal', 'comment', 'actions'];
     dialog = inject(MatDialog);
+    breakpointObserver = inject(BreakpointObserver);
     
-    // Фильтры
-    searchText = '';
-    selectedParentId: string | null = null;
-
-    @ViewChild(MatSort) sort!: MatSort;
+    // State signals
+    selectedUnit = signal<UnitDto | null>(null);
+    sidenavOpen = signal<boolean>(this.getSavedSidenavState());
+    
+    // Computed signals
+    selectedUnitTitle = computed(() => {
+        const unit = this.selectedUnit();
+        return unit ? `${unit.name} (${unit.shortName})` : 'Підрозділи';
+    });
+    
+    isMobile = computed(() => 
+        this.breakpointObserver.isMatched([Breakpoints.Handset])
+    );
+    
+    sidenavMode = computed(() => 
+        this.isMobile() ? 'over' : 'side'
+    );
 
     constructor() {
+        // Закрываем sidenav на мобильных устройствах при старте
         effect(() => {
-            this.dataSource.data = this.items();
+            if (this.isMobile() && this.sidenavOpen()) {
+                this.sidenavOpen.set(false);
+            }
         });
     }
 
-    ngAfterViewInit() {
-        this.dataSource.sort = this.sort;
-        // Загружаем все подразделения
-        this.unitService.getAll().subscribe(items => {
-            this.items.set(items);
-            this.allUnits.set(items);
+    private getSavedSidenavState(): boolean {
+        const saved = localStorage.getItem('unitSidenavOpen');
+        return saved !== null ? saved === 'true' : true;
+    }
+
+    private saveSidenavState(open: boolean) {
+        localStorage.setItem('unitSidenavOpen', open.toString());
+    }
+
+    toggleSidenav() {
+        const newState = !this.sidenavOpen();
+        this.sidenavOpen.set(newState);
+        this.saveSidenavState(newState);
+    }
+
+    onUnitSelected(unit: any) {
+        // Получаем полную информацию о подразделении
+        this.unitService.getById(unit.id).subscribe(fullUnit => {
+            this.selectedUnit.set(fullUnit);
+            
+            // Закрываем sidenav на мобильных после выбора
+            if (this.isMobile()) {
+                this.sidenavOpen.set(false);
+            }
         });
     }
 
-    reload() {
-        // Определяем значение parentId для передачи на сервер
-        let parentIdForServer: string | undefined;
-        
-        if (this.selectedParentId === '') {
-            // Все подразделения - не передаем parentId
-            parentIdForServer = undefined;
-        } else if (this.selectedParentId === NULL_GUID) {
-            // Только корневые подразделения (без родителей) - передаем NULL_GUID
-            parentIdForServer = NULL_GUID;
-        } else {
-            // Конкретный родительский ID
-            parentIdForServer = this.selectedParentId || undefined;
-        }
-
-        this.unitService.getAll(this.searchText, parentIdForServer)
-            .subscribe(items => {
-                this.items.set(items);
-            });
-    }
-
-    onSearchChange(searchText: string) {
-        this.searchText = searchText;
-        this.reload();
-    }
-
-    onParentFilterChange(parentId: string | null) {
-        this.selectedParentId = parentId;
-        this.reload();
-    }
-
-    // CREATE
-    add() {
+    addUnit() {
         const dialogRef = this.dialog.open(UnitDialogComponent, {
             width: '600px',
             data: { 
@@ -199,7 +237,7 @@ export class UnitsComponent implements AfterViewInit {
                 militaryNumber: '', 
                 forceTypeId: undefined,
                 unitTypeId: undefined,
-                parentId: undefined,
+                parentId: this.selectedUnit()?.id || undefined,
                 assignedUnitId: undefined,
                 orderVal: 1, 
                 comment: '' 
@@ -219,27 +257,36 @@ export class UnitsComponent implements AfterViewInit {
                     orderVal: result.orderVal,
                     comment: result.comment
                 };
-                this.unitService.create(createDto).subscribe(() => this.reload());
+                this.unitService.create(createDto).subscribe(() => {
+                    // TODO: Обновить дерево подразделений
+                });
             }
         });
     }
 
-    // UPDATE
-    edit(unit: Unit) {
+    editUnit() {
+        const unit = this.selectedUnit();
+        if (!unit) return;
+
         const dialogRef = this.dialog.open(UnitDialogComponent, {
             width: '600px',
-            data: { ...unit } // Передаем копию объекта для редактирования
+            data: { ...unit }
         });
 
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
-                this.unitService.update(result.id, result).subscribe(() => this.reload());
+                this.unitService.update(result.id, result).subscribe(() => {
+                    this.selectedUnit.set(result);
+                    // TODO: Обновить дерево подразделений
+                });
             }
         });
     }
 
-    // DELETE
-    delete(unit: Unit) {
+    deleteUnit() {
+        const unit = this.selectedUnit();
+        if (!unit) return;
+
         const ref = this.dialog.open(ConfirmDialogComponent, {
             width: '360px',
             maxWidth: '95vw',
@@ -256,16 +303,17 @@ export class UnitsComponent implements AfterViewInit {
         
         ref.afterClosed().subscribe(confirmed => {
             if (confirmed) {
-                this.unitService.delete(unit.id).subscribe(() => this.reload());
+                this.unitService.delete(unit.id).subscribe(() => {
+                    this.selectedUnit.set(null);
+                    // TODO: Обновить дерево подразделений
+                });
             }
         });
     }
 
-    // Показать дочерние подразделения
-    showChildren(unit: Unit) {
+    showChildren(unit: UnitDto) {
         this.unitService.getChildren(unit.id).subscribe(children => {
             if (children.length === 0) {
-                // Показать уведомление, что дочерних подразделений нет
                 this.dialog.open(ConfirmDialogComponent, {
                     width: '360px',
                     autoFocus: false,
@@ -279,18 +327,26 @@ export class UnitsComponent implements AfterViewInit {
                     }
                 });
             } else {
-                // Фильтруем таблицу, чтобы показать только дочерние подразделения
-                this.selectedParentId = unit.id;
-                this.reload();
+                const childrenNames = children.map(c => `• ${c.name} (${c.shortName})`).join('\n');
+                this.dialog.open(ConfirmDialogComponent, {
+                    width: '400px',
+                    autoFocus: false,
+                    data: {
+                        title: `Дочірні підрозділи "${unit.shortName}"`,
+                        message: childrenNames,
+                        confirmText: 'OK',
+                        cancelText: '',
+                        color: 'primary',
+                        icon: 'account_tree'
+                    }
+                });
             }
         });
     }
 
-    // Показать приданные подразделения
-    showAssigned(unit: Unit) {
+    showAssigned(unit: UnitDto) {
         this.unitService.getAssignedUnits(unit.id).subscribe(assigned => {
             if (assigned.length === 0) {
-                // Показать уведомление, что приданных подразделений нет
                 this.dialog.open(ConfirmDialogComponent, {
                     width: '360px',
                     autoFocus: false,
@@ -304,7 +360,6 @@ export class UnitsComponent implements AfterViewInit {
                     }
                 });
             } else {
-                // Показать диалог со списком приданных подразделений
                 const assignedNames = assigned.map(a => `• ${a.name} (${a.shortName})`).join('\n');
                 this.dialog.open(ConfirmDialogComponent, {
                     width: '400px',
