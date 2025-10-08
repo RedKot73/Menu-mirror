@@ -134,6 +134,10 @@ import { LookupDto } from '../shared/models/lookup.models';
               [disabled]="!isFormValid()">
         Зберегти
       </button>
+      <button mat-raised-button color="accent" (click)="onSaveAndContinue()" 
+              [disabled]="!isFormValid()">
+        Зберегти і продовжити
+      </button>
     </div>`,
     styles: [`
         .content {
@@ -144,7 +148,11 @@ import { LookupDto } from '../shared/models/lookup.models';
             padding-top: 10px !important;
         }
         .content .mat-mdc-form-field { width: 100%; }
-        .actions { gap: 8px; }
+        .actions { 
+            gap: 8px; 
+            display: flex;
+            flex-wrap: wrap;
+        }
         textarea {
             resize: vertical;
             min-height: 60px;
@@ -288,6 +296,10 @@ export class SoldierDialogComponent implements OnInit {
     }
     
     onSave() { 
-        this.ref.close(this.data); 
+        this.ref.close({ data: this.data, continue: false }); 
+    }
+
+    onSaveAndContinue() {
+        this.ref.close({ data: this.data, continue: true });
     }
 }

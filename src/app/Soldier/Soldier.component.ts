@@ -193,46 +193,58 @@ export class SoldiersComponent implements AfterViewInit {
 
     // CREATE
     add() {
-        const dialogRef = this.dialog.open(SoldierDialogComponent, {
-            width: '600px',
-            data: { 
-                id: '',
-                firstName: '', 
-                midleName: '', 
-                lastName: '', 
-                fio: '',
-                nickName: '', 
-                unitId: this.filterByUnitId(),
-                unitShortName: '',
-                assignedUnitId: undefined,
-                assignedUnitShortName: undefined,
-                rankId: '',
-                rankShortValue: '',
-                positionId: '',
-                positionValue: '',
-                stateId: '',
-                stateValue: '',
-                comment: '' 
-            } as SoldierDto
-        });
+        const openDialog = () => {
+            const dialogRef = this.dialog.open(SoldierDialogComponent, {
+                width: '600px',
+                data: { 
+                    id: '',
+                    firstName: '', 
+                    midleName: '', 
+                    lastName: '', 
+                    fio: '',
+                    nickName: '', 
+                    unitId: this.filterByUnitId() || '',
+                    unitShortName: '',
+                    assignedUnitId: undefined,
+                    assignedUnitShortName: undefined,
+                    rankId: '',
+                    rankShortValue: '',
+                    positionId: '',
+                    positionValue: '',
+                    stateId: '',
+                    stateValue: '',
+                    comment: '' 
+                } as SoldierDto
+            });
 
-        dialogRef.afterClosed().subscribe(result => {
-            if (result) {
-                const createDto: SoldierCreateDto = {
-                    firstName: result.firstName,
-                    midleName: result.midleName,
-                    lastName: result.lastName,
-                    nickName: result.nickName,
-                    unitId: result.unitId,
-                    assignedUnitId: result.assignedUnitId,
-                    rankId: result.rankId,
-                    positionId: result.positionId,
-                    stateId: result.stateId,
-                    comment: result.comment
-                };
-                this.soldierService.create(createDto).subscribe(() => this.reload());
-            }
-        });
+            dialogRef.afterClosed().subscribe(result => {
+                if (result && result.data) {
+                    const createDto: SoldierCreateDto = {
+                        firstName: result.data.firstName,
+                        midleName: result.data.midleName,
+                        lastName: result.data.lastName,
+                        nickName: result.data.nickName,
+                        unitId: result.data.unitId,
+                        assignedUnitId: result.data.assignedUnitId,
+                        rankId: result.data.rankId,
+                        positionId: result.data.positionId,
+                        stateId: result.data.stateId,
+                        comment: result.data.comment
+                    };
+                    
+                    this.soldierService.create(createDto).subscribe(() => {
+                        this.reload();
+                        
+                        // Если нужно продолжить, открываем диалог снова
+                        if (result.continue) {
+                            setTimeout(() => openDialog(), 100);
+                        }
+                    });
+                }
+            });
+        };
+
+        openDialog();
     }
 
     // UPDATE
@@ -243,8 +255,8 @@ export class SoldiersComponent implements AfterViewInit {
         });
 
         dialogRef.afterClosed().subscribe(result => {
-            if (result) {
-                this.soldierService.update(result.id, result).subscribe(() => this.reload());
+            if (result && result.data) {
+                this.soldierService.update(result.data.id, result.data).subscribe(() => this.reload());
             }
         });
     }
