@@ -66,6 +66,9 @@ export class UnitTreeComponent implements OnInit {
 
     // Output для выбора подразделения
     unitSelected = output<UnitTreeItemDto>();
+    
+    // Output для уведомления об обновлении подразделения
+    unitUpdated = output<UnitTreeItemDto>();
 
     dataSource = new MatTreeNestedDataSource<UnitTreeNode>();
     loading = signal(false);
@@ -309,21 +312,14 @@ export class UnitTreeComponent implements OnInit {
 
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
-                this.unitService.update(result.id, result).subscribe(() => {
+                const unit = result as UnitTreeItemDto;
+                this.unitService.update(unit.id, unit).subscribe(() => {
                     // Эффективное локальное обновление
-                    this.updateNodeById(result.id, {
-                        name: result.name,
-                        shortName: result.shortName,
-                        militaryNumber: result.militaryNumber,
-                        forceType: result.forceType,
-                        unitType: result.unitType,
-                        forceTypeId: result.forceTypeId,
-                        unitTypeId: result.unitTypeId,
-                        assignedUnitId: result.assignedUnitId,
-                        orderVal: result.orderVal,
-                        comment: result.comment
-                    });
+                    this.updateNodeById(unit.id, unit);
                     this.forceTreeUpdate();
+                    
+                    // Уведомляем о том, что подразделение обновлено
+                    this.unitUpdated.emit(unit);
                 });
             }
         });
