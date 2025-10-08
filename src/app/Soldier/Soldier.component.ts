@@ -36,8 +36,6 @@ export type Soldier = SoldierDto;
     ],
     styleUrl: './Soldier.component.scss',
     template: `
-        <h2>Бійці</h2>
-        
         <soldier-filters 
             [allUnits]="allUnits()"
             (searchChanged)="onSearchChange($event)"

@@ -29,10 +29,14 @@ import { NULL_GUID } from './unit.constants';
     template: `
         <div class="tree-container">
             <div class="tree-header">
-                <h3>Дерево підрозділів</h3>
+                <h3>Підрозділи</h3>
                 <button mat-raised-button color="primary" (click)="refresh()" [disabled]="loading()">
                     <mat-icon>refresh</mat-icon>
                     Оновити
+                </button>
+                <button mat-raised-button color="primary" (click)="CreateUnit()" [disabled]="loading()">
+                    <mat-icon>add</mat-icon>
+                    Створити
                 </button>
             </div>
 
@@ -246,6 +250,44 @@ export class UnitTreeComponent implements OnInit {
             orderVal: node.orderVal,
             comment: node.comment,
             hasChildren: node.hasChildren
+        });
+    }
+
+    CreateUnit() {
+        // Открываем диалог для создания корневого подразделения
+        const dialogRef = this.dialog.open(UnitDialogComponent, {
+            width: '600px',
+            data: { 
+                id: '',
+                name: '', 
+                shortName: '', 
+                militaryNumber: '', 
+                forceTypeId: undefined,
+                unitTypeId: undefined,
+                parentId: NULL_GUID, // Устанавливаем корневой родитель
+                assignedUnitId: undefined,
+                orderVal: 1, 
+                comment: '' 
+            }
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                this.unitService.create({
+                    name: result.name,
+                    shortName: result.shortName,
+                    militaryNumber: result.militaryNumber,
+                    forceTypeId: result.forceTypeId,
+                    unitTypeId: result.unitTypeId,
+                    parentId: result.parentId,
+                    assignedUnitId: result.assignedUnitId,
+                    orderVal: result.orderVal,
+                    comment: result.comment
+                }).subscribe(() => {
+                    // Перезагружаем корневые данные для отображения нового подразделения
+                    this.loadRootData();
+                });
+            }
         });
     }
 
