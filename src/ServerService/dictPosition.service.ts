@@ -10,7 +10,7 @@ export type DictPosition = SimpleDictDto;
     providedIn: 'root'
 })
 export class DictPositionService {
-    readonly api = '/api/DictPosition';
+    readonly api = '/api/dict-positions';
     private http = inject(HttpClient);
 
     createItemsSignal() {
@@ -40,5 +40,9 @@ export class DictPositionService {
 
     delete(id: string): Observable<void> {
         return this.http.delete<void>(`${this.api}/${id}`);
+    }
+
+    getSelectList(): Observable<LookupDto[]> {
+        return this.http.get<LookupDto[]>(`${this.api}/sel_list`);
     }
 }

@@ -53,4 +53,8 @@ export class DictRankService {
     get(api: string, id: string) {
         return this.http.get<DictRank>(`${api}/${id}`);
     }
+
+    getSelectList(): Observable<LookupDto[]> {
+        return this.http.get<LookupDto[]>(`${this.api}/sel_list`);
+    }
 }

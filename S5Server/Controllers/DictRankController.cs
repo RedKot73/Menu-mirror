@@ -182,4 +182,16 @@ public class DictRankController : ControllerBase
 
         return Ok(data);
     }
+
+    /// <summary>Укороченный список для списков выбора</summary>
+    [HttpGet("sel_list")]
+    public async Task<ActionResult<IEnumerable<LookupDto>>> GetSelectList()
+    {
+        var data = await Query()
+            .OrderBy(t => t.ShortValue)
+            .Select(t => new LookupDto(t.Id, t.ShortValue))
+            .ToListAsync();
+
+        return Ok(data);
+    }
 }

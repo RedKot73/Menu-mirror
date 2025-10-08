@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
 using S5Server.Data;
 using S5Server.Models;
 using S5Server.Utils;
@@ -10,132 +9,253 @@ namespace S5Server.Controllers;
 /// <summary>
 /// Generic API контроллер для справочников с ShortValue (без пагинации, без Razor)
 /// </summary>
+/// ВНИМАНИЕ: [ApiController] на абстрактном классе не применяется к наследникам, им нужен свой атрибут.
 [ApiController]
 public abstract class ShortDictApiController<TEntity> : ControllerBase
     where TEntity : ShortDictBase, IShortDictBase, new()
 {
     protected readonly MainDbContext _db;
     protected readonly DbSet<TEntity> _set;
+    protected readonly ILogger _logger;
 
-    protected ShortDictApiController(MainDbContext db, DbSet<TEntity> set)
+    protected ShortDictApiController(MainDbContext db, DbSet<TEntity> set, ILogger logger)
     {
         _db = db;
         _set = set;
+        _logger = logger;
     }
 
     protected IQueryable<TEntity> Query() => _set.AsNoTracking();
 
     /// <summary>Полный список (опционально фильтр по подстроке)</summary>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ShortDictDto>>> GetAll([FromQuery] string? search,
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<ShortDictDto>>> GetAll(
+        [FromQuery] string? search,
         CancellationToken ct = default)
     {
-        var q = Query();
-        if (!string.IsNullOrWhiteSpace(search))
-            q = q.Where(x => x.ShortValue.Contains(search));
+        try
+        {
+            var q = Query();
+            if (!string.IsNullOrWhiteSpace(search))
+                q = q.Where(x => x.ShortValue.Contains(search));
 
-        var list = await q
-            .OrderBy(x => x.Value)
-            .Select(x => ShortDictBase.ToDto(x))
-            .ToListAsync(ct);
+            var list = await q
+                .OrderBy(x => x.Value)
+                .Select(t => ShortDictBase.ToDto(t))
+                .ToListAsync(ct);
 
-        return Ok(list);
+            return Ok(list);
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Отмена клиентом");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка GetAll {Entity}", typeof(TEntity).Name);
+            return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+        }
     }
 
     [HttpGet("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ShortDictDto>> Get(string id, CancellationToken ct = default)
     {
-        var e = await Query().FirstOrDefaultAsync(x => x.Id == id, ct);
-        return e == null ? NotFound() : Ok(ShortDictBase.ToDto(e));
+        try
+        {
+            var e = await Query().FirstOrDefaultAsync(x => x.Id == id, ct);
+            if (e == null)
+                return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+            return Ok(ShortDictBase.ToDto(e));
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Отмена клиентом");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка Get {Entity} Id={Id}", typeof(TEntity).Name, id);
+            return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+        }
     }
 
     [HttpPost]
-    public async Task<ActionResult<ShortDictDto>> Create([FromBody] ShortDictCreateDto dto,
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<ShortDictDto>> Create(
+        [FromBody] ShortDictCreateDto dto,
         CancellationToken ct = default)
     {
-        if (dto is null) return BadRequest("Пустое тело запроса.");
-        if (string.IsNullOrWhiteSpace(dto.Value)) return BadRequest("Value не может быть пустым.");
-        if (string.IsNullOrWhiteSpace(dto.ShortValue)) return BadRequest("ShortValue не может быть пустым.");
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+        if (dto is null)
+            return Problem(statusCode: 400, title: "Некорректное тело запроса");
 
         var entity = new TEntity
         {
             Id = Guid.NewGuid().ToString("D"),
-            Value = dto.Value,
-            ShortValue = dto.ShortValue,
-            Comment = dto.Comment
+            Value = dto.Value.Trim(),
+            ShortValue = dto.ShortValue.Trim(),
+            Comment = dto.Comment?.Trim()
         };
         _set.Add(entity);
+
         try
         {
             await _db.SaveChangesAsync(ct);
+            return CreatedAtAction(nameof(Get), new { id = entity.Id }, ShortDictBase.ToDto(entity));
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Отмена клиентом");
         }
         catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
-            return Conflict($"Значение \"{entity.Value}\" уже существует.");
+            _logger.LogInformation(ex, "Конфликт уникальности Value={Value} ShortValue={ShortValue} {Entity}",
+                entity.Value, entity.ShortValue, typeof(TEntity).Name);
+            return Problem(
+                statusCode: 409,
+                title: "Конфликт уникальности",
+                detail: $"Значение \"{entity.Value}\" уже существует.",
+                extensions: new Dictionary<string, object?>
+                {
+                    ["field"] = "Value",
+                    ["value"] = entity.Value
+                });
         }
-        return CreatedAtAction(nameof(Get), new { id = entity.Id }, ShortDictBase.ToDto(entity));
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _logger.LogWarning(ex, "Конкурентный конфликт Create {Entity}", typeof(TEntity).Name);
+            return Problem(statusCode: 409, title: "Конкурентный конфликт");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Неизвестная ошибка Create {Entity}", typeof(TEntity).Name);
+            return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+        }
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id,
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Update(
+        string id,
         [FromBody] ShortDictDto dto,
         CancellationToken ct = default)
     {
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
         if (dto is null)
-            return BadRequest("Пустое тело запроса.");
-        if (string.IsNullOrWhiteSpace(dto.Value))
-            return BadRequest("Value не может быть пустым.");
-        if (string.IsNullOrWhiteSpace(dto.ShortValue))
-            return BadRequest("ShortValue не может быть пустым.");
-        var e = await _set.AsTracking()
-            .FirstOrDefaultAsync(x => x.Id == id, ct);
+            return Problem(statusCode: 400, title: "Некорректное тело запроса");
+
+        var e = await _set.AsTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
         if (e == null)
-            return NotFound();
+            return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
 
         var snapshot = ShortDictBase.ToDto(e);
         ShortDictBase.ApplyDto(e, dto);
+
         if (snapshot == ShortDictBase.ToDto(e))
             return NoContent();
+
         try
         {
             await _db.SaveChangesAsync(ct);
+            return NoContent();
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Отмена клиентом");
         }
         catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
-            return Conflict($"Значение \"{e.Value}\" уже существует.");
+            _logger.LogInformation(ex, "Конфликт уникальности Update {Entity} Id={Id} Value={Value}",
+                typeof(TEntity).Name, id, e.Value);
+            return Problem(
+                statusCode: 409,
+                title: "Конфликт уникальности",
+                detail: $"Значение \"{e.Value}\" уже существует.",
+                extensions: new Dictionary<string, object?>
+                {
+                    ["field"] = "Value",
+                    ["value"] = e.Value,
+                    ["id"] = id
+                });
         }
-        return NoContent();
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _logger.LogWarning(ex, "Конкурентный конфликт Update {Entity} Id={Id}", typeof(TEntity).Name, id);
+            return Problem(statusCode: 409, title: "Конкурентный конфликт");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка Update {Entity} Id={Id}", typeof(TEntity).Name, id);
+            return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+        }
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(string id,
-        CancellationToken ct = default)
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(string id, CancellationToken ct = default)
     {
-        var e = await _set.FirstOrDefaultAsync(x => x.Id == id, ct);
-        if (e == null) return NotFound();
-        _set.Remove(e);
-        await _db.SaveChangesAsync(ct);
-        return NoContent();
+        try
+        {
+            var e = await _set.FirstOrDefaultAsync(x => x.Id == id, ct);
+            if (e == null)
+                return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+
+            _set.Remove(e);
+            await _db.SaveChangesAsync(ct);
+            return NoContent();
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Отмена клиентом");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка Delete {Entity} Id={Id}", typeof(TEntity).Name, id);
+            return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+        }
     }
 
     /// <summary>Укороченный список для автокомплита</summary>
     [HttpGet("lookup")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<object>>> Lookup(
         [FromQuery] string term,
-        [FromQuery] int limit = 10)
+        [FromQuery] int limit = 10,
+        CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(term))
             return Ok(Array.Empty<object>());
-
         if (limit is < 1 or > 100) limit = 10;
 
-        var data = await Query()
-            .Where(x => x.Value.Contains(term) || x.ShortValue.Contains(term))
-            .OrderBy(x => x.Value)
-            .Take(limit)
-            .Select(x => new { x.Id, Name = x.Value, ShortName = x.ShortValue })
-            .ToListAsync();
+        try
+        {
+            var data = await Query()
+                .Where(x => x.Value.Contains(term) || x.ShortValue.Contains(term))
+                .OrderBy(x => x.Value)
+                .Take(limit)
+                .Select(x => new { x.Id, Name = x.Value, ShortName = x.ShortValue })
+                .ToListAsync(ct);
 
-        return Ok(data);
+            return Ok(data);
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Отмена клиентом");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка Lookup {Entity}", typeof(TEntity).Name);
+            return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+        }
     }
 }

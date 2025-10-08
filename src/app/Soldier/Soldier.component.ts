@@ -48,21 +48,16 @@ export type Soldier = SoldierDto;
             <!-- FIO Column -->
             <ng-container matColumnDef="fio">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header> ПІБ </th>
-                <td mat-cell *matCellDef="let soldier"> 
-                    <div class="soldier-name">
-                        <span class="fio">{{ soldier.fio }}</span>
-                        @if (soldier.nickName) {
-                            <span class="nickname">"{{ soldier.nickName }}"</span>
-                        }
-                        @if (soldier.assignedUnitId) {
-                            <mat-icon class="assigned-icon" 
-                                     matTooltip="Приданий до {{ soldier.assignedUnitShortName }}"
-                                     >assignment_ind</mat-icon>
-                        }
-                    </div>
+                <td mat-cell *matCellDef="let soldier">
+                    <span class="fio">{{ soldier.fio }}</span>
                 </td>
             </ng-container>
             
+            <ng-container matColumnDef="nickName">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Позивний </th>
+                <td mat-cell *matCellDef="let soldier"> {{ soldier.nickName }} </td>
+            </ng-container>
+
             <!-- Rank Column -->
             <ng-container matColumnDef="rankShortValue">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header> Звання </th>
@@ -137,7 +132,7 @@ export class SoldiersComponent implements AfterViewInit {
     items = this.soldierService.createItemsSignal();
     allUnits = signal<UnitDto[]>([]);
     dataSource = new MatTableDataSource<Soldier>([]);
-    displayedColumns = ['fio', 'rankShortValue', 'positionValue',
+    displayedColumns = ['fio', 'nickName', 'rankShortValue', 'positionValue',
         'stateValue', 'assignedUnitShortName', 'comment', 'actions'];
     dialog = inject(MatDialog);
     

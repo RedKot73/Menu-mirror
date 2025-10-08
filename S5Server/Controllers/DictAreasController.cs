@@ -4,8 +4,9 @@ using S5Server.Models;
 
 namespace S5Server.Controllers;
 
+[ApiController] // важно для авто-валидации и ProblemDetails по умолчанию
 [Route("api/dict-areas")]
 public class DictAreasController : SimpleDictApiController<DictArea>
 {
-    public DictAreasController(MainDbContext db) : base(db, db.DictAreas) { }
+    public DictAreasController(MainDbContext db, ILogger<DictAreasController> logger) : base(db, db.DictAreas, logger) { }
 }

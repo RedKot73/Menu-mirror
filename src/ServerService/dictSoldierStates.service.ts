@@ -10,7 +10,7 @@ export type DictSoldierStates = SimpleDictDto;
     providedIn: 'root'
 })
 export class DictSoldierStatesService {
-    readonly api = '/api/DictSoldierStates';
+    readonly api = '/api/dict-soldier-states';
     private http = inject(HttpClient);
 
     createItemsSignal() {
@@ -40,5 +40,9 @@ export class DictSoldierStatesService {
 
     delete(id: string): Observable<void> {
         return this.http.delete<void>(`${this.api}/${id}`);
+    }
+
+    getSelectList(): Observable<LookupDto[]> {
+        return this.http.get<LookupDto[]>(`${this.api}/sel_list`);
     }
 }

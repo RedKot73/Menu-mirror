@@ -13,9 +13,9 @@ import { AsyncPipe } from '@angular/common';
 
 import { SoldierDto } from "../../ServerService/soldier.service";
 import { UnitService } from "../../ServerService/unit.service";
-import { DictRankService, DictRank } from "../../ServerService/dictRanks.service";
-import { DictPositionService, DictPosition } from "../../ServerService/dictPosition.service";
-import { DictSoldierStatesService, DictSoldierStates } from "../../ServerService/dictSoldierStates.service";
+import { DictRankService } from "../../ServerService/dictRanks.service";
+import { DictPositionService } from "../../ServerService/dictPosition.service";
+import { DictSoldierStatesService } from "../../ServerService/dictSoldierStates.service";
 import { LookupDto } from '../shared/models/lookup.models';
 
 @Component({
@@ -100,7 +100,7 @@ import { LookupDto } from '../shared/models/lookup.models';
         <mat-label>Звання</mat-label>
         <mat-select [(ngModel)]="data.rankId" required>
           @for (rank of dictRanks; track rank.id) {
-            <mat-option [value]="rank.id">{{ rank.shortValue }}</mat-option>
+            <mat-option [value]="rank.id">{{ rank.value }}</mat-option>
           }
         </mat-select>
       </mat-form-field>
@@ -158,9 +158,9 @@ export class SoldierDialogComponent implements OnInit {
     private dictSoldierStatesService = inject(DictSoldierStatesService);
     private cdr = inject(ChangeDetectorRef);
     
-    dictRanks: DictRank[] = [];
-    dictPositions: DictPosition[] = [];
-    dictStates: DictSoldierStates[] = [];
+    dictRanks: LookupDto[] = [];
+    dictPositions: LookupDto[] = [];
+    dictStates: LookupDto[] = [];
     
     // Для автокомплита основного подразделения
     unitSearchControl = new FormControl<LookupDto | string | null>(null);
@@ -238,9 +238,9 @@ export class SoldierDialogComponent implements OnInit {
     private loadData() {
         // Используем forkJoin для одновременной загрузки всех данных
         forkJoin({
-            ranks: this.dictRankService.getAll(),
-            positions: this.dictPositionService.getAll(),
-            states: this.dictSoldierStatesService.getAll()
+            ranks: this.dictRankService.getSelectList(),
+            positions: this.dictPositionService.getSelectList(),
+            states: this.dictSoldierStatesService.getSelectList()
         }).subscribe(({ ranks, positions, states }) => {
             this.dictRanks = ranks;
             this.dictPositions = positions;
