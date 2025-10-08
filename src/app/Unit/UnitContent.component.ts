@@ -2,6 +2,8 @@ import { Component, input, output } from "@angular/core";
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { UnitDto } from "../../ServerService/unit.service";
 
 @Component({
@@ -10,7 +12,9 @@ import { UnitDto } from "../../ServerService/unit.service";
     imports: [
         MatButtonModule,
         MatIconModule,
-        MatCardModule
+        MatCardModule,
+        MatDividerModule,
+        MatExpansionModule
     ],
     styleUrl: './UnitContent.component.scss',
     template: `
@@ -68,6 +72,71 @@ import { UnitDto } from "../../ServerService/unit.service";
                         </div>
                     </mat-card-content>
                 </mat-card>
+
+                <!-- Дополнительные секции с expansion panels -->
+                <mat-accordion class="sections-accordion">
+                    
+                    <mat-expansion-panel class="unit-section-panel">
+                        <mat-expansion-panel-header>
+                            <mat-panel-title>
+                                <mat-icon color="primary">group</mat-icon>
+                                Особовий склад
+                            </mat-panel-title>
+                        </mat-expansion-panel-header>
+
+                        <div class="section-content">
+                            <p class="todo-placeholder">
+                                [TODO: Тут буде таблиця або список особового складу підрозділу]
+                            </p>
+                        </div>
+                    </mat-expansion-panel>
+
+                    <mat-expansion-panel class="unit-section-panel">
+                        <mat-expansion-panel-header>
+                            <mat-panel-title>
+                                <mat-icon color="primary">gavel</mat-icon>
+                                Бойові розпорядження
+                            </mat-panel-title>
+                        </mat-expansion-panel-header>
+                        
+                        <div class="section-content">
+                            <p class="todo-placeholder">
+                                [TODO: Тут буде список бойових розпоряджень підрозділу]
+                            </p>
+                        </div>
+                    </mat-expansion-panel>
+
+                    <mat-expansion-panel class="unit-section-panel">
+                        <mat-expansion-panel-header>
+                            <mat-panel-title>
+                                <mat-icon color="primary">send</mat-icon>
+                                Бойові донесення
+                            </mat-panel-title>
+                        </mat-expansion-panel-header>
+                        
+                        <div class="section-content">
+                            <p class="todo-placeholder">
+                                [TODO: Тут буде список бойових донесень підрозділу]
+                            </p>
+                        </div>
+                    </mat-expansion-panel>
+                    
+                    <mat-expansion-panel class="unit-section-panel">
+                        <mat-expansion-panel-header>
+                            <mat-panel-title>
+                                <mat-icon color="primary">info</mat-icon>
+                                Додаткова інформація
+                            </mat-panel-title>
+                        </mat-expansion-panel-header>
+                        
+                        <div class="section-content">
+                            <p class="todo-placeholder">
+                                [TODO: Ця секція зарезервована для майбутніх даних, які ще не визначені.]
+                            </p>
+                        </div>
+                    </mat-expansion-panel>
+
+                </mat-accordion>
             } @else {
                 <!-- Стан коли нічого не вибрано -->
                 <div class="empty-state">
