@@ -5,6 +5,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { UnitDto } from "../../ServerService/unit.service";
+import { SoldiersComponent } from '../Soldier/Soldier.component';
 
 @Component({
     selector: "unit-content",
@@ -14,7 +15,8 @@ import { UnitDto } from "../../ServerService/unit.service";
         MatIconModule,
         MatCardModule,
         MatDividerModule,
-        MatExpansionModule
+        MatExpansionModule,
+        SoldiersComponent
     ],
     styleUrl: './UnitContent.component.scss',
     template: `
@@ -85,9 +87,7 @@ import { UnitDto } from "../../ServerService/unit.service";
                         </mat-expansion-panel-header>
 
                         <div class="section-content">
-                            <p class="todo-placeholder">
-                                [TODO: Тут буде таблиця або список особового складу підрозділу]
-                            </p>
+                            <page-soldiers [filterByUnitId]="unit.id"></page-soldiers>
                         </div>
                     </mat-expansion-panel>
 

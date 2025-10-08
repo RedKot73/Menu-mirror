@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild, AfterViewInit, effect, signal } from "@angular/core";
+import { Component, inject, ViewChild, AfterViewInit, effect, signal, input } from "@angular/core";
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -41,7 +41,6 @@ export type Soldier = SoldierDto;
         <soldier-filters 
             [allUnits]="allUnits()"
             (searchChanged)="onSearchChange($event)"
-            (unitFilterChanged)="onUnitFilterChange($event)"
             (assignedUnitFilterChanged)="onAssignedUnitFilterChange($event)"
             (reload)="reload()"
             (add)="add()">
@@ -66,18 +65,6 @@ export type Soldier = SoldierDto;
                 </td>
             </ng-container>
             
-            <!-- Unit Column -->
-            <ng-container matColumnDef="unitShortName">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> Підрозділ </th>
-                <td mat-cell *matCellDef="let soldier"> {{ soldier.unitShortName }} </td>
-            </ng-container>
-            
-            <!-- Assigned Unit Column -->
-            <ng-container matColumnDef="assignedUnitShortName">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> Приданий до </th>
-                <td mat-cell *matCellDef="let soldier"> {{ soldier.assignedUnitShortName || '-' }} </td>
-            </ng-container>
-            
             <!-- Rank Column -->
             <ng-container matColumnDef="rankShortValue">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header> Звання </th>
@@ -96,6 +83,12 @@ export type Soldier = SoldierDto;
                 <td mat-cell *matCellDef="let soldier"> 
                     <span class="state-badge">{{ soldier.stateValue }}</span>
                 </td>
+            </ng-container>
+
+            <!-- Assigned Unit Column -->
+            <ng-container matColumnDef="assignedUnitShortName">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Приданий до </th>
+                <td mat-cell *matCellDef="let soldier"> {{ soldier.assignedUnitShortName || '-' }} </td>
             </ng-container>
 
             <!-- Comment Column -->
@@ -139,16 +132,19 @@ export type Soldier = SoldierDto;
 export class SoldiersComponent implements AfterViewInit {
     soldierService = inject(SoldierService);
     unitService = inject(UnitService);
+    
+    // Input для фильтрации по подразделению
+    filterByUnitId = input<string | null>(null);
+    
     items = this.soldierService.createItemsSignal();
     allUnits = signal<UnitDto[]>([]);
     dataSource = new MatTableDataSource<Soldier>([]);
-    displayedColumns = ['fio', 'unitShortName', 'assignedUnitShortName', 
-        'rankShortValue', 'positionValue', 'stateValue', 'comment', 'actions'];
+    displayedColumns = ['fio', 'rankShortValue', 'positionValue',
+        'stateValue', 'assignedUnitShortName', 'comment', 'actions'];
     dialog = inject(MatDialog);
     
     // Фильтры
     searchText = '';
-    selectedUnitId: string | null = null;
     selectedAssignedUnitId: string | null = null;
 
     @ViewChild(MatSort) sort!: MatSort;
@@ -156,6 +152,14 @@ export class SoldiersComponent implements AfterViewInit {
     constructor() {
         effect(() => {
             this.dataSource.data = this.items();
+        });
+        
+        // Автоматически перезагружаем данные при изменении фильтра подразделения
+        effect(() => {
+            const unitFilter = this.filterByUnitId();
+            if (unitFilter !== null) {
+                this.reload();
+            }
         });
     }
 
@@ -173,7 +177,7 @@ export class SoldiersComponent implements AfterViewInit {
 
     reload() {
         // Определяем параметры для сервера
-        const unitId = this.selectedUnitId === '' ? undefined : this.selectedUnitId || undefined;
+        const unitId = this.filterByUnitId() === '' ? undefined : this.filterByUnitId() || undefined;
         const assignedUnitId = this.selectedAssignedUnitId === '' ? undefined : 
                               this.selectedAssignedUnitId === 'null' ? 'null' : 
                               this.selectedAssignedUnitId || undefined;
@@ -186,11 +190,6 @@ export class SoldiersComponent implements AfterViewInit {
 
     onSearchChange(searchText: string) {
         this.searchText = searchText;
-        this.reload();
-    }
-
-    onUnitFilterChange(unitId: string | null) {
-        this.selectedUnitId = unitId;
         this.reload();
     }
 
@@ -210,7 +209,7 @@ export class SoldiersComponent implements AfterViewInit {
                 lastName: '', 
                 fio: '',
                 nickName: '', 
-                unitId: '',
+                unitId: this.filterByUnitId(),
                 unitShortName: '',
                 assignedUnitId: undefined,
                 assignedUnitShortName: undefined,

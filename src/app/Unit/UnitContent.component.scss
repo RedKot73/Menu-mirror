@@ -134,7 +134,22 @@
 
 /* Стилі для контенту всередині панелі */
 .section-content {
-    padding: 16px;
+    padding: 0;
+    
+    // Для обычного placeholder контента добавляем отступы
+    .todo-placeholder {
+        margin: 16px;
+    }
+    
+    // Для компонентов убираем дополнительные отступы
+    page-soldiers {
+        display: block;
+        
+        h2 {
+            margin-top: 0;
+            padding: 16px 16px 0 16px;
+        }
+    }
 }
 
 .todo-placeholder {

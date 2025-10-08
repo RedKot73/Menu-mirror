@@ -34,16 +34,6 @@ import { UnitDto } from '../../ServerService/unit.service';
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="filter-field">
-                <mat-label>Підрозділ</mat-label>
-                <mat-select [(ngModel)]="selectedUnitId" (ngModelChange)="onUnitFilterChange()">
-                    <mat-option [value]="''">Всі підрозділи</mat-option>
-                    @for (unit of allUnits; track unit.id) {
-                        <mat-option [value]="unit.id">{{ unit.shortName }}</mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="filter-field">
                 <mat-label>Приданий до</mat-label>
                 <mat-select [(ngModel)]="selectedAssignedUnitId" (ngModelChange)="onAssignedUnitFilterChange()">
                     <mat-option [value]="''">Всі</mat-option>
@@ -113,7 +103,6 @@ import { UnitDto } from '../../ServerService/unit.service';
 export class SoldierFiltersComponent {
     @Input() allUnits: UnitDto[] = [];
     @Output() searchChanged = new EventEmitter<string>();
-    @Output() unitFilterChanged = new EventEmitter<string | null>();
     @Output() assignedUnitFilterChanged = new EventEmitter<string | null>();
     @Output() reload = new EventEmitter<void>();
     @Output() add = new EventEmitter<void>();
@@ -136,11 +125,6 @@ export class SoldierFiltersComponent {
 
     onSearchInput() {
         this.searchSubject.next(this.searchText);
-    }
-
-    onUnitFilterChange() {
-        const unitId = this.selectedUnitId === '' ? null : this.selectedUnitId;
-        this.unitFilterChanged.emit(unitId);
     }
 
     onAssignedUnitFilterChange() {
