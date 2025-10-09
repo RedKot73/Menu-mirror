@@ -1,13 +1,9 @@
-import { Component, inject, signal, computed, effect } from "@angular/core";
-import { MatButtonModule } from '@angular/material/button';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatToolbarModule } from '@angular/material/toolbar';
+import { Component, inject, signal, computed, effect, HostListener, ElementRef, ViewChild, AfterViewInit, OnDestroy } from "@angular/core";
 import { MatDialog } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-import { MatDividerModule } from '@angular/material/divider';
 import { MatChipsModule } from '@angular/material/chips';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { CommonModule } from '@angular/common';
 
 import { UnitDialogComponent } from '../dialogs/UnitDialog';
 import { ConfirmDialogComponent } from "../dialogs/ConfirmDialog.component";
@@ -20,80 +16,98 @@ export type Unit = UnitDto;
 @Component({
     selector: "page-units",
     imports: [
-        MatButtonModule,
-        MatSidenavModule,
-        MatToolbarModule,
-        MatIconModule,
+        CommonModule,
         MatCardModule,
-        MatDividerModule,
         MatChipsModule,
         UnitTreeComponent,
         UnitContentComponent
     ],
     styleUrl: './Unit.component.scss',
     template: `
-        <mat-sidenav-container class="unit-container">
-            <!-- Левая панель с деревом подразделений -->
-            <mat-sidenav 
-                #sidenav 
-                [mode]="sidenavMode()"
-                [opened]="sidenavOpen()"
-                class="unit-sidenav">
-                
-                <div class="sidenav-header">
-                    <button mat-icon-button (click)="toggleSidenav()">
-                        <mat-icon>close</mat-icon>
+        <div class="container" #containerRef>
+            <div class="panel nav-panel" [style.width.%]="navPanelWidth()" [class.collapsed]="isNavPanelCollapsed()">
+                <div class="panel-header" [class.hidden]="isNavPanelCollapsed()">
+                    <h3>Дерево підрозділів</h3>
+                </div>
+                <div class="panel-content" [class.hidden]="isNavPanelCollapsed()">
+                    <!-- Дерево подразделений -->
+                    <unit-tree 
+                        (unitSelected)="onUnitSelected($event)"
+                        (unitUpdated)="onUnitUpdated($event)"
+                        class="unit-tree">
+                    </unit-tree>
+                </div>
+            </div>
+            
+            <div 
+                class="splitter"
+                [class.dragging]="isDragging()"
+                (mousedown)="startDrag($event)">
+                <div class="splitter-handle"></div>
+                <div class="splitter-controls">
+                    <button 
+                        class="toggle-btn"
+                        (click)="toggleNavPanel()"
+                        [title]="isNavPanelCollapsed() ? 'Показати дерево підрозділів' : 'Приховати дерево підрозділів'">
+                        <span class="arrow" [class.collapsed]="isNavPanelCollapsed()">
+                            {{ isNavPanelCollapsed() ? '▶' : '◀' }}
+                        </span>
                     </button>
                 </div>
-                
-                <!-- Дерево подразделений -->
-                <unit-tree 
-                    (unitSelected)="onUnitSelected($event)"
-                    (unitUpdated)="onUnitUpdated($event)"
-                    class="unit-tree">
-                </unit-tree>
-                
-                <!-- Разделитель для изменения размера -->
-                @if (!isMobile() && sidenavMode() === 'side') {
-                    <div class="sidenav-resizer" 
-                         [class.resizing]="isResizing()"
-                         (mousedown)="onResizeStart($event)">
+            </div>
+            
+            <div class="panel content-panel" [style.width.%]="contentPanelWidth()">
+                <div class="panel-header">
+                    <!-- Toolbar с заголовком -->
+                    <div class="unit-toolbar">
+                        <h3>{{ selectedUnitTitle() }}</h3>
                     </div>
-                }
-            </mat-sidenav>
-
-            <!-- Основной контент -->
-            <mat-sidenav-content class="unit-content">
-                <!-- Toolbar с кнопкой toggle -->
-                <mat-toolbar color="primary" class="unit-toolbar">
-                    <button 
-                        mat-icon-button 
-                        (click)="toggleSidenav()"
-                        [class.hidden]="sidenavOpen() && !isMobile()">
-                        <mat-icon>menu</mat-icon>
-                    </button>
-                </mat-toolbar>
-
-                <!-- Основное содержимое -->
-                <unit-content 
-                    [selectedUnit]="selectedUnit()"
-                    [sidenavOpen]="sidenavOpen()"
-                    (showSidenav)="toggleSidenav()">
-                </unit-content>
-            </mat-sidenav-content>
-        </mat-sidenav-container>
+                </div>
+                <div class="panel-content">
+                    <!-- Основное содержимое -->
+                    <unit-content 
+                        [selectedUnit]="selectedUnit()"
+                        [sidenavOpen]="!isNavPanelCollapsed()"
+                        (showSidenav)="toggleNavPanel()">
+                    </unit-content>
+                </div>
+            </div>
+        </div>
     `
 })
-export class UnitsComponent {
+export class UnitsComponent implements AfterViewInit, OnDestroy {
     unitService = inject(UnitService);
     dialog = inject(MatDialog);
     breakpointObserver = inject(BreakpointObserver);
 
+    // ViewChild for container reference
+    @ViewChild('containerRef') containerRef!: ElementRef<HTMLElement>;
+
     // State signals
     selectedUnit = signal<UnitDto | null>(null);
-    sidenavOpen = signal<boolean>(this.getSavedSidenavState());
-    sidenavWidth = signal<number>(this.getSavedSidenavWidth());
-    isResizing = signal<boolean>(false);
+    
+    // Panel signals (replacing sidenav signals)
+    navPanelWidth = signal(this.getSavedNavPanelWidth());
+    contentPanelWidth = computed(() => {
+        const navWidth = this.navPanelWidth();
+        return navWidth === 0 ? 100 : 100 - navWidth;
+    });
+    isDragging = signal(false);
+    isNavPanelCollapsed = signal(this.getSavedNavPanelState());
+
+    // Panel constants
+    private readonly SPLITTER_WIDTH_PX = 6;
+    private readonly MIN_PANEL_WIDTH_PERCENT = 20;
+    private readonly MAX_PANEL_WIDTH_PERCENT = 100 - this.MIN_PANEL_WIDTH_PERCENT;
+    
+    private lastNavPanelWidth = this.getSavedNavPanelWidth();
+    private startX = 0;
+    private startNavWidth = 0;
+    private containerWidth = 0;
+
+    // Event handlers
+    private onMouseMoveHandler = this.onMouseMove.bind(this);
+    private onMouseUpHandler = this.onMouseUp.bind(this);
 
     // Computed signals
     selectedUnitTitle = computed(() => {
@@ -105,78 +119,147 @@ export class UnitsComponent {
         this.breakpointObserver.isMatched([Breakpoints.Handset])
     );
 
-    sidenavMode = computed(() =>
-        this.isMobile() ? 'over' : 'side'
-    );
-
     constructor() {
-        // Закрываем sidenav на мобильных устройствах при старте
+        // Закрываем навигационную панель на мобильных устройствах при старте
         effect(() => {
-            if (this.isMobile() && this.sidenavOpen()) {
-                this.sidenavOpen.set(false);
+            if (this.isMobile() && !this.isNavPanelCollapsed()) {
+                this.isNavPanelCollapsed.set(true);
             }
-        });
-
-        // Применяем ширину sidenav через CSS переменную
-        effect(() => {
-            document.documentElement.style.setProperty(
-                '--sidenav-width',
-                `${this.sidenavWidth()}px`
-            );
         });
     }
 
-    // Обработчики изменения размера
-    onResizeStart(event: MouseEvent) {
+    // --- Lifecycle Hooks ---
+    ngAfterViewInit(): void {
+        // Initial width calculation
+        this.updateContainerWidth();
+    }
+
+    ngOnDestroy(): void {
+        // Ensure cleanup in case of component destruction during dragging
+        if (this.isDragging()) {
+            this.cleanupDragListeners();
+            this.isDragging.set(false);
+        }
+    }
+
+    // --- Methods ---
+
+    /** Updates the width of the container, minus the splitter width. */
+    private updateContainerWidth(): void {
+        if (this.containerRef) {
+            this.containerWidth = this.containerRef.nativeElement.offsetWidth - this.SPLITTER_WIDTH_PX;
+        }
+    }
+
+    startDrag(event: MouseEvent) {
+        // Не начинаем перетаскивание, если кликнули по кнопке
+        if ((event.target as HTMLElement).closest('.toggle-btn')) {
+            return;
+        }
+        
+        // Не позволяем перетаскивать, если панель свернута
+        if (this.isNavPanelCollapsed()) {
+            return;
+        }
+
         event.preventDefault();
-        this.isResizing.set(true);
-
-        const startX = event.clientX;
-        const startWidth = this.sidenavWidth();
-
-        const onMouseMove = (e: MouseEvent) => {
-            const deltaX = e.clientX - startX;
-            const newWidth = Math.min(600, Math.max(250, startWidth + deltaX));
-            this.sidenavWidth.set(newWidth);
-        };
-
-        const onMouseUp = () => {
-            this.isResizing.set(false);
-            this.saveSidenavWidth(this.sidenavWidth());
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
-        };
-
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
+        this.isDragging.set(true);
+        
+        // Recalculate container width at the start of drag
+        this.updateContainerWidth(); 
+        
+        this.startX = event.clientX;
+        this.startNavWidth = this.navPanelWidth();
+        
+        document.addEventListener('mousemove', this.onMouseMoveHandler);
+        document.addEventListener('mouseup', this.onMouseUpHandler);
         document.body.style.cursor = 'col-resize';
         document.body.style.userSelect = 'none';
     }
 
-    private getSavedSidenavState(): boolean {
-        const saved = localStorage.getItem('unitSidenavOpen');
-        return saved !== null ? saved === 'true' : true;
+    private onMouseMove(event: MouseEvent) {
+        if (!this.isDragging() || this.containerWidth <= 0) return;
+
+        const deltaX = event.clientX - this.startX;
+        const deltaPercent = (deltaX / this.containerWidth) * 100; 
+        let newNavWidth = this.startNavWidth + deltaPercent;
+        
+        // Use fixed percentage limits to avoid conflicts with CSS min-width
+        newNavWidth = Math.max(
+            this.MIN_PANEL_WIDTH_PERCENT, 
+            Math.min(this.MAX_PANEL_WIDTH_PERCENT, newNavWidth)
+        );
+        
+        this.navPanelWidth.set(newNavWidth);
     }
 
-    private getSavedSidenavWidth(): number {
-        const saved = localStorage.getItem('unitSidenavWidth');
-        return saved !== null ? parseInt(saved, 10) : 350;
+    private onMouseUp() {
+        this.isDragging.set(false);
+        this.saveNavPanelWidth(this.navPanelWidth());
+        this.cleanupDragListeners();
     }
 
-    private saveSidenavState(open: boolean) {
-        localStorage.setItem('unitSidenavOpen', open.toString());
+    private cleanupDragListeners(): void {
+        document.removeEventListener('mousemove', this.onMouseMoveHandler);
+        document.removeEventListener('mouseup', this.onMouseUpHandler);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
     }
 
-    private saveSidenavWidth(width: number) {
-        localStorage.setItem('unitSidenavWidth', width.toString());
+    private getSavedNavPanelState(): boolean {
+        const saved = localStorage.getItem('unitNavPanelCollapsed');
+        return saved !== null ? saved === 'true' : false;
     }
 
-    toggleSidenav() {
-        const newState = !this.sidenavOpen();
-        this.sidenavOpen.set(newState);
-        this.saveSidenavState(newState);
+    private getSavedNavPanelWidth(): number {
+        const saved = localStorage.getItem('unitNavPanelWidth');
+        return saved !== null ? parseInt(saved, 10) : 50;
+    }
+
+    private saveNavPanelState(collapsed: boolean) {
+        localStorage.setItem('unitNavPanelCollapsed', collapsed.toString());
+    }
+
+    private saveNavPanelWidth(width: number) {
+        localStorage.setItem('unitNavPanelWidth', width.toString());
+    }
+
+    /** Переключает состояние навигационной панели (свернута/развернута) */
+    toggleNavPanel(): void {
+        if (this.isNavPanelCollapsed()) {
+            // Разворачиваем панель
+            this.navPanelWidth.set(this.lastNavPanelWidth);
+            this.isNavPanelCollapsed.set(false);
+            this.saveNavPanelState(false);
+        } else {
+            // Сворачиваем панель
+            this.lastNavPanelWidth = this.navPanelWidth();
+            this.saveNavPanelWidth(this.lastNavPanelWidth);
+            this.navPanelWidth.set(0);
+            this.isNavPanelCollapsed.set(true);
+            this.saveNavPanelState(true);
+        }
+    }
+
+    /**
+     * Recalculate container width on window resize to ensure correct boundary checks
+     * and percentage calculations on the next drag operation.
+     */
+    @HostListener('window:resize')
+    onWindowResize() {
+        // Update container width on resize
+        this.updateContainerWidth(); 
+
+        // Re-clamp current width within fixed percentage bounds
+        const currentNavWidth = this.navPanelWidth();
+        const clampedNavWidth = Math.max(
+            this.MIN_PANEL_WIDTH_PERCENT, 
+            Math.min(this.MAX_PANEL_WIDTH_PERCENT, currentNavWidth)
+        );
+
+        if (clampedNavWidth !== currentNavWidth) {
+            this.navPanelWidth.set(clampedNavWidth);
+        }
     }
 
     onUnitSelected(unit: UnitTreeItemDto) {
@@ -184,9 +267,9 @@ export class UnitsComponent {
         this.unitService.getById(unit.id).subscribe(fullUnit => {
             this.selectedUnit.set(fullUnit);
 
-            // Закрываем sidenav на мобильных после выбора
+            // Закрываем навигационную панель на мобильных после выбора
             if (this.isMobile()) {
-                this.sidenavOpen.set(false);
+                this.isNavPanelCollapsed.set(true);
             }
         });
     }

@@ -1,4 +1,6 @@
-import { Component, HostListener, signal, computed, ElementRef, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, HostListener, signal,
+    computed, ElementRef, ViewChild,
+    AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({

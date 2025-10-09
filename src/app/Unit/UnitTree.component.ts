@@ -29,7 +29,6 @@ import { NULL_GUID } from './unit.constants';
     template: `
         <div class="tree-container">
             <div class="tree-header">
-                <h3>Підрозділи</h3>
                 <button mat-raised-button color="primary" (click)="refresh()" [disabled]="loading()">
                     <mat-icon>refresh</mat-icon>
                     Оновити

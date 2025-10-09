@@ -1,315 +1,162 @@
-// Основной контейнер
-.unit-container {
-    height: 100vh;
+.container {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Встановлюємо 0, щоб дозволити згортання */
+  max-width: 80%;
+  overflow: hidden;
+}
+
+.nav-panel {
+  background-color: #f5f5f5;
+  min-width: 200px; /* Мінімальна ширина лише для розгорнутого стану */
+}
+
+.content-panel {
+  background-color: #fafafa;
+}
+
+.panel-header {
+  padding: 16px;
+  background-color: #e3f2fd;
+  border-bottom: 1px solid #ddd;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  
+  h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: #1976d2;
+  }
+  
+  .unit-toolbar {
+    width: 100%;
+    margin: -16px;
+    background-color: #1976d2;
+    color: white;
+    padding: 16px;
     display: flex;
-    position: relative;
-}
-
-// Левая панель (sidenav)
-.unit-sidenav {
-    width: var(--sidenav-width, 350px);
-    min-width: 250px;
-    max-width: 600px;
-    border-right: 1px solid var(--mat-divider-color);
-    background: var(--mat-app-background-color);
-    position: relative;
-    
-    .sidenav-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px;
-        border-bottom: 1px solid var(--mat-divider-color);
-        background: var(--mat-app-surface-color);
-        
-        h3 {
-            margin: 0;
-            color: var(--mat-app-on-surface-color);
-            font-weight: 500;
-        }
-    }
-    
-    .unit-tree {
-        height: calc(100vh - 73px); // Вычитаем высоту header
-        overflow: auto;
-        padding: 8px;
-    }
-}
-
-// Разделитель для изменения размера
-.sidenav-resizer {
-    position: absolute;
-    top: 0;
-    right: -3px;
-    width: 6px;
-    height: 100%;
-    cursor: col-resize;
-    background: transparent;
-    z-index: 10;
-    
-    &:hover,
-    &.resizing {
-        background: var(--mat-primary-color);
-        opacity: 0.3;
-    }
-    
-    &::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 2px;
-        height: 20px;
-        background: var(--mat-divider-color);
-        border-radius: 1px;
-    }
-}
-
-// Основной контент
-.unit-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-// Toolbar
-.unit-toolbar {
-    flex-shrink: 0;
-    
-    .toolbar-title {
-        flex: 1;
-        margin-left: 16px;
-        font-weight: 500;
-    }
-    
-    .toolbar-spacer {
-        flex: 1 1 auto;
-    }
-    
-    .hidden {
-        display: none;
-    }
-}
-
-// Основное содержимое
-.main-content {
-    flex: 1;
-    padding: 24px;
-    overflow: auto;
-    background: var(--mat-app-background-color);
-}
-
-// Карточка с деталями подразделения
-.unit-details-card {
-    max-width: 800px;
-    margin: 0 auto;
-    
-    mat-card-header {
-        margin-bottom: 16px;
-        
-        mat-card-title {
-            font-size: 24px;
-            font-weight: 500;
-            color: var(--mat-app-primary-color);
-        }
-        
-        mat-card-subtitle {
-            font-size: 16px;
-            margin-top: 4px;
-            color: var(--mat-app-on-surface-variant-color);
-        }
-    }
-}
-
-// Сетка с информацией о подразделении
-.unit-info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-    
-    .info-item {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        
-        &.full-width {
-            grid-column: 1 / -1;
-        }
-        
-        strong {
-            font-weight: 500;
-            color: var(--mat-app-on-surface-color);
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        span {
-            color: var(--mat-app-on-surface-variant-color);
-            font-size: 16px;
-            word-break: break-word;
-        }
-    }
-}
-
-// Статусные чипы
-.unit-status-chips {
-    margin-top: 16px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    
-    mat-chip-set {
-        margin: 0;
-        
-        mat-chip {
-            --mdc-chip-label-text-color: var(--mat-app-on-surface-color);
-            --mdc-chip-outline-color: var(--mat-app-outline-color);
-        }
-    }
-}
-
-// Пустое состояние
-.empty-state {
-    display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    height: 100%;
-    text-align: center;
-    color: var(--mat-app-on-surface-variant-color);
-    
-    .empty-icon {
-        font-size: 72px;
-        width: 72px;
-        height: 72px;
-        margin-bottom: 24px;
-        opacity: 0.6;
-    }
-    
-    h2 {
-        margin: 0 0 16px 0;
-        font-weight: 400;
-        font-size: 24px;
-    }
-    
-    p {
-        margin: 0 0 24px 0;
-        max-width: 400px;
-        line-height: 1.5;
-    }
-}
-
-// Адаптивность для мобильных устройств
-@media (max-width: 768px) {
-    .unit-sidenav {
-        width: 100vw;
-        max-width: 350px;
-    }
-    
-    .main-content {
-        padding: 16px;
-    }
-    
-    .unit-info-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
-        
-        .info-item {
-            padding: 12px;
-            background: var(--mat-app-surface-color);
-            border-radius: 8px;
-            border: 1px solid var(--mat-app-outline-variant-color);
-        }
-    }
-    
-    .unit-details-card {
-        margin: 0;
-        
-        mat-card-header {
-            mat-card-title {
-                font-size: 20px;
-            }
-            
-            mat-card-subtitle {
-                font-size: 14px;
-            }
-        }
-    }
-    
-    .empty-state {
-        .empty-icon {
-            font-size: 48px;
-            width: 48px;
-            height: 48px;
-        }
-        
-        h2 {
-            font-size: 20px;
-        }
-    }
-}
-
-// Темы Material Design
-@media (prefers-color-scheme: dark) {
-    .unit-sidenav {
-        border-right-color: rgba(255, 255, 255, 0.12);
-    }
-    
-    .sidenav-header {
-        border-bottom-color: rgba(255, 255, 255, 0.12);
-    }
-}
-
-// Анимации и переходы
-.unit-sidenav, .main-content {
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-.unit-details-card {
-    transition: box-shadow 0.3s ease;
-    
-    &:hover {
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    }
-}
-
-// Улучшенная типографика
-.info-item {
-    strong {
-        font-family: 'Roboto', 'Helvetica Neue', sans-serif;
-    }
-    
-    span {
-        font-family: 'Roboto', 'Helvetica Neue', sans-serif;
-        line-height: 1.4;
-    }
-}
-
-// Доступность
-.unit-toolbar button:focus,
-.sidenav-header button:focus {
-    outline: 2px solid var(--mat-app-primary-color);
-    outline-offset: 2px;
-}
-
-// Стили для действий карточки
-mat-card-actions {
-    display: flex;
     gap: 8px;
-    padding-top: 16px;
+    
+    h3 {
+      margin: 0;
+      color: white;
+      font-size: 20px;
+      font-weight: 500;
+    }
     
     button {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        
-        mat-icon {
-            font-size: 18px;
-            width: 18px;
-            height: 18px;
-        }
+      color: white;
     }
+  }
+}
+
+.panel-content {
+  flex: 1;
+  padding: 0;
+  overflow: auto;
+  
+  .unit-tree {
+    height: 100%;
+    padding: 8px;
+  }
+}
+
+.splitter {
+  width: 6px;
+  background-color: #e0e0e0;
+  cursor: col-resize;
+  position: relative;
+  flex-shrink: 0;
+  user-select: none;
+  transition: background-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.splitter:hover {
+  background-color: #2196f3;
+}
+
+.splitter.dragging {
+  background-color: #1976d2;
+}
+
+.splitter-handle {
+  width: 3px;
+  height: 40px;
+  background-color: #666;
+  border-radius: 2px;
+  margin-bottom: 8px;
+}
+
+.splitter:hover .splitter-handle {
+  background-color: white;
+}
+
+.splitter.dragging .splitter-handle {
+  background-color: white;
+}
+
+.splitter-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.toggle-btn {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 3px;
+  background-color: #f5f5f5;
+  color: #666;
+  cursor: pointer;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.toggle-btn:hover {
+  background-color: #2196f3;
+  color: white;
+  transform: scale(1.1);
+}
+
+.arrow {
+  font-size: 8px;
+  font-weight: bold;
+  transition: transform 0.2s ease;
+}
+
+.arrow.collapsed {
+  transform: translateX(1px); /* Slight adjustment for visual balance */
+}
+
+.panel.collapsed {
+  min-width: 0 !important;
+  width: 0 !important;
+}
+
+.panel-header.hidden,
+.panel-content.hidden {
+  display: none !important;
+}
+
+.hidden {
+  display: none !important;
 }
