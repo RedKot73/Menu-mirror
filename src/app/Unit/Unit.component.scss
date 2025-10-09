@@ -9,17 +9,19 @@
   display: flex;
   flex-direction: column;
   min-width: 0; /* Встановлюємо 0, щоб дозволити згортання */
-  max-width: 80%;
   overflow: hidden;
+  transition: width 0.3s ease;
 }
 
 .nav-panel {
   background-color: #f5f5f5;
   min-width: 200px; /* Мінімальна ширина лише для розгорнутого стану */
+  max-width: 80%;
 }
 
 .content-panel {
   background-color: #fafafa;
+  /* Убираем max-width для контентной панели, чтобы она могла занимать всю ширину */
 }
 
 .panel-header {
@@ -150,6 +152,8 @@
 .panel.collapsed {
   min-width: 0 !important;
   width: 0 !important;
+  max-width: 0 !important;
+  overflow: hidden;
 }
 
 .panel-header.hidden,

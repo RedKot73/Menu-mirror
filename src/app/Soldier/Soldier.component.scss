@@ -31,6 +31,21 @@
     border: 1px solid #bbdefb;
 }
 
+// Стили для колонки комментария
+.comment-cell {
+    max-width: 200px; // Ограничиваем максимальную ширину
+    width: 200px;
+}
+
+.comment-text {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    cursor: help; // Показываем, что есть дополнительная информация
+}
+
 // Responsive table
 @media (max-width: 768px) {
     .mat-column-comment {

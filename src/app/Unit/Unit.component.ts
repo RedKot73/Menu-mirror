@@ -89,8 +89,16 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
     // Panel signals (replacing sidenav signals)
     navPanelWidth = signal(this.getSavedNavPanelWidth());
     contentPanelWidth = computed(() => {
+        const isCollapsed = this.isNavPanelCollapsed();
         const navWidth = this.navPanelWidth();
-        return navWidth === 0 ? 100 : 100 - navWidth;
+        
+        // Если панель свернута, контент занимает всю ширину
+        if (isCollapsed) {
+            return 100;
+        }
+        
+        // Если панель развернута, вычисляем оставшуюся ширину
+        return 100 - navWidth;
     });
     isDragging = signal(false);
     isNavPanelCollapsed = signal(this.getSavedNavPanelState());

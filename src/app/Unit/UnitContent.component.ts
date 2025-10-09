@@ -25,8 +25,7 @@ import { SoldiersComponent } from '../Soldier/Soldier.component';
                 <!-- Детальная информация о подразделении -->
                 <mat-card class="unit-details-card">
                     <mat-card-header>
-                        <mat-card-title>{{ unit.name }}</mat-card-title>
-                        <mat-card-subtitle>{{ unit.shortName }}</mat-card-subtitle>
+                        <mat-card-title>{{ unit.shortName }}</mat-card-title>
                     </mat-card-header>
                     
                     <mat-card-content>

@@ -9,7 +9,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
 import { FormsModule } from '@angular/forms';
+import { SlicePipe } from '@angular/common';
 
 import { SoldierDialogComponent } from '../dialogs/SoldierDialog';
 import { ConfirmDialogComponent } from "../dialogs/ConfirmDialog.component";
@@ -31,7 +33,9 @@ export type Soldier = SoldierDto;
         MatSelectModule,
         MatOptionModule,
         MatTooltipModule,
+        MatMenuModule,
         FormsModule,
+        SlicePipe,
         SoldierFiltersComponent
     ],
     styleUrl: './Soldier.component.scss',
@@ -45,6 +49,38 @@ export type Soldier = SoldierDto;
         </soldier-filters>
 
         <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" style="width:100%; margin-top: 1em;">
+            <!-- Menu Column -->
+            <ng-container matColumnDef="menu">
+                <th mat-header-cell *matHeaderCellDef style="width: 60px;"> Дії </th>
+                <td mat-cell *matCellDef="let soldier">
+                    <button mat-icon-button 
+                            [matMenuTriggerFor]="soldierMenu"
+                            matTooltip="Дії з бійцем"
+                            (click)="$event.stopPropagation()">
+                        <mat-icon>more_vert</mat-icon>
+                    </button>
+                    
+                    <mat-menu #soldierMenu="matMenu">
+                        <button mat-menu-item (click)="assign(soldier)">
+                            <mat-icon color="primary">assignment_ind</mat-icon>
+                            <span>Придати до підрозділу</span>
+                        </button>
+                        <button mat-menu-item (click)="move(soldier)">
+                            <mat-icon color="primary">swap_horiz</mat-icon>
+                            <span>Перемістити до іншого підрозділу</span>
+                        </button>
+                        <button mat-menu-item (click)="edit(soldier)">
+                            <mat-icon color="accent">edit</mat-icon>
+                            <span>Редагувати</span>
+                        </button>
+                        <button mat-menu-item (click)="delete(soldier)">
+                            <mat-icon color="warn">delete</mat-icon>
+                            <span>Видалити</span>
+                        </button>
+                    </mat-menu>
+                </td>
+            </ng-container>
+
             <!-- FIO Column -->
             <ng-container matColumnDef="fio">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header> ПІБ </th>
@@ -87,33 +123,12 @@ export type Soldier = SoldierDto;
             <!-- Comment Column -->
             <ng-container matColumnDef="comment">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header> Коментар </th>
-                <td mat-cell *matCellDef="let soldier"> {{ soldier.comment || '-' }} </td>
-            </ng-container>
-            
-            <!-- Actions Column -->
-            <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef> Дії </th>
-                <td mat-cell *matCellDef="let soldier">
-                    <button mat-icon-button color="primary" 
-                            (click)="assign(soldier)" 
-                            matTooltip="Придати до підрозділу">
-                        <mat-icon>assignment_ind</mat-icon>
-                    </button>
-                    <button mat-icon-button color="primary" 
-                            (click)="move(soldier)" 
-                            matTooltip="Перемістити до іншого підрозділу">
-                        <mat-icon>swap_horiz</mat-icon>
-                    </button>
-                    <button mat-icon-button color="accent" 
-                            (click)="edit(soldier)"
-                            matTooltip="Редагувати">
-                        <mat-icon>edit</mat-icon>
-                    </button>
-                    <button mat-icon-button color="warn" 
-                            (click)="delete(soldier)"
-                            matTooltip="Видалити">
-                        <mat-icon>delete</mat-icon>
-                    </button>
+                <td mat-cell *matCellDef="let soldier" class="comment-cell"> 
+                    <span class="comment-text" 
+                          [matTooltip]="soldier.comment && soldier.comment.length > 50 ? soldier.comment : ''"
+                          [title]="soldier.comment && soldier.comment.length > 50 ? soldier.comment : ''">
+                        {{ soldier.comment ? (soldier.comment.length > 50 ? (soldier.comment | slice:0:50) + '...' : soldier.comment) : '-' }}
+                    </span>
                 </td>
             </ng-container>
 
@@ -132,8 +147,8 @@ export class SoldiersComponent implements AfterViewInit {
     items = this.soldierService.createItemsSignal();
     allUnits = signal<UnitDto[]>([]);
     dataSource = new MatTableDataSource<Soldier>([]);
-    displayedColumns = ['fio', 'nickName', 'rankShortValue', 'positionValue',
-        'stateValue', 'assignedUnitShortName', 'comment', 'actions'];
+    displayedColumns = ['menu', 'fio', 'nickName', 'rankShortValue', 'positionValue',
+        'stateValue', 'assignedUnitShortName', 'comment'];
     dialog = inject(MatDialog);
     
     // Фильтры
