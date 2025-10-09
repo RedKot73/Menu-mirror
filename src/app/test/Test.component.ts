@@ -7,11 +7,11 @@ import { CommonModule } from '@angular/common';
   styleUrl: './Test.component.scss',
   template: `
     <div class="container" #containerRef>
-      <div class="panel nav-panel" [style.width.%]="navPanelWidth()">
-        <div class="panel-header">
+      <div class="panel nav-panel" [style.width.%]="navPanelWidth()" [class.collapsed]="isNavPanelCollapsed()">
+        <div class="panel-header" [class.hidden]="isNavPanelCollapsed()">
           <h3>Навігаційна панель</h3>
         </div>
-        <div class="panel-content">
+        <div class="panel-content" [class.hidden]="isNavPanelCollapsed()">
           <p>Контент навігаційної панелі</p>
           <ul>
             <li>Елемент 1</li>
@@ -26,6 +26,16 @@ import { CommonModule } from '@angular/common';
         [class.dragging]="isDragging()"
         (mousedown)="startDrag($event)">
         <div class="splitter-handle"></div>
+        <div class="splitter-controls">
+          <button 
+            class="toggle-btn"
+            (click)="toggleNavPanel()"
+            [title]="isNavPanelCollapsed() ? 'Показати навігаційну панель' : 'Приховати навігаційну панель'">
+            <span class="arrow" [class.collapsed]="isNavPanelCollapsed()">
+              {{ isNavPanelCollapsed() ? '▶' : '◀' }}
+            </span>
+          </button>
+        </div>
       </div>
       
       <div class="panel content-panel" [style.width.%]="contentPanelWidth()">
@@ -47,14 +57,19 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   // --- Properties and Signals ---
   @ViewChild('containerRef') containerRef!: ElementRef<HTMLElement>;
   
-  navPanelWidth = signal(50);
-  contentPanelWidth = computed(() => 100 - this.navPanelWidth());
+  navPanelWidth = signal(this.getSavedNavPanelWidth());
+  contentPanelWidth = computed(() => {
+    const navWidth = this.navPanelWidth();
+    return navWidth === 0 ? 100 : 100 - navWidth;
+  });
   isDragging = signal(false);
+  isNavPanelCollapsed = signal(this.getSavedNavPanelState());
 
   private readonly SPLITTER_WIDTH_PX = 6;
   private readonly MIN_PANEL_WIDTH_PERCENT = 20;
   private readonly MAX_PANEL_WIDTH_PERCENT = 100 - this.MIN_PANEL_WIDTH_PERCENT;
   
+  private lastNavPanelWidth = this.getSavedNavPanelWidth(); // Сохраняем последнюю ширину перед сворачиванием
   private startX = 0;
   private startNavWidth = 0;
   private containerWidth = 0; // The current width of the container
@@ -88,6 +103,16 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   }
 
   startDrag(event: MouseEvent) {
+    // Не начинаем перетаскивание, если кликнули по кнопке
+    if ((event.target as HTMLElement).closest('.toggle-btn')) {
+      return;
+    }
+    
+    // Не позволяем перетаскивать, если панель свернута
+    if (this.isNavPanelCollapsed()) {
+      return;
+    }
+
     event.preventDefault();
     this.isDragging.set(true);
     
@@ -121,6 +146,7 @@ export class TestComponent implements AfterViewInit, OnDestroy {
 
   private onMouseUp() {
     this.isDragging.set(false);
+    this.saveNavPanelWidth(this.navPanelWidth());
     this.cleanupDragListeners();
   }
 
@@ -129,6 +155,41 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     document.removeEventListener('mouseup', this.onMouseUpHandler);
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
+  }
+
+  private getSavedNavPanelState(): boolean {
+    const saved = localStorage.getItem('testNavPanelCollapsed');
+    return saved !== null ? saved === 'true' : false;
+  }
+
+  private getSavedNavPanelWidth(): number {
+    const saved = localStorage.getItem('testNavPanelWidth');
+    return saved !== null ? parseInt(saved, 10) : 50;
+  }
+
+  private saveNavPanelState(collapsed: boolean) {
+    localStorage.setItem('testNavPanelCollapsed', collapsed.toString());
+  }
+
+  private saveNavPanelWidth(width: number) {
+    localStorage.setItem('testNavPanelWidth', width.toString());
+  }
+
+  /** Переключает состояние навигационной панели (свернута/развернута) */
+  toggleNavPanel(): void {
+    if (this.isNavPanelCollapsed()) {
+      // Разворачиваем панель
+      this.navPanelWidth.set(this.lastNavPanelWidth);
+      this.isNavPanelCollapsed.set(false);
+      this.saveNavPanelState(false);
+    } else {
+      // Сворачиваем панель
+      this.lastNavPanelWidth = this.navPanelWidth();
+      this.saveNavPanelWidth(this.lastNavPanelWidth);
+      this.navPanelWidth.set(0);
+      this.isNavPanelCollapsed.set(true);
+      this.saveNavPanelState(true);
+    }
   }
 
   /**

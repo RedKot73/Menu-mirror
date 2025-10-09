@@ -8,12 +8,14 @@
 .panel {
   display: flex;
   flex-direction: column;
-  min-width: 200px;
+  min-width: 0; /* Встановлюємо 0, щоб дозволити згортання */
   max-width: 80%;
+  overflow: hidden;
 }
 
 .nav-panel {
   background-color: #f5f5f5;
+  min-width: 200px; /* Мінімальна ширина лише для розгорнутого стану */
 }
 
 .content-panel {
@@ -56,6 +58,10 @@
   flex-shrink: 0;
   user-select: none;
   transition: background-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .splitter:hover {
@@ -67,14 +73,11 @@
 }
 
 .splitter-handle {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   width: 3px;
   height: 40px;
   background-color: #666;
   border-radius: 2px;
+  margin-bottom: 8px;
 }
 
 .splitter:hover .splitter-handle {
@@ -83,6 +86,58 @@
 
 .splitter.dragging .splitter-handle {
   background-color: white;
+}
+
+.splitter-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.toggle-btn {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 3px;
+  background-color: #f5f5f5;
+  color: #666;
+  cursor: pointer;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.toggle-btn:hover {
+  background-color: #2196f3;
+  color: white;
+  transform: scale(1.1);
+}
+
+.arrow {
+  font-size: 8px;
+  font-weight: bold;
+  transition: transform 0.2s ease;
+}
+
+.arrow.collapsed {
+  transform: translateX(1px); /* Slight adjustment for visual balance */
+}
+
+.panel.collapsed {
+  min-width: 0 !important;
+  width: 0 !important;
+}
+
+.panel-header.hidden,
+.panel-content.hidden {
+  display: none !important;
+}
+
+.hidden {
+  display: none !important;
 }
 
 ul {
