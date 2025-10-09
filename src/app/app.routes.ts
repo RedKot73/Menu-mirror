@@ -16,7 +16,11 @@ import { Component } from '@angular/core';
 }) class UsersPage { }
 
 export const routes: Routes = [
-    // Lazy loading для справочников
+    {
+        path: 'test',
+        loadComponent: () => import('../app/test/Test.component').then(m => m.TestComponent),
+        title: 'Тестова сторінка'
+    },
     {
         path: 'dictArea',
         loadComponent: () => import('../dictionaries/dictAreaPage.component').then(m => m.dictAreaPage),
