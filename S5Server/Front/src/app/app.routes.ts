@@ -52,6 +52,7 @@ export const routes: Routes = [
         title: 'Типи підрозділів'
     },
     { path: 'units', title: 'Підрозділи', loadComponent: () => import('../app/Unit/Unit.component').then(m => m.UnitsComponent) },
+    { path: 'templates', title: 'Шаблоны документов', loadComponent: () => import('../app/DocumentTemplates/document-templates-full.component').then(m => m.DocumentTemplatesComponent) },
     { path: 'orders', title: 'Розпорядження', component: OrdersPage },
     { path: 'reports', title: 'Донесення', component: ReportsPage },
     { path: 'users', title: 'Користувачі', component: UsersPage },

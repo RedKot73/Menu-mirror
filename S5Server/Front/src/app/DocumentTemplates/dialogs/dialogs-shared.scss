@@ -1,0 +1,143 @@
+/* Общие стили для диалогов DocumentTemplates */
+
+/* Основные контейнеры диалогов */
+.dialog-content {
+  overflow-y: auto;
+}
+
+.dialog-content.small {
+  width: 600px;
+  max-height: 70vh;
+}
+
+.dialog-content.medium {
+  width: 700px;
+  max-height: 80vh;
+}
+
+.dialog-content.large {
+  width: 90vw;
+  max-width: 1200px;
+  height: 80vh;
+  overflow: hidden;
+}
+
+/* Кнопки и действия диалогов */
+.dialog-actions {
+  gap: 8px;
+  padding: 16px 24px;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* Заголовки диалогов */
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+
+  h3 {
+    margin: 0;
+  }
+}
+
+.preview-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Общие заголовки диалогов */
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Табы в диалогах */
+.preview-tabs {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  ::ng-deep .mat-mdc-tab-group-tab-content {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .tab-content {
+    height: 100%;
+    padding: 16px;
+    overflow-y: auto;
+  }
+}
+
+/* Специфичные стили для preview диалогов */
+.empty-preview {
+  text-align: center;
+  padding: 64px 32px;
+  color: #666;
+
+  mat-icon {
+    font-size: 64px;
+    height: 64px;
+    width: 64px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+
+  h4 {
+    margin: 0 0 8px 0;
+  }
+}
+
+/* Специфичные стили для data-sets-dialog */
+.data-sets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.data-set-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background-color: #fafafa;
+}
+
+.data-set-info {
+  flex: 1;
+}
+
+.data-set-name {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.data-set-date {
+  font-size: 12px;
+  color: #666;
+}
+
+.data-set-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Дополнительные стили для preview iframe */
+.preview-container {
+  height: 100%;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.preview-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}

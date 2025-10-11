@@ -11,6 +11,7 @@ import { MatMenuModule } from '@angular/material/menu';
       <button matButton [matMenuTriggerFor]="dictionaries">Довідники</button>
       <button matButton routerLink="/test" >Тестова сторінка</button>
       <button matButton routerLink="/units" >Підрозділи</button>
+      <button matButton routerLink="/templates" >Шаблоны документов</button>
       <button matButton routerLink="/orders" >Розпорядження</button>
       <button matButton routerLink="/reports" >Донесення</button>
       <button matButton routerLink="/users" >Користувачі</button>
