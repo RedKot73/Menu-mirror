@@ -1,4 +1,4 @@
-using System.Text.Json;
+п»їusing System.Text.Json;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -58,12 +58,12 @@ namespace S5Server.Controllers
             }
             catch (OperationCanceledException)
             {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
+                return Problem(statusCode: 499, title: "РћС‚РјРµРЅР° РєР»РёРµРЅС‚РѕРј");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при получении списка шаблонов");
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+                _logger.LogError(ex, "РћС€РёР±РєР° РїСЂРё РїРѕР»СѓС‡РµРЅРёРё СЃРїРёСЃРєР° С€Р°Р±Р»РѕРЅРѕРІ");
+                return Problem(statusCode: 500, title: "Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ РѕС€РёР±РєР° СЃРµСЂРІРµСЂР°");
             }
         }
 
@@ -78,19 +78,19 @@ namespace S5Server.Controllers
                     .FirstOrDefaultAsync(x => x.Id == id, ct);
 
                 if (t == null)
-                    return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+                    return Problem(statusCode: 404, title: "РќРµ РЅР°Р№РґРµРЅРѕ", detail: $"Id={id}");
 
                 return Ok(new TemplateListItem(
                     t.Id, t.Name, t.Description, t.Format, t.CreatedAtUtc, t.UpdatedAtUtc));
             }
             catch (OperationCanceledException)
             {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
+                return Problem(statusCode: 499, title: "РћС‚РјРµРЅР° РєР»РёРµРЅС‚РѕРј");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при получении шаблона Id={Id}", id);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+                _logger.LogError(ex, "РћС€РёР±РєР° РїСЂРё РїРѕР»СѓС‡РµРЅРёРё С€Р°Р±Р»РѕРЅР° Id={Id}", id);
+                return Problem(statusCode: 500, title: "Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ РѕС€РёР±РєР° СЃРµСЂРІРµСЂР°");
             }
         }
 
@@ -107,11 +107,11 @@ namespace S5Server.Controllers
                 return ValidationProblem(ModelState);
 
             if (file is null || file.Length == 0)
-                return Problem(statusCode: 400, title: "Файл шаблона не передан");
+                return Problem(statusCode: 400, title: "Р¤Р°Р№Р» С€Р°Р±Р»РѕРЅР° РЅРµ РїРµСЂРµРґР°РЅ");
 
             var format = dto.Format?.Trim().ToLowerInvariant();
             if (format is not ("html" or "txt" or "docx"))
-                return Problem(statusCode: 400, title: "Поддерживаемые форматы: html, txt, docx");
+                return Problem(statusCode: 400, title: "РџРѕРґРґРµСЂР¶РёРІР°РµРјС‹Рµ С„РѕСЂРјР°С‚С‹: html, txt, docx");
 
             try
             {
@@ -137,22 +137,22 @@ namespace S5Server.Controllers
             }
             catch (OperationCanceledException)
             {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
+                return Problem(statusCode: 499, title: "РћС‚РјРµРЅР° РєР»РёРµРЅС‚РѕРј");
             }
             catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
             {
-                _logger.LogInformation(ex, "Конфликт уникальности при создании шаблона Name={Name}", dto.Name);
-                return Problem(statusCode: 409, title: "Конфликт уникальности", detail: $"Шаблон с именем \"{dto.Name}\" уже существует.");
+                _logger.LogInformation(ex, "РљРѕРЅС„Р»РёРєС‚ СѓРЅРёРєР°Р»СЊРЅРѕСЃС‚Рё РїСЂРё СЃРѕР·РґР°РЅРёРё С€Р°Р±Р»РѕРЅР° Name={Name}", dto.Name);
+                return Problem(statusCode: 409, title: "РљРѕРЅС„Р»РёРєС‚ СѓРЅРёРєР°Р»СЊРЅРѕСЃС‚Рё", detail: $"РЁР°Р±Р»РѕРЅ СЃ РёРјРµРЅРµРј \"{dto.Name}\" СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚.");
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                _logger.LogWarning(ex, "Конкурентный конфликт при создании шаблона Name={Name}", dto.Name);
-                return Problem(statusCode: 409, title: "Конкурентный конфликт");
+                _logger.LogWarning(ex, "РљРѕРЅРєСѓСЂРµРЅС‚РЅС‹Р№ РєРѕРЅС„Р»РёРєС‚ РїСЂРё СЃРѕР·РґР°РЅРёРё С€Р°Р±Р»РѕРЅР° Name={Name}", dto.Name);
+                return Problem(statusCode: 409, title: "РљРѕРЅРєСѓСЂРµРЅС‚РЅС‹Р№ РєРѕРЅС„Р»РёРєС‚");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Неизвестная ошибка при создании шаблона Name={Name}", dto.Name);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+                _logger.LogError(ex, "РќРµРёР·РІРµСЃС‚РЅР°СЏ РѕС€РёР±РєР° РїСЂРё СЃРѕР·РґР°РЅРёРё С€Р°Р±Р»РѕРЅР° Name={Name}", dto.Name);
+                return Problem(statusCode: 500, title: "Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ РѕС€РёР±РєР° СЃРµСЂРІРµСЂР°");
             }
         }
 
@@ -173,7 +173,7 @@ namespace S5Server.Controllers
 
             var t = await _docTempl.AsTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
             if (t == null)
-                return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+                return Problem(statusCode: 404, title: "РќРµ РЅР°Р№РґРµРЅРѕ", detail: $"Id={id}");
 
             t.Name = dto.Name.Trim();
             t.Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim();
@@ -182,9 +182,9 @@ namespace S5Server.Controllers
             {
                 var format = dto.Format.Trim().ToLowerInvariant();
                 if (format is not ("html" or "txt" or "docx"))
-                    return Problem(statusCode: 400, title: "Поддерживаемые форматы: html, txt, docx");
+                    return Problem(statusCode: 400, title: "РџРѕРґРґРµСЂР¶РёРІР°РµРјС‹Рµ С„РѕСЂРјР°С‚С‹: html, txt, docx");
                 t.Format = format;
-                // При смене формата корректируем content-type
+                // РџСЂРё СЃРјРµРЅРµ С„РѕСЂРјР°С‚Р° РєРѕСЂСЂРµРєС‚РёСЂСѓРµРј content-type
                 if (file == null)
                     t.ContentType = DocumentTemplate.GetContentTypeByFormat(t.Format);
             }
@@ -206,22 +206,22 @@ namespace S5Server.Controllers
             }
             catch (OperationCanceledException)
             {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
+                return Problem(statusCode: 499, title: "РћС‚РјРµРЅР° РєР»РёРµРЅС‚РѕРј");
             }
             catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
             {
-                _logger.LogInformation(ex, "Конфликт уникальности при обновлении шаблона Id={Id} Name={Name}", id, dto.Name);
-                return Problem(statusCode: 409, title: "Конфликт уникальности", detail: $"Шаблон с именем \"{dto.Name}\" уже существует.");
+                _logger.LogInformation(ex, "РљРѕРЅС„Р»РёРєС‚ СѓРЅРёРєР°Р»СЊРЅРѕСЃС‚Рё РїСЂРё РѕР±РЅРѕРІР»РµРЅРёРё С€Р°Р±Р»РѕРЅР° Id={Id} Name={Name}", id, dto.Name);
+                return Problem(statusCode: 409, title: "РљРѕРЅС„Р»РёРєС‚ СѓРЅРёРєР°Р»СЊРЅРѕСЃС‚Рё", detail: $"РЁР°Р±Р»РѕРЅ СЃ РёРјРµРЅРµРј \"{dto.Name}\" СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚.");
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                _logger.LogWarning(ex, "Конкурентный конфликт при обновлении шаблона Id={Id}", id);
-                return Problem(statusCode: 409, title: "Конкурентный конфликт");
+                _logger.LogWarning(ex, "РљРѕРЅРєСѓСЂРµРЅС‚РЅС‹Р№ РєРѕРЅС„Р»РёРєС‚ РїСЂРё РѕР±РЅРѕРІР»РµРЅРёРё С€Р°Р±Р»РѕРЅР° Id={Id}", id);
+                return Problem(statusCode: 409, title: "РљРѕРЅРєСѓСЂРµРЅС‚РЅС‹Р№ РєРѕРЅС„Р»РёРєС‚");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при обновлении шаблона Id={Id}", id);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+                _logger.LogError(ex, "РћС€РёР±РєР° РїСЂРё РѕР±РЅРѕРІР»РµРЅРёРё С€Р°Р±Р»РѕРЅР° Id={Id}", id);
+                return Problem(statusCode: 500, title: "Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ РѕС€РёР±РєР° СЃРµСЂРІРµСЂР°");
             }
         }
 
@@ -234,7 +234,7 @@ namespace S5Server.Controllers
             {
                 var t = await _docTempl.FirstOrDefaultAsync(x => x.Id == id, ct);
                 if (t == null)
-                    return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+                    return Problem(statusCode: 404, title: "РќРµ РЅР°Р№РґРµРЅРѕ", detail: $"Id={id}");
 
                 _docTempl.Remove(t);
                 await _db.SaveChangesAsync(ct);
@@ -242,12 +242,12 @@ namespace S5Server.Controllers
             }
             catch (OperationCanceledException)
             {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
+                return Problem(statusCode: 499, title: "РћС‚РјРµРЅР° РєР»РёРµРЅС‚РѕРј");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при удалении шаблона Id={Id}", id);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+                _logger.LogError(ex, "РћС€РёР±РєР° РїСЂРё СѓРґР°Р»РµРЅРёРё С€Р°Р±Р»РѕРЅР° Id={Id}", id);
+                return Problem(statusCode: 500, title: "Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ РѕС€РёР±РєР° СЃРµСЂРІРµСЂР°");
             }
         }
 
@@ -260,17 +260,17 @@ namespace S5Server.Controllers
             {
                 var t = await _docTempl.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
                 if (t == null)
-                    return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+                    return Problem(statusCode: 404, title: "РќРµ РЅР°Р№РґРµРЅРѕ", detail: $"Id={id}");
                 return File(t.Content, t.ContentType);
             }
             catch (OperationCanceledException)
             {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
+                return Problem(statusCode: 499, title: "РћС‚РјРµРЅР° РєР»РёРµРЅС‚РѕРј");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при выдаче файла шаблона Id={Id}", id);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+                _logger.LogError(ex, "РћС€РёР±РєР° РїСЂРё РІС‹РґР°С‡Рµ С„Р°Р№Р»Р° С€Р°Р±Р»РѕРЅР° Id={Id}", id);
+                return Problem(statusCode: 500, title: "Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ РѕС€РёР±РєР° СЃРµСЂРІРµСЂР°");
             }
         }
 
@@ -284,7 +284,7 @@ namespace S5Server.Controllers
             {
                 var t = await _docTempl.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
                 if (t == null)
-                    return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+                    return Problem(statusCode: 404, title: "РќРµ РЅР°Р№РґРµРЅРѕ", detail: $"Id={id}");
 
                 var format = TemplateRenderer.ParseFormat(t.Format);
                 var dataJson = request?.DataJson ?? "{}";
@@ -308,12 +308,12 @@ namespace S5Server.Controllers
             }
             catch (OperationCanceledException)
             {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
+                return Problem(statusCode: 499, title: "РћС‚РјРµРЅР° РєР»РёРµРЅС‚РѕРј");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка предпросмотра шаблона Id={Id}", id);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+                _logger.LogError(ex, "РћС€РёР±РєР° РїСЂРµРґРїСЂРѕСЃРјРѕС‚СЂР° С€Р°Р±Р»РѕРЅР° Id={Id}", id);
+                return Problem(statusCode: 500, title: "Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ РѕС€РёР±РєР° СЃРµСЂРІРµСЂР°");
             }
         }
 
@@ -326,29 +326,29 @@ namespace S5Server.Controllers
             {
                 var t = await _docTempl.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
                 if (t == null)
-                    return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+                    return Problem(statusCode: 404, title: "РќРµ РЅР°Р№РґРµРЅРѕ", detail: $"Id={id}");
 
                 var format = TemplateRenderer.ParseFormat(t.Format);
                 var export = (request?.Export ?? "html").ToLowerInvariant();
                 var dataJson = request?.DataJson ?? "{}";
 
-                // Сохраняю текущий вызов, чтобы не ломать совместимость с вашим TemplateRenderer.
+                // РЎРѕС…СЂР°РЅСЏСЋ С‚РµРєСѓС‰РёР№ РІС‹Р·РѕРІ, С‡С‚РѕР±С‹ РЅРµ Р»РѕРјР°С‚СЊ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚СЊ СЃ РІР°С€РёРј TemplateRenderer.
                 var result = await _renderer.RenderAsync(t.Name, format, t.Content, dataJson, export);
                 return File(result.Bytes, result.ContentType, result.FileName);
             }
             catch (OperationCanceledException)
             {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
+                return Problem(statusCode: 499, title: "РћС‚РјРµРЅР° РєР»РёРµРЅС‚РѕРј");
             }
             catch (NotImplementedException ex)
             {
-                _logger.LogWarning(ex, "Запрошен не реализованный экспорт Id={Id}", id);
-                return Problem(statusCode: 501, title: "Не реализовано");
+                _logger.LogWarning(ex, "Р—Р°РїСЂРѕС€РµРЅ РЅРµ СЂРµР°Р»РёР·РѕРІР°РЅРЅС‹Р№ СЌРєСЃРїРѕСЂС‚ Id={Id}", id);
+                return Problem(statusCode: 501, title: "РќРµ СЂРµР°Р»РёР·РѕРІР°РЅРѕ");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка экспорта документа по шаблону Id={Id}", id);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+                _logger.LogError(ex, "РћС€РёР±РєР° СЌРєСЃРїРѕСЂС‚Р° РґРѕРєСѓРјРµРЅС‚Р° РїРѕ С€Р°Р±Р»РѕРЅСѓ Id={Id}", id);
+                return Problem(statusCode: 500, title: "Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ РѕС€РёР±РєР° СЃРµСЂРІРµСЂР°");
             }
         }
 
@@ -361,7 +361,7 @@ namespace S5Server.Controllers
             {
                 var exists = await _docTempl.AsNoTracking().AnyAsync(x => x.Id == id, ct);
                 if (!exists)
-                    return Problem(statusCode: 404, title: "Не найдено", detail: $"TemplateId={id}");
+                    return Problem(statusCode: 404, title: "РќРµ РЅР°Р№РґРµРЅРѕ", detail: $"TemplateId={id}");
 
                 var items = await _templDataSets.AsNoTracking()
                     .Where(d => d.TemplateId == id)
@@ -373,12 +373,12 @@ namespace S5Server.Controllers
             }
             catch (OperationCanceledException)
             {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
+                return Problem(statusCode: 499, title: "РћС‚РјРµРЅР° РєР»РёРµРЅС‚РѕРј");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка получения наборов данных TemplateId={TemplateId}", id);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+                _logger.LogError(ex, "РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ РЅР°Р±РѕСЂРѕРІ РґР°РЅРЅС‹С… TemplateId={TemplateId}", id);
+                return Problem(statusCode: 500, title: "Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ РѕС€РёР±РєР° СЃРµСЂРІРµСЂР°");
             }
         }
 
@@ -396,13 +396,13 @@ namespace S5Server.Controllers
             {
                 var t = await _docTempl.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
                 if (t == null)
-                    return Problem(statusCode: 404, title: "Не найдено", detail: $"TemplateId={id}");
+                    return Problem(statusCode: 404, title: "РќРµ РЅР°Р№РґРµРЅРѕ", detail: $"TemplateId={id}");
 
-                // Валидация JSON
+                // Р’Р°Р»РёРґР°С†РёСЏ JSON
                 try { JsonDocument.Parse(dto.DataJson); }
                 catch
                 {
-                    return Problem(statusCode: 400, title: "Некорректный JSON");
+                    return Problem(statusCode: 400, title: "РќРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ JSON");
                 }
 
                 var ds = new TemplateDataSet
@@ -421,22 +421,22 @@ namespace S5Server.Controllers
                 }
                 catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
                 {
-                    _logger.LogInformation(ex, "Конфликт уникальности набора данных Name={Name} TemplateId={TemplateId}", ds.Name, id);
+                    _logger.LogInformation(ex, "РљРѕРЅС„Р»РёРєС‚ СѓРЅРёРєР°Р»СЊРЅРѕСЃС‚Рё РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С… Name={Name} TemplateId={TemplateId}", ds.Name, id);
                     return Problem(
                         statusCode: 409,
-                        title: "Конфликт уникальности",
-                        detail: $"Набор данных с именем \"{ds.Name}\" уже существует.",
+                        title: "РљРѕРЅС„Р»РёРєС‚ СѓРЅРёРєР°Р»СЊРЅРѕСЃС‚Рё",
+                        detail: $"РќР°Р±РѕСЂ РґР°РЅРЅС‹С… СЃ РёРјРµРЅРµРј \"{ds.Name}\" СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚.",
                         extensions: new Dictionary<string, object?> { ["field"] = "Name", ["value"] = ds.Name });
                 }
             }
             catch (OperationCanceledException)
             {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
+                return Problem(statusCode: 499, title: "РћС‚РјРµРЅР° РєР»РёРµРЅС‚РѕРј");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка создания набора данных TemplateId={TemplateId}", id);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+                _logger.LogError(ex, "РћС€РёР±РєР° СЃРѕР·РґР°РЅРёСЏ РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С… TemplateId={TemplateId}", id);
+                return Problem(statusCode: 500, title: "Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ РѕС€РёР±РєР° СЃРµСЂРІРµСЂР°");
             }
         }
 
@@ -449,18 +449,18 @@ namespace S5Server.Controllers
             {
                 var ds = await _templDataSets.AsNoTracking().FirstOrDefaultAsync(x => x.Id == dataSetId, ct);
                 if (ds == null)
-                    return Problem(statusCode: 404, title: "Не найдено", detail: $"DataSetId={dataSetId}");
+                    return Problem(statusCode: 404, title: "РќРµ РЅР°Р№РґРµРЅРѕ", detail: $"DataSetId={dataSetId}");
 
                 return Ok(new { ds.Id, ds.TemplateId, ds.Name, ds.DataJson, ds.CreatedAtUtc });
             }
             catch (OperationCanceledException)
             {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
+                return Problem(statusCode: 499, title: "РћС‚РјРµРЅР° РєР»РёРµРЅС‚РѕРј");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка получения набора данных DataSetId={DataSetId}", dataSetId);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+                _logger.LogError(ex, "РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С… DataSetId={DataSetId}", dataSetId);
+                return Problem(statusCode: 500, title: "Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ РѕС€РёР±РєР° СЃРµСЂРІРµСЂР°");
             }
         }
 
@@ -473,7 +473,7 @@ namespace S5Server.Controllers
             {
                 var ds = await _templDataSets.FirstOrDefaultAsync(x => x.Id == dataSetId, ct);
                 if (ds == null)
-                    return Problem(statusCode: 404, title: "Не найдено", detail: $"DataSetId={dataSetId}");
+                    return Problem(statusCode: 404, title: "РќРµ РЅР°Р№РґРµРЅРѕ", detail: $"DataSetId={dataSetId}");
 
                 _templDataSets.Remove(ds);
                 await _db.SaveChangesAsync(ct);
@@ -481,12 +481,12 @@ namespace S5Server.Controllers
             }
             catch (OperationCanceledException)
             {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
+                return Problem(statusCode: 499, title: "РћС‚РјРµРЅР° РєР»РёРµРЅС‚РѕРј");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка удаления набора данных DataSetId={DataSetId}", dataSetId);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+                _logger.LogError(ex, "РћС€РёР±РєР° СѓРґР°Р»РµРЅРёСЏ РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С… DataSetId={DataSetId}", dataSetId);
+                return Problem(statusCode: 500, title: "Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ РѕС€РёР±РєР° СЃРµСЂРІРµСЂР°");
             }
         }
     }

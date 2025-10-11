@@ -80,7 +80,7 @@ namespace S5Server.Models
         string? Comment
     )
     {
-        public Soldier ToEntity() => new Soldier
+        public Soldier ToEntity() => new()
         {
             FirstName = FirstName.Trim(),
             MidleName = string.IsNullOrWhiteSpace(MidleName) ? null : MidleName.Trim(),
