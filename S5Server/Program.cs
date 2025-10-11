@@ -4,6 +4,7 @@ using Microsoft.OpenApi.Models;
 
 using S5Server.Data;
 using S5Server.Models;
+using S5Server.Services;
 
 using Serilog;
 
@@ -86,6 +87,7 @@ builder.Services.AddCors(p =>
               .AllowAnyMethod()
               .AllowCredentials());
 });
+builder.Services.AddScoped<TemplateRenderer>();
 
 var app = builder.Build();
 

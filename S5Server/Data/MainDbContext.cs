@@ -196,19 +196,38 @@ namespace S5Server.Data
                 */
             });
 
-            modelBuilder.Entity<TVezhaUser<string>>(entity =>
+            // Новые сущности: шаблоны и наборы данных
+            modelBuilder.Entity<DocumentTemplate>(entity =>
             {
-                // SoldierId колонка в AspNetUsers
-                entity.Property(u => u.SoldierId)
-                      .HasColumnType("TEXT(36)")
-                      .IsRequired();
+                entity.ToTable("document_templates");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+                entity.Property(e => e.Name).IsRequired().HasColumnType("TEXT(150)");
+                entity.Property(e => e.Description).HasColumnType("TEXT(300)");
+                //entity.Property(e => e.FileName).IsRequired().HasColumnType("TEXT(250)");
+                entity.Property(e => e.ContentType).IsRequired().HasColumnType("TEXT(50)");
+                entity.Property(e => e.Format).IsRequired().HasColumnType("TEXT(10)");
+                entity.Property(e => e.Content).IsRequired().HasColumnType("BLOB");
+                entity.Property(e => e.CreatedAtUtc).HasColumnType("TEXT");
+                entity.Property(e => e.UpdatedAtUtc).HasColumnType("TEXT");
+            });
 
-                entity.HasOne(u => u.Soldier)
-                      .WithOne(s => s.VezhaUser) // можно .WithOne() если в Soldier уберёте навигацию
-                      .HasForeignKey<TVezhaUser<string>>(u => u.SoldierId)
-                      .OnDelete(DeleteBehavior.Restrict); // или SetNull если nullable
+            modelBuilder.Entity<TemplateDataSet>(entity =>
+            {
+                entity.ToTable("template_data_sets");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+                entity.Property(e => e.TemplateId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.Name).IsRequired().HasColumnType("TEXT(150)");
+                entity.Property(e => e.DataJson).IsRequired().HasColumnType("TEXT");
+                entity.Property(e => e.CreatedAtUtc).HasColumnType("TEXT");
 
-                entity.HasIndex(u => u.SoldierId).IsUnique(); // 1:0..1
+                entity.HasOne(d => d.Template)
+                      .WithMany(t => t.DataSets)
+                      .HasForeignKey(d => d.TemplateId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => new { e.TemplateId, e.Name }).IsUnique();
             });
         }
 
@@ -244,5 +263,9 @@ namespace S5Server.Data
         /// Військовослужбовці (бійці)
         /// </summary>
         public DbSet<Soldier> Soldiers { get; set; }
+
+        // Новые таблицы
+        public DbSet<DocumentTemplate> DocumentTemplates { get; set; }
+        public DbSet<TemplateDataSet> TemplateDataSets { get; set; }
     }
 }
