@@ -5,6 +5,7 @@
     {
       "type": "npm",
       "script": "start",
+      "path": "S5Server/Front/",
       "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",
@@ -29,6 +30,9 @@
         "--proxy-config",
         "proxy.conf.json"
       ],
+      "options": {
+        "cwd": "${workspaceFolder}/S5Server/Front"
+      },
       "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",
@@ -43,6 +47,27 @@
           }
         }
       }
+    },
+    {
+      "label": "run server",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "run"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/S5Server"
+      },
+      "isBackground": true,
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "start full-stack",
+      "dependsOrder": "parallel",
+      "dependsOn": [
+        "ng serve (proxy)",
+        "run server"
+      ]
     }
   ]
 }
