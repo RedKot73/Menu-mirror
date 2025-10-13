@@ -82,7 +82,7 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddCors(p =>
 {
     p.AddPolicy("AngularDev",
-        b => b.WithOrigins("https://localhost:4200")
+        b => b.WithOrigins("http://localhost:4200", "https://localhost:4200")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials());

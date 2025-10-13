@@ -1,8 +1,7 @@
-﻿using System.Text.Json;
-
+﻿using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
 using S5Server.Data;
 using S5Server.Models;
 using S5Server.Services;
@@ -20,8 +19,7 @@ namespace S5Server.Controllers
         private readonly TemplateRenderer _renderer;
         private readonly ILogger<DocumentTemplatesController> _logger;
 
-        public DocumentTemplatesController(MainDbContext db,
-            TemplateRenderer renderer, ILogger<DocumentTemplatesController> logger)
+        public DocumentTemplatesController(MainDbContext db, TemplateRenderer renderer, ILogger<DocumentTemplatesController> logger)
         {
             _db = db;
             _docTempl = _db.DocumentTemplates;
@@ -30,17 +28,13 @@ namespace S5Server.Controllers
             _logger = logger;
         }
 
-        public record TemplateListItem(
-            string Id,
-            string Name,
-            string? Description,
-            string Format,
-            DateTime CreatedAtUtc,
-            DateTime UpdatedAtUtc);
-
+        public record TemplateListItem(string Id, string Name, string? Description, string Format, DateTime CreatedAtUtc, DateTime UpdatedAtUtc);
         public record CreateTemplateDto(string Name, string? Description, string Format);
         public record DataSetCreateDto(string Name, string DataJson);
-        public record RenderRequest(string? DataJson, string Export);/* Export = html|txt|docx|pdf */
+        public record RenderRequest(string? DataJson, string Export /* html|txt|docx|pdf */);
+
+        // Новый: запрос экспорта уже готового HTML от клиента
+        public record ClientHtmlExportRequest(string Name, string Html, string Export /* html|txt|pdf|docx*/);
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -486,6 +480,69 @@ namespace S5Server.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Ошибка удаления набора данных DataSetId={DataSetId}", dataSetId);
+                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+            }
+        }
+
+        [HttpGet("{id}/content")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Produces("text/plain")]
+        public async Task<IActionResult> GetTemplateContent(string id, CancellationToken ct = default)
+        {
+            try
+            {
+                var t = await _docTempl.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
+                if (t == null)
+                    return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+
+                // Поддерживаем клиентский рендер только для html/txt
+                var fmt = t.Format.ToLowerInvariant();
+                if (fmt is "html" or "txt")
+                {
+                    var text = Encoding.UTF8.GetString(t.Content);
+                    return Content(text, "text/plain; charset=utf-8");
+                }
+
+                return Problem(statusCode: 415, title: "Неподдерживаемый формат",
+                               detail: $"Для формата '{t.Format}' контент как текст недоступен.");
+            }
+            catch (OperationCanceledException)
+            {
+                return Problem(statusCode: 499, title: "Отмена клиентом");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка выдачи содержимого шаблона Id={Id}", id);
+                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+            }
+        }
+
+        [HttpPost("export-from-html")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ExportFromClientHtml([FromBody] ClientHtmlExportRequest req, CancellationToken ct = default)
+        {
+            if (req is null || string.IsNullOrWhiteSpace(req.Html) || string.IsNullOrWhiteSpace(req.Export))
+                return Problem(statusCode: 400, title: "Некорректные данные запроса");
+
+            try
+            {
+                var result = await _renderer.RenderFromClientHtmlAsync(req.Name ?? "Document", req.Html, req.Export);
+                return File(result.Bytes, result.ContentType, result.FileName);
+            }
+            catch (NotImplementedException ex)
+            {
+                _logger.LogWarning(ex, "Экспорт HTML -> {Export} не реализован", req.Export);
+                return Problem(statusCode: 501, title: "Не реализовано", detail: $"Экспорт в {req.Export} пока не поддерживается.");
+            }
+            catch (OperationCanceledException)
+            {
+                return Problem(statusCode: 499, title: "Отмена клиентом");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка экспорта из HTML: Name={Name}, Export={Export}", req.Name, req.Export);
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }

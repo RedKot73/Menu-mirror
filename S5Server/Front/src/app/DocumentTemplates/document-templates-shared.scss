@@ -294,3 +294,45 @@ mat-card-header {
 .delete-action {
   color: #f44336;
 }
+
+/* Стили для Live Preview */
+.preview-controls {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.preview-section {
+  h4 {
+    margin: 24px 0 12px 0;
+    color: #333;
+    font-size: 14px;
+    font-weight: 500;
+  }
+}
+
+.preview-result {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 16px;
+  background-color: #fafafa;
+  max-height: 400px;
+  overflow-y: auto;
+
+  &.html-preview {
+    background-color: white;
+  }
+
+  &.txt-preview {
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
+    background-color: #f8f9fa;
+  }
+
+  pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+}

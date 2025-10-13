@@ -1,22 +1,26 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
 import { 
   TemplateListItem, 
   CreateTemplateDto, 
   DataSetCreateDto, 
-  RenderRequest, 
+  RenderRequest,
+  ClientRenderRequest,
+  ServerRenderRequest, 
   TemplateDataSet,
   TemplateDataSetListItem 
 } from '../models/document-template.models';
+import { HandlebarsTemplateService } from '../DocumentTemplates/services/handlebars-template.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DocumentTemplateService {
   private readonly http = inject(HttpClient);
+  private readonly handlebarsService = inject(HandlebarsTemplateService);
   private readonly baseUrl = '/api/templates';
 
   // === CRUD операции для шаблонов ===
@@ -96,6 +100,94 @@ export class DocumentTemplateService {
     return this.http.post(`${this.baseUrl}/${id}/export`, request, {
       responseType: 'blob'
     }).pipe(catchError(this.handleError));
+  }
+
+  // === Гибридный рендеринг (NEW) ===
+
+  /**
+   * Проверяет, поддерживается ли клиентский рендеринг для указанного формата
+   */
+  supportsClientRendering(format: string): boolean {
+    return this.handlebarsService.supportsClientRendering(format);
+  }
+
+  /**
+   * Получает содержимое шаблона для клиентского рендеринга
+   */
+  getTemplateContent(id: string): Observable<string> {
+    return this.http.get(`${this.baseUrl}/${id}/content`, {
+      responseType: 'text'
+    }).pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Клиентский рендеринг с использованием Handlebars (только HTML/TXT)
+   */
+  renderClientSide(templateContent: string, dataJson: string, format: 'html' | 'txt'): Observable<string> {
+    return new Observable(observer => {
+      try {
+        const data = JSON.parse(dataJson || '{}');
+        const result = this.handlebarsService.renderTemplate(templateContent, data, format);
+        
+        if (result.success) {
+          observer.next(result.content!);
+          observer.complete();
+        } else {
+          observer.error(new Error(result.error));
+        }
+      } catch (error: any) {
+        observer.error(error);
+      }
+    });
+  }
+
+  /**
+   * Серверный рендеринг (для DOCX/PDF или fallback)
+   */
+  renderServerSide(id: string, dataJson: string, exportFormat: 'docx' | 'pdf'): Observable<Blob> {
+    const request: RenderRequest = { 
+      dataJson: dataJson || '{}', 
+      export: exportFormat,
+      useClientRendering: false
+    };
+    
+    return this.http.post(`${this.baseUrl}/${id}/export`, request, {
+      responseType: 'blob'
+    }).pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Универсальный метод предпросмотра с автоматическим выбором рендеринга
+   */
+  previewTemplate(id: string, dataJson: string, format: 'html' | 'txt' | 'docx' | 'pdf'): Observable<string | Blob> {
+    if (this.supportsClientRendering(format)) {
+      // Клиентский рендеринг для HTML/TXT
+      return this.getTemplateContent(id).pipe(
+        switchMap((templateContent: string) => 
+          this.renderClientSide(templateContent, dataJson, format as 'html' | 'txt')
+        )
+      );
+    } else {
+      // Серверный рендеринг для DOCX/PDF
+      return this.exportDocument(id, format as 'docx' | 'pdf', dataJson);
+    }
+  }
+
+  /**
+   * Универсальный метод экспорта с автоматическим выбором рендеринга
+   */
+  exportTemplate(id: string, dataJson: string, exportFormat: 'html' | 'txt' | 'docx' | 'pdf'): Observable<string | Blob> {
+    if (this.supportsClientRendering(exportFormat)) {
+      // Клиентский рендеринг для HTML/TXT
+      return this.getTemplateContent(id).pipe(
+        switchMap((templateContent: string) => 
+          this.renderClientSide(templateContent, dataJson, exportFormat as 'html' | 'txt')
+        )
+      );
+    } else {
+      // Серверный рендеринг для DOCX/PDF
+      return this.renderServerSide(id, dataJson, exportFormat as 'docx' | 'pdf');
+    }
   }
 
   // === Наборы данных ===

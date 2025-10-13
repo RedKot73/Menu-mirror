@@ -6,8 +6,6 @@ using System.Text.RegularExpressions;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
-// using OpenXmlPowerTools;
-// using PuppeteerSharp;
 
 namespace S5Server.Services
 {
@@ -372,6 +370,49 @@ namespace S5Server.Services
                     */
                 default:
                     return await RenderAsync(fileNameBase, format, template, dataJson, "html");
+            }
+        }
+
+        private static string HtmlToPlainText(string html)
+        {
+            if (string.IsNullOrWhiteSpace(html)) return string.Empty;
+            var text = Regex.Replace(html, "<[^>]+>", " ", RegexOptions.Singleline);
+            text = WebUtility.HtmlDecode(text);
+            text = Regex.Replace(text, @"[ \t]+", " ");
+            text = Regex.Replace(text, @"(\r?\n)\s+", "$1");
+            return text.Trim();
+        }
+
+        public Task<RenderResult> RenderFromClientHtmlAsync(string name, string html, string export)
+        {
+            var safeBase = Path.GetFileNameWithoutExtension(MakeSafeFileName($"{name}_{DateTime.Now:yyyyMMdd_HHmmss_fff}"));
+            switch (export.ToLowerInvariant())
+            {
+                case "html":
+                    return Task.FromResult(new RenderResult(
+                        "text/html; charset=utf-8",
+                        Encoding.UTF8.GetBytes(html ?? string.Empty),
+                        safeBase + ".html"));
+
+                case "txt":
+                    var plain = HtmlToPlainText(html ?? string.Empty);
+                    return Task.FromResult(new RenderResult(
+                        "text/plain; charset=utf-8",
+                        Encoding.UTF8.GetBytes(plain),
+                        safeBase + ".txt"));
+
+                case "pdf":
+                    throw new NotImplementedException("Экспорт HTML → PDF пока не реализован");
+
+                case "docx":
+                    throw new NotImplementedException("Экспорт HTML → DOCX пока не реализован");
+
+                default:
+                    // По умолчанию HTML
+                    return Task.FromResult(new RenderResult(
+                        "text/html; charset=utf-8",
+                        Encoding.UTF8.GetBytes(html ?? string.Empty),
+                        safeBase + ".html"));
             }
         }
     }

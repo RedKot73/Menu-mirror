@@ -12,6 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 
 import { DocumentTemplateService } from '../../ServerService/document-template.service';
+import { HandlebarsTemplateService } from '../services/handlebars-template.service';
 import { TemplateListItem, CreateTemplateDto, SUPPORTED_FORMATS } from '../../models/document-template.models';
 
 export interface TemplateEditorDialogData {
@@ -86,6 +87,61 @@ export interface TemplateEditorDialogData {
                   <mat-error>Выберите формат</mat-error>
                 }
               </mat-form-field>
+
+              <div class="file-upload-section">
+                <h3>{{ isCreateMode() ? 'Загрузка файла шаблона' : 'Обновление файла шаблона' }}</h3>
+
+                @if (!isCreateMode()) {
+                  <p class="file-info">
+                    <mat-icon>info</mat-icon>
+                    Если не выберете новый файл, текущий шаблон останется без изменений
+                  </p>
+                }
+
+                <div class="file-input-container">
+                  <input #fileInput
+                         type="file"
+                         (change)="onFileSelected($event)"
+                         [accept]="getAcceptedFileTypes()"
+                         class="file-input"
+                         id="templateFile">
+
+                  <label for="templateFile" class="file-input-label" matRipple>
+                    <mat-icon>upload_file</mat-icon>
+                    {{ selectedFile() ? selectedFile()!.name : 'Выберите файл шаблона' }}
+                  </label>
+                </div>
+
+                @if (selectedFile()) {
+                  <div class="file-details">
+                    <div class="file-detail">
+                      <strong>Имя файла:</strong> {{ selectedFile()!.name }}
+                    </div>
+                    <div class="file-detail">
+                      <strong>Размер:</strong> {{ getFileSize(selectedFile()!.size) }}
+                    </div>
+                    <div class="file-detail">
+                      <strong>Тип:</strong> {{ selectedFile()!.type || 'Неизвестно' }}
+                    </div>
+                  </div>
+                }
+
+                @if (fileError()) {
+                  <div class="file-error">
+                    <mat-icon>error</mat-icon>
+                    {{ fileError() }}
+                  </div>
+                }
+
+                <div class="format-hints">
+                  <h4>Поддерживаемые форматы:</h4>
+                  <ul>
+                    <li><strong>HTML:</strong> .html, .htm - HTML шаблоны с Handlebars синтаксисом</li>
+                    <li><strong>TXT:</strong> .txt - Текстовые шаблоны с переменными</li>
+                    <li><strong>DOCX:</strong> .docx - Microsoft Word документы с полями</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </mat-tab>
 
@@ -148,6 +204,80 @@ export interface TemplateEditorDialogData {
               </div>
             </div>
           </mat-tab>
+
+          <!-- Вкладка: Live Preview (только для HTML/TXT) -->
+          @if (supportsClientRendering()) {
+            <mat-tab label="Live Preview" [disabled]="!canShowLivePreview()">
+              <div class="tab-content">
+                @if (!canShowLivePreview()) {
+                  <div class="empty-state">
+                    <mat-icon>preview</mat-icon>
+                    <h4>Предпросмотр недоступен</h4>
+                    <p>Сначала выберите файл HTML или TXT шаблона</p>
+                  </div>
+                } @else {
+                  <div class="preview-controls">
+                    <button mat-raised-button 
+                            color="primary" 
+                            (click)="toggleLivePreview()"
+                            [disabled]="!templateContent()">
+                      <mat-icon>{{ showLivePreview() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                      {{ showLivePreview() ? 'Скрыть предпросмотр' : 'Показать предпросмотр' }}
+                    </button>
+                    
+                    <button mat-button 
+                            (click)="validateTemplate()"
+                            [disabled]="!templateContent()">
+                      <mat-icon>check_circle</mat-icon>
+                      Проверить шаблон
+                    </button>
+                  </div>
+
+                  @if (showLivePreview()) {
+                    <div class="preview-section">
+                      <h4>Тестовые данные (JSON):</h4>
+                      <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>JSON данные для предпросмотра</mat-label>
+                        <textarea matInput 
+                                  [value]="sampleData()"
+                                  (input)="updateSampleData($event)"
+                                  class="json-textarea"
+                                  rows="8"
+                                  placeholder='{"name": "Пример", "date": "2024-01-01"}'>
+                        </textarea>
+                        <mat-hint>Измените данные для тестирования шаблона</mat-hint>
+                      </mat-form-field>
+
+                      <h4>Результат:</h4>
+                      @if (previewError()) {
+                        <div class="error-container">
+                          <mat-icon>error</mat-icon>
+                          <h4>Ошибка рендеринга</h4>
+                          <p>{{ previewError() }}</p>
+                        </div>
+                      } @else if (previewContent()) {
+                        <div class="preview-result" 
+                             [class.html-preview]="templateForm.get('format')?.value === 'html'"
+                             [class.txt-preview]="templateForm.get('format')?.value === 'txt'">
+                          @if (templateForm.get('format')?.value === 'html') {
+                            <div [innerHTML]="previewContent()"></div>
+                          } @else {
+                            <pre>{{ previewContent() }}</pre>
+                          }
+                        </div>
+                      } @else {
+                        <div class="empty-preview">
+                          <mat-icon>description</mat-icon>
+                          <h4>Предпросмотр пуст</h4>
+                          <p>Проверьте шаблон и данные</p>
+                        </div>
+                      }
+                    </div>
+                  }
+                }
+              </div>
+            </mat-tab>
+          }
         </mat-tab-group>
       </form>
 
@@ -175,6 +305,7 @@ export class TemplateEditorDialogComponent implements OnInit {
   private dialogRef = inject(MatDialogRef<TemplateEditorDialogComponent>);
   private data = inject<TemplateEditorDialogData>(MAT_DIALOG_DATA);
   private templateService = inject(DocumentTemplateService);
+  private handlebarsService = inject(HandlebarsTemplateService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
 
@@ -182,11 +313,29 @@ export class TemplateEditorDialogComponent implements OnInit {
   loading = signal(false);
   selectedFile = signal<File | null>(null);
   fileError = signal<string | null>(null);
+  
+  // Новые свойства для Handlebars поддержки
+  templateContent = signal<string>('');
+  sampleData = signal<string>('{}');
+  previewContent = signal<string>('');
+  previewError = signal<string | null>(null);
+  showLivePreview = signal(false);
 
   supportedFormats = SUPPORTED_FORMATS;
 
   // Computed properties
   isCreateMode = computed(() => this.data.mode === 'create');
+  
+  // Проверяем, поддерживает ли выбранный формат клиентский рендеринг
+  supportsClientRendering = computed(() => {
+    const format = this.templateForm?.get('format')?.value;
+    return format && this.templateService.supportsClientRendering(format);
+  });
+  
+  // Можно ли показывать live preview
+  canShowLivePreview = computed(() => {
+    return this.supportsClientRendering() && this.templateContent().length > 0;
+  });
   
   descriptionLength = computed(() => {
     const description = this.templateForm?.get('description')?.value || '';
@@ -234,45 +383,6 @@ export class TemplateEditorDialogComponent implements OnInit {
       'docx': '.docx'
     };
     return acceptTypes[selectedFormat] || '*';
-  }
-
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    
-    this.fileError.set(null);
-    
-    if (!file) {
-      this.selectedFile.set(null);
-      return;
-    }
-
-    // Валидация размера файла (50MB)
-    const maxSize = 50 * 1024 * 1024;
-    if (file.size > maxSize) {
-      this.fileError.set('Размер файла не должен превышать 50MB');
-      this.selectedFile.set(null);
-      return;
-    }
-
-    // Валидация расширения файла
-    const selectedFormat = this.templateForm.get('format')?.value;
-    const validExtensions: Record<string, string[]> = {
-      'html': ['.html', '.htm'],
-      'txt': ['.txt'],
-      'docx': ['.docx']
-    };
-
-    if (selectedFormat && validExtensions[selectedFormat]) {
-      const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
-      if (!validExtensions[selectedFormat].includes(fileExtension)) {
-        this.fileError.set(`Для формата ${selectedFormat.toUpperCase()} ожидается файл с расширением: ${validExtensions[selectedFormat].join(', ')}`);
-        this.selectedFile.set(null);
-        return;
-      }
-    }
-
-    this.selectedFile.set(file);
   }
 
   getFileSize(bytes: number): string {
@@ -326,5 +436,171 @@ export class TemplateEditorDialogComponent implements OnInit {
 
   onCancel(): void {
     this.dialogRef.close();
+  }
+
+  // === Методы для поддержки Handlebars ===
+
+  /**
+   * Чтение содержимого файла для live preview
+   */
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    
+    this.fileError.set(null);
+    this.templateContent.set('');
+    this.previewContent.set('');
+    this.previewError.set(null);
+    
+    if (!file) {
+      this.selectedFile.set(null);
+      return;
+    }
+
+    // Валидация размера файла (50MB)
+    const maxSize = 50 * 1024 * 1024;
+    if (file.size > maxSize) {
+      this.fileError.set('Размер файла не должен превышать 50MB');
+      this.selectedFile.set(null);
+      return;
+    }
+
+    // Валидация расширения файла
+    const selectedFormat = this.templateForm.get('format')?.value;
+    const validExtensions: Record<string, string[]> = {
+      'html': ['.html', '.htm'],
+      'txt': ['.txt'],
+      'docx': ['.docx']
+    };
+
+    if (selectedFormat && validExtensions[selectedFormat]) {
+      const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+      if (!validExtensions[selectedFormat].includes(fileExtension)) {
+        this.fileError.set(`Для формата ${selectedFormat.toUpperCase()} ожидается файл с расширением: ${validExtensions[selectedFormat].join(', ')}`);
+        this.selectedFile.set(null);
+        return;
+      }
+    }
+
+    this.selectedFile.set(file);
+
+    // Читаем содержимое файла для HTML/TXT шаблонов
+    if (this.templateService.supportsClientRendering(selectedFormat)) {
+      this.readFileContent(file);
+    }
+  }
+
+  /**
+   * Чтение содержимого файла для предпросмотра
+   */
+  private readFileContent(file: File): void {
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const content = e.target.result;
+      this.templateContent.set(content);
+      this.generateSampleDataFromTemplate(content);
+      this.updatePreview();
+    };
+    reader.onerror = () => {
+      this.fileError.set('Ошибка чтения файла');
+    };
+    reader.readAsText(file);
+  }
+
+  /**
+   * Генерация примера данных на основе шаблона
+   */
+  private generateSampleDataFromTemplate(templateContent: string): void {
+    try {
+      const sampleData = this.handlebarsService.generateSampleData(templateContent);
+      this.sampleData.set(JSON.stringify(sampleData, null, 2));
+    } catch (error) {
+      console.warn('Не удалось сгенерировать пример данных:', error);
+      this.sampleData.set('{\n  "name": "Пример значения",\n  "date": "2024-01-01",\n  "amount": 1000\n}');
+    }
+  }
+
+  /**
+   * Обновление предпросмотра
+   */
+  updatePreview(): void {
+    if (!this.showLivePreview() || !this.templateContent()) {
+      return;
+    }
+
+    const format = this.templateForm.get('format')?.value;
+    if (!this.templateService.supportsClientRendering(format)) {
+      return;
+    }
+
+    try {
+      const data = JSON.parse(this.sampleData());
+      const result = this.handlebarsService.renderTemplate(
+        this.templateContent(), 
+        data, 
+        format as 'html' | 'txt'
+      );
+
+      if (result.success) {
+        this.previewContent.set(result.content || '');
+        this.previewError.set(null);
+      } else {
+        this.previewContent.set('');
+        this.previewError.set(result.error || 'Ошибка рендеринга');
+      }
+    } catch (error: any) {
+      this.previewContent.set('');
+      this.previewError.set(`Ошибка в JSON данных: ${error.message}`);
+    }
+  }
+
+  /**
+   * Переключение отображения предпросмотра
+   */
+  toggleLivePreview(): void {
+    this.showLivePreview.set(!this.showLivePreview());
+    if (this.showLivePreview()) {
+      this.updatePreview();
+    }
+  }
+
+  /**
+   * Обновление данных для предпросмотра (обработчик события input)
+   */
+  updateSampleData(event: Event): void {
+    const target = event.target as HTMLTextAreaElement;
+    if (target) {
+      this.onSampleDataChange(target.value);
+    }
+  }
+
+  /**
+   * Обновление данных для предпросмотра
+   */
+  onSampleDataChange(newData: string): void {
+    this.sampleData.set(newData);
+    if (this.showLivePreview()) {
+      this.updatePreview();
+    }
+  }
+
+  /**
+   * Валидация Handlebars шаблона
+   */
+  validateTemplate(): void {
+    if (!this.templateContent()) {
+      this.snackBar.open('Сначала выберите файл шаблона', 'Закрыть', { duration: 3000 });
+      return;
+    }
+
+    const validation = this.handlebarsService.validateTemplate(this.templateContent());
+    if (validation.isValid) {
+      this.snackBar.open('Шаблон корректен!', 'Закрыть', { duration: 3000 });
+      this.previewError.set(null);
+    } else {
+      const errorMessage = validation.errors.join('; ');
+      this.snackBar.open(`Ошибки в шаблоне: ${errorMessage}`, 'Закрыть', { duration: 5000 });
+      this.previewError.set(errorMessage);
+    }
   }
 }

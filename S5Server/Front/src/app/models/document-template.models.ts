@@ -23,6 +23,19 @@ export interface DataSetCreateDto {
 export interface RenderRequest {
   dataJson?: string;
   export: 'html' | 'txt' | 'docx' | 'pdf';
+  useClientRendering?: boolean; // Новый флаг для указания типа рендеринга
+}
+
+export interface ClientRenderRequest {
+  templateContent: string;
+  dataJson: string;
+  format: 'html' | 'txt';
+}
+
+export interface ServerRenderRequest {
+  templateId: string;
+  dataJson: string;
+  export: 'docx' | 'pdf';
 }
 
 export interface TemplateDataSet {

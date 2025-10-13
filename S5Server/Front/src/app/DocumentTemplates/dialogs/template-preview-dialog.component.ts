@@ -13,6 +13,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 import { DocumentTemplateService } from '../../ServerService/document-template.service';
+import { HandlebarsTemplateService } from '../services/handlebars-template.service';
 import { TemplateListItem, EXPORT_FORMATS } from '../../models/document-template.models';
 
 export interface TemplatePreviewDialogData {
@@ -164,6 +165,7 @@ export class TemplatePreviewDialogComponent implements OnInit {
   private dialogRef = inject(MatDialogRef<TemplatePreviewDialogComponent>);
   public data = inject<TemplatePreviewDialogData>(MAT_DIALOG_DATA);
   private templateService = inject(DocumentTemplateService);
+  private handlebarsService = inject(HandlebarsTemplateService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
   private sanitizer = inject(DomSanitizer);
@@ -173,12 +175,18 @@ export class TemplatePreviewDialogComponent implements OnInit {
   previewHtml = signal<string | null>(null);
   previewError = signal<string | null>(null);
   jsonError = signal<string | null>(null);
+  
+  // Новые свойства для гибридного рендеринга
+  templateContent = signal<string>('');
+  supportsClientRendering = signal(false);
 
   exportFormats = EXPORT_FORMATS;
 
   ngOnInit(): void {
     this.initializeForm();
     this.setupFormValidation();
+    this.checkRenderingCapabilities();
+    this.loadInitialData();
   }
 
   private initializeForm(): void {
@@ -191,6 +199,58 @@ export class TemplatePreviewDialogComponent implements OnInit {
     this.dataForm.get('dataJson')?.valueChanges.subscribe(value => {
       this.validateJson(value);
     });
+  }
+
+  /**
+   * Проверяет возможности рендеринга для данного шаблона
+   */
+  private checkRenderingCapabilities(): void {
+    const format = this.data.template.format;
+    this.supportsClientRendering.set(this.templateService.supportsClientRendering(format));
+  }
+
+  /**
+   * Загружает начальные данные и содержимое шаблона
+   */
+  private loadInitialData(): void {
+    // Генерируем начальные примеры данных
+    this.loadSampleData();
+
+    // Если поддерживается клиентский рендеринг, загружаем содержимое шаблона
+    if (this.supportsClientRendering()) {
+      this.loadTemplateContent();
+    }
+  }
+
+  /**
+   * Загружает содержимое шаблона для клиентского рендеринга
+   */
+  private loadTemplateContent(): void {
+    this.templateService.getTemplateContent(this.data.template.id).subscribe({
+      next: (content: string) => {
+        this.templateContent.set(content);
+        this.generateSampleDataFromTemplate(content);
+        this.updatePreview(); // Автоматически обновляем предпросмотр
+      },
+      error: (error: any) => {
+        console.error('Ошибка загрузки содержимого шаблона:', error);
+        this.previewError.set('Не удалось загрузить содержимое шаблона');
+      }
+    });
+  }
+
+  /**
+   * Генерирует примеры данных на основе переменных в шаблоне
+   */
+  private generateSampleDataFromTemplate(templateContent: string): void {
+    try {
+      const sampleData = this.handlebarsService.generateSampleData(templateContent);
+      this.dataForm.patchValue({
+        dataJson: JSON.stringify(sampleData, null, 2)
+      });
+    } catch (error) {
+      console.warn('Не удалось сгенерировать примеры данных:', error);
+    }
   }
 
   private validateJson(jsonString: string): void {
@@ -256,13 +316,54 @@ export class TemplatePreviewDialogComponent implements OnInit {
       return;
     }
 
-    this.templateService.previewHtml(this.data.template.id, JSON.stringify(parsedData)).subscribe({
+    const format = this.data.template.format;
+
+    if (this.supportsClientRendering() && this.templateContent()) {
+      // Клиентский рендеринг для HTML/TXT
+      this.renderClientSide(parsedData, format as 'html' | 'txt');
+    } else {
+      // Серверный рендеринг для всех остальных случаев
+      this.renderServerSide(parsedData);
+    }
+  }
+
+  /**
+   * Клиентский рендеринг с Handlebars
+   */
+  private renderClientSide(data: any, format: 'html' | 'txt'): void {
+    try {
+      const result = this.handlebarsService.renderTemplate(
+        this.templateContent(), 
+        data, 
+        format
+      );
+
+      if (result.success) {
+        this.previewHtml.set(result.content || '');
+        this.previewError.set(null);
+      } else {
+        this.previewHtml.set(null);
+        this.previewError.set(result.error || 'Ошибка клиентского рендеринга');
+      }
+    } catch (error: any) {
+      this.previewHtml.set(null);
+      this.previewError.set(`Ошибка рендеринга: ${error.message}`);
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  /**
+   * Серверный рендеринг (fallback для DOCX и старых шаблонов)
+   */
+  private renderServerSide(data: any): void {
+    this.templateService.previewHtml(this.data.template.id, JSON.stringify(data)).subscribe({
       next: (html: string) => {
         this.previewHtml.set(html);
         this.loading.set(false);
       },
       error: (error: any) => {
-        console.error('Ошибка генерации предпросмотра:', error);
+        console.error('Ошибка серверного рендеринга:', error);
         this.previewError.set(error.error?.message || 'Ошибка генерации предпросмотра');
         this.loading.set(false);
       }
@@ -285,14 +386,30 @@ export class TemplatePreviewDialogComponent implements OnInit {
       return;
     }
 
-    this.templateService.exportDocument(this.data.template.id, format as any, JSON.stringify(parsedData)).subscribe({
-      next: (blob: Blob) => {
-        const fileName = `${this.data.template.name}.${format}`;
-        this.templateService.downloadBlob(blob, fileName);
+    this.templateService.exportTemplate(
+      this.data.template.id, 
+      JSON.stringify(parsedData), 
+      format as 'html' | 'txt' | 'docx' | 'pdf'
+    ).subscribe({
+      next: (result: string | Blob) => {
+        if (typeof result === 'string') {
+          // Строковый результат (HTML/TXT) - создаем Blob для скачивания
+          const blob = new Blob([result], { 
+            type: format === 'html' ? 'text/html' : 'text/plain' 
+          });
+          const fileName = `${this.data.template.name}.${format}`;
+          this.templateService.downloadBlob(blob, fileName);
+        } else {
+          // Blob результат (DOCX/PDF)
+          const fileName = `${this.data.template.name}.${format}`;
+          this.templateService.downloadBlob(result, fileName);
+        }
+        
+        this.snackBar.open(`Документ экспортирован в формате ${format.toUpperCase()}`, 'Закрыть', { duration: 3000 });
       },
       error: (error: any) => {
         console.error('Ошибка экспорта:', error);
-        this.snackBar.open('Ошибка экспорта документа', 'Закрыть', { duration: 5000 });
+        this.snackBar.open(error.message || 'Ошибка экспорта документа', 'Закрыть', { duration: 5000 });
       }
     });
   }
