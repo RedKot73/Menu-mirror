@@ -159,7 +159,7 @@ export interface TemplatePreviewDialogData {
       </button>
     </div>
   `,
-  styleUrls: ['./dialogs-shared.scss', '../document-templates-shared.scss']
+  styleUrls: ['./dialogs-shared.scss', '../document-templates.scss']
 })
 export class TemplatePreviewDialogComponent implements OnInit {
   private dialogRef = inject(MatDialogRef<TemplatePreviewDialogComponent>);

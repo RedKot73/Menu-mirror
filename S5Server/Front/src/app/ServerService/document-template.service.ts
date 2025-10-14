@@ -1,15 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { catchError, switchMap } from 'rxjs/operators';
 
 import { 
   TemplateListItem, 
   CreateTemplateDto, 
   DataSetCreateDto, 
   RenderRequest,
-  ClientRenderRequest,
-  ServerRenderRequest, 
   TemplateDataSet,
   TemplateDataSetListItem 
 } from '../models/document-template.models';

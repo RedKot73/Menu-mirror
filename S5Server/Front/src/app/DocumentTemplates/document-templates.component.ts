@@ -1,8 +1,8 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { MatIconModule} from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
@@ -132,7 +132,7 @@ import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
       </mat-card>
     </div>
   `,
-  styleUrls: ['./document-templates-shared.scss']
+  styleUrls: ['./document-templates.scss']
 })
 export class DocumentTemplatesComponent {
   private templateService = inject(DocumentTemplateService);
@@ -154,11 +154,11 @@ export class DocumentTemplatesComponent {
   loadTemplates(): void {
     this.loading.set(true);
     this.templateService.getTemplates().subscribe({
-      next: (templates) => {
+      next: (templates: TemplateListItem[]) => {
         this.templates.set(templates);
         this.loading.set(false);
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Ошибка загрузки шаблонов:', error);
         this.snackBar.open('Ошибка загрузки шаблонов', 'Закрыть', { duration: 5000 });
         this.loading.set(false);
@@ -209,11 +209,11 @@ export class DocumentTemplatesComponent {
 
   downloadTemplate(template: TemplateListItem): void {
     this.templateService.downloadTemplate(template.id).subscribe({
-      next: (blob) => {
+      next: (blob: Blob) => {
         const fileName = `${template.name}.${template.format}`;
         this.templateService.downloadBlob(blob, fileName);
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Ошибка скачивания шаблона:', error);
         this.snackBar.open('Ошибка скачивания шаблона', 'Закрыть', { duration: 5000 });
       }
@@ -221,8 +221,13 @@ export class DocumentTemplatesComponent {
   }
 
   exportTemplate(template: TemplateListItem): void {
-    // TODO: Открыть диалог выбора формата экспорта и данных
-    console.log('Export template:', template);
+    // Открываем предпросмотр для экспорта с данными
+    this.dialog.open(TemplatePreviewDialogComponent, {
+      width: '90vw',
+      maxWidth: '1200px',
+      height: '90vh',
+      data: { template }
+    });
   }
 
   manageDataSets(template: TemplateListItem): void {
@@ -257,7 +262,7 @@ export class DocumentTemplatesComponent {
             this.loadTemplates();
             this.snackBar.open('Шаблон удален', 'Закрыть', { duration: 3000 });
           },
-          error: (error) => {
+          error: (error: any) => {
             console.error('Ошибка удаления шаблона:', error);
             this.snackBar.open('Ошибка удаления шаблона', 'Закрыть', { duration: 5000 });
           }

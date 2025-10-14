@@ -299,7 +299,7 @@ export interface TemplateEditorDialogData {
       </button>
     </div>
   `,
-  styleUrls: ['./dialogs-shared.scss', '../document-templates-shared.scss']
+  styleUrls: ['./dialogs-shared.scss', '../document-templates.scss']
 })
 export class TemplateEditorDialogComponent implements OnInit {
   private dialogRef = inject(MatDialogRef<TemplateEditorDialogComponent>);

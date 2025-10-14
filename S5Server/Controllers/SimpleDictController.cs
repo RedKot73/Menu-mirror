@@ -1,5 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Cryptography;
+
+using DocumentFormat.OpenXml.Office2010.Excel;
+using DocumentFormat.OpenXml.Wordprocessing;
+
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using S5Server.Data;
 using S5Server.Models;
 using S5Server.Utils;
@@ -208,7 +214,7 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
 
     [HttpGet("lookup")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<object>>> Lookup(
+    public async Task<ActionResult<IEnumerable<LookupDto>>> Lookup(
         [FromQuery] string term,
         [FromQuery] int limit = 10,
         CancellationToken ct = default)
@@ -220,10 +226,10 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         try
         {
             var data = await Query()
-                .Where(x => x.Value.Contains(term))
-                .OrderBy(x => x.Value)
+                .Where(t => t.Value.Contains(term))
+                .OrderBy(t => t.Value)
                 .Take(limit)
-                .Select(x => new { x.Id, Name = x.Value })
+                .Select(t => new LookupDto(t.Id, t.Value))
                 .ToListAsync(ct);
 
             return Ok(data);

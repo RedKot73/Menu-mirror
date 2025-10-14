@@ -142,7 +142,7 @@ export interface DataSetsDialogData {
       </button>
     </div>
   `,
-  styleUrls: ['./dialogs-shared.scss', '../document-templates-shared.scss']
+  styleUrls: ['./dialogs-shared.scss', '../document-templates.scss']
 })
 export class DataSetsDialogComponent implements OnInit {
   private dialogRef = inject(MatDialogRef<DataSetsDialogComponent>);

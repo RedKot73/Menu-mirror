@@ -162,7 +162,7 @@ public class DictRankController : ControllerBase
 
     // Укороченный список для автокомплита
     [HttpGet("lookup")]
-    public async Task<ActionResult<IEnumerable<object>>> Lookup(
+    public async Task<ActionResult<IEnumerable<LookupDto>>> Lookup(
         [FromQuery] string term,
         [FromQuery] int limit = 10,
         CancellationToken ct = default)
@@ -173,11 +173,11 @@ public class DictRankController : ControllerBase
         if (limit is < 1 or > 100) limit = 10;
 
         var data = await Query()
-            .Where(x => x.Value.Contains(term) || x.ShortValue.Contains(term))
-            .OrderBy(x => x.OrderVal)
-            .ThenBy(x => x.Value)
+            .Where(t => t.Value.Contains(term))
+            .OrderBy(t => t.OrderVal)
+            .ThenBy(t => t.Value)
             .Take(limit)
-            .Select(x => new { x.Id, Name = x.ShortValue })
+            .Select(t => new LookupDto(t.Id, t.ShortValue))
             .ToListAsync(ct);
 
         return Ok(data);

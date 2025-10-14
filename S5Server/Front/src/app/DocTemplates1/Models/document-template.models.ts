@@ -210,16 +210,16 @@ export const TEMPLATE_FORMAT_OPTIONS: FormatOption[] = [
   { 
     value: TemplateFormat.Html, 
     label: 'HTML', 
-    description: 'Веб-страница с форматированием' 
+    description: 'Веб-сторінка' 
   },
   { 
     value: TemplateFormat.Txt, 
     label: 'Текст', 
-    description: 'Простой текстовый файл' 
+    description: 'Текстовий файл' 
   },
   { 
     value: TemplateFormat.Docx, 
-    label: 'Word документ', 
+    label: 'Word (DOCX)', 
     description: 'Microsoft Word документ' 
   },
   { 

@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Linq;
+
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using S5Server.Data;
 using S5Server.Models;
 using S5Server.Utils;
@@ -228,7 +231,7 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
     /// <summary>Укороченный список для автокомплита</summary>
     [HttpGet("lookup")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<object>>> Lookup(
+    public async Task<ActionResult<IEnumerable<LookupDto>>> Lookup(
         [FromQuery] string term,
         [FromQuery] int limit = 10,
         CancellationToken ct = default)
@@ -240,10 +243,10 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         try
         {
             var data = await Query()
-                .Where(x => x.Value.Contains(term) || x.ShortValue.Contains(term))
-                .OrderBy(x => x.Value)
+                .Where(t => t.Value.Contains(term))
+                .OrderBy(t => t.Value)
                 .Take(limit)
-                .Select(x => new { x.Id, Name = x.Value, ShortName = x.ShortValue })
+                .Select(t => new LookupDto(t.Id, t.ShortValue))
                 .ToListAsync(ct);
 
             return Ok(data);
