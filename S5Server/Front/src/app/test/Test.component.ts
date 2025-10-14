@@ -17,6 +17,13 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatOptionModule } from '@angular/material/core';
+import { MatMenuModule } from '@angular/material/menu';
+import { FormsModule } from '@angular/forms';
+import { SlicePipe } from '@angular/common';
+
 import { DocumentTemplateService } from '../DocTemplates1/ServerServices/document-template.service';
 import { TemplateDetailsDto, TemplateFormat, DocumentTemplateUtils, CreateTemplateDto, TEMPLATE_FORMAT_OPTIONS } from '../DocTemplates1/Models/document-template.models';
 import { CreateTemplateDialogComponent } from './create-template-dialog.component';
@@ -24,10 +31,22 @@ import { CreateTemplateDialogComponent } from './create-template-dialog.componen
 @Component({
   selector: 'app-test',
   imports: [
-    CommonModule, 
-    MatTableModule, 
-    MatButtonModule, 
-    MatIconModule, 
+    CommonModule,
+
+    MatTableModule,
+    MatButtonModule,
+    MatSortModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatTooltipModule,
+    MatMenuModule,
+
+    MatTableModule,
+    MatButtonModule,
+    MatIconModule,
     MatTooltipModule,
     MatChipsModule,
     MatDialogModule,
@@ -61,11 +80,43 @@ import { CreateTemplateDialogComponent } from './create-template-dialog.componen
                         } @else if (templates().length === 0) {
                             <div class="no-data">Нет доступных шаблонов</div>
                         } @else {
-                            <table mat-table [dataSource]="dataSource" class="templates-table">
-                                
+                            <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+                                <!-- Actions Column -->
+                                <ng-container matColumnDef="actions">
+                                    <th mat-header-cell *matHeaderCellDef style="width: 60px;"> Дії </th>
+                                    <td mat-cell *matCellDef="let template">
+                                        <button mat-icon-button
+                                                [matMenuTriggerFor]="templateMenu"
+                                                matTooltip="Дії"
+                                                (click)="$event.stopPropagation()">
+                                            <mat-icon>more_vert</mat-icon>
+                                        </button>
+
+                                        <mat-menu #templateMenu="matMenu">
+                                                            <button mat-icon-button
+                                                                    (click)="downloadTemplate(template); $event.stopPropagation()"
+                                                                    matTooltip="Скачать шаблон">
+                                                                <mat-icon>download</mat-icon>
+                                                            </button>
+                                                            @if (supportsPreview(template)) {
+                                                                <button mat-icon-button
+                                                                        (click)="previewTemplate(template); $event.stopPropagation()"
+                                                                        matTooltip="Предпросмотр">
+                                                                    <mat-icon>visibility</mat-icon>
+                                                                </button>
+                                                            }
+                                                            <button mat-icon-button
+                                                                    (click)="editTemplate(template); $event.stopPropagation()"
+                                                                    matTooltip="Редактировать">
+                                                                <mat-icon>edit</mat-icon>
+                                                            </button>
+                                        </mat-menu>
+                                    </td>
+                                </ng-container>
+
                                 <!-- Name Column -->
                                 <ng-container matColumnDef="name">
-                                    <th mat-header-cell *matHeaderCellDef>Название</th>
+                                    <th mat-header-cell *matHeaderCellDef>Назва</th>
                                     <td mat-cell *matCellDef="let template" 
                                         (click)="selectTemplate(template)"
                                         [class.selected]="selectedTemplate()?.id === template.id"
@@ -94,12 +145,12 @@ import { CreateTemplateDialogComponent } from './create-template-dialog.componen
                                         @if (template.isPublished) {
                                             <mat-chip class="status-published">
                                                 <mat-icon>check_circle</mat-icon>
-                                                Опубликован
+                                                Опубліковано
                                             </mat-chip>
                                         } @else {
                                             <mat-chip class="status-draft">
                                                 <mat-icon>edit</mat-icon>
-                                                Черновик
+                                                Чернетка
                                             </mat-chip>
                                         }
                                     </td>
@@ -109,31 +160,7 @@ import { CreateTemplateDialogComponent } from './create-template-dialog.componen
                                 <ng-container matColumnDef="category">
                                     <th mat-header-cell *matHeaderCellDef>Категория</th>
                                     <td mat-cell *matCellDef="let template">
-                                        {{ template.templateCategoryName || 'Без категории' }}
-                                    </td>
-                                </ng-container>
-
-                                <!-- Actions Column -->
-                                <ng-container matColumnDef="actions">
-                                    <th mat-header-cell *matHeaderCellDef>Действия</th>
-                                    <td mat-cell *matCellDef="let template">
-                                        <button mat-icon-button 
-                                                (click)="downloadTemplate(template); $event.stopPropagation()"
-                                                matTooltip="Скачать шаблон">
-                                            <mat-icon>download</mat-icon>
-                                        </button>
-                                        @if (supportsPreview(template)) {
-                                            <button mat-icon-button 
-                                                    (click)="previewTemplate(template); $event.stopPropagation()"
-                                                    matTooltip="Предпросмотр">
-                                                <mat-icon>visibility</mat-icon>
-                                            </button>
-                                        }
-                                        <button mat-icon-button 
-                                                (click)="editTemplate(template); $event.stopPropagation()"
-                                                matTooltip="Редактировать">
-                                            <mat-icon>edit</mat-icon>
-                                        </button>
+                                        {{ template.templateCategoryName || '---' }}
                                     </td>
                                 </ng-container>
 
@@ -231,7 +258,7 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   selectedTemplate = signal<TemplateDetailsDto | null>(null);
   isLoading = signal(false);
   dataSource = new MatTableDataSource<TemplateDetailsDto>([]);
-  displayedColumns = ['name', 'format', 'status', 'category', 'actions'];
+  displayedColumns = ['actions', 'name', 'format', 'status', 'category'];
 
   // Panel signals (replacing sidenav signals)
   navPanelWidth = signal(this.getSavedNavPanelWidth());
@@ -429,10 +456,10 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     this.documentTemplateService.getList().subscribe({
       next: (templates) => {
         // Получаем детали для каждого шаблона
-        const detailsRequests = templates.map(template => 
+        const detailsRequests = templates.map(template =>
           this.documentTemplateService.getDetails(template.id)
         );
-        
+
         Promise.all(detailsRequests.map(req => req.toPromise())).then(details => {
           this.templates.set(details.filter(d => d !== undefined) as TemplateDetailsDto[]);
           this.isLoading.set(false);
