@@ -51,6 +51,11 @@ export const routes: Routes = [
         loadComponent: () => import('../dictionaries/dictUnitTypes.component').then(m => m.DictUnitTypesComponent),
         title: 'Типи підрозділів'
     },
+    {
+        path: 'dictTemplateCategories',
+        loadComponent: () => import('../dictionaries/dictTemplateCategories.component').then(m => m.DictTemplateCategoriesComponent),
+        title: 'Категорії шаблонів документів'
+    },
     { 
         path: 'units', title: 'Підрозділи',
         loadComponent: () => import('../app/Unit/Unit.component')
@@ -58,7 +63,7 @@ export const routes: Routes = [
     },
     {
         path: 'templates', title: 'Шаблоны документов',
-        loadComponent: () => import('../app/DocumentTemplates/document-templates-full.component')
+        loadComponent: () => import('./DocumentTemplates/document-templates.component')
         .then(m => m.DocumentTemplatesComponent)
     },
     { path: 'orders', title: 'Розпорядження', component: OrdersPage },

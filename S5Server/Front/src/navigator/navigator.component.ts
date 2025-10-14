@@ -24,6 +24,7 @@ import { MatMenuModule } from '@angular/material/menu';
 
       <mat-menu #dictDroneForces="matMenu">
         <button mat-menu-item routerLink="/dictArea">Напрямок ЛБЗ</button>
+        <button mat-menu-item routerLink="/dictTemplateCategories">Категорії шаблонів документів</button>
       </mat-menu>
 
       <mat-menu #dictGeneralInfo="matMenu">
