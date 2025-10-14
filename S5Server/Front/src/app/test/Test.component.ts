@@ -80,7 +80,7 @@ import { CreateTemplateDialogComponent } from './create-template-dialog.componen
                         } @else if (templates().length === 0) {
                             <div class="no-data">Нет доступных шаблонов</div>
                         } @else {
-                            <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+                            <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
                                 <!-- Actions Column -->
                                 <ng-container matColumnDef="actions">
                                     <th mat-header-cell *matHeaderCellDef style="width: 60px;"> Дії </th>
@@ -116,7 +116,7 @@ import { CreateTemplateDialogComponent } from './create-template-dialog.componen
 
                                 <!-- Name Column -->
                                 <ng-container matColumnDef="name">
-                                    <th mat-header-cell *matHeaderCellDef>Назва</th>
+                                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Назва</th>
                                     <td mat-cell *matCellDef="let template" 
                                         (click)="selectTemplate(template)"
                                         [class.selected]="selectedTemplate()?.id === template.id"
@@ -130,7 +130,7 @@ import { CreateTemplateDialogComponent } from './create-template-dialog.componen
 
                                 <!-- Format Column -->
                                 <ng-container matColumnDef="format">
-                                    <th mat-header-cell *matHeaderCellDef>Формат</th>
+                                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Формат</th>
                                     <td mat-cell *matCellDef="let template">
                                         <mat-chip class="format-chip" [class]="'format-' + template.format">
                                             {{ getFormatLabel(template.format) }}
@@ -140,7 +140,7 @@ import { CreateTemplateDialogComponent } from './create-template-dialog.componen
 
                                 <!-- Status Column -->
                                 <ng-container matColumnDef="status">
-                                    <th mat-header-cell *matHeaderCellDef>Статус</th>
+                                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Статус</th>
                                     <td mat-cell *matCellDef="let template">
                                         @if (template.isPublished) {
                                             <mat-chip class="status-published">
@@ -158,9 +158,21 @@ import { CreateTemplateDialogComponent } from './create-template-dialog.componen
 
                                 <!-- Category Column -->
                                 <ng-container matColumnDef="category">
-                                    <th mat-header-cell *matHeaderCellDef>Категория</th>
+                                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Категория</th>
                                     <td mat-cell *matCellDef="let template">
                                         {{ template.templateCategoryName || '---' }}
+                                    </td>
+                                </ng-container>
+
+                                <!-- Description Column -->
+                                <ng-container matColumnDef="description">
+                                    <th mat-header-cell *matHeaderCellDef> Опис </th>
+                                    <td mat-cell *matCellDef="let template" class="comment-cell">
+                                        <span class="comment-text"
+                                              [matTooltip]="template.description && template.description.length > 50 ? template.description : ''"
+                                              [title]="template.description && template.description.length > 50 ? template.description : ''">
+                                            {{ template.description ? (template.description.length > 50 ? (template.description | slice:0:50) + '...' : template.description) : '-' }}
+                                        </span>
                                     </td>
                                 </ng-container>
 
@@ -252,13 +264,14 @@ export class TestComponent implements AfterViewInit, OnDestroy {
 
   // ViewChild for container reference
   @ViewChild('containerRef') containerRef!: ElementRef<HTMLElement>;
+  @ViewChild(MatSort) sort!: MatSort;
 
   // Template management signals
   templates = signal<TemplateDetailsDto[]>([]);
   selectedTemplate = signal<TemplateDetailsDto | null>(null);
   isLoading = signal(false);
   dataSource = new MatTableDataSource<TemplateDetailsDto>([]);
-  displayedColumns = ['actions', 'name', 'format', 'status', 'category'];
+  displayedColumns = ['actions', 'name', 'format', 'status', 'category', 'description'];
 
   // Panel signals (replacing sidenav signals)
   navPanelWidth = signal(this.getSavedNavPanelWidth());
@@ -316,6 +329,9 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     // Initial width calculation
     this.updateContainerWidth();
+    
+    // Setup table sorting
+    this.dataSource.sort = this.sort;
   }
 
   ngOnDestroy(): void {
