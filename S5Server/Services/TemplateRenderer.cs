@@ -383,7 +383,9 @@ namespace S5Server.Services
             return text.Trim();
         }
 
-        public Task<RenderResult> RenderFromClientHtmlAsync(string name, string html, string export)
+        public Task<RenderResult> RenderFromClientHtmlAsync(string name,
+            string html, string export,
+            CancellationToken ct = default)
         {
             var safeBase = Path.GetFileNameWithoutExtension(MakeSafeFileName($"{name}_{DateTime.Now:yyyyMMdd_HHmmss_fff}"));
             switch (export.ToLowerInvariant())

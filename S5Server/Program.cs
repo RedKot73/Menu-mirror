@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System.Text.Json;
+
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
@@ -63,12 +65,27 @@ builder.Services.AddIdentity<TVezhaUser<string>, IdentityRole>(options =>
     .AddUserManager<UserManager<TVezhaUser<string>>>()
     .AddRoles<IdentityRole>()
     .AddDefaultTokenProviders();
-
+/*
 builder.Services.AddControllers()
     .AddJsonOptions(o =>
     {
         o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        //o.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
     });
+*/
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        ///*
+        // Вказуємо, що JSON ключі повинні бути camelCase
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+
+        // Також бажано додати:
+        options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+        //*/
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {

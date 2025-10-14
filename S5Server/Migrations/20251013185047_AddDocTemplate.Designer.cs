@@ -11,7 +11,7 @@ using S5Server.Data;
 namespace S5Server.Migrations
 {
     [DbContext(typeof(MainDbContext))]
-    [Migration("20251010111534_AddDocTemplate")]
+    [Migration("20251013185047_AddDocTemplate")]
     partial class AddDocTemplate
     {
         /// <inheritdoc />
@@ -352,6 +352,34 @@ namespace S5Server.Migrations
                     b.ToTable("dict_soldier_state", (string)null);
                 });
 
+            modelBuilder.Entity("S5Server.Models.DictTemplateCategory", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ShortValue")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Value")
+                        .IsUnique();
+
+                    b.ToTable("dict_template_category", (string)null);
+                });
+
             modelBuilder.Entity("S5Server.Models.DictUnitType", b =>
                 {
                     b.Property<string>("Id")
@@ -390,37 +418,56 @@ namespace S5Server.Migrations
                         .IsRequired()
                         .HasColumnType("BLOB");
 
-                    b.Property<string>("ContentType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                    b.Property<string>("ContentHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT(64)");
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("DefaultDataSetId")
+                        .HasColumnType("TEXT(36)");
+
                     b.Property<string>("Description")
                         .HasMaxLength(300)
                         .HasColumnType("TEXT(300)");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("TEXT(250)");
 
                     b.Property<string>("Format")
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("TEXT(10)");
 
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("TEXT(150)");
 
+                    b.Property<DateTime?>("PublishedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TemplateCategoryId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
                     b.Property<DateTime>("UpdatedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ContentHash");
+
+                    b.HasIndex("DefaultDataSetId");
+
+                    b.HasIndex("IsPublished");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("TemplateCategoryId");
 
                     b.ToTable("document_templates", (string)null);
                 });
@@ -564,14 +611,23 @@ namespace S5Server.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("TEXT(150)");
 
+                    b.Property<DateTime?>("PublishedAtUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("TemplateId")
                         .IsRequired()
                         .HasColumnType("TEXT(36)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -681,6 +737,24 @@ namespace S5Server.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("S5Server.Models.DocumentTemplate", b =>
+                {
+                    b.HasOne("S5Server.Models.TemplateDataSet", "DefaultDataSet")
+                        .WithMany()
+                        .HasForeignKey("DefaultDataSetId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("S5Server.Models.DictTemplateCategory", "TemplateCategory")
+                        .WithMany()
+                        .HasForeignKey("TemplateCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DefaultDataSet");
+
+                    b.Navigation("TemplateCategory");
                 });
 
             modelBuilder.Entity("S5Server.Models.Soldier", b =>

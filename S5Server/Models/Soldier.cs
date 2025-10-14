@@ -168,13 +168,13 @@ namespace S5Server.Models
         /// <summary>
         /// Посада
         /// </summary>
-        [ForeignKey(nameof(DictPosition)), Display(Name = DictPosition.Caption)]
+        [ForeignKey(nameof(DictPosition))]
         public string PositionId { get; set; } = string.Empty;
 
         /// <summary>
         /// Посада
         /// </summary>
-        [ValidateNever, Display(Name = DictPosition.Caption)]
+        [ValidateNever]
         public DictPosition Position { get; set; } = default!;
 
         /// <summary>

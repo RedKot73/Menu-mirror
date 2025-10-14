@@ -91,6 +91,15 @@ namespace S5Server.Data
                 entity.HasIndex(e => e.Value).IsUnique();
                 entity.Property(e => e.OrderVal).HasColumnType("INTEGER");
             });
+            modelBuilder.Entity<DictTemplateCategory>(entity =>
+            {
+                entity.ToTable("dict_template_category");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+                entity.Property(e => e.Value).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.Comment).HasColumnType("TEXT");
+                entity.HasIndex(e => e.Value).IsUnique();
+            });
 
             modelBuilder.Entity<Unit>(entity =>
             {
@@ -201,13 +210,36 @@ namespace S5Server.Data
             {
                 entity.ToTable("document_templates");
                 entity.HasKey(e => e.Id);
+
                 entity.Property(e => e.Id).HasColumnType("TEXT(36)");
                 entity.Property(e => e.Name).IsRequired().HasColumnType("TEXT(150)");
                 entity.Property(e => e.Description).HasColumnType("TEXT(300)");
-                //entity.Property(e => e.FileName).IsRequired().HasColumnType("TEXT(250)");
-                entity.Property(e => e.ContentType).IsRequired().HasColumnType("TEXT(50)");
+                //entity.Property(e => e.ContentType).IsRequired().HasColumnType("TEXT(50)");
                 entity.Property(e => e.Format).IsRequired().HasColumnType("TEXT(10)");
                 entity.Property(e => e.Content).IsRequired().HasColumnType("BLOB");
+
+                entity.Property(e => e.TemplateCategoryId).HasColumnType("TEXT(36)");
+                entity.HasOne(e => e.TemplateCategory)
+                    .WithMany()
+                    .HasForeignKey(e => e.TemplateCategoryId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.Property(e => e.ContentHash).HasColumnType("TEXT(64)");
+                entity.Property(e => e.IsPublished).HasColumnType("INTEGER");
+                entity.Property(e => e.PublishedAtUtc).HasColumnType("TEXT");
+
+                entity.Property(e => e.DefaultDataSetId).HasColumnType("TEXT(36)");
+                entity.HasOne(e => e.DefaultDataSet)
+                      .WithMany()
+                      .HasForeignKey(e => e.DefaultDataSetId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.Property(e => e.CreatedAtUtc).HasColumnType("TEXT");
+                entity.Property(e => e.UpdatedAtUtc).HasColumnType("TEXT");
+
+                entity.HasIndex(e => e.Name).IsUnique();
+                entity.HasIndex(e => e.ContentHash);// быстрая сверка
+                entity.HasIndex(e => e.IsPublished);
+
                 entity.Property(e => e.CreatedAtUtc).HasColumnType("TEXT");
                 entity.Property(e => e.UpdatedAtUtc).HasColumnType("TEXT");
             });
@@ -255,6 +287,15 @@ namespace S5Server.Data
         /// Довідник Військове звання
         /// </summary>
         public DbSet<DictRank> DictRanks { get; set; }
+        /// <summary>
+        /// Категория шаблона документа
+        /// Gets or sets the collection of template category entities in the database.
+        /// </summary>
+        /// <remarks>Use this property to query, add, update, or remove template category records through
+        /// Entity Framework. Changes made to this collection are tracked by the context and persisted to the database
+        /// when SaveChanges is called.</remarks>
+        public DbSet<DictTemplateCategory> DictTemplateCategories { get; set; }
+
         /// <summary>
         /// Підрозділи
         /// </summary>

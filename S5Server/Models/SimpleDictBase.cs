@@ -4,12 +4,12 @@ namespace S5Server.Models
 {
     // DTO для внешнего API
     public record SimpleDictDto(
-        [property: Required, StringLength(40)] string Id,
-        [property: Required, StringLength(100)] string Value,
+        [Required, StringLength(40)] string Id,
+        [Required, StringLength(100)] string Value,
         string? Comment);
 
     public record SimpleDictCreateDto(
-        [property: Required, StringLength(100)] string Value,
+        [Required, StringLength(100)] string Value,
         string? Comment);
 
 
@@ -50,13 +50,13 @@ namespace S5Server.Models
     /// DTO для справочников с ShortValue
     /// </summary>
     public record ShortDictDto(
-        [property: Required, StringLength(40)] string Id,
-        [property: Required, StringLength(100)] string Value,
-        [property: Required, StringLength(50)] string ShortValue,
+        [Required, StringLength(40)] string Id,
+        [Required, StringLength(100)] string Value,
+        [Required, StringLength(50)] string ShortValue,
         string? Comment);
     public record ShortDictCreateDto(
-        [property: Required, StringLength(100)] string Value,
-        [property: Required, StringLength(50)] string ShortValue,
+        [Required, StringLength(100)] string Value,
+        [Required, StringLength(50)] string ShortValue,
         string? Comment);
 
     public class ShortDictBase : SimpleDictBase, IShortDictBase

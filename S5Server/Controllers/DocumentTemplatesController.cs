@@ -1,7 +1,10 @@
 ﻿using System.Text;
 using System.Text.Json;
+using System.Security.Cryptography;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using S5Server.Data;
 using S5Server.Models;
 using S5Server.Services;
@@ -15,7 +18,7 @@ namespace S5Server.Controllers
     {
         private readonly MainDbContext _db;
         private readonly DbSet<DocumentTemplate> _docTempl;
-        private readonly DbSet<TemplateDataSet> _templDataSets;
+        //private readonly DbSet<TemplateDataSet> _templDataSets;
         private readonly TemplateRenderer _renderer;
         private readonly ILogger<DocumentTemplatesController> _logger;
 
@@ -23,29 +26,29 @@ namespace S5Server.Controllers
         {
             _db = db;
             _docTempl = _db.DocumentTemplates;
-            _templDataSets = _db.TemplateDataSets;
+            //_templDataSets = _db.TemplateDataSets;
             _renderer = renderer;
             _logger = logger;
         }
 
-        public record TemplateListItem(string Id, string Name, string? Description, string Format, DateTime CreatedAtUtc, DateTime UpdatedAtUtc);
-        public record CreateTemplateDto(string Name, string? Description, string Format);
-        public record DataSetCreateDto(string Name, string DataJson);
         public record RenderRequest(string? DataJson, string Export /* html|txt|docx|pdf */);
-
-        // Новый: запрос экспорта уже готового HTML от клиента
         public record ClientHtmlExportRequest(string Name, string Html, string Export /* html|txt|pdf|docx*/);
+
+        private static string ComputeSha256(byte[] data)
+        {
+            var hash = SHA256.HashData(data);
+            return Convert.ToHexString(hash).ToLowerInvariant();
+        }
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<TemplateListItem>>> GetList(CancellationToken ct = default)
+        public async Task<ActionResult<IEnumerable<TemplateDto>>> GetList(CancellationToken ct = default)
         {
             try
             {
                 var list = await _docTempl.AsNoTracking()
                     .OrderByDescending(t => t.UpdatedAtUtc)
-                    .Select(t => new TemplateListItem(
-                        t.Id, t.Name, t.Description, t.Format, t.CreatedAtUtc, t.UpdatedAtUtc))
+                    .Select(t => TemplateDto.ToDto(t))
                     .ToListAsync(ct);
 
                 return Ok(list);
@@ -64,18 +67,18 @@ namespace S5Server.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<TemplateListItem>> GetById(string id, CancellationToken ct = default)
+        public async Task<ActionResult<TemplateDto>> GetById(string id, CancellationToken ct = default)
         {
             try
             {
-                var t = await _docTempl.AsNoTracking()
+                var t = await _docTempl
+                    .AsNoTracking()
                     .FirstOrDefaultAsync(x => x.Id == id, ct);
 
                 if (t == null)
                     return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
 
-                return Ok(new TemplateListItem(
-                    t.Id, t.Name, t.Description, t.Format, t.CreatedAtUtc, t.UpdatedAtUtc));
+                return Ok(TemplateDto.ToDto(t));
             }
             catch (OperationCanceledException)
             {
@@ -89,18 +92,18 @@ namespace S5Server.Controllers
         }
 
         [HttpPost]
+        [Consumes("multipart/form-data")]
         [RequestSizeLimit(50_000_000)]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<TemplateListItem>> Create(
+        public async Task<ActionResult<TemplateDto>> Create(
             [FromForm] CreateTemplateDto dto,
-            [FromForm] IFormFile file,
             CancellationToken ct = default)
         {
             if (!ModelState.IsValid)
                 return ValidationProblem(ModelState);
 
-            if (file is null || file.Length == 0)
+            if (dto.File is null || dto.File.Length == 0)//Проверить DefaultDataSetId
                 return Problem(statusCode: 400, title: "Файл шаблона не передан");
 
             var format = dto.Format?.Trim().ToLowerInvariant();
@@ -110,15 +113,18 @@ namespace S5Server.Controllers
             try
             {
                 using var ms = new MemoryStream();
-                await file.CopyToAsync(ms, ct);
+                await dto.File.CopyToAsync(ms, ct);
+                var content = ms.ToArray();
 
                 var entity = new DocumentTemplate
                 {
                     Name = dto.Name.Trim(),
                     Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim(),
-                    ContentType = file.ContentType ?? DocumentTemplate.GetContentTypeByFormat(format),
                     Format = format!,
-                    Content = ms.ToArray(),
+                    Content = content,
+                    ContentHash = ComputeSha256(content),
+                    TemplateCategoryId = dto.TemplateCategoryId,
+                    DefaultDataSetId = string.IsNullOrWhiteSpace(dto.DefaultDataSetId) ? null : dto.DefaultDataSetId.Trim(),
                     CreatedAtUtc = DateTime.UtcNow,
                     UpdatedAtUtc = DateTime.UtcNow
                 };
@@ -126,8 +132,8 @@ namespace S5Server.Controllers
                 _docTempl.Add(entity);
                 await _db.SaveChangesAsync(ct);
 
-                return CreatedAtAction(nameof(GetById), new { id = entity.Id },
-                    new TemplateListItem(entity.Id, entity.Name, entity.Description, entity.Format, entity.CreatedAtUtc, entity.UpdatedAtUtc));
+                return CreatedAtAction(nameof(GetById),
+                    new { id = entity.Id }, TemplateDto.ToDto(entity));
             }
             catch (OperationCanceledException)
             {
@@ -159,40 +165,36 @@ namespace S5Server.Controllers
         public async Task<IActionResult> Update(
             string id,
             [FromForm] CreateTemplateDto dto,
-            [FromForm] IFormFile? file,
             CancellationToken ct = default)
         {
             if (!ModelState.IsValid)
                 return ValidationProblem(ModelState);
 
-            var t = await _docTempl.AsTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
+            var t = await _docTempl
+                .AsTracking()
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (t == null)
                 return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
 
             t.Name = dto.Name.Trim();
             t.Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim();
 
-            if (!string.IsNullOrWhiteSpace(dto.Format))
-            {
-                var format = dto.Format.Trim().ToLowerInvariant();
-                if (format is not ("html" or "txt" or "docx"))
-                    return Problem(statusCode: 400, title: "Поддерживаемые форматы: html, txt, docx");
-                t.Format = format;
-                // При смене формата корректируем content-type
-                if (file == null)
-                    t.ContentType = DocumentTemplate.GetContentTypeByFormat(t.Format);
-            }
+            // Формат — если не пришёл, используем текущий
+            var newFormat = string.IsNullOrWhiteSpace(dto.Format)
+                ? t.Format
+                : dto.Format.Trim().ToLowerInvariant();
+            if (newFormat is not ("html" or "txt" or "docx"))
+                return Problem(statusCode: 400, title: "Поддерживаемые форматы: html, txt, docx");
 
-            if (file != null && file.Length > 0)
+            if (dto.File != null && dto.File.Length > 0)
             {
                 using var ms = new MemoryStream();
-                await file.CopyToAsync(ms, ct);
-                t.ContentType = file.ContentType ?? DocumentTemplate.GetContentTypeByFormat(t.Format);
-                t.Content = ms.ToArray();
+                await dto.File.CopyToAsync(ms, ct);
+                var content = ms.ToArray();
+                t.Content = content;
+                t.ContentHash = ComputeSha256(content);
             }
-
             t.UpdatedAtUtc = DateTime.UtcNow;
-
             try
             {
                 await _db.SaveChangesAsync(ct);
@@ -215,6 +217,154 @@ namespace S5Server.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Ошибка при обновлении шаблона Id={Id}", id);
+                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+            }
+        }
+
+        [HttpPatch("{id}/category")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> SetCategory(string id, [FromBody] SetCategoryDto dto, CancellationToken ct = default)
+        {
+            try
+            {
+                var t = await _docTempl.AsTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
+                if (t == null)
+                    return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+
+                var newCatId = string.IsNullOrWhiteSpace(dto.TemplateCategoryId)
+                    ? ControllerFunctions.NullGuid
+                    : dto.TemplateCategoryId!.Trim();
+
+                if (newCatId != ControllerFunctions.NullGuid)
+                {
+                    var exists = await _db.DictTemplateCategories.AsNoTracking()
+                        .AnyAsync(c => c.Id == newCatId, ct);
+                    if (!exists)
+                        return Problem(statusCode: 404, title: "Категория не найдена", detail: $"TemplateCategoryId={newCatId}");
+                }
+
+                t.TemplateCategoryId = newCatId;
+                t.UpdatedAtUtc = DateTime.UtcNow;
+                await _db.SaveChangesAsync(ct);
+                return NoContent();
+            }
+            catch (OperationCanceledException)
+            {
+                return Problem(statusCode: 499, title: "Отмена клиентом");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка установки категории шаблона Id={Id}", id);
+                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+            }
+        }
+
+        [HttpPost("{id}/publish")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Publish(string id, CancellationToken ct = default)
+        {
+            try
+            {
+                var t = await _docTempl
+                    .AsTracking()
+                    .FirstOrDefaultAsync(x => x.Id == id, ct);
+                if (t == null)
+                    return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+
+                t.IsPublished = true;
+                t.PublishedAtUtc = DateTime.UtcNow;
+                t.UpdatedAtUtc = DateTime.UtcNow;
+                await _db.SaveChangesAsync(ct);
+                return NoContent();
+            }
+            catch (OperationCanceledException)
+            {
+                return Problem(statusCode: 499, title: "Отмена клиентом");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка публикации шаблона Id={Id}", id);
+                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+            }
+        }
+
+        [HttpPost("{id}/unpublish")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Unpublish(string id, CancellationToken ct = default)
+        {
+            try
+            {
+                var t = await _docTempl
+                    .AsTracking()
+                    .FirstOrDefaultAsync(x => x.Id == id, ct);
+                if (t == null)
+                    return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+
+                t.IsPublished = false;
+                t.PublishedAtUtc = null;
+                t.UpdatedAtUtc = DateTime.UtcNow;
+                await _db.SaveChangesAsync(ct);
+                return NoContent();
+            }
+            catch (OperationCanceledException)
+            {
+                return Problem(statusCode: 499, title: "Отмена клиентом");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка снятия с публикации шаблона Id={Id}", id);
+                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+            }
+        }
+
+        [HttpPatch("{id}/default-data-set")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> SetDefaultDataSet(string id, [FromBody] SetDefaultDataSetDto dto, CancellationToken ct = default)
+        {
+            try
+            {
+                var t = await _docTempl
+                    .AsTracking()
+                    .FirstOrDefaultAsync(x => x.Id == id, ct);
+                if (t == null)
+                    return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+
+                if (string.IsNullOrWhiteSpace(dto.DefaultDataSetId))
+                {
+                    t.DefaultDataSetId = null;
+                }
+                else
+                {
+                    var dsId = dto.DefaultDataSetId.Trim();
+                    /*
+                    var ds = await _templDataSets.AsNoTracking()
+                        .FirstOrDefaultAsync(x => x.Id == dsId, ct);
+                    if (ds == null)
+                        return Problem(statusCode: 404, title: "Набор данных не найден", detail: $"DataSetId={dsId}");
+
+                    if (ds.TemplateId != id)
+                        return Problem(statusCode: 400, title: "Неверный набор данных", detail: "Набор данных принадлежит другому шаблону.");
+                    */
+                    t.DefaultDataSetId = dsId;
+                }
+
+                t.UpdatedAtUtc = DateTime.UtcNow;
+                await _db.SaveChangesAsync(ct);
+                return NoContent();
+            }
+            catch (OperationCanceledException)
+            {
+                return Problem(statusCode: 499, title: "Отмена клиентом");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка установки дефолтного набора данных Id={Id}", id);
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
@@ -252,7 +402,9 @@ namespace S5Server.Controllers
         {
             try
             {
-                var t = await _docTempl.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
+                var t = await _docTempl
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.Id == id, ct);
                 if (t == null)
                     return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
                 return File(t.Content, t.ContentType);
@@ -264,6 +416,85 @@ namespace S5Server.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Ошибка при выдаче файла шаблона Id={Id}", id);
+                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+            }
+        }
+
+
+        [HttpGet("{id}/content")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Produces("text/plain")]
+        public async Task<IActionResult> GetTemplateContent(string id, CancellationToken ct = default)
+        {
+            try
+            {
+                var t = await _docTempl
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.Id == id, ct);
+                if (t == null)
+                    return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+
+                // Поддерживаем клиентский рендер только для html/txt
+                var fmt = t.Format.ToLowerInvariant();
+                if (fmt is "html" or "txt")
+                {
+                    var text = Encoding.UTF8.GetString(t.Content);
+                    return Content(text, "text/plain; charset=utf-8");
+                }
+
+                return Problem(statusCode: 415, title: "Неподдерживаемый формат",
+                               detail: $"Для формата '{t.Format}' контент как текст недоступен.");
+            }
+            catch (OperationCanceledException)
+            {
+                return Problem(statusCode: 499, title: "Отмена клиентом");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка выдачи содержимого шаблона Id={Id}", id);
+                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+            }
+        }
+        [HttpGet("{id}/details")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<TemplateDetailsDto>> GetDetails(string id, CancellationToken ct = default)
+        {
+            try
+            {
+                var t = await _docTempl.AsNoTracking()
+                    .Include(x => x.TemplateCategory)
+                    .Include(x => x.DefaultDataSet)
+                    .FirstOrDefaultAsync(x => x.Id == id, ct);
+
+                if (t == null)
+                    return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+
+                var dto = new TemplateDetailsDto(
+                    t.Id,
+                    t.Name,
+                    t.Description,
+                    t.Format,
+                    t.TemplateCategoryId,
+                    t.TemplateCategory?.Value,
+                    t.IsPublished,
+                    t.PublishedAtUtc,
+                    t.DefaultDataSetId,
+                    t.DefaultDataSet?.Name,
+                    t.ContentHash,
+                    t.CreatedAtUtc,
+                    t.UpdatedAtUtc);
+
+                return Ok(dto);
+            }
+            catch (OperationCanceledException)
+            {
+                return Problem(statusCode: 499, title: "Отмена клиентом");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка получения деталей шаблона Id={Id}", id);
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
@@ -346,189 +577,19 @@ namespace S5Server.Controllers
             }
         }
 
-        [HttpGet("{id}/data-sets")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetDataSets(string id, CancellationToken ct = default)
-        {
-            try
-            {
-                var exists = await _docTempl.AsNoTracking().AnyAsync(x => x.Id == id, ct);
-                if (!exists)
-                    return Problem(statusCode: 404, title: "Не найдено", detail: $"TemplateId={id}");
-
-                var items = await _templDataSets.AsNoTracking()
-                    .Where(d => d.TemplateId == id)
-                    .OrderByDescending(d => d.CreatedAtUtc)
-                    .Select(d => new { d.Id, d.Name, d.CreatedAtUtc })
-                    .ToListAsync(ct);
-
-                return Ok(items);
-            }
-            catch (OperationCanceledException)
-            {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка получения наборов данных TemplateId={TemplateId}", id);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
-            }
-        }
-
-        [HttpPost("{id}/data-sets")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status409Conflict)]
-        public async Task<IActionResult> CreateDataSet(string id, [FromBody] DataSetCreateDto dto, CancellationToken ct = default)
-        {
-            if (!ModelState.IsValid)
-                return ValidationProblem(ModelState);
-
-            try
-            {
-                var t = await _docTempl.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
-                if (t == null)
-                    return Problem(statusCode: 404, title: "Не найдено", detail: $"TemplateId={id}");
-
-                // Валидация JSON
-                try { JsonDocument.Parse(dto.DataJson); }
-                catch
-                {
-                    return Problem(statusCode: 400, title: "Некорректный JSON");
-                }
-
-                var ds = new TemplateDataSet
-                {
-                    TemplateId = id,
-                    Name = dto.Name.Trim(),
-                    DataJson = dto.DataJson,
-                    CreatedAtUtc = DateTime.UtcNow
-                };
-                _templDataSets.Add(ds);
-
-                try
-                {
-                    await _db.SaveChangesAsync(ct);
-                    return Ok(new { ds.Id, ds.Name, ds.CreatedAtUtc });
-                }
-                catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
-                {
-                    _logger.LogInformation(ex, "Конфликт уникальности набора данных Name={Name} TemplateId={TemplateId}", ds.Name, id);
-                    return Problem(
-                        statusCode: 409,
-                        title: "Конфликт уникальности",
-                        detail: $"Набор данных с именем \"{ds.Name}\" уже существует.",
-                        extensions: new Dictionary<string, object?> { ["field"] = "Name", ["value"] = ds.Name });
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка создания набора данных TemplateId={TemplateId}", id);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
-            }
-        }
-
-        [HttpGet("data-sets/{dataSetId}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetDataSet(string dataSetId, CancellationToken ct = default)
-        {
-            try
-            {
-                var ds = await _templDataSets.AsNoTracking().FirstOrDefaultAsync(x => x.Id == dataSetId, ct);
-                if (ds == null)
-                    return Problem(statusCode: 404, title: "Не найдено", detail: $"DataSetId={dataSetId}");
-
-                return Ok(new { ds.Id, ds.TemplateId, ds.Name, ds.DataJson, ds.CreatedAtUtc });
-            }
-            catch (OperationCanceledException)
-            {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка получения набора данных DataSetId={DataSetId}", dataSetId);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
-            }
-        }
-
-        [HttpDelete("data-sets/{dataSetId}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeleteDataSet(string dataSetId, CancellationToken ct = default)
-        {
-            try
-            {
-                var ds = await _templDataSets.FirstOrDefaultAsync(x => x.Id == dataSetId, ct);
-                if (ds == null)
-                    return Problem(statusCode: 404, title: "Не найдено", detail: $"DataSetId={dataSetId}");
-
-                _templDataSets.Remove(ds);
-                await _db.SaveChangesAsync(ct);
-                return NoContent();
-            }
-            catch (OperationCanceledException)
-            {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка удаления набора данных DataSetId={DataSetId}", dataSetId);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
-            }
-        }
-
-        [HttpGet("{id}/content")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [Produces("text/plain")]
-        public async Task<IActionResult> GetTemplateContent(string id, CancellationToken ct = default)
-        {
-            try
-            {
-                var t = await _docTempl.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
-                if (t == null)
-                    return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
-
-                // Поддерживаем клиентский рендер только для html/txt
-                var fmt = t.Format.ToLowerInvariant();
-                if (fmt is "html" or "txt")
-                {
-                    var text = Encoding.UTF8.GetString(t.Content);
-                    return Content(text, "text/plain; charset=utf-8");
-                }
-
-                return Problem(statusCode: 415, title: "Неподдерживаемый формат",
-                               detail: $"Для формата '{t.Format}' контент как текст недоступен.");
-            }
-            catch (OperationCanceledException)
-            {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка выдачи содержимого шаблона Id={Id}", id);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
-            }
-        }
-
         [HttpPost("export-from-html")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> ExportFromClientHtml([FromBody] ClientHtmlExportRequest req, CancellationToken ct = default)
+        public async Task<IActionResult> ExportFromClientHtml([FromBody] ClientHtmlExportRequest req,
+            CancellationToken ct = default)
         {
             if (req is null || string.IsNullOrWhiteSpace(req.Html) || string.IsNullOrWhiteSpace(req.Export))
                 return Problem(statusCode: 400, title: "Некорректные данные запроса");
 
             try
             {
-                var result = await _renderer.RenderFromClientHtmlAsync(req.Name ?? "Document", req.Html, req.Export);
+                var result = await _renderer
+                    .RenderFromClientHtmlAsync(req.Name ?? "Document", req.Html, req.Export, ct);
                 return File(result.Bytes, result.ContentType, result.FileName);
             }
             catch (NotImplementedException ex)
