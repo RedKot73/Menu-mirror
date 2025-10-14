@@ -7,22 +7,13 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
+using static S5Server.Models.DocumentTemplate;
+
 namespace S5Server.Services
 {
     public class TemplateRenderer
     {
-        public enum TemplateFormat { Html, Txt, Docx }
-
         public record RenderResult(string ContentType, byte[] Bytes, string FileName);
-
-        public static TemplateFormat ParseFormat(string format) =>
-            format.ToLowerInvariant() switch
-            {
-                "html" => TemplateFormat.Html,
-                "txt" => TemplateFormat.Txt,
-                "docx" => TemplateFormat.Docx,
-                _ => TemplateFormat.Html
-            };
 
         public IDictionary<string, string> ParseJsonToDict(string dataJson)
         {

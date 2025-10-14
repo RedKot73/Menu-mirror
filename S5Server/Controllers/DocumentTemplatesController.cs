@@ -9,6 +9,7 @@ using S5Server.Data;
 using S5Server.Models;
 using S5Server.Services;
 using S5Server.Utils;
+using static S5Server.Models.DocumentTemplate;
 
 namespace S5Server.Controllers
 {
@@ -17,15 +18,14 @@ namespace S5Server.Controllers
     public class DocumentTemplatesController : ControllerBase
     {
         private readonly MainDbContext _db;
-        private readonly DbSet<DocumentTemplate> _docTempl;
-        //private readonly DbSet<TemplateDataSet> _templDataSets;
+        private readonly DbSet<DocumentTemplate> _set;
         private readonly TemplateRenderer _renderer;
         private readonly ILogger<DocumentTemplatesController> _logger;
 
         public DocumentTemplatesController(MainDbContext db, TemplateRenderer renderer, ILogger<DocumentTemplatesController> logger)
         {
             _db = db;
-            _docTempl = _db.DocumentTemplates;
+            _set = _db.DocumentTemplates;
             //_templDataSets = _db.TemplateDataSets;
             _renderer = renderer;
             _logger = logger;
@@ -46,7 +46,7 @@ namespace S5Server.Controllers
         {
             try
             {
-                var list = await _docTempl.AsNoTracking()
+                var list = await _set.AsNoTracking()
                     .OrderByDescending(t => t.UpdatedAtUtc)
                     .Select(t => TemplateDto.ToDto(t))
                     .ToListAsync(ct);
@@ -71,7 +71,7 @@ namespace S5Server.Controllers
         {
             try
             {
-                var t = await _docTempl
+                var t = await _set
                     .AsNoTracking()
                     .FirstOrDefaultAsync(x => x.Id == id, ct);
 
@@ -106,9 +106,8 @@ namespace S5Server.Controllers
             if (dto.File is null || dto.File.Length == 0)//Проверить DefaultDataSetId
                 return Problem(statusCode: 400, title: "Файл шаблона не передан");
 
-            var format = dto.Format?.Trim().ToLowerInvariant();
-            if (format is not ("html" or "txt" or "docx"))
-                return Problem(statusCode: 400, title: "Поддерживаемые форматы: html, txt, docx");
+            if(!DocumentTemplate.TryParseFormat(dto.Format, out var format))
+                return Problem(statusCode: 400, title: "Поддерживаемые форматы: html, txt, docx, pdf");
 
             try
             {
@@ -120,16 +119,17 @@ namespace S5Server.Controllers
                 {
                     Name = dto.Name.Trim(),
                     Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim(),
-                    Format = format!,
+                    Format = format,
                     Content = content,
                     ContentHash = ComputeSha256(content),
                     TemplateCategoryId = dto.TemplateCategoryId,
+                    IsPublished = dto.IsPublished,
                     DefaultDataSetId = string.IsNullOrWhiteSpace(dto.DefaultDataSetId) ? null : dto.DefaultDataSetId.Trim(),
                     CreatedAtUtc = DateTime.UtcNow,
                     UpdatedAtUtc = DateTime.UtcNow
                 };
 
-                _docTempl.Add(entity);
+                _set.Add(entity);
                 await _db.SaveChangesAsync(ct);
 
                 return CreatedAtAction(nameof(GetById),
@@ -157,6 +157,7 @@ namespace S5Server.Controllers
         }
 
         [HttpPut("{id}")]
+        [Consumes("multipart/form-data")]
         [RequestSizeLimit(50_000_000)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -170,21 +171,19 @@ namespace S5Server.Controllers
             if (!ModelState.IsValid)
                 return ValidationProblem(ModelState);
 
-            var t = await _docTempl
+            var t = await _set
                 .AsTracking()
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (t == null)
                 return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
 
-            t.Name = dto.Name.Trim();
-            t.Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim();
-
             // Формат — если не пришёл, используем текущий
-            var newFormat = string.IsNullOrWhiteSpace(dto.Format)
-                ? t.Format
-                : dto.Format.Trim().ToLowerInvariant();
-            if (newFormat is not ("html" or "txt" or "docx"))
-                return Problem(statusCode: 400, title: "Поддерживаемые форматы: html, txt, docx");
+            if (!string.IsNullOrWhiteSpace(dto.Format))
+            {
+                if(!DocumentTemplate.TryParseFormat(dto.Format, out var newFormat))
+                    return Problem(statusCode: 400, title: "Поддерживаемые форматы: html, txt, docx, pdf");
+                t.Format = newFormat;
+            }
 
             if (dto.File != null && dto.File.Length > 0)
             {
@@ -194,7 +193,12 @@ namespace S5Server.Controllers
                 t.Content = content;
                 t.ContentHash = ComputeSha256(content);
             }
+
+            t.Name = dto.Name.Trim();
+            t.Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim();
+            t.IsPublished = dto.IsPublished;
             t.UpdatedAtUtc = DateTime.UtcNow;
+
             try
             {
                 await _db.SaveChangesAsync(ct);
@@ -229,7 +233,7 @@ namespace S5Server.Controllers
         {
             try
             {
-                var t = await _docTempl.AsTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
+                var t = await _set.AsTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
                 if (t == null)
                     return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
 
@@ -268,7 +272,7 @@ namespace S5Server.Controllers
         {
             try
             {
-                var t = await _docTempl
+                var t = await _set
                     .AsTracking()
                     .FirstOrDefaultAsync(x => x.Id == id, ct);
                 if (t == null)
@@ -298,7 +302,7 @@ namespace S5Server.Controllers
         {
             try
             {
-                var t = await _docTempl
+                var t = await _set
                     .AsTracking()
                     .FirstOrDefaultAsync(x => x.Id == id, ct);
                 if (t == null)
@@ -329,7 +333,7 @@ namespace S5Server.Controllers
         {
             try
             {
-                var t = await _docTempl
+                var t = await _set
                     .AsTracking()
                     .FirstOrDefaultAsync(x => x.Id == id, ct);
                 if (t == null)
@@ -342,15 +346,7 @@ namespace S5Server.Controllers
                 else
                 {
                     var dsId = dto.DefaultDataSetId.Trim();
-                    /*
-                    var ds = await _templDataSets.AsNoTracking()
-                        .FirstOrDefaultAsync(x => x.Id == dsId, ct);
-                    if (ds == null)
-                        return Problem(statusCode: 404, title: "Набор данных не найден", detail: $"DataSetId={dsId}");
-
-                    if (ds.TemplateId != id)
-                        return Problem(statusCode: 400, title: "Неверный набор данных", detail: "Набор данных принадлежит другому шаблону.");
-                    */
+                    // Валидацию принадлежности набора данных шаблону можно вернуть при необходимости
                     t.DefaultDataSetId = dsId;
                 }
 
@@ -376,11 +372,11 @@ namespace S5Server.Controllers
         {
             try
             {
-                var t = await _docTempl.FirstOrDefaultAsync(x => x.Id == id, ct);
+                var t = await _set.FirstOrDefaultAsync(x => x.Id == id, ct);
                 if (t == null)
                     return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
 
-                _docTempl.Remove(t);
+                _set.Remove(t);
                 await _db.SaveChangesAsync(ct);
                 return NoContent();
             }
@@ -402,7 +398,7 @@ namespace S5Server.Controllers
         {
             try
             {
-                var t = await _docTempl
+                var t = await _set
                     .AsNoTracking()
                     .FirstOrDefaultAsync(x => x.Id == id, ct);
                 if (t == null)
@@ -420,7 +416,6 @@ namespace S5Server.Controllers
             }
         }
 
-
         [HttpGet("{id}/content")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -429,22 +424,21 @@ namespace S5Server.Controllers
         {
             try
             {
-                var t = await _docTempl
+                var t = await _set
                     .AsNoTracking()
                     .FirstOrDefaultAsync(x => x.Id == id, ct);
                 if (t == null)
                     return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
 
                 // Поддерживаем клиентский рендер только для html/txt
-                var fmt = t.Format.ToLowerInvariant();
-                if (fmt is "html" or "txt")
+                if (t.Format is DocumentTemplate.TemplateFormat.Html or DocumentTemplate.TemplateFormat.Txt)
                 {
                     var text = Encoding.UTF8.GetString(t.Content);
                     return Content(text, "text/plain; charset=utf-8");
                 }
 
                 return Problem(statusCode: 415, title: "Неподдерживаемый формат",
-                               detail: $"Для формата '{t.Format}' контент как текст недоступен.");
+                               detail: $"Для формата '{DocumentTemplate.FormatToString(t.Format)}' контент как текст недоступен.");
             }
             catch (OperationCanceledException)
             {
@@ -456,6 +450,7 @@ namespace S5Server.Controllers
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
+
         [HttpGet("{id}/details")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -463,7 +458,7 @@ namespace S5Server.Controllers
         {
             try
             {
-                var t = await _docTempl.AsNoTracking()
+                var t = await _set.AsNoTracking()
                     .Include(x => x.TemplateCategory)
                     .Include(x => x.DefaultDataSet)
                     .FirstOrDefaultAsync(x => x.Id == id, ct);
@@ -475,14 +470,13 @@ namespace S5Server.Controllers
                     t.Id,
                     t.Name,
                     t.Description,
-                    t.Format,
+                    DocumentTemplate.FormatToString(t.Format),
                     t.TemplateCategoryId,
                     t.TemplateCategory?.Value,
                     t.IsPublished,
                     t.PublishedAtUtc,
                     t.DefaultDataSetId,
                     t.DefaultDataSet?.Name,
-                    t.ContentHash,
                     t.CreatedAtUtc,
                     t.UpdatedAtUtc);
 
@@ -507,29 +501,30 @@ namespace S5Server.Controllers
         {
             try
             {
-                var t = await _docTempl.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
+                var t = await _set
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.Id == id, ct);
                 if (t == null)
                     return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
 
-                var format = TemplateRenderer.ParseFormat(t.Format);
                 var dataJson = request?.DataJson ?? "{}";
 
-                if (format == TemplateRenderer.TemplateFormat.Docx)
+                if (t.Format == TemplateFormat.Docx)
                 {
                     var merged = _renderer.RenderDocx(t.Content, _renderer.ParseJsonToDict(dataJson));
                     var html = _renderer.DocxToHtml(merged);
                     return Content(html, "text/html; charset=utf-8");
                 }
 
-                if (format == TemplateRenderer.TemplateFormat.Txt)
+                if (t.Format == TemplateFormat.Txt)
                 {
                     var txt = _renderer.RenderTxt(t.Content, _renderer.ParseJsonToDict(dataJson));
-                    var html = $"<pre>{System.Net.WebUtility.HtmlEncode(System.Text.Encoding.UTF8.GetString(txt))}</pre>";
+                    var html = $"<pre>{System.Net.WebUtility.HtmlEncode(Encoding.UTF8.GetString(txt))}</pre>";
                     return Content(html, "text/html; charset=utf-8");
                 }
 
                 var bytes = _renderer.RenderHtml(t.Content, _renderer.ParseJsonToDict(dataJson));
-                return Content(System.Text.Encoding.UTF8.GetString(bytes), "text/html; charset=utf-8");
+                return Content(Encoding.UTF8.GetString(bytes), "text/html; charset=utf-8");
             }
             catch (OperationCanceledException)
             {
@@ -549,16 +544,16 @@ namespace S5Server.Controllers
         {
             try
             {
-                var t = await _docTempl.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
+                var t = await _set
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.Id == id, ct);
                 if (t == null)
                     return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
 
-                var format = TemplateRenderer.ParseFormat(t.Format);
                 var export = (request?.Export ?? "html").ToLowerInvariant();
                 var dataJson = request?.DataJson ?? "{}";
 
-                // Сохраняю текущий вызов, чтобы не ломать совместимость с вашим TemplateRenderer.
-                var result = await _renderer.RenderAsync(t.Name, format, t.Content, dataJson, export);
+                var result = await _renderer.RenderAsync(t.Name, t.Format, t.Content, dataJson, export);
                 return File(result.Bytes, result.ContentType, result.FileName);
             }
             catch (OperationCanceledException)

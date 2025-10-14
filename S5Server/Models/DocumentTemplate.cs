@@ -30,7 +30,7 @@ namespace S5Server.Models
                 e.Id,
                 e.Name,
                 e.Description,
-                e.Format,
+                DocumentTemplate.FormatToString(e.Format),
                 e.TemplateCategoryId,
                 e.IsPublished,
                 e.DefaultDataSetId,
@@ -43,7 +43,7 @@ namespace S5Server.Models
         {
             e.Name = dto.Name.Trim();
             e.Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim();
-            e.Format = dto.Format;
+            e.Format = DocumentTemplate.ParseFormat(dto.Format); // parse
             e.TemplateCategoryId = dto.TemplateCategoryId;
             e.IsPublished = dto.IsPublished;
             e.DefaultDataSetId = dto.DefaultDataSetId;
@@ -52,6 +52,7 @@ namespace S5Server.Models
             e.UpdatedAtUtc = dto.UpdatedAtUtc;
         }
     }
+
     public record TemplateDetailsDto(
         string Id,
         string Name,
@@ -63,7 +64,6 @@ namespace S5Server.Models
         DateTime? PublishedAtUtc,
         string? DefaultDataSetId,
         string? DefaultDataSetName,
-        string? ContentHash,
         DateTime CreatedAtUtc,
         DateTime UpdatedAtUtc);
 
@@ -72,18 +72,23 @@ namespace S5Server.Models
         string? Description,
         [Required] string Format,
         string TemplateCategoryId,
+        bool IsPublished,
         string? DefaultDataSetId,
         IFormFile? File);
     public record SetCategoryDto(string? TemplateCategoryId);
     public record SetDefaultDataSetDto(string? DefaultDataSetId);
 
-    /// <summary>
-    /// Шаблон документа (HTML/TXT/DOCX), хранится в БД.
-    /// Плейсхолдеры: {{Key}}
-    /// </summary>
     [Table("document_templates")]
     public class DocumentTemplate
     {
+        public enum TemplateFormat
+        {
+            Html,
+            Txt,
+            Docx,
+            Pdf
+        }
+
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public string Id { get; set; } = Guid.NewGuid().ToString("D");
 
@@ -93,29 +98,16 @@ namespace S5Server.Models
         [StringLength(300)]
         public string? Description { get; set; }
 
-        // html|txt|docx
-        /// <summary>
-        /// Gets or sets the format in which the content is generated.
-        /// </summary>
-        /// <remarks>Supported formats include "html", "txt", and "docx". The default value is "html". The value must not
-        /// exceed 10 characters.</remarks>
-        [StringLength(10), Required]
-        public string Format { get; set; } = "html";
+        // Ограниченный набор значений
+        [Required]
+        public TemplateFormat Format { get; set; } = TemplateFormat.Html;
 
-        // e.g. text/html, text/plain, application/vnd.openxmlformats-officedocument.wordprocessingml.document
-        /// <summary>
-        /// Вычисляемый MIME-тип на основе <see cref="Format"/>.
-        /// </summary>
-        /// <remarks>The content type specifies the media type of the file, such as "text/html",
-        /// "text/plain", or "application/vnd.openxmlformats-officedocument.wordprocessingml.document". This value is
-        /// used to inform clients and systems about the format of the file for proper handling and display.</remarks>
         [NotMapped]
         public string ContentType => GetContentTypeByFormat(Format);
 
         [Required]
         public byte[] Content { get; set; } = [];
 
-        // Категория (для фильтров/поиска)
         [StringLength(36)]
         public string TemplateCategoryId { get; set; } = ControllerFunctions.NullGuid;
         [ValidateNever]
@@ -156,14 +148,69 @@ namespace S5Server.Models
 
         [ValidateNever]
         public ICollection<TemplateDataSet> DataSets { get; set; } = [];
-
-        public static string GetContentTypeByFormat(string format) =>
-                    format switch
-                    {
-                        "html" => "text/html",
-                        "txt" => "text/plain",
-                        "docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                        _ => "application/octet-stream"
-                    };
+        /// <summary>
+        /// Attempts to parse the specified string into a corresponding template format value.
+        /// </summary>
+        /// <remarks>If parsing fails, the out parameter is set to the default format value. Leading and
+        /// trailing whitespace in the input string are ignored, and comparison is case-insensitive.</remarks>
+        /// <param name="s">The input string representing the format to parse. Supported values are "html", "txt", "docx", and "pdf"
+        /// (case-insensitive).</param>
+        /// <param name="fmt">When this method returns, contains the parsed template format if parsing succeeded; otherwise, contains the
+        /// default format value.</param>
+        /// <returns>true if the input string was successfully parsed into a known template format; otherwise, false.</returns>
+        public static bool TryParseFormat(string? s, out TemplateFormat fmt)
+        {
+            switch (s?.Trim().ToLowerInvariant())
+            {
+                case "html": fmt = TemplateFormat.Html; return true;
+                case "txt": fmt = TemplateFormat.Txt; return true;
+                case "docx": fmt = TemplateFormat.Docx; return true;
+                case "pdf": fmt = TemplateFormat.Pdf; return true;
+                default: fmt = TemplateFormat.Html; return false;
+            }
+        }
+        /// <summary>
+        /// Parses the specified string into a corresponding <see cref="TemplateFormat"/> value.
+        /// </summary>
+        /// <param name="s">The string representation of the format to parse. Can be <see langword="null"/>.</param>
+        /// <returns>The <see cref="TemplateFormat"/> value that corresponds to the specified string.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="s"/> does not represent a supported format.</exception>
+        public static TemplateFormat ParseFormat(string? s)
+        {
+            if (TryParseFormat(s, out var fmt)) return fmt;
+            throw new ArgumentOutOfRangeException(nameof(s), $"Unsupported format: {s}");
+        }
+        /// <summary>
+        /// Converts the specified template format to its corresponding string representation.
+        /// </summary>
+        /// <remarks>If an unrecognized format is provided, the method returns "html" as the default
+        /// value.</remarks>
+        /// <param name="format">The template format to convert. If the value is not a recognized format, "html" is returned by default.</param>
+        /// <returns>A string representing the specified template format. Possible values are "html", "txt", "docx", or "pdf".</returns>
+        public static string FormatToString(TemplateFormat format) =>
+            format switch
+            {
+                TemplateFormat.Html => "html",
+                TemplateFormat.Txt => "txt",
+                TemplateFormat.Docx => "docx",
+                TemplateFormat.Pdf => "pdf",
+                _ => "html"
+            };
+        /// <summary>
+        /// Returns the MIME content type string corresponding to the specified template format.
+        /// </summary>
+        /// <param name="format">The template format for which to retrieve the MIME content type. Must be a valid value of <see
+        /// cref="TemplateFormat"/>.</param>
+        /// <returns>A string representing the MIME content type for the given format. Returns "application/octet-stream" if the
+        /// format is not recognized.</returns>
+        public static string GetContentTypeByFormat(TemplateFormat format) =>
+            format switch
+            {
+                TemplateFormat.Html => "text/html",
+                TemplateFormat.Txt => "text/plain",
+                TemplateFormat.Docx => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                TemplateFormat.Pdf => "application/pdf",
+                _ => "application/octet-stream"
+            };
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion; // добавьте наверху
 
 using S5Server.Models;
 
@@ -214,15 +215,24 @@ namespace S5Server.Data
                 entity.Property(e => e.Id).HasColumnType("TEXT(36)");
                 entity.Property(e => e.Name).IsRequired().HasColumnType("TEXT(150)");
                 entity.Property(e => e.Description).HasColumnType("TEXT(300)");
-                //entity.Property(e => e.ContentType).IsRequired().HasColumnType("TEXT(50)");
-                entity.Property(e => e.Format).IsRequired().HasColumnType("TEXT(10)");
                 entity.Property(e => e.Content).IsRequired().HasColumnType("BLOB");
+
+                // Храним enum Format в нижнем регистре (html|txt|docx|pdf)
+                var fmtConverter = new ValueConverter<DocumentTemplate.TemplateFormat, string>(
+                    v => DocumentTemplate.FormatToString(v),
+                    v => DocumentTemplate.ParseFormat(v)
+                );
+                entity.Property(e => e.Format)
+                      .HasConversion(fmtConverter)
+                      .IsRequired()
+                      .HasColumnType("TEXT(10)");
 
                 entity.Property(e => e.TemplateCategoryId).HasColumnType("TEXT(36)");
                 entity.HasOne(e => e.TemplateCategory)
-                    .WithMany()
-                    .HasForeignKey(e => e.TemplateCategoryId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                      .WithMany()
+                      .HasForeignKey(e => e.TemplateCategoryId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
                 entity.Property(e => e.ContentHash).HasColumnType("TEXT(64)");
                 entity.Property(e => e.IsPublished).HasColumnType("INTEGER");
                 entity.Property(e => e.PublishedAtUtc).HasColumnType("TEXT");
@@ -237,11 +247,8 @@ namespace S5Server.Data
                 entity.Property(e => e.UpdatedAtUtc).HasColumnType("TEXT");
 
                 entity.HasIndex(e => e.Name).IsUnique();
-                entity.HasIndex(e => e.ContentHash);// быстрая сверка
+                entity.HasIndex(e => e.ContentHash);
                 entity.HasIndex(e => e.IsPublished);
-
-                entity.Property(e => e.CreatedAtUtc).HasColumnType("TEXT");
-                entity.Property(e => e.UpdatedAtUtc).HasColumnType("TEXT");
             });
 
             modelBuilder.Entity<TemplateDataSet>(entity =>
