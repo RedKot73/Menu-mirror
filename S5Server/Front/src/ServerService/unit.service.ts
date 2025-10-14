@@ -65,12 +65,6 @@ export class UnitService {
         return this.http.get<UnitTreeItemDto[]>(this.api, { params });
     }
 
-    // Lookup для автокомплита
-    lookup(term: string, limit: number = 10): Observable<LookupDto[]> {
-        const params = { term, limit: limit.toString() };
-        return this.http.get<LookupDto[]>(`${this.api}/lookup`, { params });
-    }
-
     getById(id: string): Observable<UnitDto> {
         return this.http.get<UnitDto>(`${this.api}/${id}`);
     }
@@ -120,5 +114,20 @@ export class UnitService {
 
     removeAssignedUnit(unitId: string, assignedId: string): Observable<void> {
         return this.http.post<void>(`${this.api}/${unitId}/remove-assigned/${assignedId}`, {});
+    }
+
+    //Работают по разному, не путать
+    // GET /api/.../lookup - Получить список для автозаполнения
+    // GET /api/.../sel_list - Получить список для селекта
+    lookup(term: string, limit: number = 10): Observable<LookupDto[]> {
+        const params = { term, limit: limit.toString() };
+        return this.http.get<LookupDto[]>(`${this.api}/lookup`, { params });
+    }
+
+    //Работают по разному, не путать
+    // GET /api/.../lookup - Получить список для автозаполнения
+    // GET /api/.../sel_list - Получить список для селекта
+    getSelectList(): Observable<LookupDto[]> {
+        return this.http.get<LookupDto[]>(`${this.api}/sel_list`);
     }
 }

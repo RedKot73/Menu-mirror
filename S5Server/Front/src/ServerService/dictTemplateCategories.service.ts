@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ShortDictDto } from './shortDict.service';
 import { LookupDto } from '../app/shared/models/lookup.models';
+import { Observable } from 'rxjs/internal/Observable';
 
 export type DictTemplateCategory = ShortDictDto;
 
@@ -9,36 +10,46 @@ export type DictTemplateCategory = ShortDictDto;
 export class DictTemplateCategoriesService {
     readonly api = '/api/dict-template-categories';
 
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient) { }
 
-  getAll() {
-    return this.http.get<ShortDictDto[]>(this.api);
-  }
+    getAll() {
+        return this.http.get<ShortDictDto[]>(this.api);
+    }
 
-  get(id: string) {
-      return this.http.get<ShortDictDto>(`${this.api}/${id}`);
-  }
+    get(id: string) {
+        return this.http.get<ShortDictDto>(`${this.api}/${id}`);
+    }
 
-  create(dto: Omit<ShortDictDto, 'id'>) {
-      return this.http.post<ShortDictDto>(this.api, dto);
-  }
+    create(dto: Omit<ShortDictDto, 'id'>) {
+        return this.http.post<ShortDictDto>(this.api, dto);
+    }
 
-  update(id: string, dto: Omit<ShortDictDto, 'id'>) {
-      return this.http.put<void>(`${this.api}/${id}`, dto);
-  }
+    update(id: string, dto: Omit<ShortDictDto, 'id'>) {
+        return this.http.put<void>(`${this.api}/${id}`, dto);
+    }
 
-  delete(id: string) {
-      return this.http.delete<void>(`${this.api}/${id}`);
-  }
+    delete(id: string) {
+        return this.http.delete<void>(`${this.api}/${id}`);
+    }
 
-  lookup(term: string, limit = 10) {
-      return this.http.get<LookupDto[]>(`${this.api}/lookup`, {
-      params: { term, limit },
-    });
-  }
+    //Работают по разному, не путать
+    // GET /api/.../lookup - Получить список для автозаполнения
+    // GET /api/.../sel_list - Получить список для селекта
+    lookup(term: string, limit = 10) {
+        return this.http.get<LookupDto[]>(`${this.api}/lookup`, {
+            params: { term, limit },
+        });
+    }
 
-  // Создает сигнал для элементов справочника
-  createItemsSignal() {
-    return signal<ShortDictDto[]>([]);
-  }
+    //Работают по разному, не путать
+    // GET /api/.../lookup - Получить список для автозаполнения
+    // GET /api/.../sel_list - Получить список для селекта
+    getSelectList(): Observable<LookupDto[]> {
+        return this.http.get<LookupDto[]>(`${this.api}/sel_list`);
+    }
+
+    // Создает сигнал для элементов справочника
+    createItemsSignal() {
+        return signal<ShortDictDto[]>([]);
+    }
 }

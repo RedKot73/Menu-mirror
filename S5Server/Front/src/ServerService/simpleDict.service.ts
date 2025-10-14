@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { LookupDto } from '../app/shared/models/lookup.models';
+import { Observable } from 'rxjs/internal/Observable';
 
 export interface SimpleDictDto {
   id: string;
@@ -10,7 +11,7 @@ export interface SimpleDictDto {
 
 @Injectable({ providedIn: 'root' })
 export class SimpleDictService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getAll(api: string) {
     return this.http.get<SimpleDictDto[]>(api);
@@ -32,10 +33,20 @@ export class SimpleDictService {
     return this.http.delete(`${api}/${id}`);
   }
 
+  //Работают по разному, не путать
+  // GET /api/.../lookup - Получить список для автозаполнения
+  // GET /api/.../sel_list - Получить список для селекта
   lookup(api: string, term: string, limit = 10) {
     return this.http.get<LookupDto[]>(`${api}/lookup`, {
       params: { term, limit },
     });
+  }
+
+  //Работают по разному, не путать
+  // GET /api/.../lookup - Получить список для автозаполнения
+  // GET /api/.../sel_list - Получить список для селекта
+  getSelectList(api: string): Observable<LookupDto[]> {
+    return this.http.get<LookupDto[]>(`${api}/sel_list`);
   }
 
   // Для каждого справочника создавайте отдельный сигнал через этот метод

@@ -33,6 +33,9 @@ export class DictUnitTypeService {
         return this.http.delete<void>(`${this.api}/${id}`);
     }
 
+    //Работают по разному, не путать
+    // GET /api/.../lookup - Получить список для автозаполнения
+    // GET /api/.../sel_list - Получить список для селекта
     lookup(term: string, limit = 10) {
         return this.http.get<LookupDto[]>(`${this.api}/lookup`, {
             params: { term, limit },

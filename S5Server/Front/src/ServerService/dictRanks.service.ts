@@ -54,6 +54,9 @@ export class DictRankService {
         return this.http.get<DictRank>(`${api}/${id}`);
     }
 
+    //Работают по разному, не путать
+    // GET /api/dict-ranks/lookup - Получить список для автозаполнения
+    // GET /api/dict-ranks/sel_list - Получить список для селекта
     getSelectList(): Observable<LookupDto[]> {
         return this.http.get<LookupDto[]>(`${this.api}/sel_list`);
     }

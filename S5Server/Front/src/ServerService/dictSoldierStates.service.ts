@@ -42,6 +42,9 @@ export class DictSoldierStatesService {
         return this.http.delete<void>(`${this.api}/${id}`);
     }
 
+    //Работают по разному, не путать
+    // GET /api/.../lookup - Получить список для автозаполнения
+    // GET /api/.../sel_list - Получить список для селекта
     getSelectList(): Observable<LookupDto[]> {
         return this.http.get<LookupDto[]>(`${this.api}/sel_list`);
     }

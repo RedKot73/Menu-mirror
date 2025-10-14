@@ -261,4 +261,28 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
             return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
         }
     }
+
+    [HttpGet("sel_list")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<LookupDto>>> GetSelectList(CancellationToken ct = default)
+    {
+        try
+        {
+            var data = await Query()
+                .OrderBy(t => t.Value)
+                .Select(t => new LookupDto(t.Id, t.ShortValue))
+                .ToListAsync(ct);
+
+            return Ok(data);
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Отмена клиентом");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при получении sel_list {Entity}", typeof(TEntity).Name);
+            return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+        }
+    }
 }
