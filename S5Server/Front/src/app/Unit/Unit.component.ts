@@ -1,4 +1,5 @@
-import { Component, inject, signal, computed, effect, HostListener, ElementRef, ViewChild, AfterViewInit, OnDestroy } from "@angular/core";
+import { Component, inject, signal, computed, effect,
+    HostListener, ElementRef, ViewChild, AfterViewInit, OnDestroy } from "@angular/core";
 import { MatDialog } from '@angular/material/dialog';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
