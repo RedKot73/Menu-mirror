@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { LookupDto } from '../shared/models/lookup.models';
+import { DictTemplateCategoriesService } from '../../ServerService/dictTemplateCategories.service';
 import { 
   TemplateFormat, 
   DocumentTemplateUtils, 
@@ -68,7 +69,13 @@ import {
         <!-- Template Category -->
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Категорія шаблону</mat-label>
-          <input matInput formControlName="templateCategoryId" placeholder="ID категорії">
+          <mat-select formControlName="templateCategoryId">
+            @for (category of categoryOptions; track category.id) {
+              <mat-option [value]="category.id">
+                {{ category.value }}
+              </mat-option>
+            }
+          </mat-select>
           @if (templateForm.get('templateCategoryId')?.hasError('required') && templateForm.get('templateCategoryId')?.touched) {
             <mat-error>Категорія обов'язкова</mat-error>
           }
@@ -172,9 +179,11 @@ import {
 export class CreateTemplateDialogComponent {
   dialogRef = inject(MatDialogRef<CreateTemplateDialogComponent>);
   formBuilder = inject(FormBuilder);
+  dictTemplateCategoriesService = inject(DictTemplateCategoriesService);
   
   templateForm: FormGroup;
   formatOptions = TEMPLATE_FORMAT_OPTIONS;
+  categoryOptions: LookupDto[] = [];
   selectedFile: File | null = null;
   selectedFileName = '';
   fileError = '';
@@ -187,6 +196,20 @@ export class CreateTemplateDialogComponent {
       templateCategoryId: ['', [Validators.required]],
       isPublished: [false]
     });
+    // Загружаем список категорий
+    this.loadCategories();
+  }
+
+  private loadCategories(): void {
+    this.dictTemplateCategoriesService.getSelectList().subscribe({
+      next: (categories: LookupDto[]) => {
+        this.categoryOptions = categories;
+      },
+      error: (error: any) => {
+        console.error('Error loading template categories:', error);
+        this.categoryOptions = [];
+      }
+    });
   }
 
   onFileSelected(event: Event): void {
@@ -197,6 +220,12 @@ export class CreateTemplateDialogComponent {
       // Validate file size (50MB limit)
       if (file.size > 50 * 1024 * 1024) {
         this.fileError = 'Розмір файлу не повинен перевищувати 50MB';
+        this.selectedFile = null;
+        this.selectedFileName = '';
+        return;
+      }
+      if (file.size === 0) {
+        this.fileError = 'Обрано порожній файл';
         this.selectedFile = null;
         this.selectedFileName = '';
         return;
@@ -237,6 +266,15 @@ export class CreateTemplateDialogComponent {
       };
 
       this.dialogRef.close(createDto);
+    } else {
+      if (!this.templateForm.valid) {
+        Object.keys(this.templateForm.controls).forEach(key => {
+          const control = this.templateForm.get(key);
+          if (control && !control.valid) {
+            console.log(`Field ${key} errors:`, control.errors);
+          }
+        });
+      }
     }
   }
 

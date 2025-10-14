@@ -103,10 +103,12 @@ namespace S5Server.Controllers
             if (!ModelState.IsValid)
                 return ValidationProblem(ModelState);
 
-            if (dto.File is null || dto.File.Length == 0)//Проверить DefaultDataSetId
-                return Problem(statusCode: 400, title: "Файл шаблона не передан");
+            if (dto.File is null)//Проверить DefaultDataSetId
+                return Problem(statusCode: 400, title: "Файл шаблона не передано");
+            if (dto.File.Length == 0)//Проверить DefaultDataSetId
+                return Problem(statusCode: 400, title: "Файл шаблона порожній");
 
-            if(!DocumentTemplate.TryParseFormat(dto.Format, out var format))
+            if (!DocumentTemplate.TryParseFormat(dto.Format, out var format))
                 return Problem(statusCode: 400, title: "Поддерживаемые форматы: html, txt, docx, pdf");
 
             try
