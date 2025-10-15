@@ -66,6 +66,11 @@ export const routes: Routes = [
         loadComponent: () => import('./DocumentTemplates/document-templates.component')
         .then(m => m.DocumentTemplatesComponent)
     },
+    {
+        path: 'doc-templates', title: 'Управление шаблонами',
+        loadComponent: () => import('./test/DocTemplate.component')
+        .then(m => m.DocTemplateComponent)
+    },
     { path: 'orders', title: 'Розпорядження', component: OrdersPage },
     { path: 'reports', title: 'Донесення', component: ReportsPage },
     { path: 'users', title: 'Користувачі', component: UsersPage },

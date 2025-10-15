@@ -2,182 +2,24 @@ import {
   Component, inject, signal, computed, effect,
   HostListener, ElementRef, ViewChild, AfterViewInit, OnDestroy
 } from "@angular/core";
-import { MatDialog } from '@angular/material/dialog';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDialogModule } from '@angular/material/dialog';
-//import { MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
-import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatOptionModule } from '@angular/material/core';
-import { MatMenuModule } from '@angular/material/menu';
-//import { FormsModule } from '@angular/forms';
-//import { SlicePipe } from '@angular/common';
-
-import { DocumentTemplateService } from '../DocTemplates1/ServerServices/document-template.service';
-import {
-    TemplateDetailsDto, TemplateFormat,
-    DocumentTemplateUtils, CreateTemplateDto, TEMPLATE_FORMAT_OPTIONS } from '../DocTemplates1/Models/document-template.models';
-import { DocTemplateUtils } from '../DocTemplates1/Models/shared.models';
-import { CreateTemplateDialogComponent } from './create-template-dialog.component';
+import { DocTemplateComponent } from './DocTemplate.component';
 
 @Component({
   selector: 'app-test',
   imports: [
     CommonModule,
-
-    MatTableModule,
-    MatButtonModule,
-    MatSortModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatOptionModule,
-    MatTooltipModule,
-    MatMenuModule,
-
-    MatChipsModule,
-    MatDialogModule,
-    MatCheckboxModule,
-    ReactiveFormsModule
+    DocTemplateComponent
   ],
   styleUrl: './Test.component.scss',
   template: `
         <div class="container" #containerRef>
             <div class="panel nav-panel" [style.width.%]="navPanelWidth()" [class.collapsed]="isNavPanelCollapsed()">
-                <div class="panel-header" [class.hidden]="isNavPanelCollapsed()">
-                    <h3>Шаблоны документов</h3>
-                    <div class="header-actions">
-                        <button mat-icon-button (click)="refreshTemplates()" matTooltip="Обновить список">
-                            <mat-icon>refresh</mat-icon>
-                        </button>
-                        <button mat-raised-button color="primary" (click)="createTemplate()" matTooltip="Создать новый шаблон">
-                            <mat-icon>add</mat-icon>
-                            Створити шаблон
-                        </button>
-                    </div>
-                </div>
                 <div class="panel-content" [class.hidden]="isNavPanelCollapsed()">
-                    <!-- Templates table -->
-                    <div class="templates-container">
-                        @if (isLoading()) {
-                            <div class="loading-indicator">Загрузка...</div>
-                        } @else if (templates().length === 0) {
-                            <div class="no-data">Нет доступных шаблонов</div>
-                        } @else {
-                            <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
-                                <!-- Actions Column -->
-                                <ng-container matColumnDef="actions">
-                                    <th mat-header-cell *matHeaderCellDef style="width: 60px;"> Дії </th>
-                                    <td mat-cell *matCellDef="let template">
-                                        <button mat-icon-button
-                                                [matMenuTriggerFor]="templateMenu"
-                                                matTooltip="Дії"
-                                                (click)="$event.stopPropagation()">
-                                            <mat-icon>more_vert</mat-icon>
-                                        </button>
-
-                                        <mat-menu #templateMenu="matMenu">
-                                          <button mat-icon-button
-                                                  (click)="downloadTemplate(template); $event.stopPropagation()"
-                                                  matTooltip="Скачать шаблон">
-                                              <mat-icon>download</mat-icon>
-                                          </button>
-                                          @if (supportsPreview(template)) {
-                                              <button mat-icon-button
-                                                      (click)="previewTemplate(template); $event.stopPropagation()"
-                                                      matTooltip="Предпросмотр">
-                                                  <mat-icon>visibility</mat-icon>
-                                              </button>
-                                          }
-                                          <button mat-icon-button
-                                                  (click)="editTemplate(template); $event.stopPropagation()"
-                                                  matTooltip="Редактировать">
-                                              <mat-icon>edit</mat-icon>
-                                          </button>
-                                        </mat-menu>
-                                    </td>
-                                </ng-container>
-
-                                <!-- Name Column -->
-                                <ng-container matColumnDef="name">
-                                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Назва</th>
-                                    <td mat-cell *matCellDef="let template" 
-                                        (click)="selectTemplate(template)"
-                                        [class.selected]="selectedTemplate()?.id === template.id"
-                                        class="clickable-cell">
-                                        <div class="template-name">{{ template.name }}</div>
-                                        @if (template.description) {
-                                            <div class="template-description">{{ template.description }}</div>
-                                        }
-                                    </td>
-                                </ng-container>
-
-                                <!-- Format Column -->
-                                <ng-container matColumnDef="format">
-                                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Формат</th>
-                                    <td mat-cell *matCellDef="let template">
-                                        <mat-chip class="format-chip" [class]="'format-' + template.format">
-                                            {{ getFormatLabel(template.format) }}
-                                        </mat-chip>
-                                    </td>
-                                </ng-container>
-
-                                <!-- Status Column -->
-                                <ng-container matColumnDef="status">
-                                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Статус</th>
-                                    <td mat-cell *matCellDef="let template">
-                                        @if (template.isPublished) {
-                                            <mat-chip class="status-published">
-                                                <mat-icon>check_circle</mat-icon>
-                                                {{ getStatusLabel(template.isPublished) }}
-                                            </mat-chip>
-                                        } @else {
-                                            <mat-chip class="status-draft">
-                                                <mat-icon>edit</mat-icon>
-                                                {{ getStatusLabel(template.isPublished) }}
-                                            </mat-chip>
-                                        }
-                                    </td>
-                                </ng-container>
-
-                                <!-- Category Column -->
-                                <ng-container matColumnDef="category">
-                                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Категория</th>
-                                    <td mat-cell *matCellDef="let template">
-                                        {{ template.templateCategoryName || '---' }}
-                                    </td>
-                                </ng-container>
-
-                                <!-- Description Column -->
-                                <ng-container matColumnDef="description">
-                                    <th mat-header-cell *matHeaderCellDef> Опис </th>
-                                    <td mat-cell *matCellDef="let template" class="comment-cell">
-                                        <span class="comment-text"
-                                              [matTooltip]="template.description && template.description.length > 50 ? template.description : ''"
-                                              [title]="template.description && template.description.length > 50 ? template.description : ''">
-                                            {{ template.description ? (template.description.length > 50 ? (template.description | slice:0:50) + '...' : template.description) : '-' }}
-                                        </span>
-                                    </td>
-                                </ng-container>
-
-                                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                                <tr mat-row *matRowDef="let row; columns: displayedColumns;" 
-                                    [class.selected-row]="selectedTemplate()?.id === row.id"></tr>
-                            </table>
-                        }
-                    </div>
+                    <!-- DocTemplate Component -->
+                    <page-doc-templates></page-doc-templates>
                 </div>
             </div>
 
@@ -190,7 +32,7 @@ import { CreateTemplateDialogComponent } from './create-template-dialog.componen
                     <button
                         class="toggle-btn"
                         (click)="toggleNavPanel()"
-                        [title]="isNavPanelCollapsed() ? 'Показати шаблони документів' : 'Приховати шаблони документів'">
+                        [title]="isNavPanelCollapsed() ? 'Показати управління шаблонами' : 'Приховати управління шаблонами'">
                         <span class="arrow" [class.collapsed]="isNavPanelCollapsed()">
                             {{ isNavPanelCollapsed() ? '▶' : '◀' }}
                         </span>
@@ -202,44 +44,15 @@ import { CreateTemplateDialogComponent } from './create-template-dialog.componen
                 <div class="panel-header">
                     <!-- Toolbar с заголовком -->
                     <div class="unit-toolbar">
-                        <h3>
-                            @if (selectedTemplate()) {
-                                {{ selectedTemplate()!.name }}
-                            } @else {
-                                Выберите шаблон
-                            }
-                        </h3>
-                        @if (selectedTemplate()) {
-                            <div class="template-info">
-                                <span class="format-info">{{ getFormatLabel(selectedTemplate()!.format) }}</span>
-                                <span class="status-info" [class.published]="selectedTemplate()!.isPublished">
-                                    {{ getStatusLabel(selectedTemplate()!.isPublished) }}
-                                </span>
-                            </div>
-                        }
+                        <h3>Детали</h3>
                     </div>
                 </div>
                 <div class="panel-content">
                     <!-- Основное содержимое -->
-                    @if (selectedTemplate()) {
-                        <div class="template-details">
-                            <h4>Детали шаблона</h4>
-                            <p><strong>ID:</strong> {{ selectedTemplate()!.id }}</p>
-                            <p><strong>Описание:</strong> {{ selectedTemplate()!.description || 'Нет описания' }}</p>
-                            <p><strong>Формат:</strong> {{ getFormatLabel(selectedTemplate()!.format) }}</p>
-                            <p><strong>Категория:</strong> {{ selectedTemplate()!.templateCategoryName || 'Без категории' }}</p>
-                            <p><strong>Создан:</strong> {{ selectedTemplate()!.createdAtUtc | date:'medium' }}</p>
-                            <p><strong>Обновлен:</strong> {{ selectedTemplate()!.updatedAtUtc | date:'medium' }}</p>
-                            @if (selectedTemplate()!.publishedAtUtc) {
-                                <p><strong>Опубликован:</strong> {{ selectedTemplate()!.publishedAtUtc | date:'medium' }}</p>
-                            }
-                        </div>
-                    } @else {
-                        <div class="no-selection">
-                            <mat-icon>description</mat-icon>
-                            <p>Выберите шаблон из списка слева для просмотра деталей</p>
-                        </div>
-                    }
+                    <div class="template-details">
+                        <h4>Информация</h4>
+                        <p>Выберите шаблон в левой панели для просмотра деталей и выполнения операций.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -253,22 +66,10 @@ import { CreateTemplateDialogComponent } from './create-template-dialog.componen
   `]
 })
 export class TestComponent implements AfterViewInit, OnDestroy {
-  documentTemplateService = inject(DocumentTemplateService);
-  dataSource = new MatTableDataSource<TemplateDetailsDto>([]);
-  displayedColumns = ['actions', 'name', 'format', 'status', 'category', 'description'];
-
-  dialog = inject(MatDialog);
   breakpointObserver = inject(BreakpointObserver);
-  formBuilder = inject(FormBuilder);
 
   // ViewChild for container reference
   @ViewChild('containerRef') containerRef!: ElementRef<HTMLElement>;
-  @ViewChild(MatSort) sort!: MatSort;
-
-  // Template management signals
-  templates = signal<TemplateDetailsDto[]>([]);
-  selectedTemplate = signal<TemplateDetailsDto | null>(null);
-  isLoading = signal(false);
 
   // Panel signals (replacing sidenav signals)
   navPanelWidth = signal(this.getSavedNavPanelWidth());
@@ -312,26 +113,13 @@ export class TestComponent implements AfterViewInit, OnDestroy {
         this.isNavPanelCollapsed.set(true);
       }
     });
-
-    // Обновляем dataSource при изменении списка шаблонов
-    effect(() => {
-      this.dataSource.data = this.templates();
-    });
-
-    // Загружаем шаблоны при инициализации
-    this.refreshTemplates();
   }
 
   // --- Lifecycle Hooks ---
   ngAfterViewInit(): void {
     // Initial width calculation
     this.updateContainerWidth();
-
-    // Setup table sorting - simple approach like in Soldier component
-    this.dataSource.sort = this.sort;
-  }
-
-  ngOnDestroy(): void {
+  }  ngOnDestroy(): void {
     // Ensure cleanup in case of component destruction during dragging
     if (this.isDragging()) {
       this.cleanupDragListeners();
@@ -457,164 +245,5 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     if (clampedNavWidth !== currentNavWidth) {
       this.navPanelWidth.set(clampedNavWidth);
     }
-  }
-
-  // ===== TEMPLATE MANAGEMENT METHODS =====
-
-  /**
-   * Обновляет список шаблонов с сервера
-   */
-  refreshTemplates(): void {
-    this.isLoading.set(true);
-    this.documentTemplateService.getList().subscribe({
-      next: (templates) => {
-        // Получаем детали для каждого шаблона
-        const detailsRequests = templates.map(template =>
-          this.documentTemplateService.getDetails(template.id)
-        );
-
-        Promise.all(detailsRequests.map(req => req.toPromise())).then(details => {
-          this.templates.set(details.filter(d => d !== undefined) as TemplateDetailsDto[]);
-          this.isLoading.set(false);
-        }).catch(error => {
-          console.error('Error loading template details:', error);
-          this.isLoading.set(false);
-        });
-      },
-      error: (error) => {
-        console.error('Error loading templates:', error);
-        this.isLoading.set(false);
-      }
-    });
-  }
-
-  /**
-   * Выбирает шаблон для отображения в правой панели
-   */
-  selectTemplate(template: TemplateDetailsDto): void {
-    this.selectedTemplate.set(template);
-  }
-
-  /**
-   * Получает читаемое название формата
-   */
-  getFormatLabel(format: string): string {
-    const templateFormat = DocumentTemplateUtils.parseFormat(format);
-    switch (templateFormat) {
-      case TemplateFormat.Html:
-        return 'HTML';
-      case TemplateFormat.Txt:
-        return 'Текст';
-      case TemplateFormat.Docx:
-        return 'Word';
-      case TemplateFormat.Pdf:
-        return 'PDF';
-      default:
-        return format.toUpperCase();
-    }
-  }
-
-  /**
-   * Получает читаемое название статуса публикации
-   */
-  getStatusLabel(isPublished: boolean): string {
-    return DocTemplateUtils.getStatusLabel(isPublished);
-  }
-
-  /**
-   * Проверяет, поддерживается ли предпросмотр для шаблона
-   */
-  supportsPreview(template: TemplateDetailsDto): boolean {
-    const templateFormat = DocumentTemplateUtils.parseFormat(template.format);
-    return DocumentTemplateUtils.supportsClientRendering(templateFormat);
-  }
-
-  /**
-   * Скачивает файл шаблона
-   */
-  downloadTemplate(template: TemplateDetailsDto): void {
-    const fileName = `${template.name}.${this.getFileExtension(template.format)}`;
-    this.documentTemplateService.downloadFile(template.id, fileName).subscribe({
-      next: () => {
-        console.log('Template downloaded successfully');
-      },
-      error: (error) => {
-        console.error('Error downloading template:', error);
-      }
-    });
-  }
-
-  /**
-   * Открывает предпросмотр шаблона
-   */
-  previewTemplate(template: TemplateDetailsDto): void {
-    if (!this.supportsPreview(template)) {
-      return;
-    }
-
-    this.documentTemplateService.previewHtml(template.id).subscribe({
-      next: (html) => {
-        // Открываем HTML в новом окне для предпросмотра
-        const previewWindow = window.open('', '_blank');
-        if (previewWindow) {
-          previewWindow.document.write(html);
-          previewWindow.document.close();
-        }
-      },
-      error: (error) => {
-        console.error('Error previewing template:', error);
-      }
-    });
-  }
-
-  /**
-   * Открывает редактор шаблона (заглушка)
-   */
-  editTemplate(template: TemplateDetailsDto): void {
-    console.log('Edit template:', template);
-    // TODO: Реализовать открытие диалога редактирования
-  }
-
-  /**
-   * Получает расширение файла по формату
-   */
-  private getFileExtension(format: string): string {
-    const templateFormat = DocumentTemplateUtils.parseFormat(format);
-    return DocumentTemplateUtils.getFileExtension(templateFormat);
-  }
-
-  /**
-   * Открывает диалог создания нового шаблона
-   */
-  createTemplate(): void {
-    const dialogRef = this.dialog.open(CreateTemplateDialogComponent, {
-      width: '600px',
-      maxWidth: '90vw',
-      disableClose: true,
-      data: {}
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.documentTemplateService.create(result).subscribe({
-          next: (template) => {
-            console.log('Template created successfully:', template);
-            this.refreshTemplates();
-            // Выбираем созданный шаблон
-            this.documentTemplateService.getDetails(template.id).subscribe({
-              next: (details) => {
-                this.selectedTemplate.set(details);
-              },
-              error: (error) => {
-                console.error('Error loading template details:', error);
-              }
-            });
-          },
-          error: (error) => {
-            console.error('Error creating template:', error);
-          }
-        });
-      }
-    });
   }
 } 

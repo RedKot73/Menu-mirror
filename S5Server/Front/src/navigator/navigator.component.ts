@@ -10,8 +10,9 @@ import { MatMenuModule } from '@angular/material/menu';
     <mat-toolbar class="sidenav-container">
       <button matButton [matMenuTriggerFor]="dictionaries">Довідники</button>
       <button matButton routerLink="/test" >Тестова сторінка</button>
+      <button matButton routerLink="/doc-templates" >Робота з шаблонами</button>
       <button matButton routerLink="/units" >Підрозділи</button>
-      <button matButton routerLink="/templates" >Шаблоны документов</button>
+      <button matButton routerLink="/templates" >Шаблони документів</button>
       <button matButton routerLink="/orders" >Розпорядження</button>
       <button matButton routerLink="/reports" >Донесення</button>
       <button matButton routerLink="/users" >Користувачі</button>

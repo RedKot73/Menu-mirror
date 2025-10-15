@@ -4,7 +4,6 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { 
   TemplateDto, 
-  TemplateDetailsDto, 
   CreateTemplateDto, 
   SetCategoryDto, 
   SetDefaultDataSetDto,
@@ -38,14 +37,7 @@ export class DocumentTemplateService {
     return this.http.get<TemplateDto>(`${this.baseUrl}/${id}`);
   }
 
-  /**
-   * GET /api/templates/{id}/details - Получить детальную информацию о шаблоне
-   */
-  getDetails(id: string): Observable<TemplateDetailsDto> {
-    return this.http.get<TemplateDetailsDto>(`${this.baseUrl}/${id}/details`);
-  }
-
-  /**
+    /**
    * POST /api/templates - Создать новый шаблон
    */
   create(dto: CreateTemplateDto): Observable<TemplateDto> {

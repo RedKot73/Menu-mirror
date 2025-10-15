@@ -9,22 +9,8 @@ export enum TemplateFormat {
 // Строковые представления форматов для API
 export type TemplateFormatString = 'html' | 'txt' | 'docx' | 'pdf';
 
-// Базовый интерфейс для шаблона документа (соответствует TemplateDto)
-export interface TemplateDto {
-  id: string;
-  name: string;
-  description?: string;
-  format: string; // Приходит как строка с сервера (lowercase)
-  templateCategoryId: string;
-  isPublished: boolean;
-  defaultDataSetId?: string;
-  contentHash?: string;
-  createdAtUtc: string; // ISO date string
-  updatedAtUtc: string; // ISO date string
-}
-
 // Детальная информация о шаблоне (соответствует TemplateDetailsDto)
-export interface TemplateDetailsDto {
+export interface TemplateDto {
   id: string;
   name: string;
   description?: string;
