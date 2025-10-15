@@ -9,6 +9,7 @@ import {
   DataSetCreateDto, 
   RenderRequest,
   TemplateDataSet,
+  TemplateDataSetDto,
   TemplateDataSetListItem 
 } from '../models/document-template.models';
 import { HandlebarsTemplateService } from '../DocumentTemplates/services/handlebars-template.service';
@@ -191,22 +192,27 @@ export class DocumentTemplateService {
   // === Наборы данных ===
 
   getDataSets(templateId: string): Observable<TemplateDataSetListItem[]> {
-    return this.http.get<TemplateDataSetListItem[]>(`${this.baseUrl}/${templateId}/data-sets`)
+    return this.http.get<TemplateDataSetListItem[]>(`api/templ_data/${templateId}/data-sets`)
       .pipe(catchError(this.handleError));
   }
 
-  createDataSet(templateId: string, dto: DataSetCreateDto): Observable<TemplateDataSetListItem> {
-    return this.http.post<TemplateDataSetListItem>(`${this.baseUrl}/${templateId}/data-sets`, dto)
+  createDataSet(dto: DataSetCreateDto): Observable<TemplateDataSetListItem> {
+    return this.http.post<TemplateDataSetListItem>(`api/templ_data/${dto.templateId}/data-sets`, dto)
       .pipe(catchError(this.handleError));
   }
 
-  getDataSet(dataSetId: string): Observable<TemplateDataSet> {
-    return this.http.get<TemplateDataSet>(`${this.baseUrl}/data-sets/${dataSetId}`)
+  getDataSet(dataSetId: string): Observable<TemplateDataSetDto> {
+    return this.http.get<TemplateDataSetDto>(`api/templ_data/data-sets/${dataSetId}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  updateDataSet(dataSetId: string, dto: TemplateDataSetDto): Observable<void> {
+    return this.http.put<void>(`api/templ_data/data-sets/${dataSetId}`, dto)
       .pipe(catchError(this.handleError));
   }
 
   deleteDataSet(dataSetId: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/data-sets/${dataSetId}`)
+    return this.http.delete<void>(`api/templ_data/data-sets/${dataSetId}`)
       .pipe(catchError(this.handleError));
   }
 

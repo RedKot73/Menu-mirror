@@ -16,8 +16,10 @@ export interface CreateTemplateDto {
 }
 
 export interface DataSetCreateDto {
+  templateId: string;
   name: string;
   dataJson: string;
+  isPublished: boolean;
 }
 
 export interface RenderRequest {
@@ -41,15 +43,33 @@ export interface ServerRenderRequest {
 export interface TemplateDataSet {
   id: string;
   templateId: string;
+  templateName?: string;
   name: string;
   dataJson: string;
+  isPublished: boolean;
   createdAtUtc: string;
+  updatedAtUtc: string;
+}
+
+export interface TemplateDataSetDto {
+  id: string;
+  templateId: string;
+  templateName?: string;
+  name: string;
+  dataJson: string;
+  isPublished: boolean;
+  createdAtUtc: string;
+  updatedAtUtc: string;
 }
 
 export interface TemplateDataSetListItem {
   id: string;
+  templateId: string;
+  templateName?: string;
   name: string;
+  isPublished: boolean;
   createdAtUtc: string;
+  updatedAtUtc: string;
 }
 
 export interface RenderResult {

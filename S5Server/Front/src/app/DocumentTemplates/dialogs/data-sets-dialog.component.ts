@@ -5,12 +5,13 @@ import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/materia
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 
 import { DocumentTemplateService } from '../../ServerService/document-template.service';
-import { TemplateListItem, TemplateDataSetListItem } from '../../models/document-template.models';
+import { TemplateListItem, TemplateDataSetListItem, DataSetCreateDto, TemplateDataSetDto } from '../../models/document-template.models';
 
 export interface DataSetsDialogData {
   template: TemplateListItem;
@@ -27,6 +28,7 @@ export interface DataSetsDialogData {
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
+    MatCheckboxModule,
     MatProgressBarModule,
     MatIconModule
   ],
@@ -80,6 +82,12 @@ export interface DataSetsDialogData {
             }
           </mat-form-field>
 
+          <div class="publish-section">
+            <mat-checkbox formControlName="isPublished">
+              Опубликовать набор данных
+            </mat-checkbox>
+          </div>
+
           <div class="json-actions">
             <button mat-button (click)="loadSampleData()" type="button">
               <mat-icon>lightbulb</mat-icon>
@@ -117,7 +125,14 @@ export interface DataSetsDialogData {
               <div class="data-set-item">
                 <div class="data-set-info">
                   <div class="data-set-name">{{ dataSet.name }}</div>
-                  <div class="data-set-date">{{ formatDate(dataSet.createdAtUtc) }}</div>
+                  <div class="data-set-meta">
+                    <span class="data-set-date">{{ formatDate(dataSet.createdAtUtc) }}</span>
+                    @if (dataSet.isPublished) {
+                      <span class="published-badge">Опубликован</span>
+                    } @else {
+                      <span class="draft-badge">Черновик</span>
+                    }
+                  </div>
                 </div>
                 <div class="data-set-actions">
                   <button mat-button (click)="loadDataSet(dataSet.id)">
@@ -142,7 +157,36 @@ export interface DataSetsDialogData {
       </button>
     </div>
   `,
-  styleUrls: ['./dialogs-shared.scss', '../document-templates.scss']
+  styleUrls: ['./dialogs-shared.scss', '../document-templates.scss'],
+  styles: [`
+    .publish-section {
+      margin: 16px 0;
+    }
+    
+    .data-set-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .published-badge, .draft-badge {
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .published-badge {
+      background-color: #e8f5e8;
+      color: #2e7d32;
+    }
+    
+    .draft-badge {
+      background-color: #fff3e0;
+      color: #f57c00;
+    }
+  `]
 })
 export class DataSetsDialogComponent implements OnInit {
   private dialogRef = inject(MatDialogRef<DataSetsDialogComponent>);
@@ -164,7 +208,8 @@ export class DataSetsDialogComponent implements OnInit {
   private initializeForm(): void {
     this.createForm = this.fb.group({
       name: ['', [Validators.required]],
-      dataJson: ['{}', [Validators.required]]
+      dataJson: ['{}', [Validators.required]],
+      isPublished: [false]
     });
   }
 
@@ -249,15 +294,21 @@ export class DataSetsDialogComponent implements OnInit {
     }
 
     this.loading.set(true);
-    this.templateService.createDataSet(this.data.template.id, {
+    
+    const createDto: DataSetCreateDto = {
+      templateId: this.data.template.id,
       name: formValue.name,
-      dataJson: formValue.dataJson
-    }).subscribe({
+      dataJson: formValue.dataJson,
+      isPublished: formValue.isPublished || false
+    };
+    
+    this.templateService.createDataSet(createDto).subscribe({
       next: (dataSet: TemplateDataSetListItem) => {
         this.dataSets.update(sets => [...sets, dataSet]);
         this.createForm.reset({
           name: '',
-          dataJson: '{}'
+          dataJson: '{}',
+          isPublished: false
         });
         this.snackBar.open('Набор данных создан', 'Закрыть', { duration: 3000 });
         this.loading.set(false);
@@ -272,10 +323,11 @@ export class DataSetsDialogComponent implements OnInit {
 
   loadDataSet(dataSetId: string): void {
     this.templateService.getDataSet(dataSetId).subscribe({
-      next: (dataSet: any) => {
+      next: (dataSet: TemplateDataSetDto) => {
         this.createForm.patchValue({
           name: dataSet.name,
-          dataJson: dataSet.dataJson
+          dataJson: dataSet.dataJson,
+          isPublished: dataSet.isPublished
         });
         this.snackBar.open('Набор данных загружен', 'Закрыть', { duration: 3000 });
       },
