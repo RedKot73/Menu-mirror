@@ -11,7 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule } from '@angular/material/dialog';
-import { MatDialogRef } from '@angular/material/dialog';
+//import { MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -21,11 +21,14 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatOptionModule } from '@angular/material/core';
 import { MatMenuModule } from '@angular/material/menu';
-import { FormsModule } from '@angular/forms';
-import { SlicePipe } from '@angular/common';
+//import { FormsModule } from '@angular/forms';
+//import { SlicePipe } from '@angular/common';
 
 import { DocumentTemplateService } from '../DocTemplates1/ServerServices/document-template.service';
-import { TemplateDetailsDto, TemplateFormat, DocumentTemplateUtils, CreateTemplateDto, TEMPLATE_FORMAT_OPTIONS } from '../DocTemplates1/Models/document-template.models';
+import {
+    TemplateDetailsDto, TemplateFormat,
+    DocumentTemplateUtils, CreateTemplateDto, TEMPLATE_FORMAT_OPTIONS } from '../DocTemplates1/Models/document-template.models';
+import { DocTemplateUtils } from '../DocTemplates1/Models/shared.models';
 import { CreateTemplateDialogComponent } from './create-template-dialog.component';
 
 @Component({
@@ -44,15 +47,8 @@ import { CreateTemplateDialogComponent } from './create-template-dialog.componen
     MatTooltipModule,
     MatMenuModule,
 
-    MatTableModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTooltipModule,
     MatChipsModule,
     MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
     MatCheckboxModule,
     ReactiveFormsModule
   ],
@@ -93,23 +89,23 @@ import { CreateTemplateDialogComponent } from './create-template-dialog.componen
                                         </button>
 
                                         <mat-menu #templateMenu="matMenu">
-                                                            <button mat-icon-button
-                                                                    (click)="downloadTemplate(template); $event.stopPropagation()"
-                                                                    matTooltip="Скачать шаблон">
-                                                                <mat-icon>download</mat-icon>
-                                                            </button>
-                                                            @if (supportsPreview(template)) {
-                                                                <button mat-icon-button
-                                                                        (click)="previewTemplate(template); $event.stopPropagation()"
-                                                                        matTooltip="Предпросмотр">
-                                                                    <mat-icon>visibility</mat-icon>
-                                                                </button>
-                                                            }
-                                                            <button mat-icon-button
-                                                                    (click)="editTemplate(template); $event.stopPropagation()"
-                                                                    matTooltip="Редактировать">
-                                                                <mat-icon>edit</mat-icon>
-                                                            </button>
+                                          <button mat-icon-button
+                                                  (click)="downloadTemplate(template); $event.stopPropagation()"
+                                                  matTooltip="Скачать шаблон">
+                                              <mat-icon>download</mat-icon>
+                                          </button>
+                                          @if (supportsPreview(template)) {
+                                              <button mat-icon-button
+                                                      (click)="previewTemplate(template); $event.stopPropagation()"
+                                                      matTooltip="Предпросмотр">
+                                                  <mat-icon>visibility</mat-icon>
+                                              </button>
+                                          }
+                                          <button mat-icon-button
+                                                  (click)="editTemplate(template); $event.stopPropagation()"
+                                                  matTooltip="Редактировать">
+                                              <mat-icon>edit</mat-icon>
+                                          </button>
                                         </mat-menu>
                                     </td>
                                 </ng-container>
@@ -145,12 +141,12 @@ import { CreateTemplateDialogComponent } from './create-template-dialog.componen
                                         @if (template.isPublished) {
                                             <mat-chip class="status-published">
                                                 <mat-icon>check_circle</mat-icon>
-                                                Опубліковано
+                                                {{ getStatusLabel(template.isPublished) }}
                                             </mat-chip>
                                         } @else {
                                             <mat-chip class="status-draft">
                                                 <mat-icon>edit</mat-icon>
-                                                Чернетка
+                                                {{ getStatusLabel(template.isPublished) }}
                                             </mat-chip>
                                         }
                                     </td>
@@ -217,7 +213,7 @@ import { CreateTemplateDialogComponent } from './create-template-dialog.componen
                             <div class="template-info">
                                 <span class="format-info">{{ getFormatLabel(selectedTemplate()!.format) }}</span>
                                 <span class="status-info" [class.published]="selectedTemplate()!.isPublished">
-                                    {{ selectedTemplate()!.isPublished ? 'Опубликован' : 'Черновик' }}
+                                    {{ getStatusLabel(selectedTemplate()!.isPublished) }}
                                 </span>
                             </div>
                         }
@@ -257,9 +253,12 @@ import { CreateTemplateDialogComponent } from './create-template-dialog.componen
   `]
 })
 export class TestComponent implements AfterViewInit, OnDestroy {
+  documentTemplateService = inject(DocumentTemplateService);
+  dataSource = new MatTableDataSource<TemplateDetailsDto>([]);
+  displayedColumns = ['actions', 'name', 'format', 'status', 'category', 'description'];
+
   dialog = inject(MatDialog);
   breakpointObserver = inject(BreakpointObserver);
-  documentTemplateService = inject(DocumentTemplateService);
   formBuilder = inject(FormBuilder);
 
   // ViewChild for container reference
@@ -270,8 +269,6 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   templates = signal<TemplateDetailsDto[]>([]);
   selectedTemplate = signal<TemplateDetailsDto | null>(null);
   isLoading = signal(false);
-  dataSource = new MatTableDataSource<TemplateDetailsDto>([]);
-  displayedColumns = ['actions', 'name', 'format', 'status', 'category', 'description'];
 
   // Panel signals (replacing sidenav signals)
   navPanelWidth = signal(this.getSavedNavPanelWidth());
@@ -329,8 +326,8 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     // Initial width calculation
     this.updateContainerWidth();
-    
-    // Setup table sorting
+
+    // Setup table sorting - simple approach like in Soldier component
     this.dataSource.sort = this.sort;
   }
 
@@ -515,6 +512,13 @@ export class TestComponent implements AfterViewInit, OnDestroy {
       default:
         return format.toUpperCase();
     }
+  }
+
+  /**
+   * Получает читаемое название статуса публикации
+   */
+  getStatusLabel(isPublished: boolean): string {
+    return DocTemplateUtils.getStatusLabel(isPublished);
   }
 
   /**
