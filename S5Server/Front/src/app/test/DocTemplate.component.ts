@@ -100,34 +100,30 @@ export type DocumentTemplate = TemplateDto;
                         <mat-menu #templateMenu="matMenu">
                             <button mat-menu-item (click)="downloadTemplate(template)">
                                 <mat-icon color="primary">download</mat-icon>
-                                <span>Скачать шаблон</span>
+                                <span>Завантажити шаблон</span>
                             </button>
                             @if (supportsPreview(template)) {
                                 <button mat-menu-item (click)="previewTemplate(template)">
                                     <mat-icon color="primary">visibility</mat-icon>
-                                    <span>Предпросмотр</span>
+                                    <span>Попередній перегляд</span>
                                 </button>
                             }
-                            <button mat-menu-item (click)="setCategory(template)">
-                                <mat-icon color="accent">category</mat-icon>
-                                <span>Установить категорию</span>
-                            </button>
                             @if (!template.isPublished) {
                                 <button mat-menu-item (click)="publish(template)">
-                                    <mat-icon color="primary">publish</mat-icon>
-                                    <span>Опубликовать</span>
+                                    <mat-icon color="primary">published</mat-icon>
+                                    <span>Опублікувати</span>
                                 </button>
                             } @else {
                                 <button mat-menu-item (click)="unpublish(template)">
                                     <mat-icon color="accent">unpublished</mat-icon>
-                                    <span>Снять с публикации</span>
+                                    <span>Зняти з публікації</span>
                                 </button>
                             }
                             <button mat-menu-item (click)="edit(template)">
                                 <mat-icon color="accent">edit</mat-icon>
                                 <span>Редагувати</span>
                             </button>
-                            <button mat-menu-item (click)="delete(template)">
+                            <button mat-menu-item (click)="delete(template)" class="delete-action">
                                 <mat-icon color="warn">delete</mat-icon>
                                 <span>Видалити</span>
                             </button>
@@ -205,20 +201,7 @@ export type DocumentTemplate = TemplateDto;
                     style="cursor: pointer;"></tr>
             </table>
         }
-    `,
-    styles: [`
-        .mat-mdc-row.selected {
-            background-color: #e3f2fd !important;
-        }
-        
-        .mat-mdc-row:hover {
-            background-color: #f5f5f5;
-        }
-        
-        .mat-mdc-row.selected:hover {
-            background-color: #bbdefb !important;
-        }
-    `]
+    `
 })
 export class DocTemplateComponent implements AfterViewInit {
     documentTemplateService = inject(DocumentTemplateService);
@@ -486,25 +469,6 @@ export class DocTemplateComponent implements AfterViewInit {
             },
             error: (error) => {
                 console.error('Error unpublishing template:', error);
-            }
-        });
-    }
-
-    /**
-     * Устанавливает категорию шаблона
-     */
-    setCategory(template: DocumentTemplate): void {
-        // TODO: Реализовать диалог выбора категории
-        this.dialog.open(ConfirmDialogComponent, {
-            width: '400px',
-            autoFocus: false,
-            data: {
-                title: 'Установка категории',
-                message: `Функція установки категории для шаблону "${template.name}" буде реалізована пізніше.`,
-                confirmText: 'OK',
-                cancelText: '',
-                color: 'primary',
-                icon: 'info'
             }
         });
     }
