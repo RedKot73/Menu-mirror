@@ -3,11 +3,11 @@ export enum TemplateFormat {
   Html = 'Html',
   Txt = 'Txt',
   Docx = 'Docx',
-  Pdf = 'Pdf'
+  //Pdf = 'Pdf'
 }
 
 // Строковые представления форматов для API
-export type TemplateFormatString = 'html' | 'txt' | 'docx' | 'pdf';
+export type TemplateFormatString = 'html' | 'txt' | 'docx';// | 'pdf';
 
 // Детальная информация о шаблоне (соответствует TemplateDetailsDto)
 export interface TemplateDto {
@@ -73,8 +73,10 @@ export class DocumentTemplateUtils {
         return 'txt';
       case TemplateFormat.Docx:
         return 'docx';
+        /*
       case TemplateFormat.Pdf:
         return 'pdf';
+        */
       default:
         return 'html';
     }
@@ -91,8 +93,10 @@ export class DocumentTemplateUtils {
         return TemplateFormat.Txt;
       case 'docx':
         return TemplateFormat.Docx;
+        /*
       case 'pdf':
         return TemplateFormat.Pdf;
+        */
       default:
         return TemplateFormat.Html;
     }
@@ -113,8 +117,10 @@ export class DocumentTemplateUtils {
         return { success: true, format: TemplateFormat.Txt };
       case 'docx':
         return { success: true, format: TemplateFormat.Docx };
+        /*
       case 'pdf':
         return { success: true, format: TemplateFormat.Pdf };
+        */
       default:
         return { success: false, format: TemplateFormat.Html };
     }
@@ -131,8 +137,10 @@ export class DocumentTemplateUtils {
         return 'text/plain';
       case TemplateFormat.Docx:
         return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        /*
       case TemplateFormat.Pdf:
         return 'application/pdf';
+        */
       default:
         return 'application/octet-stream';
     }
@@ -156,8 +164,10 @@ export class DocumentTemplateUtils {
         return 'txt';
       case TemplateFormat.Docx:
         return 'docx';
+        /*
       case TemplateFormat.Pdf:
         return 'pdf';
+        */
       default:
         return 'html';
     }
@@ -208,9 +218,11 @@ export const TEMPLATE_FORMAT_OPTIONS: FormatOption[] = [
     label: 'Word (DOCX)', 
     description: 'Microsoft Word документ' 
   },
-  { 
+  /*
+  { //В PDF можемо тільки експортувати
     value: TemplateFormat.Pdf, 
     label: 'PDF', 
-    description: 'Портативный документ' 
+    description: 'Портативний документ' 
   }
+  */
 ];

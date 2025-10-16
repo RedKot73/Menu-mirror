@@ -22,10 +22,10 @@ import { TemplateDto } from '../DocTemplates1/Models/document-template.models';
             <div class="panel nav-panel" [style.width.%]="navPanelWidth()" [class.collapsed]="isNavPanelCollapsed()">
                 <div class="panel-content" [class.hidden]="isNavPanelCollapsed()">
                     <!-- DocTemplate Component -->
-                    <page-doc-templates 
+                    <app-page-doc-templates 
                         [selectedTemplate]="selectedTemplate()"
                         (templateSelected)="onTemplateSelected($event)">
-                    </page-doc-templates>
+                    </app-page-doc-templates>
                 </div>
             </div>
 

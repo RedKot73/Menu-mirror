@@ -29,13 +29,16 @@ import {
     DocumentTemplateUtils
 } from '../DocTemplates1/Models/document-template.models';
 import { DocTemplateUtils } from '../DocTemplates1/Models/shared.models';
-import { CreateTemplateDialogComponent } from './create-template-dialog.component';
+import {
+    CreateTemplateDialogComponent,
+    EditTemplateResult
+} from './CreateTemplate-dialog.component';
 import { ConfirmDialogComponent } from "../dialogs/ConfirmDialog.component";
 
 export type DocumentTemplate = TemplateDto;
 
 @Component({
-    selector: "page-doc-templates",
+    selector: "app-page-doc-templates",
     imports: [
         MatTableModule, 
         MatButtonModule, 
@@ -305,8 +308,10 @@ export class DocTemplateComponent implements AfterViewInit {
                 return 'Текст';
             case TemplateFormat.Docx:
                 return 'Word';
+                /*
             case TemplateFormat.Pdf:
                 return 'PDF';
+                */
             default:
                 return format.toUpperCase();
         }
@@ -333,14 +338,14 @@ export class DocTemplateComponent implements AfterViewInit {
             width: '600px',
             maxWidth: '90vw',
             disableClose: true,
-            data: {}
+            data: { mode: 'create' }
         });
 
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
+                // result - это CreateTemplateDto
                 this.documentTemplateService.create(result).subscribe({
-                    next: (template) => {
-                        console.log('Template created successfully:', template);
+                    next: () => {
                         this.reload();
                     },
                     error: (error) => {
@@ -353,17 +358,36 @@ export class DocTemplateComponent implements AfterViewInit {
 
     // UPDATE
     edit(template: DocumentTemplate) {
-        // TODO: Реализовать диалог редактирования
-        this.dialog.open(ConfirmDialogComponent, {
-            width: '400px',
-            autoFocus: false,
-            data: {
-                title: 'Редагування шаблону',
-                message: `Функція редагування шаблону "${template.name}" буде реалізована пізніше.`,
-                confirmText: 'OK',
-                cancelText: '',
-                color: 'primary',
-                icon: 'info'
+        const dialogRef = this.dialog.open(CreateTemplateDialogComponent, {
+            width: '600px',
+            maxWidth: '90vw',
+            disableClose: true,
+            data: { 
+                mode: 'edit',
+                template: template
+            }
+        });
+
+        dialogRef.afterClosed().subscribe((result: EditTemplateResult) => {
+            if (result) {
+                // result содержит обновленный template и опционально file
+                const updateData = {
+                    name: result.template.name,
+                    description: result.template.description,
+                    format: result.template.format,
+                    templateCategoryId: result.template.templateCategoryId,
+                    isPublished: result.template.isPublished,
+                    file: result.file
+                };
+
+                this.documentTemplateService.update(template.id, updateData).subscribe({
+                    next: () => {
+                        this.reload();
+                    },
+                    error: (error) => {
+                        console.error('Error updating template:', error);
+                    }
+                });
             }
         });
     }
@@ -388,7 +412,6 @@ export class DocTemplateComponent implements AfterViewInit {
             if (confirmed) {
                 this.documentTemplateService.delete(template.id).subscribe({
                     next: () => {
-                        console.log('Template deleted successfully');
                         this.reload();
                     },
                     error: (error) => {
@@ -445,7 +468,6 @@ export class DocTemplateComponent implements AfterViewInit {
     publish(template: DocumentTemplate): void {
         this.documentTemplateService.publish(template.id).subscribe({
             next: () => {
-                console.log('Template published successfully');
                 this.reload();
             },
             error: (error) => {
@@ -460,7 +482,6 @@ export class DocTemplateComponent implements AfterViewInit {
     unpublish(template: DocumentTemplate): void {
         this.documentTemplateService.unpublish(template.id).subscribe({
             next: () => {
-                console.log('Template unpublished successfully');
                 this.reload();
             },
             error: (error) => {
