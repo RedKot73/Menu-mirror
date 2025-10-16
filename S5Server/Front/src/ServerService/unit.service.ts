@@ -49,18 +49,18 @@ export class UnitService {
 
     // CRUD операции
     getAll(search?: string, parentId?: string): Observable<UnitDto[]> {
-        let params: any = {};
-        if (search) params.search = search;
-        if (parentId) params.parentId = parentId;
+        const params: any = {};
+        if (search) {params.search = search;}
+        if (parentId) {params.parentId = parentId;}
         
         return this.http.get<UnitDto[]>(this.api, { params });
     }
 
     // Специальный метод для дерева с ленивой загрузкой
     getTreeItems(search?: string, parentId?: string): Observable<UnitTreeItemDto[]> {
-        let params: any = {};
-        if (search) params.search = search;
-        if (parentId !== undefined) params.parentId = parentId;
+        const params: any = {};
+        if (search) {params.search = search;}
+        if (parentId !== undefined) {params.parentId = parentId;}
         
         return this.http.get<UnitTreeItemDto[]>(this.api, { params });
     }

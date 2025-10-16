@@ -8,7 +8,6 @@ import {
   CreateTemplateDto, 
   DataSetCreateDto, 
   RenderRequest,
-  TemplateDataSet,
   TemplateDataSetDto,
   TemplateDataSetListItem 
 } from '../models/document-template.models';
@@ -134,7 +133,7 @@ export class DocumentTemplateService {
         } else {
           observer.error(new Error(result.error));
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         observer.error(error);
       }
     });

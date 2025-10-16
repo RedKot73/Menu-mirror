@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, WritableSignal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LookupDto } from '../app/shared/models/lookup.models';
@@ -46,7 +46,7 @@ export class DictRankService {
         return this.http.delete<void>(`${this.api}/${id}`);
     }
 
-    createItemsSignal(): any {
+    createItemsSignal(): WritableSignal<DictRank[]> {
         return signal<DictRank[]>([]);
     }
 

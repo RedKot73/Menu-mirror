@@ -77,50 +77,7 @@ export class TemplateDataSetService {
       .pipe(catchError(this.handleError));
   }
 
-  // === Утилитарные методы ===
-
-  /**
-   * Валидация JSON строки
-   */
-  /*
-  isValidJson_(jsonString: string): boolean {
-    return TemplateDataSetUtils.isValidJson(jsonString);
-  }
-*/
-  /**
-   * Форматирование JSON строки
-   */
-    /*
-    formatJson_(jsonString: string, spaces: number = 2): string {
-    return TemplateDataSetUtils.formatJson(jsonString, spaces);
-  }
-*/
-  /**
-   * Создание пустого набора данных для формы
-   */
-    /*
-    createEmpty_(templateId: string): Partial<TemplateDataSetCreateDto> {
-    return TemplateDataSetUtils.createEmpty(templateId);
-  }
-*/
-  /**
-   * Получение статуса публикации как строки
-   */
-    /*
-    getStatusLabel_(isPublished: boolean): string {
-        return DocTemplateUtils.getStatusLabel(isPublished);
-  }
-*/
-  /**
-   * Валидация набора данных перед отправкой
-   */
-    /*
-  validate_(dataSet: TemplateDataSetCreateDto): { valid: boolean; errors: string[] } {
-    return TemplateDataSetUtils.validate(dataSet);
-  }
-*/
   // === Работа с сигналами ===
-
   /**
    * Создает реактивный сигнал для списка наборов данных
    */

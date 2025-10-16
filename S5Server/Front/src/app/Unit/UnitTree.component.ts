@@ -124,10 +124,8 @@ export class UnitTreeComponent implements OnInit {
     }
 
     async loadChildren(parentNode: UnitTreeNode) {
-        if (parentNode.isLoading || parentNode.isLoaded) return;
-        
+        if (parentNode.isLoading || parentNode.isLoaded) {return;}
         parentNode.isLoading = true;
-        
         try {
             const children = await firstValueFrom(this.unitService.getTreeItems(undefined, parentNode.id));
             
@@ -179,7 +177,7 @@ export class UnitTreeComponent implements OnInit {
             }
             if (node.children && node.children.length > 0) {
                 const result = this.findAndProcessNodeById(nodeId, processor, node.children);
-                if (result !== null) return result;
+                if (result !== null) {return result;}
             }
         }
         return null;
@@ -216,7 +214,7 @@ export class UnitTreeComponent implements OnInit {
             }
             if (nodes[i].children && nodes[i].children!.length > 0) {
                 const result = this.findAndProcessNodesById(nodeId, processor, nodes[i].children!);
-                if (result !== null) return result;
+                if (result !== null) {return result;}
             }
         }
         return null;

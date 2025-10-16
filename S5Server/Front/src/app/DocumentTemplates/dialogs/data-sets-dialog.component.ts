@@ -249,7 +249,7 @@ export class DataSetsDialogComponent implements OnInit {
 
   formatJson(): void {
     const jsonValue = this.createForm.get('dataJson')?.value;
-    if (!jsonValue) return;
+    if (!jsonValue) {return;}
 
     try {
       const parsed = JSON.parse(jsonValue);
@@ -269,7 +269,7 @@ export class DataSetsDialogComponent implements OnInit {
         this.dataSets.set(dataSets);
         this.loading.set(false);
       },
-      error: (error: any) => {
+      error: (error: unknown) => {
         console.error('Ошибка загрузки наборов данных:', error);
         this.snackBar.open('Ошибка загрузки наборов данных', 'Закрыть', { duration: 5000 });
         this.loading.set(false);
@@ -313,7 +313,7 @@ export class DataSetsDialogComponent implements OnInit {
         this.snackBar.open('Набор данных создан', 'Закрыть', { duration: 3000 });
         this.loading.set(false);
       },
-      error: (error: any) => {
+      error: (error: unknown) => {
         console.error('Ошибка создания набора данных:', error);
         this.snackBar.open('Ошибка создания набора данных', 'Закрыть', { duration: 5000 });
         this.loading.set(false);
@@ -331,7 +331,7 @@ export class DataSetsDialogComponent implements OnInit {
         });
         this.snackBar.open('Набор данных загружен', 'Закрыть', { duration: 3000 });
       },
-      error: (error: any) => {
+      error: (error: unknown) => {
         console.error('Ошибка загрузки набора данных:', error);
         this.snackBar.open('Ошибка загрузки набора данных', 'Закрыть', { duration: 5000 });
       }
@@ -348,7 +348,7 @@ export class DataSetsDialogComponent implements OnInit {
         this.dataSets.update(sets => sets.filter(s => s.id !== dataSetId));
         this.snackBar.open('Набор данных удалён', 'Закрыть', { duration: 3000 });
       },
-      error: (error: any) => {
+      error: (error: unknown) => {
         console.error('Ошибка удаления набора данных:', error);
         this.snackBar.open('Ошибка удаления набора данных', 'Закрыть', { duration: 5000 });
       }

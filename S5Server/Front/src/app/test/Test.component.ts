@@ -6,12 +6,15 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
 
 import { DocTemplateComponent } from './DocTemplate.component';
+import { DataSetTableComponent } from './DataSetTable.component';
+import { TemplateDto } from '../DocTemplates1/Models/document-template.models';
 
 @Component({
   selector: 'app-test',
   imports: [
     CommonModule,
-    DocTemplateComponent
+    DocTemplateComponent,
+    DataSetTableComponent
   ],
   styleUrl: './Test.component.scss',
   template: `
@@ -19,7 +22,10 @@ import { DocTemplateComponent } from './DocTemplate.component';
             <div class="panel nav-panel" [style.width.%]="navPanelWidth()" [class.collapsed]="isNavPanelCollapsed()">
                 <div class="panel-content" [class.hidden]="isNavPanelCollapsed()">
                     <!-- DocTemplate Component -->
-                    <page-doc-templates></page-doc-templates>
+                    <page-doc-templates 
+                        [selectedTemplate]="selectedTemplate()"
+                        (templateSelected)="onTemplateSelected($event)">
+                    </page-doc-templates>
                 </div>
             </div>
 
@@ -43,16 +49,12 @@ import { DocTemplateComponent } from './DocTemplate.component';
             <div class="panel content-panel" [style.width.%]="contentPanelWidth()">
                 <div class="panel-header">
                     <!-- Toolbar с заголовком -->
-                    <div class="unit-toolbar">
-                        <h3>Детали</h3>
-                    </div>
                 </div>
                 <div class="panel-content">
-                    <!-- Основное содержимое -->
-                    <div class="template-details">
-                        <h4>Информация</h4>
-                        <p>Выберите шаблон в левой панели для просмотра деталей и выполнения операций.</p>
-                    </div>
+                    <!-- DataSetTable Component -->
+                    <template-dataset-table 
+                        [selectedTemplate]="selectedTemplate()">
+                    </template-dataset-table>
                 </div>
             </div>
         </div>
@@ -70,6 +72,7 @@ export class TestComponent implements AfterViewInit, OnDestroy {
 
   // ViewChild for container reference
   @ViewChild('containerRef') containerRef!: ElementRef<HTMLElement>;
+  selectedTemplate = signal<TemplateDto | null>(null);
 
   // Panel signals (replacing sidenav signals)
   navPanelWidth = signal(this.getSavedNavPanelWidth());
@@ -163,7 +166,7 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   }
 
   private onMouseMove(event: MouseEvent) {
-    if (!this.isDragging() || this.containerWidth <= 0) return;
+    if (!this.isDragging() || this.containerWidth <= 0) {return;}
 
     const deltaX = event.clientX - this.startX;
     const deltaPercent = (deltaX / this.containerWidth) * 100;
@@ -245,5 +248,12 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     if (clampedNavWidth !== currentNavWidth) {
       this.navPanelWidth.set(clampedNavWidth);
     }
+  }
+
+  /**
+   * Обработчик выбора шаблона из DocTemplate компонента
+   */
+  onTemplateSelected(template: TemplateDto | null): void {
+    this.selectedTemplate.set(template);
   }
 } 

@@ -343,7 +343,7 @@ export class TemplateEditorDialogComponent implements OnInit {
   });
 
   canSave = computed(() => {
-    if (!this.templateForm) return false;
+    if (!this.templateForm) {return false;}
     
     const isFormValid = this.templateForm.valid;
     const hasFile = this.isCreateMode() ? this.selectedFile() !== null : true;
@@ -386,7 +386,7 @@ export class TemplateEditorDialogComponent implements OnInit {
   }
 
   getFileSize(bytes: number): string {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) {return '0 Bytes';}
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -394,7 +394,7 @@ export class TemplateEditorDialogComponent implements OnInit {
   }
 
   onSave(): void {
-    if (!this.canSave()) return;
+    if (!this.canSave()) {return;}
 
     this.loading.set(true);
     const formValue = this.templateForm.value;

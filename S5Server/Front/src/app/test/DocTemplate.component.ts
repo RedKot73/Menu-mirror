@@ -1,4 +1,12 @@
-import { Component, inject, ViewChild, AfterViewInit, effect, signal } from "@angular/core";
+import {
+    Component,
+    inject,
+    ViewChild,
+    AfterViewInit,
+    effect,
+    signal,
+    input,
+    output } from "@angular/core";
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -18,8 +26,7 @@ import { DocumentTemplateService } from '../DocTemplates1/ServerServices/documen
 import { 
     TemplateDto,
     TemplateFormat, 
-    DocumentTemplateUtils,
-    CreateTemplateDto 
+    DocumentTemplateUtils
 } from '../DocTemplates1/Models/document-template.models';
 import { DocTemplateUtils } from '../DocTemplates1/Models/shared.models';
 import { CreateTemplateDialogComponent } from './create-template-dialog.component';
@@ -189,14 +196,34 @@ export type DocumentTemplate = TemplateDto;
                 </ng-container>
 
                 <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;" 
+                    (click)="selectTemplate(row)"
+                    [class.selected]="selectedTemplate()?.id === row.id"
+                    style="cursor: pointer;"></tr>
             </table>
         }
-    `
+    `,
+    styles: [`
+        .mat-mdc-row.selected {
+            background-color: #e3f2fd !important;
+        }
+        
+        .mat-mdc-row:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .mat-mdc-row.selected:hover {
+            background-color: #bbdefb !important;
+        }
+    `]
 })
 export class DocTemplateComponent implements AfterViewInit {
     documentTemplateService = inject(DocumentTemplateService);
     dialog = inject(MatDialog);
+    
+    // Input/Output для работы с родительским компонентом
+    selectedTemplate = input<DocumentTemplate | null>(null);
+    templateSelected = output<DocumentTemplate | null>();
     
     items = signal<DocumentTemplate[]>([]);
     isLoading = signal(false);
@@ -257,6 +284,13 @@ export class DocTemplateComponent implements AfterViewInit {
 
     onSearchChange() {
         // Фильтрация срабатывает автоматически через effect
+    }
+
+    /**
+     * Выбирает шаблон и эмитит событие для родительского компонента
+     */
+    selectTemplate(template: DocumentTemplate): void {
+        this.templateSelected.emit(template);
     }
 
     /**

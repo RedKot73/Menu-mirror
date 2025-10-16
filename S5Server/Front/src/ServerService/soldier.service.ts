@@ -49,10 +49,10 @@ export class SoldierService {
 
     // CRUD операции
     getAll(search?: string, unitId?: string, assignedUnitId?: string): Observable<SoldierDto[]> {
-        let params: any = {};
-        if (search) params.search = search;
-        if (unitId) params.unitId = unitId;
-        if (assignedUnitId) params.assignedUnitId = assignedUnitId;
+        const params: any = {};
+        if (search) {params.search = search;}
+        if (unitId) {params.unitId = unitId;}
+        if (assignedUnitId) {params.assignedUnitId = assignedUnitId;}
         
         return this.http.get<SoldierDto[]>(this.api, { params });
     }

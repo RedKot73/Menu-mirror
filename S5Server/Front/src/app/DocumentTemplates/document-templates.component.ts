@@ -158,7 +158,7 @@ export class DocumentTemplatesComponent {
         this.templates.set(templates);
         this.loading.set(false);
       },
-      error: (error: any) => {
+      error: (error: unknown) => {
         console.error('Ошибка загрузки шаблонов:', error);
         this.snackBar.open('Ошибка загрузки шаблонов', 'Закрыть', { duration: 5000 });
         this.loading.set(false);
@@ -213,7 +213,7 @@ export class DocumentTemplatesComponent {
         const fileName = `${template.name}.${template.format}`;
         this.templateService.downloadBlob(blob, fileName);
       },
-      error: (error: any) => {
+      error: (error: unknown) => {
         console.error('Ошибка скачивания шаблона:', error);
         this.snackBar.open('Ошибка скачивания шаблона', 'Закрыть', { duration: 5000 });
       }
@@ -262,7 +262,7 @@ export class DocumentTemplatesComponent {
             this.loadTemplates();
             this.snackBar.open('Шаблон удален', 'Закрыть', { duration: 3000 });
           },
-          error: (error: any) => {
+          error: (error: unknown) => {
             console.error('Ошибка удаления шаблона:', error);
             this.snackBar.open('Ошибка удаления шаблона', 'Закрыть', { duration: 5000 });
           }

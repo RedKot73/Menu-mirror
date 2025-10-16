@@ -6,9 +6,11 @@ import { MatChipsModule } from '@angular/material/chips';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
 
-import { UnitDialogComponent } from '../dialogs/UnitDialog';
-import { ConfirmDialogComponent } from "../dialogs/ConfirmDialog.component";
-import { UnitService, UnitDto, UnitCreateDto, UnitTreeItemDto } from "../../ServerService/unit.service";
+import {
+    UnitService,
+    UnitDto,
+    UnitTreeItemDto
+} from "../../ServerService/unit.service";
 import { UnitTreeComponent } from './UnitTree.component';
 import { UnitContentComponent } from './UnitContent.component';
 
@@ -187,7 +189,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
     }
 
     private onMouseMove(event: MouseEvent) {
-        if (!this.isDragging() || this.containerWidth <= 0) return;
+        if (!this.isDragging() || this.containerWidth <= 0) {return;}
 
         const deltaX = event.clientX - this.startX;
         const deltaPercent = (deltaX / this.containerWidth) * 100; 

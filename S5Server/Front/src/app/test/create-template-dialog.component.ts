@@ -205,7 +205,7 @@ export class CreateTemplateDialogComponent {
       next: (categories: LookupDto[]) => {
         this.categoryOptions = categories;
       },
-      error: (error: any) => {
+      error: (error: unknown) => {
         console.error('Error loading template categories:', error);
         this.categoryOptions = [];
       }
@@ -271,7 +271,7 @@ export class CreateTemplateDialogComponent {
         Object.keys(this.templateForm.controls).forEach(key => {
           const control = this.templateForm.get(key);
           if (control && !control.valid) {
-            console.log(`Field ${key} errors:`, control.errors);
+            console.error(`Field ${key} errors:`, control.errors);
           }
         });
       }

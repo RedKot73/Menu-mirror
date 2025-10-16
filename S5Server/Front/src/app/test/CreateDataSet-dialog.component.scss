@@ -1,0 +1,97 @@
+.dialog-header {
+  padding: 20px 20px 0 20px;
+}
+
+.dialog-header h2 {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.dialog-subtitle {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.edit-mode-indicator {
+  color: #1976d2;
+  font-weight: 500;
+}
+
+.create-section {
+  padding: 20px;
+  max-width: 600px;
+}
+
+.create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.name-field {
+  flex: 1;
+}
+
+.create-button {
+  height: 56px;
+  min-width: 120px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.json-textarea {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+
+.json-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.dialog-actions {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.publish-section {
+  margin: 16px 0;
+}
+
+.data-set-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.published-badge, .draft-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.published-badge {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.draft-badge {
+  background-color: #fff3e0;
+  color: #f57c00;
+}

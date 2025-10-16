@@ -232,7 +232,7 @@ export class TemplatePreviewDialogComponent implements OnInit {
         this.generateSampleDataFromTemplate(content);
         this.updatePreview(); // Автоматически обновляем предпросмотр
       },
-      error: (error: any) => {
+      error: (error: unknown) => {
         console.error('Ошибка загрузки содержимого шаблона:', error);
         this.previewError.set('Не удалось загрузить содержимое шаблона');
       }
@@ -283,7 +283,7 @@ export class TemplatePreviewDialogComponent implements OnInit {
 
   formatJson(): void {
     const jsonValue = this.dataForm.get('dataJson')?.value;
-    if (!jsonValue) return;
+    if (!jsonValue) {return;}
 
     try {
       const parsed = JSON.parse(jsonValue);

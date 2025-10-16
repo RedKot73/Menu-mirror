@@ -187,10 +187,10 @@ export class HandlebarsTemplateService {
   private registerHelpers(): void {
     // Помощник для форматирования дат
     Handlebars.registerHelper('formatDate', function(date: any, format: string) {
-      if (!date) return '';
+      if (!date) {return '';}
       
       const d = new Date(date);
-      if (isNaN(d.getTime())) return date;
+      if (isNaN(d.getTime())) {return date;}
       
       switch (format) {
         case 'short':
@@ -211,7 +211,7 @@ export class HandlebarsTemplateService {
 
     // Помощник для форматирования чисел
     Handlebars.registerHelper('formatNumber', function(number: any, decimals?: number) {
-      if (typeof number !== 'number') return number;
+      if (typeof number !== 'number') {return number;}
       return number.toLocaleString('ru-RU', { 
         minimumFractionDigits: decimals || 0,
         maximumFractionDigits: decimals || 2

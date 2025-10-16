@@ -168,7 +168,7 @@ export class UnitDialogComponent implements OnInit {
         private ref: MatDialogRef<UnitDialogComponent>
     ) { 
         // Инициализируем значения по умолчанию
-        if (!data.orderVal) data.orderVal = 1;
+        if (!data.orderVal) {data.orderVal = 1;}
         
         // Настраиваем автокомплит для родительского подразделения
         this.filteredParentUnits = this.parentSearchControl.valueChanges.pipe(
