@@ -57,32 +57,28 @@ export type DocumentTemplate = TemplateDto;
     styleUrl: './DocTemplate.component.scss',
     template: `
         <div class="doc-templates-header">
-            <h2>Шаблоны документов</h2>
+            <h3>Шаблони документів</h3>
             <div class="header-actions">
-                <button mat-icon-button (click)="reload()" matTooltip="Обновить список">
+                <button
+                    mat-icon-button
+                    (click)="reload()"
+                    matTooltip="Оновити перелік">
                     <mat-icon>refresh</mat-icon>
                 </button>
-                <button mat-raised-button color="primary" (click)="add()" matTooltip="Создать новый шаблон">
+                <button
+                    mat-raised-button
+                    color="primary"
+                    (click)="add()"
+                    matTooltip="Створити шаблон">
                     <mat-icon>add</mat-icon>
                     Створити шаблон
                 </button>
             </div>
         </div>
 
-        <div class="filters-section">
-            <mat-form-field appearance="outline">
-                <mat-label>Поиск по названию</mat-label>
-                <input matInput 
-                       [(ngModel)]="searchText" 
-                       (ngModelChange)="onSearchChange()"
-                       placeholder="Введите название шаблона">
-                <mat-icon matSuffix>search</mat-icon>
-            </mat-form-field>
-        </div>
-
         @if (isLoading()) {
             <div class="loading-indicator">Загрузка шаблонов...</div>
-        } @else if (filteredItems().length === 0) {
+        } @else if (items().length === 0) {
             <div class="no-data">Нет доступных шаблонов</div>
         } @else {
             <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" style="width:100%; margin-top: 1em;">
@@ -213,37 +209,16 @@ export class DocTemplateComponent implements AfterViewInit {
     
     items = signal<DocumentTemplate[]>([]);
     isLoading = signal(false);
-    searchText = '';
     
     dataSource = new MatTableDataSource<DocumentTemplate>([]);
     displayedColumns = ['menu', 'name', 'format', 'status', 'category', 'created', 'updated'];
 
     @ViewChild(MatSort) sort!: MatSort;
 
-    // Фильтрованные элементы
-    filteredItems = signal<DocumentTemplate[]>([]);
-
-    constructor() {
+        constructor() {
         // Обновляем dataSource при изменении отфильтрованных данных
         effect(() => {
-            this.dataSource.data = this.filteredItems();
-        });
-        
-        // Фильтруем данные при изменении поискового запроса или основных данных
-        effect(() => {
-            const allItems = this.items();
-            const search = this.searchText.toLowerCase().trim();
-            
-            if (!search) {
-                this.filteredItems.set(allItems);
-            } else {
-                const filtered = allItems.filter(item => 
-                    item.name.toLowerCase().includes(search) ||
-                    (item.description && item.description.toLowerCase().includes(search)) ||
-                    (item.templateCategoryName && item.templateCategoryName.toLowerCase().includes(search))
-                );
-                this.filteredItems.set(filtered);
-            }
+            this.dataSource.data = this.items();
         });
     }
 
@@ -266,10 +241,6 @@ export class DocTemplateComponent implements AfterViewInit {
                 this.isLoading.set(false);
             }
         });
-    }
-
-    onSearchChange() {
-        // Фильтрация срабатывает автоматически через effect
     }
 
     /**

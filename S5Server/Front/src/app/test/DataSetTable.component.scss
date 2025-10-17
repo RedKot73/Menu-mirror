@@ -1,3 +1,17 @@
+.panel-header {
+  padding: 16px;
+  background-color: #e3f2fd;
+  border-bottom: 1px solid #ddd;
+  flex-shrink: 0;
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1976d2;
+}
+
 .dataset-container {
   padding: 16px;
   height: 100%;
@@ -19,6 +33,7 @@
 
 .header-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 
@@ -74,7 +89,7 @@
   width: 100%;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .datasets-table th {

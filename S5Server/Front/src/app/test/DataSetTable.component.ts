@@ -18,9 +18,11 @@ import { TemplateDataSetService } from '../DocTemplates1/ServerServices/template
 import { TemplateDataSetListItem } from '../DocTemplates1/Models/template-dataset.models';
 import { TemplateDto } from '../DocTemplates1/Models/document-template.models';
 import { CreateDataSetDialogComponent } from './CreateDataSet-dialog.component';
+import { ConfirmDialogComponent } from "../dialogs/ConfirmDialog.component";
+import { DocTemplateUtils } from '../DocTemplates1/Models/shared.models';
 
 @Component({
-  selector: 'template-dataset-table',
+  selector: 'app-template-dataset-table',
   standalone: true,
   styleUrl: './DataSetTable.component.scss',
   imports: [
@@ -39,21 +41,26 @@ import { CreateDataSetDialogComponent } from './CreateDataSet-dialog.component';
     MatDividerModule
   ],
   template: `
-    <div class="dataset-container">
       <!-- Header -->
-      <div class="dataset-header">
-        <h3>Наборы данных</h3>
+      <div class="panel-header">
+        <h3>Набори даних</h3>
         @if (selectedTemplate()) {
-          <div class="header-actions">
-            <button 
-              mat-raised-button 
-              color="primary" 
-              (click)="createDataSet()"
-              [disabled]="isLoading()">
-              <mat-icon>add</mat-icon>
-              Создать набор
-            </button>
-          </div>
+            <div class="header-actions">
+                <button
+                  mat-icon-button
+                  (click)="refreshDataSets()"
+                  matTooltip="Оновити перелік">
+                    <mat-icon>refresh</mat-icon>
+                </button>
+                <button
+                  mat-raised-button
+                  color="primary"
+                  (click)="createDataSet()"
+                  matTooltip="Створити набір">
+                    <mat-icon>add</mat-icon>
+                    Створити набір
+                </button>
+            </div>
         }
       </div>
 
@@ -66,26 +73,11 @@ import { CreateDataSetDialogComponent } from './CreateDataSet-dialog.component';
           </mat-chip-set>
         </div>
 
-        <!-- Search -->
-        @if (dataSets().length > 0) {
-          <div class="search-container">
-            <mat-form-field appearance="outline" class="search-field">
-              <mat-label>Поиск наборов данных</mat-label>
-              <input
-                matInput
-                [(ngModel)]="searchText"
-                (input)="applyFilter()"
-                placeholder="Введите название набора данных">
-              <mat-icon matSuffix>search</mat-icon>
-            </mat-form-field>
-          </div>
-        }
-
         <!-- Loading -->
         @if (isLoading()) {
           <div class="loading-container">
             <mat-spinner diameter="40"></mat-spinner>
-            <p>Загрузка наборов данных...</p>
+            <p>Завантаження наборів даних...</p>
           </div>
         } @else {
           <!-- Data Table -->
@@ -94,7 +86,7 @@ import { CreateDataSetDialogComponent } from './CreateDataSet-dialog.component';
               
               <!-- Name Column -->
               <ng-container matColumnDef="name">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Название</th>
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Назва</th>
                 <td mat-cell *matCellDef="let dataSet">
                   <span class="dataset-name">{{ dataSet.name }}</span>
                 </td>
@@ -112,7 +104,7 @@ import { CreateDataSetDialogComponent } from './CreateDataSet-dialog.component';
 
               <!-- Created Date Column -->
               <ng-container matColumnDef="createdAtUtc">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Создан</th>
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Створено</th>
                 <td mat-cell *matCellDef="let dataSet">
                   {{ formatDate(dataSet.createdAtUtc) }}
                 </td>
@@ -120,7 +112,7 @@ import { CreateDataSetDialogComponent } from './CreateDataSet-dialog.component';
 
               <!-- Updated Date Column -->
               <ng-container matColumnDef="updatedAtUtc">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Изменен</th>
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Оновлено</th>
                 <td mat-cell *matCellDef="let dataSet">
                   {{ formatDate(dataSet.updatedAtUtc) }}
                 </td>
@@ -128,7 +120,7 @@ import { CreateDataSetDialogComponent } from './CreateDataSet-dialog.component';
 
               <!-- Actions Column -->
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>Действия</th>
+                <th mat-header-cell *matHeaderCellDef>Дії</th>
                 <td mat-cell *matCellDef="let dataSet">
                   <button 
                     mat-icon-button 
@@ -150,10 +142,7 @@ import { CreateDataSetDialogComponent } from './CreateDataSet-dialog.component';
             @if (dataSets().length === 0) {
               <div class="no-data">
                 <mat-icon>folder_open</mat-icon>
-                <p>Наборы данных не найдены</p>
-                <button mat-raised-button color="primary" (click)="createDataSet()">
-                  Создать первый набор данных
-                </button>
+                <p>Набори даних не знайдено</p>
               </div>
             }
           </div>
@@ -188,7 +177,6 @@ import { CreateDataSetDialogComponent } from './CreateDataSet-dialog.component';
           </button>
         </ng-template>
       </mat-menu>
-    </div>
   `
 })
 export class DataSetTableComponent implements AfterViewInit {
@@ -208,7 +196,6 @@ export class DataSetTableComponent implements AfterViewInit {
   // Table configuration
   displayedColumns: string[] = ['name', 'isPublished', 'createdAtUtc', 'updatedAtUtc', 'actions'];
   dataSource = new MatTableDataSource<TemplateDataSetListItem>([]);
-  searchText = '';
 
   constructor() {
     // Отслеживаем изменения выбранного шаблона
@@ -257,13 +244,6 @@ export class DataSetTableComponent implements AfterViewInit {
   }
 
   /**
-   * Применяет фильтр поиска
-   */
-  applyFilter(): void {
-    this.dataSource.filter = this.searchText.trim().toLowerCase();
-  }
-
-  /**
    * Выбирает набор данных
    */
   selectDataSet(dataSet: TemplateDataSetListItem): void {
@@ -293,14 +273,6 @@ export class DataSetTableComponent implements AfterViewInit {
         this.refreshDataSets();
       }
     });
-  }
-
-  /**
-   * Просматривает набор данных
-   */
-  viewDataSet(dataSet: TemplateDataSetListItem): void {
-    console.log('View dataset:', dataSet);
-    // TODO: Открыть диалог просмотра набора данных
   }
 
   /**
@@ -345,7 +317,7 @@ export class DataSetTableComponent implements AfterViewInit {
    * Клонирует набор данных
    */
   cloneDataSet(dataSet: TemplateDataSetListItem): void {
-    const newName = `${dataSet.name} (копия)`;
+    const newName = `${dataSet.name} (копія)`;
     this.isLoading.set(true);
     
     this.templateDataSetService.cloneDataSet(dataSet.id, newName).subscribe({
@@ -364,29 +336,52 @@ export class DataSetTableComponent implements AfterViewInit {
    * Удаляет набор данных
    */
   deleteDataSet(dataSet: TemplateDataSetListItem): void {
-    const confirmDelete = confirm(`Вы уверены, что хотите удалить набор данных "${dataSet.name}"?`);
-    if (!confirmDelete) {return;}
+        const ref = this.dialog.open(ConfirmDialogComponent, {
+            width: '400px',
+            maxWidth: '95vw',
+            autoFocus: false,
+            data: {
+                title: 'Видалення даних',
+                message: `Ви впевнені, що хочете видалити дані "${dataSet.name}"?`,
+                confirmText: 'Видалити',
+                cancelText: 'Відмінити',
+                color: 'warn',
+                icon: 'warning'
+            }
+        });
+        
+        ref.afterClosed().subscribe(confirmed => {
+            if (confirmed) {
+              this.isLoading.set(true);
+              this.templateDataSetService.deleteDataSet(dataSet.id).subscribe({
+                next: () => {
+                  console.log('Dataset deleted successfully');
+                  if (this.selectedDataSet()?.id === dataSet.id) {
+                    this.selectedDataSet.set(null);
+                  }
+                  this.refreshDataSets();
+                },
+                error: (error) => {
+                  console.error('Error deleting dataset:', error);
+                  this.isLoading.set(false);
+                }
+              });
+            }
+        });
+  }
 
-    this.isLoading.set(true);
-    this.templateDataSetService.deleteDataSet(dataSet.id).subscribe({
-      next: () => {
-        console.log('Dataset deleted successfully');
-        if (this.selectedDataSet()?.id === dataSet.id) {
-          this.selectedDataSet.set(null);
-        }
-        this.refreshDataSets();
-      },
-      error: (error) => {
-        console.error('Error deleting dataset:', error);
-        this.isLoading.set(false);
-      }
-    });
+  /**
+   * Просматривает набор данных
+   */
+  viewDataSet(dataSet: TemplateDataSetListItem): void {
+    console.log('View dataset:', dataSet);
+    // TODO: Открыть диалог просмотра набора данных
   }
 
   /**
    * Обновляет список наборов данных
    */
-  private refreshDataSets(): void {
+  refreshDataSets(): void {
     const template = this.selectedTemplate();
     if (template) {
       this.loadDataSets(template.id);
@@ -410,12 +405,11 @@ export class DataSetTableComponent implements AfterViewInit {
         return format?.toUpperCase() || '';
     }
   }
-
   /**
-   * Получает читаемое название статуса публикации
-   */
+     * Получает читаемое название статуса публикации
+     */
   getStatusLabel(isPublished: boolean): string {
-    return isPublished ? 'Опубликован' : 'Черновик';
+    return DocTemplateUtils.getStatusLabel(isPublished);
   }
 
   /**

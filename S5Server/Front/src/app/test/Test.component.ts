@@ -47,25 +47,13 @@ import { TemplateDto } from '../DocTemplates1/Models/document-template.models';
             </div>
 
             <div class="panel content-panel" [style.width.%]="contentPanelWidth()">
-                <div class="panel-header">
-                    <!-- Toolbar с заголовком -->
-                </div>
-                <div class="panel-content">
                     <!-- DataSetTable Component -->
-                    <template-dataset-table 
+                    <app-template-dataset-table
                         [selectedTemplate]="selectedTemplate()">
-                    </template-dataset-table>
-                </div>
+                    </app-template-dataset-table>
             </div>
         </div>
-  `,
-  styles: [`
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-  `]
+  `
 })
 export class TestComponent implements AfterViewInit, OnDestroy {
   breakpointObserver = inject(BreakpointObserver);
