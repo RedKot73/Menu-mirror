@@ -4,12 +4,12 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 import {
-  TemplateDataSetDto,
-  TemplateDataSetCreateDto,
-  TemplateDataSetListItem,
-  TemplateDataSetUpdateDto,
-  TemplateDataSetUtils
-} from '../Models/template-dataset.models';
+    TemplateDataSetDto,
+    TemplateDataSetCreateDto,
+    TemplateDataSetListItem,
+    TemplateDataSetUpdateDto,
+    TemplateDataSetUtils
+} from '../models/template-dataset.models';//'../Models/template-dataset.models';
 //import { DocTemplateUtils } from '../Models/shared.models';
 
 @Injectable({
@@ -25,8 +25,8 @@ export class TemplateDataSetService {
    * Получить список наборов данных для конкретного шаблона
    * GET /api/templ_data/{id}/data-sets
    */
-  getDataSets(templateId: string): Observable<TemplateDataSetListItem[]> {
-    return this.http.get<TemplateDataSetListItem[]>(`${this.baseUrl}/${templateId}/data-sets`)
+  getDataSets(templateId: string): Observable<TemplateDataSetDto[]> {
+    return this.http.get<TemplateDataSetDto[]>(`${this.baseUrl}/${templateId}/data-sets`)
       .pipe(catchError(this.handleError));
   }
 
@@ -34,7 +34,7 @@ export class TemplateDataSetService {
    * Создать новый набор данных
    * POST /api/templ_data/{id}/data-sets
    */
-  createDataSet(templateId: string, dto: TemplateDataSetCreateDto): Observable<TemplateDataSetListItem> {
+  createDataSet(templateId: string, dto: TemplateDataSetCreateDto): Observable<TemplateDataSetDto> {
     // Валидация перед отправкой
     const validation = TemplateDataSetUtils.validate(dto);
     if (!validation.valid) {
@@ -44,7 +44,7 @@ export class TemplateDataSetService {
     // Подготовка данных для отправки
     const serverDto = TemplateDataSetUtils.toServerDto(dto);
 
-    return this.http.post<TemplateDataSetListItem>(`${this.baseUrl}/${templateId}/data-sets`, serverDto)
+    return this.http.post<TemplateDataSetDto>(`${this.baseUrl}/${templateId}/data-sets`, serverDto)
       .pipe(catchError(this.handleError));
   }
 

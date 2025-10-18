@@ -3,15 +3,15 @@ import { Component } from '@angular/core';
 
 // Simple standalone stub components for each route
 @Component({
-    selector: 'page-orders', standalone: true,
+    selector: 'app-page-orders', standalone: true,
     template: '<h2>Розпорядження</h2><p>Сторінка "Розпорядження" (заглушка)</p>'
 }) class OrdersPage { }
 @Component({
-    selector: 'page-reports', standalone: true,
+    selector: 'app-page-reports', standalone: true,
     template: '<h2>Донесення</h2><p>Сторінка "Донесення" (заглушка)</p>'
 }) class ReportsPage { }
 @Component({
-    selector: 'page-users', standalone: true,
+    selector: 'app-page-users', standalone: true,
     template: '<h2>Користувачі</h2><p>Сторінка "Користувачі" (заглушка)</p>'
 }) class UsersPage { }
 
@@ -62,15 +62,17 @@ export const routes: Routes = [
         .then(m => m.UnitsComponent) 
     },
     {
-        path: 'templates', title: 'Шаблоны документов',
+        path: 'templates', title: 'Шаблони документів',
         loadComponent: () => import('./DocumentTemplates/document-templates.component')
         .then(m => m.DocumentTemplatesComponent)
     },
+    /*
     {
-        path: 'doc-templates', title: 'Управление шаблонами',
+        path: 'doc-templates', title: 'Робота з шаблонами',
         loadComponent: () => import('./test/DocTemplate.component')
         .then(m => m.DocTemplateComponent)
     },
+    */
     { path: 'orders', title: 'Розпорядження', component: OrdersPage },
     { path: 'reports', title: 'Донесення', component: ReportsPage },
     { path: 'users', title: 'Користувачі', component: UsersPage },

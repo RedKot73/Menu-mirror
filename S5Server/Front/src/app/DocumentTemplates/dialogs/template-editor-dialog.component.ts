@@ -11,13 +11,16 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 
-import { DocumentTemplateService } from '../../ServerService/document-template.service';
+import { DocumentTemplateService } from '../services/document-template.service';
 import { HandlebarsTemplateService } from '../services/handlebars-template.service';
-import { TemplateListItem, CreateTemplateDto, SUPPORTED_FORMATS } from '../../models/document-template.models';
+import { TemplateDto, CreateTemplateDto } from '../models/document-template.models';
+import { TemplateDataSetListItem, TemplateDataSetCreateDto, TemplateDataSetDto } from '../models/template-dataset.models';
+import { TemplateDataSetService } from '../services/template-dataset.service';
+import { DocTemplateUtils, SUPPORTED_FORMATS } from '../models/shared.models';
 
 export interface TemplateEditorDialogData {
   mode: 'create' | 'edit';
-  template?: TemplateListItem;
+  template?: TemplateDto;
 }
 
 @Component({
@@ -304,16 +307,17 @@ export interface TemplateEditorDialogData {
 export class TemplateEditorDialogComponent implements OnInit {
   private dialogRef = inject(MatDialogRef<TemplateEditorDialogComponent>);
   private data = inject<TemplateEditorDialogData>(MAT_DIALOG_DATA);
+  private fb = inject(FormBuilder);
+  templateForm!: FormGroup;
+
   private templateService = inject(DocumentTemplateService);
   private handlebarsService = inject(HandlebarsTemplateService);
   private snackBar = inject(MatSnackBar);
-  private fb = inject(FormBuilder);
 
-  templateForm!: FormGroup;
   loading = signal(false);
   selectedFile = signal<File | null>(null);
   fileError = signal<string | null>(null);
-  
+
   // Новые свойства для Handlebars поддержки
   templateContent = signal<string>('');
   sampleData = signal<string>('{}');
@@ -325,30 +329,30 @@ export class TemplateEditorDialogComponent implements OnInit {
 
   // Computed properties
   isCreateMode = computed(() => this.data.mode === 'create');
-  
+
   // Проверяем, поддерживает ли выбранный формат клиентский рендеринг
   supportsClientRendering = computed(() => {
     const format = this.templateForm?.get('format')?.value;
     return format && this.templateService.supportsClientRendering(format);
   });
-  
+
   // Можно ли показывать live preview
   canShowLivePreview = computed(() => {
     return this.supportsClientRendering() && this.templateContent().length > 0;
   });
-  
+
   descriptionLength = computed(() => {
     const description = this.templateForm?.get('description')?.value || '';
     return description.length;
   });
 
   canSave = computed(() => {
-    if (!this.templateForm) {return false;}
-    
+    if (!this.templateForm) { return false; }
+
     const isFormValid = this.templateForm.valid;
     const hasFile = this.isCreateMode() ? this.selectedFile() !== null : true;
     const noFileError = this.fileError() === null;
-    
+
     return isFormValid && hasFile && noFileError;
   });
 
@@ -358,7 +362,7 @@ export class TemplateEditorDialogComponent implements OnInit {
 
   private initializeForm(): void {
     const template = this.data.template;
-    
+
     this.templateForm = this.fb.group({
       name: [template?.name || '', [Validators.required, Validators.maxLength(255)]],
       description: [template?.description || '', [Validators.maxLength(1000)]],
@@ -366,48 +370,25 @@ export class TemplateEditorDialogComponent implements OnInit {
     });
   }
 
-  getFormatDisplayName(format: string): string {
-    const formatNames: Record<string, string> = {
-      'html': 'HTML (веб-страница)',
-      'txt': 'TXT (текстовый файл)', 
-      'docx': 'DOCX (Microsoft Word)'
-    };
-    return formatNames[format] || format.toUpperCase();
-  }
-
-  getAcceptedFileTypes(): string {
-    const selectedFormat = this.templateForm?.get('format')?.value;
-    const acceptTypes: Record<string, string> = {
-      'html': '.html,.htm',
-      'txt': '.txt',
-      'docx': '.docx'
-    };
-    return acceptTypes[selectedFormat] || '*';
-  }
-
-  getFileSize(bytes: number): string {
-    if (bytes === 0) {return '0 Bytes';}
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  }
-
   onSave(): void {
-    if (!this.canSave()) {return;}
+    if (!this.canSave()) { return; }
 
     this.loading.set(true);
     const formValue = this.templateForm.value;
-    
-    const dto: CreateTemplateDto = {
-      name: formValue.name.trim(),
-      description: formValue.description?.trim() || undefined,
-      format: formValue.format
+
+    const createDto: CreateTemplateDto = {
+      name: formValue.name,
+      description: formValue.description || undefined,
+      format: DocTemplateUtils.formatToString(formValue.format),
+      templateCategoryId: formValue.templateCategoryId,
+      isPublished: formValue.isPublished,
+      //file: this.selectedFile()!
     };
 
     if (this.isCreateMode()) {
-      this.templateService.createTemplate(dto, this.selectedFile()!).subscribe({
-        next: (result: TemplateListItem) => {
+      createDto.file = this.selectedFile()!;
+      this.templateService.create(createDto).subscribe({
+        next: (result: TemplateDto) => {
           this.loading.set(false);
           this.snackBar.open('Шаблон создан успешно', 'Закрыть', { duration: 3000 });
           this.dialogRef.close(result);
@@ -419,7 +400,8 @@ export class TemplateEditorDialogComponent implements OnInit {
         }
       });
     } else {
-      this.templateService.updateTemplate(this.data.template!.id, dto, this.selectedFile() || undefined).subscribe({
+      createDto.file = this.selectedFile() || undefined;
+      this.templateService.update(this.data.template!.id, createDto).subscribe({
         next: () => {
           this.loading.set(false);
           this.snackBar.open('Шаблон обновлен успешно', 'Закрыть', { duration: 3000 });
@@ -446,12 +428,12 @@ export class TemplateEditorDialogComponent implements OnInit {
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    
+
     this.fileError.set(null);
     this.templateContent.set('');
     this.previewContent.set('');
     this.previewError.set(null);
-    
+
     if (!file) {
       this.selectedFile.set(null);
       return;
@@ -536,8 +518,8 @@ export class TemplateEditorDialogComponent implements OnInit {
     try {
       const data = JSON.parse(this.sampleData());
       const result = this.handlebarsService.renderTemplate(
-        this.templateContent(), 
-        data, 
+        this.templateContent(),
+        data,
         format as 'html' | 'txt'
       );
 
@@ -603,4 +585,32 @@ export class TemplateEditorDialogComponent implements OnInit {
       this.previewError.set(errorMessage);
     }
   }
+
+  getFormatDisplayName(format: string): string {
+    const formatNames: Record<string, string> = {
+      'html': 'HTML (веб-страница)',
+      'txt': 'TXT (текстовый файл)',
+      'docx': 'DOCX (Microsoft Word)'
+    };
+    return formatNames[format] || format.toUpperCase();
+  }
+
+  getAcceptedFileTypes(): string {
+    const selectedFormat = this.templateForm?.get('format')?.value;
+    const acceptTypes: Record<string, string> = {
+      'html': '.html,.htm',
+      'txt': '.txt',
+      'docx': '.docx'
+    };
+    return acceptTypes[selectedFormat] || '*';
+  }
+
+  getFileSize(bytes: number): string {
+    if (bytes === 0) { return '0 Bytes'; }
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
 }

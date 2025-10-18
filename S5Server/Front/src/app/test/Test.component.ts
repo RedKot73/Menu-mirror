@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
 
 import { DocTemplateComponent } from './DocTemplate.component';
 import { DataSetTableComponent } from './DataSetTable.component';
-import { TemplateDto } from '../DocTemplates1/Models/document-template.models';
+import { TemplateDto } from '../DocumentTemplates/models/document-template.models';
 
 @Component({
   selector: 'app-test',

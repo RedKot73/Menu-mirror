@@ -12,8 +12,9 @@ import { MatIconModule } from '@angular/material/icon';
 
 import {
   TemplateDataSetCreateDto, 
-  TemplateDataSetUpdateDto } from '../DocTemplates1/Models/template-dataset.models';
-import { TemplateDataSetService } from '../DocTemplates1/ServerServices/template-dataset.service';
+  TemplateDataSetUpdateDto
+} from '../DocumentTemplates/models/template-dataset.models';
+import { TemplateDataSetService } from '../DocumentTemplates/services/template-dataset.service';
 
 @Component({
     selector: 'app-data-sets-dialog',

@@ -65,14 +65,7 @@ builder.Services.AddIdentity<TVezhaUser<string>, IdentityRole>(options =>
     .AddUserManager<UserManager<TVezhaUser<string>>>()
     .AddRoles<IdentityRole>()
     .AddDefaultTokenProviders();
-/*
-builder.Services.AddControllers()
-    .AddJsonOptions(o =>
-    {
-        o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-        //o.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-    });
-*/
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -99,7 +92,11 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddCors(p =>
 {
     p.AddPolicy("AngularDev",
-        b => b.WithOrigins("http://localhost:4200", "https://localhost:4200")
+        b => b.WithOrigins(
+                "http://localhost:4200", 
+                "https://localhost:4200",
+                "http://localhost:5000",
+                "http://localhost:5001")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials());
@@ -109,11 +106,18 @@ builder.Services.AddScoped<TemplateRenderer>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
+
+// Add support for static files (Angular app)
+app.UseStaticFiles();
+
 app.UseCors("AngularDev");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Fallback to index.html for Angular routing
+app.MapFallbackToFile("index.html");
 
 if (app.Environment.IsDevelopment())
 {

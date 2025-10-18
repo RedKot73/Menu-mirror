@@ -14,12 +14,16 @@ import { MatDialog } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { TemplateDataSetService } from '../DocTemplates1/ServerServices/template-dataset.service';
-import { TemplateDataSetListItem } from '../DocTemplates1/Models/template-dataset.models';
-import { TemplateDto } from '../DocTemplates1/Models/document-template.models';
+import { TemplateDataSetService } from '../DocumentTemplates/services/template-dataset.service';
+import {
+  TemplateDataSetListItem
+} from '../DocumentTemplates/models/template-dataset.models';
+import { TemplateDto } from '../DocumentTemplates/models/document-template.models';
 import { CreateDataSetDialogComponent } from './CreateDataSet-dialog.component';
 import { ConfirmDialogComponent } from "../dialogs/ConfirmDialog.component";
-import { DocTemplateUtils } from '../DocTemplates1/Models/shared.models';
+import { TemplatePreviewDialogComponent } from '../DocumentTemplates/dialogs/template-preview-dialog.component';
+import { DocTemplateUtils } from '../DocumentTemplates/models/shared.models';
+import { MatSnackBar } from "@angular/material/snack-bar";
 
 @Component({
   selector: 'app-template-dataset-table',
@@ -170,6 +174,10 @@ import { DocTemplateUtils } from '../DocTemplates1/Models/shared.models';
             <mat-icon>content_copy</mat-icon>
             <span>Клонировать</span>
           </button>
+          <button mat-menu-item (click)="previewTemplate(dataSet.template)">
+            <mat-icon>preview</mat-icon>
+            Предварительный просмотр!!!
+          </button>
           <mat-divider></mat-divider>
           <button mat-menu-item (click)="deleteDataSet(dataSet)" class="delete-action">
             <mat-icon>delete</mat-icon>
@@ -180,10 +188,11 @@ import { DocTemplateUtils } from '../DocTemplates1/Models/shared.models';
   `
 })
 export class DataSetTableComponent implements AfterViewInit {
+  @ViewChild(MatSort, { static: false }) sort!: MatSort;
+
   private templateDataSetService = inject(TemplateDataSetService);
   private dialog = inject(MatDialog);
-
-  @ViewChild(MatSort, { static: false }) sort!: MatSort;
+  private snackBar = inject(MatSnackBar);
 
   // Input от родительского компонента
   selectedTemplate = input<TemplateDto | null>(null);
@@ -238,6 +247,7 @@ export class DataSetTableComponent implements AfterViewInit {
       error: (error) => {
         console.error('Error loading datasets:', error);
         this.dataSets.set([]);
+        this.snackBar.open('Помилка завантаження наборів даних', 'Закрити', { duration: 5000 });
         this.isLoading.set(false);
       }
     });
@@ -309,6 +319,7 @@ export class DataSetTableComponent implements AfterViewInit {
       error: (error) => {
         this.isLoading.set(false);
         console.error('Error loading dataset for edit:', error);
+        this.snackBar.open('Помилка завантаження наборів даних', 'Закрити', { duration: 5000 });
       }
     });
   }
@@ -327,6 +338,7 @@ export class DataSetTableComponent implements AfterViewInit {
       },
       error: (error) => {
         console.error('Error cloning dataset:', error);
+        this.snackBar.open('Помилка клонування набору даних', 'Закрити', { duration: 5000 });
         this.isLoading.set(false);
       }
     });
@@ -363,6 +375,7 @@ export class DataSetTableComponent implements AfterViewInit {
                 },
                 error: (error) => {
                   console.error('Error deleting dataset:', error);
+                  this.snackBar.open('Помилка видалення набору даних', 'Закрити', { duration: 5000 });
                   this.isLoading.set(false);
                 }
               });
@@ -376,7 +389,9 @@ export class DataSetTableComponent implements AfterViewInit {
   viewDataSet(dataSet: TemplateDataSetListItem): void {
     console.log('View dataset:', dataSet);
     // TODO: Открыть диалог просмотра набора данных
-  }
+    console.error('TODO: Открыть диалог просмотра набора данных');
+    this.snackBar.open('TODO: Открыть диалог просмотра набора данных', 'Закрыть', { duration: 5000 });
+}
 
   /**
    * Обновляет список наборов данных
@@ -388,23 +403,23 @@ export class DataSetTableComponent implements AfterViewInit {
     }
   }
 
+  previewTemplate(template: TemplateDto): void {
+    this.snackBar.open('TODO: Открыть диалог предварительного просмотра шаблона', 'Закрыть', { duration: 5000 });
+    this.dialog.open(TemplatePreviewDialogComponent, {
+      width: '90vw',
+      maxWidth: '1200px',
+      height: '90vh',
+      data: { template }
+    });
+  }
+
   /**
    * Получает читаемое название формата
    */
   getFormatLabel(format: string): string {
-    switch (format?.toLowerCase()) {
-      case 'html':
-        return 'HTML';
-      case 'txt':
-        return 'Текст';
-      case 'docx':
-        return 'Word';
-      case 'pdf':
-        return 'PDF';
-      default:
-        return format?.toUpperCase() || '';
-    }
+    return DocTemplateUtils.getFormatLabel(format);
   }
+
   /**
      * Получает читаемое название статуса публикации
      */
@@ -416,17 +431,6 @@ export class DataSetTableComponent implements AfterViewInit {
    * Форматирует дату для отображения
    */
   formatDate(dateString: string): string {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('ru-RU', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch {
-      return dateString;
-    }
+    return DocTemplateUtils.formatDate(dateString);
   }
 }

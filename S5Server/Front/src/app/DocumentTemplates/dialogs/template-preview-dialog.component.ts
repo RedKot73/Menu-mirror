@@ -12,12 +12,13 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatMenuModule } from '@angular/material/menu';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
-import { DocumentTemplateService } from '../../ServerService/document-template.service';
+import { DocumentTemplateService } from '../services/document-template.service';
 import { HandlebarsTemplateService } from '../services/handlebars-template.service';
-import { TemplateListItem, EXPORT_FORMATS } from '../../models/document-template.models';
+import { TemplateDto/*, RenderRequest*/ } from '../models/document-template.models';
+import { EXPORT_FORMATS } from '../models/shared.models';
 
 export interface TemplatePreviewDialogData {
-  template: TemplateListItem;
+  template: TemplateDto;
 }
 
 @Component({
@@ -205,8 +206,7 @@ export class TemplatePreviewDialogComponent implements OnInit {
    * Проверяет возможности рендеринга для данного шаблона
    */
   private checkRenderingCapabilities(): void {
-    const format = this.data.template.format;
-    this.supportsClientRendering.set(this.templateService.supportsClientRendering(format));
+    this.supportsClientRendering.set(this.templateService.supportsClientRendering(this.data.template));
   }
 
   /**
@@ -356,8 +356,13 @@ export class TemplatePreviewDialogComponent implements OnInit {
   /**
    * Серверный рендеринг (fallback для DOCX и старых шаблонов)
    */
-  private renderServerSide(data: any): void {
-    this.templateService.previewHtml(this.data.template.id, JSON.stringify(data)).subscribe({
+    private renderServerSide(data: any): void {
+        /*
+        const request: RenderRequest = {
+            dataJson = this.dataForm.get('dataJson')?.value,
+            export = this.data.template.format
+        };
+        this.templateService.previewHtml(this.data.template.id, request, JSON.stringify(data)).subscribe({
       next: (html: string) => {
         this.previewHtml.set(html);
         this.loading.set(false);
@@ -367,10 +372,14 @@ export class TemplatePreviewDialogComponent implements OnInit {
         this.previewError.set(error.error?.message || 'Ошибка генерации предпросмотра');
         this.loading.set(false);
       }
-    });
+        });
+    */
+        console.error('Ошибка серверного рендеринга: Не реализовано');
+        this.previewError.set('Ошибка генерации предпросмотра: Не реализовано');
   }
 
-  exportDocument(format: string): void {
+    exportDocument(format: string): void {
+      /*
     if (this.jsonError()) {
       this.snackBar.open('Исправьте ошибки в JSON данных', 'Закрыть', { duration: 3000 });
       return;
@@ -412,6 +421,9 @@ export class TemplatePreviewDialogComponent implements OnInit {
         this.snackBar.open(error.message || 'Ошибка экспорта документа', 'Закрыть', { duration: 5000 });
       }
     });
+    */
+      console.error('Ошибка экспорта: Не реализовано');
+      this.previewError.set('Ошибка экспорта: Не реализовано');
   }
 
   getExportIcon(format: string): string {

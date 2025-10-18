@@ -15,13 +15,12 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { LookupDto } from '../shared/models/lookup.models';
 import { DictTemplateCategoriesService } from '../../ServerService/dictTemplateCategories.service';
+import { TemplateFormat, DocTemplateUtils } from '../DocumentTemplates/models/shared.models';
 import { 
-  TemplateFormat, 
-  DocumentTemplateUtils, 
   CreateTemplateDto,
   TemplateDto,
   TEMPLATE_FORMAT_OPTIONS 
-} from '../DocTemplates1/Models/document-template.models';
+} from '../DocumentTemplates/models/document-template.models';
 
 export interface CreateTemplateDialogData {
   mode: 'create' | 'edit';
@@ -221,7 +220,7 @@ export class CreateTemplateDialogComponent {
       this.templateForm.patchValue({
         name: template.name,
         description: template.description || '',
-        format: DocumentTemplateUtils.parseFormat(template.format),
+        format: DocTemplateUtils.parseFormat(template.format),
         templateCategoryId: template.templateCategoryId || '',
         isPublished: template.isPublished
       });
@@ -275,7 +274,7 @@ export class CreateTemplateDialogComponent {
       if (selectedFormat && validExtensions[selectedFormat]) {
         const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
         if (!validExtensions[selectedFormat].includes(fileExtension)) {
-          this.fileError = `Для формату ${DocumentTemplateUtils.formatToString(selectedFormat)} очікується файл з розширенням: ${validExtensions[selectedFormat].join(', ')}`;
+          this.fileError = `Для формату ${DocTemplateUtils.formatToString(selectedFormat)} очікується файл з розширенням: ${validExtensions[selectedFormat].join(', ')}`;
           this.selectedFile = null;
           this.selectedFileName = '';
           return;
@@ -292,7 +291,7 @@ export class CreateTemplateDialogComponent {
 
   private validateFileType(file: File, format: TemplateFormat): boolean {
     const fileName = file.name.toLowerCase();
-    const expectedExtension = DocumentTemplateUtils.getFileExtension(format);
+    const expectedExtension = DocTemplateUtils.getFileExtension(format);
     return fileName.endsWith(`.${expectedExtension}`);
   }
 
@@ -327,7 +326,7 @@ export class CreateTemplateDialogComponent {
       const createDto: CreateTemplateDto = {
         name: formValue.name,
         description: formValue.description || undefined,
-        format: DocumentTemplateUtils.formatToString(formValue.format),
+        format: DocTemplateUtils.formatToString(formValue.format),
         templateCategoryId: formValue.templateCategoryId,
         isPublished: formValue.isPublished,
         file: this.selectedFile!
@@ -340,7 +339,7 @@ export class CreateTemplateDialogComponent {
         ...this.data.template!,
         name: formValue.name,
         description: formValue.description || undefined,
-        format: DocumentTemplateUtils.formatToString(formValue.format),
+        format: DocTemplateUtils.formatToString(formValue.format),
         templateCategoryId: formValue.templateCategoryId,
         isPublished: formValue.isPublished
       };

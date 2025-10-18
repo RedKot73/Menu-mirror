@@ -19,21 +19,19 @@ import { MatOptionModule } from '@angular/material/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDividerModule } from '@angular/material/divider';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { DocumentTemplateService } from '../DocTemplates1/ServerServices/document-template.service';
-import { 
-    TemplateDto,
-    TemplateFormat, 
-    DocumentTemplateUtils
-} from '../DocTemplates1/Models/document-template.models';
-import { DocTemplateUtils } from '../DocTemplates1/Models/shared.models';
+import { DocumentTemplateService } from '../DocumentTemplates/services/document-template.service';
+import { DocTemplateUtils } from '../DocumentTemplates/models/shared.models';
+import { TemplateDto } from '../DocumentTemplates/models/document-template.models';
 import {
     CreateTemplateDialogComponent,
     EditTemplateResult
 } from './CreateTemplate-dialog.component';
 import { ConfirmDialogComponent } from "../dialogs/ConfirmDialog.component";
+import { MatSnackBar } from "@angular/material/snack-bar";
 
 export type DocumentTemplate = TemplateDto;
 
@@ -51,6 +49,7 @@ export type DocumentTemplate = TemplateDto;
         MatTooltipModule,
         MatMenuModule,
         MatChipsModule,
+        MatDividerModule,
         CommonModule,
         FormsModule
     ],
@@ -119,6 +118,7 @@ export type DocumentTemplate = TemplateDto;
                                 <mat-icon color="accent">edit</mat-icon>
                                 <span>Редагувати</span>
                             </button>
+                            <mat-divider></mat-divider>
                             <button mat-menu-item (click)="delete(template)" class="delete-action">
                                 <mat-icon color="warn">delete</mat-icon>
                                 <span>Видалити</span>
@@ -200,8 +200,11 @@ export type DocumentTemplate = TemplateDto;
     `
 })
 export class DocTemplateComponent implements AfterViewInit {
+    @ViewChild(MatSort) sort!: MatSort;
+
     documentTemplateService = inject(DocumentTemplateService);
     dialog = inject(MatDialog);
+    private snackBar = inject(MatSnackBar);
     
     // Input/Output для работы с родительским компонентом
     selectedTemplate = input<DocumentTemplate | null>(null);
@@ -212,9 +215,6 @@ export class DocTemplateComponent implements AfterViewInit {
     
     dataSource = new MatTableDataSource<DocumentTemplate>([]);
     displayedColumns = ['menu', 'name', 'format', 'status', 'category', 'created', 'updated'];
-
-    @ViewChild(MatSort) sort!: MatSort;
-
         constructor() {
         // Обновляем dataSource при изменении отфильтрованных данных
         effect(() => {
@@ -238,6 +238,7 @@ export class DocTemplateComponent implements AfterViewInit {
             },
             error: (error) => {
                 console.error('Error loading templates:', error);
+                this.snackBar.open('Ошибка загрузки шаблонов', 'Закрыть', { duration: 5000 });
                 this.isLoading.set(false);
             }
         });
@@ -248,42 +249,6 @@ export class DocTemplateComponent implements AfterViewInit {
      */
     selectTemplate(template: DocumentTemplate): void {
         this.templateSelected.emit(template);
-    }
-
-    /**
-     * Получает читаемое название формата
-     */
-    getFormatLabel(format: string): string {
-        const templateFormat = DocumentTemplateUtils.parseFormat(format);
-        switch (templateFormat) {
-            case TemplateFormat.Html:
-                return 'HTML';
-            case TemplateFormat.Txt:
-                return 'Текст';
-            case TemplateFormat.Docx:
-                return 'Word';
-                /*
-            case TemplateFormat.Pdf:
-                return 'PDF';
-                */
-            default:
-                return format.toUpperCase();
-        }
-    }
-
-    /**
-     * Получает читаемое название статуса публикации
-     */
-    getStatusLabel(isPublished: boolean): string {
-        return DocTemplateUtils.getStatusLabel(isPublished);
-    }
-
-    /**
-     * Проверяет, поддерживается ли предпросмотр для шаблона
-     */
-    supportsPreview(template: DocumentTemplate): boolean {
-        const templateFormat = DocumentTemplateUtils.parseFormat(template.format);
-        return DocumentTemplateUtils.supportsClientRendering(templateFormat);
     }
 
     // CREATE
@@ -304,6 +269,7 @@ export class DocTemplateComponent implements AfterViewInit {
                     },
                     error: (error) => {
                         console.error('Error creating template:', error);
+                        this.snackBar.open('Помилка створення шаблону', 'Закрити', { duration: 5000 });
                     }
                 });
             }
@@ -340,6 +306,7 @@ export class DocTemplateComponent implements AfterViewInit {
                     },
                     error: (error) => {
                         console.error('Error updating template:', error);
+                        this.snackBar.open('Помилка оновлення шаблону', 'Закрити', { duration: 5000 });
                     }
                 });
             }
@@ -370,6 +337,7 @@ export class DocTemplateComponent implements AfterViewInit {
                     },
                     error: (error) => {
                         console.error('Error deleting template:', error);
+                        this.snackBar.open('Помилка видалення шаблону', 'Закрити', { duration: 5000 });
                     }
                 });
             }
@@ -377,7 +345,6 @@ export class DocTemplateComponent implements AfterViewInit {
     }
 
     // TEMPLATE-SPECIFIC ACTIONS
-
     /**
      * Скачивает файл шаблона
      */
@@ -389,6 +356,7 @@ export class DocTemplateComponent implements AfterViewInit {
             },
             error: (error) => {
                 console.error('Error downloading template:', error);
+                this.snackBar.open('Помилка завантаження шаблону', 'Закрити', { duration: 5000 });
             }
         });
     }
@@ -412,6 +380,7 @@ export class DocTemplateComponent implements AfterViewInit {
             },
             error: (error) => {
                 console.error('Error previewing template:', error);
+                this.snackBar.open('Помилка попереднього перегляду шаблону', 'Закрити', { duration: 5000 });
             }
         });
     }
@@ -426,6 +395,7 @@ export class DocTemplateComponent implements AfterViewInit {
             },
             error: (error) => {
                 console.error('Error publishing template:', error);
+                this.snackBar.open('Помилка публікації шаблону', 'Закрити', { duration: 5000 });
             }
         });
     }
@@ -440,15 +410,38 @@ export class DocTemplateComponent implements AfterViewInit {
             },
             error: (error) => {
                 console.error('Error unpublishing template:', error);
+                this.snackBar.open('Помилка зняття шаблону з публікації', 'Закрити', { duration: 5000 });
             }
         });
+    }
+
+    /**
+     * Получает читаемое название формата
+     */
+    getFormatLabel(format: string): string {
+        return DocTemplateUtils.getFormatLabel(format);
+    }
+
+    /**
+     * Получает читаемое название статуса публикации
+     */
+    getStatusLabel(isPublished: boolean): string {
+        return DocTemplateUtils.getStatusLabel(isPublished);
+    }
+
+    /**
+     * Проверяет, поддерживается ли предпросмотр для шаблона
+     */
+    supportsPreview(template: DocumentTemplate): boolean {
+        const templateFormat = DocTemplateUtils.parseFormat(template.format);
+        return DocTemplateUtils.supportsClientRendering(templateFormat);
     }
 
     /**
      * Получает расширение файла по формату
      */
     private getFileExtension(format: string): string {
-        const templateFormat = DocumentTemplateUtils.parseFormat(format);
-        return DocumentTemplateUtils.getFileExtension(templateFormat);
+        const templateFormat = DocTemplateUtils.parseFormat(format);
+        return DocTemplateUtils.getFileExtension(templateFormat);
     }
 }

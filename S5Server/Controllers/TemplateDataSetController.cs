@@ -158,7 +158,7 @@ namespace S5Server.Controllers
                     return Problem(statusCode: 400, title: "Некорректные данные", detail: "TemplateId не совпадает с набором данных.");
 
                 // Валидация JSON
-                try { System.Text.Json.JsonDocument.Parse(dto.DataJson); }
+                try { JsonDocument.Parse(dto.DataJson); }
                 catch
                 {
                     return Problem(statusCode: 400, title: "Некорректный JSON");

@@ -10,11 +10,13 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 
-import { DocumentTemplateService } from '../../ServerService/document-template.service';
-import { TemplateListItem, TemplateDataSetListItem, DataSetCreateDto, TemplateDataSetDto } from '../../models/document-template.models';
+import { DocumentTemplateService } from '../services/document-template.service';
+import { TemplateDto } from '../models/document-template.models';
+import { TemplateDataSetListItem, TemplateDataSetCreateDto, TemplateDataSetDto } from '../models/template-dataset.models';
+import { TemplateDataSetService } from '../services/template-dataset.service';
 
 export interface DataSetsDialogData {
-  template: TemplateListItem;
+  template: TemplateDto;
 }
 
 @Component({
@@ -192,6 +194,7 @@ export class DataSetsDialogComponent implements OnInit {
   private dialogRef = inject(MatDialogRef<DataSetsDialogComponent>);
   public data = inject<DataSetsDialogData>(MAT_DIALOG_DATA);
   private templateService = inject(DocumentTemplateService);
+  private templateDataSetService = inject(TemplateDataSetService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
 
@@ -264,7 +267,7 @@ export class DataSetsDialogComponent implements OnInit {
 
   loadDataSets(): void {
     this.loading.set(true);
-    this.templateService.getDataSets(this.data.template.id).subscribe({
+    this.templateDataSetService.getDataSets(this.data.template.id).subscribe({
       next: (dataSets: TemplateDataSetListItem[]) => {
         this.dataSets.set(dataSets);
         this.loading.set(false);
@@ -275,7 +278,8 @@ export class DataSetsDialogComponent implements OnInit {
         this.loading.set(false);
       }
     });
-  }
+
+}
 
   createDataSet(): void {
     if (this.createForm.invalid) {
@@ -295,15 +299,15 @@ export class DataSetsDialogComponent implements OnInit {
 
     this.loading.set(true);
     
-    const createDto: DataSetCreateDto = {
+    const createDto: TemplateDataSetCreateDto = {
       templateId: this.data.template.id,
       name: formValue.name,
       dataJson: formValue.dataJson,
       isPublished: formValue.isPublished || false
     };
     
-    this.templateService.createDataSet(createDto).subscribe({
-      next: (dataSet: TemplateDataSetListItem) => {
+    this.templateDataSetService.createDataSet(this.data.template.id, createDto).subscribe({
+      next: (dataSet: TemplateDataSetDto) => {
         this.dataSets.update(sets => [...sets, dataSet]);
         this.createForm.reset({
           name: '',
@@ -319,10 +323,10 @@ export class DataSetsDialogComponent implements OnInit {
         this.loading.set(false);
       }
     });
-  }
+}
 
   loadDataSet(dataSetId: string): void {
-    this.templateService.getDataSet(dataSetId).subscribe({
+    this.templateDataSetService.getDataSet(dataSetId).subscribe({
       next: (dataSet: TemplateDataSetDto) => {
         this.createForm.patchValue({
           name: dataSet.name,
@@ -343,7 +347,7 @@ export class DataSetsDialogComponent implements OnInit {
       return;
     }
 
-    this.templateService.deleteDataSet(dataSetId).subscribe({
+    this.templateDataSetService.deleteDataSet(dataSetId).subscribe({
       next: () => {
         this.dataSets.update(sets => sets.filter(s => s.id !== dataSetId));
         this.snackBar.open('Набор данных удалён', 'Закрыть', { duration: 3000 });

@@ -10,8 +10,8 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
-import { DocumentTemplateService } from '../ServerService/document-template.service';
-import { TemplateListItem } from '../models/document-template.models';
+import { DocumentTemplateService } from '../DocumentTemplates/services/document-template.service';
+import { TemplateDto } from '../DocumentTemplates/models/document-template.models';
 import { TemplateEditorDialogComponent } from './dialogs/template-editor-dialog.component';
 import { TemplatePreviewDialogComponent } from './dialogs/template-preview-dialog.component';
 import { DataSetsDialogComponent } from './dialogs/data-sets-dialog.component';
@@ -97,7 +97,7 @@ import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
                   <mat-menu #menu="matMenu">
                     <button mat-menu-item (click)="previewTemplate(template)">
                       <mat-icon>preview</mat-icon>
-                      Предварительный просмотр
+                      Предварительный просмотр!!!
                     </button>
                     <button mat-menu-item (click)="editTemplate(template)">
                       <mat-icon>edit</mat-icon>
@@ -140,7 +140,7 @@ export class DocumentTemplatesComponent {
   private snackBar = inject(MatSnackBar);
 
   // Состояние компонента
-  templates = signal<TemplateListItem[]>([]);
+  templates = signal<TemplateDto[]>([]);
   loading = signal(false);
 
   displayedColumns = ['name', 'format', 'updatedAt', 'actions'];
@@ -153,8 +153,8 @@ export class DocumentTemplatesComponent {
 
   loadTemplates(): void {
     this.loading.set(true);
-    this.templateService.getTemplates().subscribe({
-      next: (templates: TemplateListItem[]) => {
+    this.templateService.getList().subscribe({
+      next: (templates: TemplateDto[]) => {
         this.templates.set(templates);
         this.loading.set(false);
       },
@@ -183,7 +183,7 @@ export class DocumentTemplatesComponent {
     });
   }
 
-  editTemplate(template: TemplateListItem): void {
+  editTemplate(template: TemplateDto): void {
     const dialogRef = this.dialog.open(TemplateEditorDialogComponent, {
       width: '800px',
       maxHeight: '90vh',
@@ -198,7 +198,7 @@ export class DocumentTemplatesComponent {
     });
   }
 
-  previewTemplate(template: TemplateListItem): void {
+  previewTemplate(template: TemplateDto): void {
     this.dialog.open(TemplatePreviewDialogComponent, {
       width: '90vw',
       maxWidth: '1200px',
@@ -207,7 +207,7 @@ export class DocumentTemplatesComponent {
     });
   }
 
-  downloadTemplate(template: TemplateListItem): void {
+  downloadTemplate(template: TemplateDto): void {
     this.templateService.downloadTemplate(template.id).subscribe({
       next: (blob: Blob) => {
         const fileName = `${template.name}.${template.format}`;
@@ -220,7 +220,7 @@ export class DocumentTemplatesComponent {
     });
   }
 
-  exportTemplate(template: TemplateListItem): void {
+  exportTemplate(template: TemplateDto): void {
     // Открываем предпросмотр для экспорта с данными
     this.dialog.open(TemplatePreviewDialogComponent, {
       width: '90vw',
@@ -230,7 +230,7 @@ export class DocumentTemplatesComponent {
     });
   }
 
-  manageDataSets(template: TemplateListItem): void {
+  manageDataSets(template: TemplateDto): void {
     const dialogRef = this.dialog.open(DataSetsDialogComponent, {
       width: '800px',
       maxHeight: '90vh',
@@ -245,7 +245,7 @@ export class DocumentTemplatesComponent {
     });
   }
 
-  deleteTemplate(template: TemplateListItem): void {
+  deleteTemplate(template: TemplateDto): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
         title: 'Удаление шаблона',
@@ -257,7 +257,7 @@ export class DocumentTemplatesComponent {
 
     dialogRef.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
-        this.templateService.deleteTemplate(template.id).subscribe({
+        this.templateService.delete(template.id).subscribe({
           next: () => {
             this.loadTemplates();
             this.snackBar.open('Шаблон удален', 'Закрыть', { duration: 3000 });
