@@ -1,15 +1,24 @@
 .panel-header {
-  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
   background-color: #e3f2fd;
   border-bottom: 1px solid #ddd;
-  flex-shrink: 0;
-}
 
-.panel-header h3 {
+  h3 {
   margin: 0;
   font-size: 16px;
   font-weight: 500;
   color: #1976d2;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 }
 
 .dataset-container {
