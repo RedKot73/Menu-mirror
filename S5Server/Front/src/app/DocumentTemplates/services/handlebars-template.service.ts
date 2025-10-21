@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import Handlebars from 'handlebars';
+import { DocTemplateUtils, TemplateFormat } from '../models/shared.models';
 
 export interface TemplateRenderResult {
   success: boolean;
@@ -8,12 +9,12 @@ export interface TemplateRenderResult {
 }
 
 export interface ClientTemplateProcessor {
-  format: 'html' | 'txt';
+  format: TemplateFormat.Html | TemplateFormat.Txt;
   supportsClientRendering: true;
 }
 
 export interface ServerTemplateProcessor {
-  format: 'docx' | 'pdf';
+  format: TemplateFormat.Docx; //| TemplateFormat.Pdf;
   supportsClientRendering: false;
 }
 
@@ -29,25 +30,18 @@ export class HandlebarsTemplateService {
   }
 
   /**
-   * Проверяет, поддерживается ли клиентский рендеринг для указанного формата
-   */
-  supportsClientRendering(format: string): boolean {
-    return format === 'html' || format === 'txt';
-  }
-
-  /**
    * Получает процессор для указанного формата
    */
-  getTemplateProcessor(format: string): TemplateProcessor {
-    if (format === 'html' || format === 'txt') {
+  getTemplateProcessor(format: TemplateFormat): TemplateProcessor {
+    if (format === TemplateFormat.Html || format === TemplateFormat.Txt) {
       return {
-        format: format as 'html' | 'txt',
+        format: format,
         supportsClientRendering: true
       };
     }
     
     return {
-      format: format as 'docx' | 'pdf',
+      format: format,
       supportsClientRendering: false
     };
   }
@@ -55,10 +49,10 @@ export class HandlebarsTemplateService {
   /**
    * Компилирует и рендерит шаблон с данными на клиенте (только для HTML/TXT)
    */
-  renderTemplate(templateContent: string, data: any, format: 'html' | 'txt'): TemplateRenderResult {
+  renderTemplate(templateContent: string, data: any, format: TemplateFormat): TemplateRenderResult {
     try {
       // Проверяем поддержку клиентского рендеринга
-      if (!this.supportsClientRendering(format)) {
+      if (!DocTemplateUtils.supportsClientRendering(format)) {
         return {
           success: false,
           error: `Формат ${format} не поддерживает клиентский рендеринг. Используйте серверный API.`
@@ -148,7 +142,7 @@ export class HandlebarsTemplateService {
     }
 
     // Ищем переменные в блочных помощниках like {{#each items}}
-    const blockVarRegex = /\{\{\#(?:each|with)\s+([a-zA-Z_$][a-zA-Z0-9_$]*(?:\.[a-zA-Z_$][a-zA-Z0-9_$]*)*)/g;
+    const blockVarRegex = /\{\{\\#(?:each|with)\s+([a-zA-Z_$][a-zA-Z0-9_$]*(?:\.[a-zA-Z_$][a-zA-Z0-9_$]*)*)/g;
     while ((match = blockVarRegex.exec(templateContent)) !== null) {
       variables.add(match[1].trim());
     }
@@ -222,11 +216,11 @@ export class HandlebarsTemplateService {
     Handlebars.registerHelper('ifCond', function(this: any, v1: any, operator: string, v2: any, options: any) {
       switch (operator) {
         case '==':
-          return (v1 == v2) ? options.fn(this) : options.inverse(this);
+          return (v1 === v2) ? options.fn(this) : options.inverse(this);
         case '===':
           return (v1 === v2) ? options.fn(this) : options.inverse(this);
         case '!=':
-          return (v1 != v2) ? options.fn(this) : options.inverse(this);
+          return (v1 !== v2) ? options.fn(this) : options.inverse(this);
         case '!==':
           return (v1 !== v2) ? options.fn(this) : options.inverse(this);
         case '<':
@@ -271,7 +265,7 @@ export class HandlebarsTemplateService {
     const stack: string[] = [];
     
     // Ищем открывающие и закрывающие теги
-    const tagRegex = /\{\{\s*([#\/]?)(\w+).*?\}\}/g;
+    const tagRegex = /\{\{\s*([#\\/]?)(\w+).*?\}\}/g;
     let match;
     
     while ((match = tagRegex.exec(content)) !== null) {

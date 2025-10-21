@@ -56,7 +56,9 @@ export type DocumentTemplate = TemplateDto;
     styleUrl: './DocTemplate.component.scss',
     template: `
         <div class="doc-templates-header">
+<!--            
             <h3>Шаблони документів</h3>
+-->
             <div class="header-actions">
                 <button
                     mat-icon-button
@@ -215,8 +217,8 @@ export class DocTemplateComponent implements AfterViewInit {
     
     dataSource = new MatTableDataSource<DocumentTemplate>([]);
     displayedColumns = ['menu', 'name', 'format', 'status', 'category', 'created', 'updated'];
-        constructor() {
-        // Обновляем dataSource при изменении отфильтрованных данных
+
+    constructor() {
         effect(() => {
             this.dataSource.data = this.items();
         });
@@ -231,7 +233,7 @@ export class DocTemplateComponent implements AfterViewInit {
 
     reload() {
         this.isLoading.set(true);
-        this.documentTemplateService.getList().subscribe({
+        this.documentTemplateService.getTemplates().subscribe({
             next: (templates) => {
                 this.items.set(templates);
                 this.isLoading.set(false);
@@ -263,7 +265,7 @@ export class DocTemplateComponent implements AfterViewInit {
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
                 // result - это CreateTemplateDto
-                this.documentTemplateService.create(result).subscribe({
+                this.documentTemplateService.createTemplate(result).subscribe({
                     next: () => {
                         this.reload();
                     },
@@ -300,7 +302,7 @@ export class DocTemplateComponent implements AfterViewInit {
                     file: result.file
                 };
 
-                this.documentTemplateService.update(template.id, updateData).subscribe({
+                this.documentTemplateService.updateTemplate(template.id, updateData).subscribe({
                     next: () => {
                         this.reload();
                     },
@@ -331,7 +333,7 @@ export class DocTemplateComponent implements AfterViewInit {
         
         ref.afterClosed().subscribe(confirmed => {
             if (confirmed) {
-                this.documentTemplateService.delete(template.id).subscribe({
+                this.documentTemplateService.deleteTemplate(template.id).subscribe({
                     next: () => {
                         this.reload();
                     },
@@ -349,10 +351,9 @@ export class DocTemplateComponent implements AfterViewInit {
      * Скачивает файл шаблона
      */
     downloadTemplate(template: DocumentTemplate): void {
-        const fileName = `${template.name}.${this.getFileExtension(template.format)}`;
-        this.documentTemplateService.downloadFile(template.id, fileName).subscribe({
-            next: () => {
-                console.log('Template downloaded successfully');
+        this.documentTemplateService.downloadFile(template.id).subscribe({
+            next: (blob) => {
+                this.documentTemplateService.downloadBlob(blob, `${template.name}.${template.format}`);
             },
             error: (error) => {
                 console.error('Error downloading template:', error);
@@ -368,7 +369,15 @@ export class DocTemplateComponent implements AfterViewInit {
         if (!this.supportsPreview(template)) {
             return;
         }
-
+        this.documentTemplateService.getTemplateContent(template.id).subscribe({
+            next: (content) => {
+            },
+            error: (error) => {
+                console.error('Error getting template content:', error);
+                this.snackBar.open('Помилка отримання вмісту шаблону', 'Закрити', { duration: 5000 });
+            }
+        });
+        /*
         this.documentTemplateService.previewHtml(template.id).subscribe({
             next: (html) => {
                 // Открываем HTML в новом окне для предпросмотра
@@ -383,13 +392,14 @@ export class DocTemplateComponent implements AfterViewInit {
                 this.snackBar.open('Помилка попереднього перегляду шаблону', 'Закрити', { duration: 5000 });
             }
         });
+        */
     }
 
     /**
      * Публикует шаблон
      */
     publish(template: DocumentTemplate): void {
-        this.documentTemplateService.publish(template.id).subscribe({
+        this.documentTemplateService.publishTemplate(template.id).subscribe({
             next: () => {
                 this.reload();
             },
@@ -404,7 +414,7 @@ export class DocTemplateComponent implements AfterViewInit {
      * Снимает шаблон с публикации
      */
     unpublish(template: DocumentTemplate): void {
-        this.documentTemplateService.unpublish(template.id).subscribe({
+        this.documentTemplateService.unpublishTemplate(template.id).subscribe({
             next: () => {
                 this.reload();
             },

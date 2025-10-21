@@ -159,7 +159,7 @@ export interface DataSetsDialogData {
       </button>
     </div>
   `,
-  styleUrls: ['./dialogs-shared.scss', '../document-templates.scss'],
+  styleUrls: ['./dialogs-shared.scss'],
   styles: [`
     .publish-section {
       margin: 16px 0;

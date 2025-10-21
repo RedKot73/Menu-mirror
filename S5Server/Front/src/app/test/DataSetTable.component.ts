@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild, effect, signal, computed, input, AfterViewInit } from "@angular/core";
+import { Component, inject, ViewChild, effect, signal, input, AfterViewInit } from "@angular/core";
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -47,7 +47,9 @@ import { MatSnackBar } from "@angular/material/snack-bar";
   template: `
       <!-- Header -->
       <div class="panel-header">
+<!--
         <h3>Набори даних</h3>
+-->
         @if (selectedTemplate()) {
             <div class="header-actions">
                 <button

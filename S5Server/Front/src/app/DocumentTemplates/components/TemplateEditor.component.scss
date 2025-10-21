@@ -1,0 +1,187 @@
+.template-editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px;
+  background-color: #fafafa;
+}
+
+/* === Стан "Шаблон не вибрано" === */
+.no-template-selected {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #9e9e9e;
+  
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+  }
+  
+  p {
+    font-size: 16px;
+    margin: 0;
+  }
+}
+
+/* === Заголовок редактора === */
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 8px 0;
+}
+
+.template-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  
+  h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #333;
+  }
+  
+  .template-format {
+    padding: 4px 12px;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+}
+
+.editor-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* === Індикатор завантаження === */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 16px;
+  
+  p {
+    color: #666;
+    font-size: 14px;
+  }
+}
+
+/* === Контейнер помилки === */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 16px;
+  
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+  }
+  
+  p {
+    color: #f44336;
+    font-size: 14px;
+    text-align: center;
+    max-width: 400px;
+  }
+}
+
+/* === Основний контент редактора === */
+.editor-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  margin-top: 16px;
+  min-height: 0; /* Важливо для правильної роботи flex */
+  overflow: hidden; /* Запобігає переповненню */
+}
+
+.template-textarea {
+  flex: 1;
+  width: 100%;
+  min-height: 0; /* Дозволяє textarea зменшуватись нижче вмісту */
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: none; /* Вимикаємо ручну зміну розміру, бо textarea займає весь доступний простір */
+  background-color: #fff;
+  color: #333;
+  transition: border-color 0.2s;
+  overflow-y: auto; /* Додаємо вертикальну прокрутку */
+  overflow-x: auto; /* Додаємо горизонтальну прокрутку */
+  
+  &:focus {
+    outline: none;
+    border-color: #1976d2;
+    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
+  }
+  
+  &::placeholder {
+    color: #bbb;
+  }
+}
+
+/* === Індикатор незбережених змін === */
+.unsaved-indicator {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  color: #856404;
+  font-size: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* === Адаптація для мобільних === */
+@media (max-width: 768px) {
+  .editor-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .editor-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .template-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}

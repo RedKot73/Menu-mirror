@@ -20,6 +20,12 @@
 
 .content-panel {
   background-color: #fafafa;
+  overflow: hidden; /* Важливо: запобігає переповненню */
+  
+  /* Забезпечуємо, що вміст займає всю висоту */
+  > * {
+    height: 100%;
+  }
 }
 
 .panel-header {

@@ -63,8 +63,8 @@ export const routes: Routes = [
     },
     {
         path: 'templates', title: 'Шаблони документів',
-        loadComponent: () => import('./DocumentTemplates/document-templates.component')
-        .then(m => m.DocumentTemplatesComponent)
+        loadComponent: () => import('./DocumentTemplates/DocTemplatesTree.component')//import('./DocumentTemplates/DocTemplatesTree.component')
+        .then(m => m.DocTemplatesTree)
     },
     /*
     {

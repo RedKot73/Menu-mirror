@@ -1,7 +1,11 @@
-﻿using System.Text;
-using System.Text.Json;
+﻿using System.Net.Http;
 using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 
+using DocumentFormat.OpenXml.Office2010.Excel;
+
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +13,7 @@ using S5Server.Data;
 using S5Server.Models;
 using S5Server.Services;
 using S5Server.Utils;
+
 using static S5Server.Models.DocumentTemplate;
 
 namespace S5Server.Controllers
@@ -182,7 +187,7 @@ namespace S5Server.Controllers
             // Формат — если не пришёл, используем текущий
             if (!string.IsNullOrWhiteSpace(dto.Format))
             {
-                if(!DocumentTemplate.TryParseFormat(dto.Format, out var newFormat))
+                if (!DocumentTemplate.TryParseFormat(dto.Format, out var newFormat))
                     return Problem(statusCode: 400, title: "Поддерживаемые форматы: html, txt, docx, pdf");
                 t.Format = newFormat;
             }
@@ -441,6 +446,47 @@ namespace S5Server.Controllers
 
                 return Problem(statusCode: 415, title: "Неподдерживаемый формат",
                                detail: $"Для формата '{DocumentTemplate.FormatToString(t.Format)}' контент как текст недоступен.");
+            }
+            catch (OperationCanceledException)
+            {
+                return Problem(statusCode: 499, title: "Отмена клиентом");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка выдачи содержимого шаблона Id={Id}", id);
+                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+            }
+        }
+
+        /// <summary>
+        /// Represents a request to save template content.
+        /// </summary>
+        /// <param name="Content">The template content to be saved. Cannot be null.</param>
+        public record SaveTemplateContentRequest(string Content);
+        /**
+         * Сохраняет отредактированное содержимое шаблона
+         */
+        [HttpPut("{id}/content")]
+        //[Consumes("text/plain")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> SaveTemplateContent(string id,
+            [FromBody] SaveTemplateContentRequest req, CancellationToken ct = default)
+        {
+            try
+            {
+                var t = await _set
+                    .AsTracking()
+                    .FirstOrDefaultAsync(x => x.Id == id, ct);
+                if (t == null)
+                    return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+
+                t.Content = Encoding.UTF8.GetBytes(req.Content);
+                t.ContentHash = ComputeSha256(t.Content);
+                t.UpdatedAtUtc = DateTime.UtcNow;
+                await _db.SaveChangesAsync(ct);
+
+                return Ok(t);
             }
             catch (OperationCanceledException)
             {

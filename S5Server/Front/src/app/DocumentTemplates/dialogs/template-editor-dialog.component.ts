@@ -16,7 +16,7 @@ import { HandlebarsTemplateService } from '../services/handlebars-template.servi
 import { TemplateDto, CreateTemplateDto } from '../models/document-template.models';
 import { TemplateDataSetListItem, TemplateDataSetCreateDto, TemplateDataSetDto } from '../models/template-dataset.models';
 import { TemplateDataSetService } from '../services/template-dataset.service';
-import { DocTemplateUtils, SUPPORTED_FORMATS } from '../models/shared.models';
+import { DocTemplateUtils, SUPPORTED_FORMATS, TemplateFormat } from '../models/shared.models';
 
 export interface TemplateEditorDialogData {
   mode: 'create' | 'edit';
@@ -302,7 +302,7 @@ export interface TemplateEditorDialogData {
       </button>
     </div>
   `,
-  styleUrls: ['./dialogs-shared.scss', '../document-templates.scss']
+  styleUrls: ['./dialogs-shared.scss']
 })
 export class TemplateEditorDialogComponent implements OnInit {
   private dialogRef = inject(MatDialogRef<TemplateEditorDialogComponent>);
@@ -333,7 +333,7 @@ export class TemplateEditorDialogComponent implements OnInit {
   // Проверяем, поддерживает ли выбранный формат клиентский рендеринг
   supportsClientRendering = computed(() => {
     const format = this.templateForm?.get('format')?.value;
-    return format && this.templateService.supportsClientRendering(format);
+    return format && DocTemplateUtils.supportsClientRendering(format);
   });
 
   // Можно ли показывать live preview
@@ -387,7 +387,7 @@ export class TemplateEditorDialogComponent implements OnInit {
 
     if (this.isCreateMode()) {
       createDto.file = this.selectedFile()!;
-      this.templateService.create(createDto).subscribe({
+      this.templateService.createTemplate(createDto).subscribe({
         next: (result: TemplateDto) => {
           this.loading.set(false);
           this.snackBar.open('Шаблон создан успешно', 'Закрыть', { duration: 3000 });
@@ -401,7 +401,7 @@ export class TemplateEditorDialogComponent implements OnInit {
       });
     } else {
       createDto.file = this.selectedFile() || undefined;
-      this.templateService.update(this.data.template!.id, createDto).subscribe({
+      this.templateService.updateTemplate(this.data.template!.id, createDto).subscribe({
         next: () => {
           this.loading.set(false);
           this.snackBar.open('Шаблон обновлен успешно', 'Закрыть', { duration: 3000 });
@@ -467,7 +467,7 @@ export class TemplateEditorDialogComponent implements OnInit {
     this.selectedFile.set(file);
 
     // Читаем содержимое файла для HTML/TXT шаблонов
-    if (this.templateService.supportsClientRendering(selectedFormat)) {
+    if (DocTemplateUtils.supportsClientRendering(selectedFormat)) {
       this.readFileContent(file);
     }
   }
@@ -511,7 +511,7 @@ export class TemplateEditorDialogComponent implements OnInit {
     }
 
     const format = this.templateForm.get('format')?.value;
-    if (!this.templateService.supportsClientRendering(format)) {
+    if (!DocTemplateUtils.supportsClientRendering(format)) {
       return;
     }
 
@@ -520,7 +520,7 @@ export class TemplateEditorDialogComponent implements OnInit {
       const result = this.handlebarsService.renderTemplate(
         this.templateContent(),
         data,
-        format as 'html' | 'txt'
+        TemplateFormat.Html || TemplateFormat.Txt
       );
 
       if (result.success) {

@@ -15,7 +15,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { DocumentTemplateService } from '../services/document-template.service';
 import { HandlebarsTemplateService } from '../services/handlebars-template.service';
 import { TemplateDto/*, RenderRequest*/ } from '../models/document-template.models';
-import { EXPORT_FORMATS } from '../models/shared.models';
+import { DocTemplateUtils, EXPORT_FORMATS, TemplateFormat } from '../models/shared.models';
 
 export interface TemplatePreviewDialogData {
   template: TemplateDto;
@@ -160,7 +160,7 @@ export interface TemplatePreviewDialogData {
       </button>
     </div>
   `,
-  styleUrls: ['./dialogs-shared.scss', '../document-templates.scss']
+  styleUrls: ['./dialogs-shared.scss']
 })
 export class TemplatePreviewDialogComponent implements OnInit {
   private dialogRef = inject(MatDialogRef<TemplatePreviewDialogComponent>);
@@ -206,7 +206,8 @@ export class TemplatePreviewDialogComponent implements OnInit {
    * Проверяет возможности рендеринга для данного шаблона
    */
   private checkRenderingCapabilities(): void {
-    this.supportsClientRendering.set(this.templateService.supportsClientRendering(this.data.template));
+    const templateFormat = DocTemplateUtils.parseFormat(this.data.template.format);
+    this.supportsClientRendering.set(DocTemplateUtils.supportsClientRendering(templateFormat));
   }
 
   /**
@@ -320,7 +321,7 @@ export class TemplatePreviewDialogComponent implements OnInit {
 
     if (this.supportsClientRendering() && this.templateContent()) {
       // Клиентский рендеринг для HTML/TXT
-      this.renderClientSide(parsedData, format as 'html' | 'txt');
+      this.renderClientSide(parsedData, TemplateFormat.Html || TemplateFormat.Txt);
     } else {
       // Серверный рендеринг для всех остальных случаев
       this.renderServerSide(parsedData);
@@ -330,7 +331,7 @@ export class TemplatePreviewDialogComponent implements OnInit {
   /**
    * Клиентский рендеринг с Handlebars
    */
-  private renderClientSide(data: any, format: 'html' | 'txt'): void {
+  private renderClientSide(data: any, format: TemplateFormat): void {
     try {
       const result = this.handlebarsService.renderTemplate(
         this.templateContent(), 
