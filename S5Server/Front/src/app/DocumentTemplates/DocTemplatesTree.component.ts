@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { DocTemplateComponent } from '../test/DocTemplate.component';//'./DocTemplate.component';
+import { DocTemplateComponent } from '../test/DocTemplate.component';
 import { DataSetTableComponent } from '../test/DataSetTable.component';
 import { TemplateEditorComponent } from './components/TemplateEditor.component';
 import { TemplateDto } from '../DocumentTemplates/models/document-template.models';

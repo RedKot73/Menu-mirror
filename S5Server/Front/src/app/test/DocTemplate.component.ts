@@ -377,22 +377,6 @@ export class DocTemplateComponent implements AfterViewInit {
                 this.snackBar.open('Помилка отримання вмісту шаблону', 'Закрити', { duration: 5000 });
             }
         });
-        /*
-        this.documentTemplateService.previewHtml(template.id).subscribe({
-            next: (html) => {
-                // Открываем HTML в новом окне для предпросмотра
-                const previewWindow = window.open('', '_blank');
-                if (previewWindow) {
-                    previewWindow.document.write(html);
-                    previewWindow.document.close();
-                }
-            },
-            error: (error) => {
-                console.error('Error previewing template:', error);
-                this.snackBar.open('Помилка попереднього перегляду шаблону', 'Закрити', { duration: 5000 });
-            }
-        });
-        */
     }
 
     /**

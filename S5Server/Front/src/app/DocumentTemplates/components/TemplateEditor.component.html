@@ -1,0 +1,78 @@
+<div class="template-editor-container">
+    @if (!template()) {
+    <div class="no-template-selected">
+        <mat-icon>description</mat-icon>
+        <p>Виберіть шаблон для редагування</p>
+    </div>
+    } @else {
+    <div class="editor-header">
+        <div class="template-info">
+            <h3>{{ template()?.name || 'Шаблон' }}</h3>
+            <span class="template-format">{{ template()?.format }}</span>
+            @let isPublished = template()?.isPublished || false;
+            @if (isPublished) {
+            <mat-chip class="status-published">
+                <mat-icon>check_circle</mat-icon>
+                {{ getStatusLabel(isPublished) }}
+            </mat-chip>
+            } @else {
+            <mat-chip class="status-draft">
+                <mat-icon>edit</mat-icon>
+                {{ getStatusLabel(isPublished) }}
+            </mat-chip>
+            }
+        </div>
+
+        <div class="editor-actions">
+            <button mat-icon-button
+                    (click)="reloadContent()"
+                    [disabled]="isLoading()"
+                    matTooltip="Оновити вміст">
+                <mat-icon>refresh</mat-icon>
+            </button>
+
+            <button mat-raised-button
+                    color="primary"
+                    (click)="saveTemplateContent()"
+                    [disabled]="!canSave()"
+                    matTooltip="Зберегти зміни">
+                <mat-icon>save</mat-icon>
+                Зберегти
+            </button>
+        </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    @if (isLoading()) {
+    <div class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Завантаження вмісту шаблону...</p>
+    </div>
+    } @else if (loadError()) {
+    <div class="error-container">
+        <mat-icon color="warn">error_outline</mat-icon>
+        <p>{{ loadError() }}</p>
+        <button mat-raised-button color="accent" (click)="reloadContent()">
+            Спробувати ще раз
+        </button>
+    </div>
+    } @else {
+    <div class="editor-content">
+        <app-codemirror-editor [content]="templateContentControl.value"
+                               [language]="template()?.format || 'txt'"
+                               (contentChange)="onEditorContentChange($event)"
+                               (save)="saveTemplateContent()"
+                               [readOnly]="isReadonly()"
+                               class="codemirror-container"></app-codemirror-editor>
+
+        @if (templateContentControl.dirty) {
+        <div class="unsaved-indicator">
+            <mat-icon>edit</mat-icon>
+            <span>Є незбережені зміни</span>
+        </div>
+        }
+    </div>
+    }
+    }
+</div>
