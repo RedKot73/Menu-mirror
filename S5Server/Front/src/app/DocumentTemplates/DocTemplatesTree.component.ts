@@ -10,7 +10,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { DocTemplateComponent } from './components/DocTemplate.component';
 import { DataSetTableComponent } from '../test/DataSetTable.component';
 import { TemplateEditorComponent } from './components/TemplateEditor.component';
+import { DataSetEditorComponent } from './components/DataSetEditor.component';
 import { TemplateDto } from '../DocumentTemplates/models/document-template.models';
+import { TemplateDataSetListItem } from '../DocumentTemplates/models/template-dataset.models';
 
 @Component({
   selector: 'app-doc-templates-tree',
@@ -21,6 +23,7 @@ import { TemplateDto } from '../DocumentTemplates/models/document-template.model
     DocTemplateComponent,
     DataSetTableComponent,
     TemplateEditorComponent,
+    DataSetEditorComponent,
   ],
   styleUrl: '../test/Test.component.scss',
   templateUrl: './DocTemplatesTree.component.html'
@@ -31,6 +34,7 @@ export class DocTemplatesTree implements AfterViewInit, OnDestroy {
   // ViewChild for container reference
   @ViewChild('containerRef') containerRef!: ElementRef<HTMLElement>;
   selectedTemplate = signal<TemplateDto | null>(null);
+  selectedDataSet = signal<TemplateDataSetListItem | null>(null);
 
   // Panel signals (replacing sidenav signals)
   navPanelWidth = signal(this.getSavedNavPanelWidth());
@@ -214,5 +218,14 @@ export class DocTemplatesTree implements AfterViewInit, OnDestroy {
    */
   onTemplateSelected(template: TemplateDto | null): void {
     this.selectedTemplate.set(template);
+    // Сбрасываем выбранный набор данных при смене шаблона
+    this.selectedDataSet.set(null);
+  }
+
+  /**
+   * Обработчик выбора набора данных из DataSetTable компонента
+   */
+  onDataSetSelected(dataSet: TemplateDataSetListItem | null): void {
+    this.selectedDataSet.set(dataSet);
   }
 } 

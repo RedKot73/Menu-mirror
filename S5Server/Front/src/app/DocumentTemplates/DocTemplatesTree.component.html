@@ -5,12 +5,13 @@
                 <mat-tab label="Шаблони документів">
                     <!-- DocTemplate Component -->
                     <app-page-doc-templates [selectedTemplate]="selectedTemplate()"
-                        (templateSelected)="onTemplateSelected($event)">
+                                            (templateSelected)="onTemplateSelected($event)">
                     </app-page-doc-templates>
                 </mat-tab>
                 <mat-tab label="Набори даних">
                     <!-- DataSetTable Component -->
-                    <app-template-dataset-table [selectedTemplate]="selectedTemplate()">
+                    <app-template-dataset-table [selectedTemplate]="selectedTemplate()"
+                                                (dataSetSelected)="onDataSetSelected($event)">
                     </app-template-dataset-table>
                 </mat-tab>
             </mat-tab-group>
@@ -21,7 +22,7 @@
         <div class="splitter-handle"></div>
         <div class="splitter-controls">
             <button class="toggle-btn" (click)="toggleNavPanel()"
-                matTooltip="{{isNavPanelCollapsed() ? 'Показати' : 'Приховати'}}" [matTooltipPosition]="'above'">
+                    matTooltip="{{isNavPanelCollapsed() ? 'Показати' : 'Приховати'}}" [matTooltipPosition]="'above'">
 
                 <span class="arrow" [class.collapsed]="isNavPanelCollapsed()">
                     {{ isNavPanelCollapsed() ? '▶' : '◀' }}
@@ -31,6 +32,20 @@
     </div>
 
     <div class="panel content-panel" [style.width.%]="contentPanelWidth()">
-        <app-template-editor [template]="selectedTemplate()"></app-template-editor>
+        <mat-tab-group dynamicHeight>
+            <mat-tab label="Шаблон">
+                <!-- DocTemplate Editor -->
+                <app-template-editor [template]="selectedTemplate()">
+                </app-template-editor>
+            </mat-tab>
+            <mat-tab label="Дані документа">
+                <!-- DataSet Editor -->
+                <app-dataset-editor [dataSet]="selectedDataSet()">
+                </app-dataset-editor>
+            </mat-tab>
+            <mat-tab label="Результат обробки">
+                <!-- DataSet Editor -->
+            </mat-tab>
+        </mat-tab-group>
     </div>
 </div>

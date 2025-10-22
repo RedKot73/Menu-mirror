@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild, effect, signal, input, AfterViewInit } from "@angular/core";
+import { Component, inject, ViewChild, effect, signal, input, output, AfterViewInit } from "@angular/core";
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -196,8 +196,11 @@ export class DataSetTableComponent implements AfterViewInit {
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
 
-  // Input от родительского компонента
+  // Input від родительського компонента
   selectedTemplate = input<TemplateDto | null>(null);
+  
+  // Output для передачі вибраного набору даних
+  dataSetSelected = output<TemplateDataSetListItem | null>();
 
   // Signals
   dataSets = signal<TemplateDataSetListItem[]>([]);
@@ -260,6 +263,7 @@ export class DataSetTableComponent implements AfterViewInit {
    */
   selectDataSet(dataSet: TemplateDataSetListItem): void {
     this.selectedDataSet.set(dataSet);
+    this.dataSetSelected.emit(dataSet);
   }
 
   /**
