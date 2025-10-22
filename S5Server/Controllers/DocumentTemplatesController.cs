@@ -52,6 +52,7 @@ namespace S5Server.Controllers
             try
             {
                 var list = await _set.AsNoTracking()
+                    .Include(t => t.TemplateCategory)
                     .OrderByDescending(t => t.UpdatedAtUtc)
                     .Select(t => TemplateDto.ToDto(t))
                     .ToListAsync(ct);

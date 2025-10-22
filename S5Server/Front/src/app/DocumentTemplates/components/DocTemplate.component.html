@@ -1,0 +1,156 @@
+<div class="doc-templates-header">
+    <!--            
+    <h3>Шаблони документів</h3>
+-->
+    <div class="header-actions">
+        <button mat-icon-button
+                (click)="reload()"
+                matTooltip="Оновити перелік">
+            <mat-icon>refresh</mat-icon>
+        </button>
+        <button mat-raised-button
+                color="primary"
+                (click)="add()"
+                matTooltip="Створити шаблон">
+            <mat-icon>add</mat-icon>
+            Створити шаблон
+        </button>
+    </div>
+</div>
+
+@if (isLoading()) {
+<div class="loading-indicator">Загрузка шаблонов...</div>
+} @else if (items().length === 0) {
+<div class="no-data">Нет доступных шаблонов</div>
+} @else {
+<table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" style="width:100%; margin-top: 1em;">
+    <!-- Menu Column -->
+    <ng-container matColumnDef="menu">
+        <th mat-header-cell *matHeaderCellDef style="width: 60px;"> Дії </th>
+        <td mat-cell *matCellDef="let template">
+            <button mat-icon-button
+                    [matMenuTriggerFor]="templateMenu"
+                    matTooltip="Дії з шаблоном"
+                    (click)="$event.stopPropagation()">
+                <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <mat-menu #templateMenu="matMenu">
+                <button mat-menu-item (click)="downloadTemplate(template)">
+                    <mat-icon color="primary">download</mat-icon>
+                    <span>Завантажити шаблон</span>
+                </button>
+                @if (supportsPreview(template)) {
+                <button mat-menu-item (click)="previewTemplate(template)">
+                    <mat-icon color="primary">visibility</mat-icon>
+                    <span>Попередній перегляд</span>
+                </button>
+                }
+                @if (!template.isPublished) {
+                <button mat-menu-item (click)="publish(template)">
+                    <mat-icon color="primary">published</mat-icon>
+                    <span>Опублікувати</span>
+                </button>
+                } @else {
+                <button mat-menu-item (click)="unpublish(template)">
+                    <mat-icon color="accent">unpublished</mat-icon>
+                    <span>Зняти з публікації</span>
+                </button>
+                }
+                <button mat-menu-item (click)="edit(template)">
+                    <mat-icon color="accent">edit</mat-icon>
+                    <span>Редагувати</span>
+                </button>
+                <mat-divider></mat-divider>
+                <button mat-menu-item (click)="delete(template)" class="delete-action">
+                    <mat-icon color="warn">delete</mat-icon>
+                    <span>Видалити</span>
+                </button>
+            </mat-menu>
+        </td>
+    </ng-container>
+
+    <!-- Name Column -->
+    <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Назва </th>
+        <td mat-cell *matCellDef="let template">
+            <div class="template-name">{{ template.name }}</div>
+        </td>
+    </ng-container>
+
+    <!-- Format Column -->
+    <ng-container matColumnDef="format">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Формат </th>
+        <td mat-cell *matCellDef="let template">
+            <mat-chip class="format-chip" [class]="'format-' + template.format">
+                {{ getFormatLabel(template.format) }}
+            </mat-chip>
+        </td>
+    </ng-container>
+
+    <!-- Status Column -->
+    <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Статус </th>
+        <td mat-cell *matCellDef="let template">
+            @if (template.isPublished) {
+            <mat-chip class="status-published">
+                <mat-icon>check_circle</mat-icon>
+                {{ getStatusLabel(template.isPublished) }}
+            </mat-chip>
+            } @else {
+            <mat-chip class="status-draft">
+                <mat-icon>edit</mat-icon>
+                {{ getStatusLabel(template.isPublished) }}
+            </mat-chip>
+            }
+        </td>
+    </ng-container>
+
+    <!-- Category Column -->
+    <ng-container matColumnDef="category">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Категория </th>
+        <td mat-cell *matCellDef="let template">
+            {{ template.templateCategoryName || '---' }}
+        </td>
+    </ng-container>
+
+    <!-- Description Column -->
+    <ng-container matColumnDef="description">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Опис </th>
+        <td mat-cell *matCellDef="let template" class="comment-cell">
+            @let desc = template.description || '';
+            @let isLong = desc.length > 50;
+            @let displayText = isLong ? desc.slice(0, 50) + '...' : desc;
+            @let tooltip = isLong ? desc : '';
+
+            <span class="comment-text"
+                  [matTooltip]="tooltip"
+                  [title]="tooltip">
+                {{ displayText }}
+            </span>
+        </td>
+    </ng-container>
+
+    <!-- Created Column -->
+    <ng-container matColumnDef="created">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Создан </th>
+        <td mat-cell *matCellDef="let template">
+            {{ template.createdAtUtc | date:'dd.MM.yyyy HH:mm' }}
+        </td>
+    </ng-container>
+
+    <!-- Updated Column -->
+    <ng-container matColumnDef="updated">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Обновлен </th>
+        <td mat-cell *matCellDef="let template">
+            {{ template.updatedAtUtc | date:'dd.MM.yyyy HH:mm' }}
+        </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+        (click)="selectTemplate(row)"
+        [class.selected]="selectedTemplate()?.id === row.id"
+        style="cursor: pointer;"></tr>
+</table>
+}

@@ -10,17 +10,19 @@
             <h3>{{ template()?.name || 'Шаблон' }}</h3>
             <span class="template-format">{{ template()?.format }}</span>
             @let isPublished = template()?.isPublished || false;
+            @let statusLabel = getStatusLabel(isPublished);
             @if (isPublished) {
             <mat-chip class="status-published">
                 <mat-icon>check_circle</mat-icon>
-                {{ getStatusLabel(isPublished) }}
+                {{ statusLabel }}
             </mat-chip>
             } @else {
             <mat-chip class="status-draft">
                 <mat-icon>edit</mat-icon>
-                {{ getStatusLabel(isPublished) }}
+                {{ statusLabel }}
             </mat-chip>
             }
+            {{ template()?.templateCategoryName || '---' }}
         </div>
 
         <div class="editor-actions">
