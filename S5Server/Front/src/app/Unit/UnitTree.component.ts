@@ -8,7 +8,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { UnitService, UnitTreeItemDto } from "../../ServerService/unit.service";
+import { UnitService, UnitTreeItemDto } from "./services/unit.service";
 import { UnitDialogComponent } from '../dialogs/UnitDialog';
 import { ConfirmDialogComponent } from "../dialogs/ConfirmDialog.component";
 import { UnitTreeNodeComponent, UnitTreeNode } from './unit-tree-node.component';

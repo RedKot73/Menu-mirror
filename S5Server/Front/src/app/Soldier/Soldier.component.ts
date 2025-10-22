@@ -16,7 +16,7 @@ import { SlicePipe } from '@angular/common';
 import { SoldierDialogComponent } from '../dialogs/SoldierDialog';
 import { ConfirmDialogComponent } from "../dialogs/ConfirmDialog.component";
 import { SoldierService, SoldierDto, SoldierCreateDto } from "../../ServerService/soldier.service";
-import { UnitService, UnitDto } from "../../ServerService/unit.service";
+import { UnitService, UnitDto } from "../Unit/services/unit.service";
 import { SoldierFiltersComponent } from './soldier-filters.component';
 
 export type Soldier = SoldierDto;

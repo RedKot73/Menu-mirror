@@ -10,7 +10,7 @@ import {
     UnitService,
     UnitDto,
     UnitTreeItemDto
-} from "../../ServerService/unit.service";
+} from "./services/unit.service";
 import { UnitTreeComponent } from './UnitTree.component';
 import { UnitContentComponent } from './UnitContent.component';
 

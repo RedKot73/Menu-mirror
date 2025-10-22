@@ -9,7 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 
-import { UnitDto } from '../../ServerService/unit.service';
+import { UnitDto } from '../Unit/services/unit.service';
 
 @Component({
     selector: 'soldier-filters',

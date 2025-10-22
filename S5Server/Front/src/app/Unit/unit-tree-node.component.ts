@@ -5,7 +5,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 
-import { UnitTreeItemDto } from "../../ServerService/unit.service";
+import { UnitTreeItemDto } from "./services/unit.service";
 
 export interface UnitTreeNode extends UnitTreeItemDto {
     level: number;
