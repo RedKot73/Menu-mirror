@@ -5,7 +5,7 @@ import {
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
 
-import { DocTemplateComponent } from './DocTemplate.component';
+import { DocTemplateComponent } from '../DocumentTemplates/components/DocTemplate.component';
 import { DataSetTableComponent } from './DataSetTable.component';
 import { TemplateDto } from '../DocumentTemplates/models/document-template.models';
 

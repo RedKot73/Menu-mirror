@@ -467,7 +467,6 @@ namespace S5Server.Controllers
          * Сохраняет отредактированное содержимое шаблона
          */
         [HttpPut("{id}/content")]
-        //[Consumes("text/plain")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> SaveTemplateContent(string id,

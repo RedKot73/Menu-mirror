@@ -22,7 +22,7 @@ import { SoldierFiltersComponent } from './soldier-filters.component';
 export type Soldier = SoldierDto;
 
 @Component({
-    selector: "page-soldiers",
+    selector: "app-page-soldiers",
     imports: [
         MatTableModule, 
         MatButtonModule, 

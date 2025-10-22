@@ -23,14 +23,14 @@ import { MatDividerModule } from '@angular/material/divider';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { DocumentTemplateService } from '../DocumentTemplates/services/document-template.service';
-import { DocTemplateUtils } from '../DocumentTemplates/models/shared.models';
-import { TemplateDto } from '../DocumentTemplates/models/document-template.models';
+import { DocumentTemplateService } from '../services/document-template.service';
+import { DocTemplateUtils } from '../models/shared.models';
+import { TemplateDto } from '../models/document-template.models';
 import {
     CreateTemplateDialogComponent,
     EditTemplateResult
-} from './CreateTemplate-dialog.component';
-import { ConfirmDialogComponent } from "../dialogs/ConfirmDialog.component";
+} from '../../test/CreateTemplate-dialog.component';
+import { ConfirmDialogComponent } from "../../dialogs/ConfirmDialog.component";
 import { MatSnackBar } from "@angular/material/snack-bar";
 
 export type DocumentTemplate = TemplateDto;
@@ -176,6 +176,18 @@ export type DocumentTemplate = TemplateDto;
                     </td>
                 </ng-container>
 
+            <!-- Comment Column -->
+            <ng-container matColumnDef="comment">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Коментар </th>
+                <td mat-cell *matCellDef="let template" class="comment-cell">
+                    <span class="comment-text"
+                          [matTooltip]="template.comment && template.comment.length > 50 ? template.comment : ''"
+                          [title]="template.comment && template.comment.length > 50 ? template.comment : ''">
+                        {{ template.comment ? (template.comment.length > 50 ? (template.comment | slice:0:50) + '...' : template.comment) : '-' }}
+                    </span>
+                </td>
+            </ng-container>
+
                 <!-- Created Column -->
                 <ng-container matColumnDef="created">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header> Создан </th>
@@ -216,7 +228,7 @@ export class DocTemplateComponent implements AfterViewInit {
     isLoading = signal(false);
     
     dataSource = new MatTableDataSource<DocumentTemplate>([]);
-    displayedColumns = ['menu', 'name', 'format', 'status', 'category', 'created', 'updated'];
+    displayedColumns = ['menu', 'name', 'format', 'status', 'category', 'comment', 'created', 'updated'];
 
     constructor() {
         effect(() => {

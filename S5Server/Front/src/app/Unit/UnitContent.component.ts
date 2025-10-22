@@ -86,7 +86,7 @@ import { SoldiersComponent } from '../Soldier/Soldier.component';
                         </mat-expansion-panel-header>
 
                         <div class="section-content">
-                            <page-soldiers [filterByUnitId]="unit.id"></page-soldiers>
+                            <app-page-soldiers [filterByUnitId]="unit.id"></app-page-soldiers>
                         </div>
                     </mat-expansion-panel>
 
