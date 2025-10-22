@@ -11,7 +11,7 @@ import { forkJoin, Observable, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, startWith, finalize } from 'rxjs/operators';
 import { AsyncPipe } from '@angular/common';
 
-import { SoldierDto } from "../../ServerService/soldier.service";
+import { SoldierDto } from "../Soldier/services/soldier.service";
 import { UnitService } from "../Unit/services/unit.service";
 import { DictRankService } from "../../ServerService/dictRanks.service";
 import { DictPositionService } from "../../ServerService/dictPosition.service";

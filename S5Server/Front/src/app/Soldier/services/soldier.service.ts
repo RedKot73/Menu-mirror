@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { LookupDto } from '../app/shared/models/lookup.models';
+import { LookupDto } from '../../shared/models/lookup.models';
 
 export interface SoldierDto {
     id: string;

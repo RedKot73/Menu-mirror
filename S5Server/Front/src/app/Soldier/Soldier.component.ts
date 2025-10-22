@@ -15,7 +15,7 @@ import { SlicePipe } from '@angular/common';
 
 import { SoldierDialogComponent } from '../dialogs/SoldierDialog';
 import { ConfirmDialogComponent } from "../dialogs/ConfirmDialog.component";
-import { SoldierService, SoldierDto, SoldierCreateDto } from "../../ServerService/soldier.service";
+import { SoldierService, SoldierDto, SoldierCreateDto } from "./services/soldier.service";
 import { UnitService, UnitDto } from "../Unit/services/unit.service";
 import { SoldierFiltersComponent } from './soldier-filters.component';
 
