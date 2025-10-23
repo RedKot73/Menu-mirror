@@ -32,6 +32,7 @@ import {
 } from '../../test/CreateTemplate-dialog.component';
 import { ConfirmDialogComponent } from "../../dialogs/ConfirmDialog.component";
 import { MatSnackBar } from "@angular/material/snack-bar";
+import { ErrorHandler } from '../../shared/models/ErrorHandler';
 
 export type DocumentTemplate = TemplateDto;
 
@@ -95,7 +96,8 @@ export class DocTemplateComponent implements AfterViewInit {
             },
             error: (error) => {
                 console.error('Error loading templates:', error);
-                this.snackBar.open('Ошибка загрузки шаблонов', 'Закрыть', { duration: 5000 });
+                const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка завантаження шаблонів');
+                this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
                 this.isLoading.set(false);
             }
         });
@@ -126,7 +128,8 @@ export class DocTemplateComponent implements AfterViewInit {
                     },
                     error: (error) => {
                         console.error('Error creating template:', error);
-                        this.snackBar.open('Помилка створення шаблону', 'Закрити', { duration: 5000 });
+                        const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка створення шаблону');
+                        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
                     }
                 });
             }
@@ -163,7 +166,8 @@ export class DocTemplateComponent implements AfterViewInit {
                     },
                     error: (error) => {
                         console.error('Error updating template:', error);
-                        this.snackBar.open('Помилка оновлення шаблону', 'Закрити', { duration: 5000 });
+                        const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка оновлення шаблону');
+                        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
                     }
                 });
             }
@@ -194,7 +198,8 @@ export class DocTemplateComponent implements AfterViewInit {
                     },
                     error: (error) => {
                         console.error('Error deleting template:', error);
-                        this.snackBar.open('Помилка видалення шаблону', 'Закрити', { duration: 5000 });
+                        const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка видалення шаблону');
+                        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
                     }
                 });
             }
@@ -212,24 +217,8 @@ export class DocTemplateComponent implements AfterViewInit {
             },
             error: (error) => {
                 console.error('Error downloading template:', error);
-                this.snackBar.open('Помилка завантаження шаблону', 'Закрити', { duration: 5000 });
-            }
-        });
-    }
-
-    /**
-     * Открывает предпросмотр шаблона
-     */
-    previewTemplate(template: DocumentTemplate): void {
-        if (!this.supportsPreview(template)) {
-            return;
-        }
-        this.documentTemplateService.getTemplateContent(template.id).subscribe({
-            next: (content) => {
-            },
-            error: (error) => {
-                console.error('Error getting template content:', error);
-                this.snackBar.open('Помилка отримання вмісту шаблону', 'Закрити', { duration: 5000 });
+                const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка завантаження шаблону');
+                this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
             }
         });
     }
@@ -244,7 +233,8 @@ export class DocTemplateComponent implements AfterViewInit {
             },
             error: (error) => {
                 console.error('Error publishing template:', error);
-                this.snackBar.open('Помилка публікації шаблону', 'Закрити', { duration: 5000 });
+                const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка публікації шаблону');
+                this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
             }
         });
     }
@@ -259,7 +249,8 @@ export class DocTemplateComponent implements AfterViewInit {
             },
             error: (error) => {
                 console.error('Error unpublishing template:', error);
-                this.snackBar.open('Помилка зняття шаблону з публікації', 'Закрити', { duration: 5000 });
+                const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка зняття шаблону з публікації');
+                this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
             }
         });
     }
@@ -276,21 +267,5 @@ export class DocTemplateComponent implements AfterViewInit {
      */
     getStatusLabel(isPublished: boolean): string {
         return DocTemplateUtils.getStatusLabel(isPublished);
-    }
-
-    /**
-     * Проверяет, поддерживается ли предпросмотр для шаблона
-     */
-    supportsPreview(template: DocumentTemplate): boolean {
-        const templateFormat = DocTemplateUtils.parseFormat(template.format);
-        return DocTemplateUtils.supportsClientRendering(templateFormat);
-    }
-
-    /**
-     * Получает расширение файла по формату
-     */
-    private getFileExtension(format: string): string {
-        const templateFormat = DocTemplateUtils.parseFormat(format);
-        return DocTemplateUtils.getFileExtension(templateFormat);
     }
 }

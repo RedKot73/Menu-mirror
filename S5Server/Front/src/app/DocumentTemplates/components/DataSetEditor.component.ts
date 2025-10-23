@@ -13,6 +13,7 @@ import { TemplateDataSetService } from '../services/template-dataset.service';
 import { TemplateDataSetListItem, TemplateDataSetDto } from '../models/template-dataset.models';
 import { CodeMirrorEditorComponent } from './CodeMirrorEditor.component';
 import { DocTemplateUtils } from '../models/shared.models';
+import { ErrorHandler } from '../../shared/models/ErrorHandler';
 
 @Component({
     selector: 'app-dataset-editor',
@@ -114,7 +115,7 @@ export class DataSetEditorComponent {
             },
             error: (error) => {
                 console.error('Error loading dataset content:', error);
-                const errorMessage = error?.error?.message || 'Помилка завантаження вмісту набору даних';
+                const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка завантаження вмісту набору даних');
                 this.loadError.set(errorMessage);
                 this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
                 this.isLoading.set(false);
@@ -143,8 +144,8 @@ export class DataSetEditorComponent {
         const dataJson = this.dataJsonControl.value;
         try {
             JSON.parse(dataJson);
-        } catch {
-            this.snackBar.open('Невалідний JSON формат', 'Закрити', { duration: 5000 });
+        } catch(e) {
+            this.showJsonValidationError(e);
             return;
         }
 
@@ -165,7 +166,7 @@ export class DataSetEditorComponent {
             },
             error: (error) => {
                 console.error('Error saving dataset content:', error);
-                const errorMessage = error?.error?.message || 'Помилка збереження набору даних';
+                const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка збереження набору даних');
                 this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
                 this.isLoading.set(false);
             }
@@ -211,8 +212,8 @@ export class DataSetEditorComponent {
             this.dataJsonControl.setValue(formatted);
             this.dataJsonControl.markAsDirty();
             this.formDirty.set(true);
-        } catch {
-            this.snackBar.open('Невалідний JSON формат', 'Закрити', { duration: 3000 });
+        } catch(e) {
+            this.showJsonValidationError(e);
         }
     }
 
@@ -221,5 +222,13 @@ export class DataSetEditorComponent {
      */
     getStatusLabel(isPublished: boolean): string {
         return DocTemplateUtils.getStatusLabel(isPublished);
+    }
+
+    /**
+     * Обробляє та показує помилку валідації JSON
+     */
+    private showJsonValidationError(error: unknown): void {
+        const errorMessage = ErrorHandler.handleJsonError(error);
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 7000 });
     }
 }

@@ -36,16 +36,14 @@
             </button>
 
             <mat-menu #templateMenu="matMenu">
+                <button mat-menu-item (click)="edit(template)">
+                    <mat-icon color="accent">edit</mat-icon>
+                    <span>Редагувати</span>
+                </button>
                 <button mat-menu-item (click)="downloadTemplate(template)">
                     <mat-icon color="primary">download</mat-icon>
                     <span>Завантажити шаблон</span>
                 </button>
-                @if (supportsPreview(template)) {
-                <button mat-menu-item (click)="previewTemplate(template)">
-                    <mat-icon color="primary">visibility</mat-icon>
-                    <span>Попередній перегляд</span>
-                </button>
-                }
                 @if (!template.isPublished) {
                 <button mat-menu-item (click)="publish(template)">
                     <mat-icon color="primary">published</mat-icon>
@@ -57,10 +55,6 @@
                     <span>Зняти з публікації</span>
                 </button>
                 }
-                <button mat-menu-item (click)="edit(template)">
-                    <mat-icon color="accent">edit</mat-icon>
-                    <span>Редагувати</span>
-                </button>
                 <mat-divider></mat-divider>
                 <button mat-menu-item (click)="delete(template)" class="delete-action">
                     <mat-icon color="warn">delete</mat-icon>

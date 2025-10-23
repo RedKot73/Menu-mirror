@@ -11,6 +11,7 @@ import { DocTemplateComponent } from './components/DocTemplate.component';
 import { DataSetTableComponent } from '../test/DataSetTable.component';
 import { TemplateEditorComponent } from './components/TemplateEditor.component';
 import { DataSetEditorComponent } from './components/DataSetEditor.component';
+import { ResultEditorComponent } from './components/ResultEditor.component';
 import { TemplateDto } from '../DocumentTemplates/models/document-template.models';
 import { TemplateDataSetListItem } from '../DocumentTemplates/models/template-dataset.models';
 
@@ -24,6 +25,7 @@ import { TemplateDataSetListItem } from '../DocumentTemplates/models/template-da
     DataSetTableComponent,
     TemplateEditorComponent,
     DataSetEditorComponent,
+    ResultEditorComponent,
   ],
   styleUrl: '../test/Test.component.scss',
   templateUrl: './DocTemplatesTree.component.html'
@@ -33,8 +35,15 @@ export class DocTemplatesTree implements AfterViewInit, OnDestroy {
 
   // ViewChild for container reference
   @ViewChild('containerRef') containerRef!: ElementRef<HTMLElement>;
+  @ViewChild('templateEditor') templateEditor?: TemplateEditorComponent;
+  @ViewChild('dataSetEditor') dataSetEditor?: DataSetEditorComponent;
+  
   selectedTemplate = signal<TemplateDto | null>(null);
   selectedDataSet = signal<TemplateDataSetListItem | null>(null);
+
+  // Signals для контенту редакторів (для ResultEditor)
+  templateContent = signal<string>('');
+  dataSetContent = signal<string>('');
 
   // Panel signals (replacing sidenav signals)
   navPanelWidth = signal(this.getSavedNavPanelWidth());
@@ -227,5 +236,29 @@ export class DocTemplatesTree implements AfterViewInit, OnDestroy {
    */
   onDataSetSelected(dataSet: TemplateDataSetListItem | null): void {
     this.selectedDataSet.set(dataSet);
+  }
+
+  /**
+   * Обробник зміни вкладки в правій панелі
+   * Оновлює контент для ResultEditor
+   */
+  onTabChange(index: number): void {
+    // Вкладка "Результат обробки" - індекс 2
+    if (index === 2) {
+      this.updateResultContent();
+    }
+  }
+
+  /**
+   * Оновлює контент для ResultEditor з поточних редакторів
+   */
+  private updateResultContent(): void {
+    // Отримуємо контент з TemplateEditor
+    const templateContent = this.templateEditor?.templateContentControl.value || '';
+    this.templateContent.set(templateContent);
+
+    // Отримуємо контент з DataSetEditor
+    const dataSetContent = this.dataSetEditor?.dataJsonControl.value || '';
+    this.dataSetContent.set(dataSetContent);
   }
 } 

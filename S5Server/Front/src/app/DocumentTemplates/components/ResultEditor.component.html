@@ -1,0 +1,79 @@
+<div class="template-editor-container">
+    @if (!hasContent()) {
+    <div class="no-template-selected">
+        <mat-icon>transform</mat-icon>
+        <p>Заповніть шаблон і дані для перегляду результату обробки</p>
+    </div>
+    } @else {
+    <div class="editor-header">
+        <div class="template-info">
+            <h3>Результат обробки</h3>
+            @if (canProcess()) {
+            <mat-chip class="status-draft">
+                <mat-icon>check_circle</mat-icon>
+                Готово до обробки
+            </mat-chip>
+            } @else {
+            <mat-chip>
+                <mat-icon>info</mat-icon>
+                Введіть шаблон і дані
+            </mat-chip>
+            }
+        </div>
+
+        <div class="editor-actions">
+            <button mat-icon-button
+                    (click)="reprocess()"
+                    [disabled]="!canProcess() || isProcessing()"
+                    matTooltip="Перезапустити обробку">
+                <mat-icon>refresh</mat-icon>
+            </button>
+
+            <button mat-icon-button
+                    (click)="clearResult()"
+                    [disabled]="!resultContent()"
+                    matTooltip="Очистити результат">
+                <mat-icon>clear</mat-icon>
+            </button>
+
+            <button mat-raised-button
+                    color="primary"
+                    (click)="processTemplate()"
+                    [disabled]="!canProcess()"
+                    matTooltip="Обробити шаблон">
+                <mat-icon>play_arrow</mat-icon>
+                Обробити
+            </button>
+        </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    @if (isProcessing()) {
+    <div class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Обробка шаблону...</p>
+    </div>
+    } @else if (processError()) {
+    <div class="error-container">
+        <mat-icon color="warn">error_outline</mat-icon>
+        <p>{{ processError() }}</p>
+        <button mat-raised-button color="accent" (click)="reprocess()">
+            Спробувати ще раз
+        </button>
+    </div>
+    } @else if (resultContent()) {
+    <div class="editor-content">
+        <app-codemirror-editor [content]="resultContent()"
+                               [language]="'html'"
+                               [readOnly]="true"
+                               class="codemirror-container"></app-codemirror-editor>
+    </div>
+    } @else {
+    <div class="no-template-selected">
+        <mat-icon>hourglass_empty</mat-icon>
+        <p>Натисніть "Обробити" для генерації результату</p>
+    </div>
+    }
+    }
+</div>
