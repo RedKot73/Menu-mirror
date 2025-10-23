@@ -13,14 +13,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { LookupDto } from '../shared/models/lookup.models';
-import { DictTemplateCategoriesService } from '../../ServerService/dictTemplateCategories.service';
-import { TemplateFormat, DocTemplateUtils } from '../DocumentTemplates/models/shared.models';
+import { LookupDto } from '../../shared/models/lookup.models';
+import { DictTemplateCategoriesService } from '../../../ServerService/dictTemplateCategories.service';
+import { TemplateFormat, DocTemplateUtils } from '../models/shared.models';
 import { 
   CreateTemplateDto,
   TemplateDto,
   TEMPLATE_FORMAT_OPTIONS 
-} from '../DocumentTemplates/models/document-template.models';
+} from '../models/document-template.models';
 
 export interface CreateTemplateDialogData {
   mode: 'create' | 'edit';
@@ -158,7 +158,7 @@ export interface EditTemplateResult {
         </mat-form-field>
 
         <!-- Published Checkbox -->
-        <div class="checkbox-section">
+        <div class="publish-section">
           <mat-checkbox formControlName="isPublished">
             Опублікований
           </mat-checkbox>

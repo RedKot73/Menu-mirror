@@ -1,0 +1,23 @@
+/* Используем общие стили из dialogs-shared.scss */
+@use './dialogs-shared.scss';
+
+/* Специфичные стили для CreateDataSet диалога */
+.create-section {
+  padding: 20px;
+  max-width: 600px;
+}
+
+.create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.name-field {
+  flex: 1;
+}
+
+.create-button {
+  height: 56px;
+  min-width: 120px;
+}

@@ -14,15 +14,12 @@ import { MatDialog } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { TemplateDataSetService } from '../DocumentTemplates/services/template-dataset.service';
-import {
-  TemplateDataSetListItem
-} from '../DocumentTemplates/models/template-dataset.models';
-import { TemplateDto } from '../DocumentTemplates/models/document-template.models';
-import { CreateDataSetDialogComponent } from './CreateDataSet-dialog.component';
-import { ConfirmDialogComponent } from "../dialogs/ConfirmDialog.component";
-import { TemplatePreviewDialogComponent } from '../DocumentTemplates/dialogs/template-preview-dialog.component';
-import { DocTemplateUtils } from '../DocumentTemplates/models/shared.models';
+import { TemplateDataSetService } from '../services/template-dataset.service';
+import { TemplateDataSetListItem } from '../models/template-dataset.models';
+import { TemplateDto } from '../models/document-template.models';
+import { CreateDataSetDialogComponent } from '../dialogs/CreateDataSet-dialog.component';
+import { ConfirmDialogComponent } from "../../dialogs/ConfirmDialog.component";
+import { DocTemplateUtils } from '../models/shared.models';
 import { MatSnackBar } from "@angular/material/snack-bar";
 
 @Component({
@@ -247,16 +244,6 @@ export class DataSetTableComponent implements AfterViewInit {
   }
 
   /**
-   * Просматривает набор данных
-   */
-  viewDataSet(dataSet: TemplateDataSetListItem): void {
-    console.log('View dataset:', dataSet);
-    // TODO: Открыть диалог просмотра набора данных
-    console.error('TODO: Открыть диалог просмотра набора данных');
-    this.snackBar.open('TODO: Открыть диалог просмотра набора данных', 'Закрыть', { duration: 5000 });
-}
-
-  /**
    * Обновляет список наборов данных
    */
   refreshDataSets(): void {
@@ -264,16 +251,6 @@ export class DataSetTableComponent implements AfterViewInit {
     if (template) {
       this.loadDataSets(template.id);
     }
-  }
-
-  previewTemplate(template: TemplateDto): void {
-    this.snackBar.open('TODO: Открыть диалог предварительного просмотра шаблона', 'Закрыть', { duration: 5000 });
-    this.dialog.open(TemplatePreviewDialogComponent, {
-      width: '90vw',
-      maxWidth: '1200px',
-      height: '90vh',
-      data: { template }
-    });
   }
 
   /**

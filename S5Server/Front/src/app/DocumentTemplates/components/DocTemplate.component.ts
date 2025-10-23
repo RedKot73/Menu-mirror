@@ -29,7 +29,7 @@ import { TemplateDto } from '../models/document-template.models';
 import {
     CreateTemplateDialogComponent,
     EditTemplateResult
-} from '../../test/CreateTemplate-dialog.component';
+} from '../dialogs/CreateTemplate-dialog.component';
 import { ConfirmDialogComponent } from "../../dialogs/ConfirmDialog.component";
 import { MatSnackBar } from "@angular/material/snack-bar";
 import { ErrorHandler } from '../../shared/models/ErrorHandler';

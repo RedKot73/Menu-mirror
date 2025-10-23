@@ -13,8 +13,9 @@ import { MatIconModule } from '@angular/material/icon';
 import {
   TemplateDataSetCreateDto, 
   TemplateDataSetUpdateDto
-} from '../DocumentTemplates/models/template-dataset.models';
-import { TemplateDataSetService } from '../DocumentTemplates/services/template-dataset.service';
+} from '../models/template-dataset.models';
+import { TemplateDataSetService } from '../services/template-dataset.service';
+import { ErrorHandler } from '../../shared/models/ErrorHandler';
 
 @Component({
     selector: 'app-data-sets-dialog',
@@ -73,9 +74,10 @@ import { TemplateDataSetService } from '../DocumentTemplates/services/template-d
             }
           </mat-form-field>
 
+          <!-- Published Checkbox -->
           <div class="publish-section">
             <mat-checkbox formControlName="isPublished">
-              Опубликовать набор данных
+              Опублікований
             </mat-checkbox>
           </div>
 
@@ -204,7 +206,7 @@ export class CreateDataSetDialogComponent implements OnInit {
       const formatted = JSON.stringify(parsed, null, 2);
       jsonControl.setValue(formatted);
     } catch (e) {
-      this.snackBar.open('Невалидный JSON для форматирования', 'Закрыть', { duration: 3000 });
+      this.snackBar.open(ErrorHandler.handleJsonError(e), 'Закрыть', { duration: 3000 });
     }
   }
 
@@ -241,13 +243,12 @@ export class CreateDataSetDialogComponent implements OnInit {
     this.templateDataSetService.createDataSet(this.data.templateId, createDto).subscribe({
       next: (createdDataSet) => {
         this.loading.set(false);
-        this.snackBar.open('Набор данных создан успешно', 'Закрыть', { duration: 3000 });
+        this.snackBar.open('Набір даних створено успішно', 'Закрити', { duration: 3000 });
         this.dialogRef.close(createdDataSet);
       },
       error: (error) => {
         this.loading.set(false);
-        console.error('Error creating dataset:', error);
-        this.snackBar.open('Ошибка при создании набора данных', 'Закрыть', { duration: 5000 });
+        this.snackBar.open(ErrorHandler.handleHttpError(error), 'Закрити', { duration: 5000 });
       }
     });
   }
@@ -275,13 +276,12 @@ export class CreateDataSetDialogComponent implements OnInit {
     this.templateDataSetService.updateDataSet(dataSetId, updateDto).subscribe({
       next: (updatedDataSet) => {
         this.loading.set(false);
-        this.snackBar.open('Набор данных обновлен успешно', 'Закрыть', { duration: 3000 });
+        this.snackBar.open('Набір даних оновлено успішно', 'Закрити', { duration: 3000 });
         this.dialogRef.close(updatedDataSet);
       },
       error: (error) => {
         this.loading.set(false);
-        console.error('Error updating dataset:', error);
-        this.snackBar.open('Ошибка при обновлении набора данных', 'Закрыть', { duration: 5000 });
+        this.snackBar.open(ErrorHandler.handleHttpError(error), 'Закрити', { duration: 5000 });
       }
     });
   }

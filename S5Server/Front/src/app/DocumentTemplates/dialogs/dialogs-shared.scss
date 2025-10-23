@@ -1,6 +1,6 @@
 /* Общие стили для диалогов DocumentTemplates */
 
-/* Основные контейнеры диалогов */
+/* ==================== Основные контейнеры диалогов ==================== */
 .dialog-content {
   overflow-y: auto;
 }
@@ -22,14 +22,29 @@
   overflow: hidden;
 }
 
-/* Кнопки и действия диалогов */
-.dialog-actions {
+/* ==================== Заголовки диалогов ==================== */
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  padding: 16px 24px;
-  border-top: 1px solid #e0e0e0;
 }
 
-/* Заголовки диалогов */
+.dialog-header {
+  padding: 20px 20px 0 20px;
+
+  h2 {
+    margin: 0 0 4px 0;
+    font-size: 20px;
+    font-weight: 500;
+  }
+}
+
+.dialog-subtitle {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
 .preview-header {
   display: flex;
   justify-content: space-between;
@@ -43,19 +58,152 @@
   }
 }
 
+/* ==================== Кнопки и действия диалогов ==================== */
+.dialog-actions {
+  padding: 16px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid #e0e0e0;
+}
+
 .preview-actions {
   display: flex;
   gap: 8px;
 }
 
-/* Общие заголовки диалогов */
-h2[mat-dialog-title] {
+/* ==================== Формы диалогов ==================== */
+.full-width {
+  width: 100%;
+}
+
+.form-row {
   display: flex;
-  align-items: center;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+/* ==================== Файловый инпут ==================== */
+.file-upload-section {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
-/* Табы в диалогах */
+.file-input-container {
+  position: relative;
+}
+
+.file-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.file-input-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #fafafa;
+  color: #666;
+  font-size: 14px;
+  text-align: center;
+  min-height: 60px;
+
+  &:hover {
+    border-color: #1976d2;
+    background-color: #f0f7ff;
+    color: #1976d2;
+  }
+
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.file-details {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 12px;
+  border-left: 4px solid #4caf50;
+}
+
+.file-detail {
+  margin-bottom: 4px;
+  font-size: 14px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #666;
+  padding: 8px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.file-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #f44336;
+  font-size: 14px;
+  padding: 8px;
+  background-color: #ffebee;
+  border-radius: 4px;
+  border-left: 4px solid #f44336;
+}
+
+/* ==================== JSON редактор ==================== */
+.json-textarea {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+
+.json-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* ==================== Бейджи статусов ==================== */
+.published-badge,
+.draft-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.published-badge {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.draft-badge {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.edit-mode-indicator {
+  color: #1976d2;
+  font-weight: 500;
+}
+
+/* ==================== Табы в диалогах ==================== */
 .preview-tabs {
   height: 100%;
   display: flex;
@@ -73,7 +221,7 @@ h2[mat-dialog-title] {
   }
 }
 
-/* Специфичные стили для preview диалогов */
+/* ==================== Preview специфичные стили ==================== */
 .empty-preview {
   text-align: center;
   padding: 64px 32px;
@@ -92,7 +240,20 @@ h2[mat-dialog-title] {
   }
 }
 
-/* Специфичные стили для data-sets-dialog */
+.preview-container {
+  height: 100%;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.preview-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* ==================== Data sets list ==================== */
 .data-sets-list {
   display: flex;
   flex-direction: column;
@@ -128,16 +289,13 @@ h2[mat-dialog-title] {
   gap: 8px;
 }
 
-/* Дополнительные стили для preview iframe */
-.preview-container {
-  height: 100%;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  overflow: hidden;
+.data-set-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.preview-iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
+.publish-section {
+  margin: 16px 0;
 }

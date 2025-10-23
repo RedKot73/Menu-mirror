@@ -114,26 +114,18 @@
 <!-- Actions Menu -->
 <mat-menu #actionsMenu="matMenu">
   <ng-template matMenuContent let-dataSet="dataSet">
-    <button mat-menu-item (click)="viewDataSet(dataSet)">
-      <mat-icon>visibility</mat-icon>
-      <span>Просмотр</span>
-    </button>
     <button mat-menu-item (click)="editDataSet(dataSet)">
       <mat-icon>edit</mat-icon>
-      <span>Редактировать</span>
+      <span>Редагувати</span>
     </button>
     <button mat-menu-item (click)="cloneDataSet(dataSet)">
       <mat-icon>content_copy</mat-icon>
-      <span>Клонировать</span>
-    </button>
-    <button mat-menu-item (click)="previewTemplate(dataSet.template)">
-      <mat-icon>preview</mat-icon>
-      Предварительный просмотр!!!
+      <span>Клонувати</span>
     </button>
     <mat-divider></mat-divider>
     <button mat-menu-item (click)="deleteDataSet(dataSet)" class="delete-action">
       <mat-icon>delete</mat-icon>
-      <span>Удалить</span>
+      <span>Видалити</span>
     </button>
   </ng-template>
 </mat-menu>

@@ -8,7 +8,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { DocTemplateComponent } from './components/DocTemplate.component';
-import { DataSetTableComponent } from '../test/DataSetTable.component';
+import { DataSetTableComponent } from './components/DataSetTable.component';
 import { TemplateEditorComponent } from './components/TemplateEditor.component';
 import { DataSetEditorComponent } from './components/DataSetEditor.component';
 import { ResultEditorComponent } from './components/ResultEditor.component';
