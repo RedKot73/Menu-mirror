@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 
 import { UnitTreeItemDto } from "./services/unit.service";
 
@@ -22,7 +23,8 @@ export interface UnitTreeNode extends UnitTreeItemDto {
         MatIconModule,
         MatProgressSpinnerModule,
         MatTooltipModule,
-        MatMenuModule
+        MatMenuModule,
+        MatDividerModule
     ],
     styleUrl: './unit-tree-node.component.scss',
     template: `
@@ -85,10 +87,12 @@ export interface UnitTreeNode extends UnitTreeItemDto {
                         <mat-icon color="accent">edit</mat-icon>
                         <span>Редагувати</span>
                     </button>
-                    <button mat-menu-item 
+                    <mat-divider></mat-divider>
+                    <button mat-menu-item
                             (click)="onDelete($event)"
-                            [disabled]="node().hasChildren">
-                        <mat-icon color="warn">delete</mat-icon>
+                            [disabled]="node().hasChildren"
+                            class="delete-action">
+                        <mat-icon>delete</mat-icon>
                         <span>Видалити</span>
                     </button>
                 </mat-menu>

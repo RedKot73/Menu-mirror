@@ -62,7 +62,7 @@ export class DataSetTableComponent implements AfterViewInit {
   isLoading = signal(false);
 
   // Table configuration
-  displayedColumns: string[] = ['name', 'isPublished', 'createdAtUtc', 'updatedAtUtc', 'actions'];
+  displayedColumns: string[] = ['menu', 'name', 'isPublished', 'createdAtUtc', 'updatedAtUtc'];
   dataSource = new MatTableDataSource<TemplateDataSetListItem>([]);
 
   constructor() {

@@ -10,6 +10,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { FormsModule } from '@angular/forms';
 import { SlicePipe } from '@angular/common';
 
@@ -34,6 +35,7 @@ export type Soldier = SoldierDto;
         MatOptionModule,
         MatTooltipModule,
         MatMenuModule,
+        MatDividerModule,
         FormsModule,
         SlicePipe,
         SoldierFiltersComponent

@@ -50,3 +50,4 @@ chrome.devtools.json
 /S5Server/bin/Release/net9.0
 /S5Server/publish
 /S5Server/wwwroot
+/Publish/S5Server

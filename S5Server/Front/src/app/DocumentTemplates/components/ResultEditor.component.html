@@ -23,7 +23,7 @@
 
         <div class="editor-actions">
             <button mat-icon-button
-                    (click)="reprocess()"
+                    (click)="processTemplate()"
                     [disabled]="!canProcess() || isProcessing()"
                     matTooltip="Перезапустити обробку">
                 <mat-icon>refresh</mat-icon>
@@ -58,7 +58,7 @@
     <div class="error-container">
         <mat-icon color="warn">error_outline</mat-icon>
         <p>{{ processError() }}</p>
-        <button mat-raised-button color="accent" (click)="reprocess()">
+        <button mat-raised-button color="accent" (click)="processTemplate()">
             Спробувати ще раз
         </button>
     </div>

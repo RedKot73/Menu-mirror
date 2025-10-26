@@ -10,6 +10,8 @@ import { MatChipsModule } from '@angular/material/chips';
 
 import { CodeMirrorEditorComponent } from './CodeMirrorEditor.component';
 import { ErrorHandler } from '../../shared/models/ErrorHandler';
+import { HandlebarsTemplateService } from '../services/handlebars-template.service';
+import { DatasetData } from '../models/template.types';
 
 @Component({
     selector: 'app-result-editor',
@@ -28,6 +30,7 @@ import { ErrorHandler } from '../../shared/models/ErrorHandler';
     styleUrl: './TemplateEditor.component.scss'
 })
 export class ResultEditorComponent {
+    private handlebarsTemplateService = inject(HandlebarsTemplateService);
     private snackBar = inject(MatSnackBar);
 
     // Input signals для отримання контенту з інших редакторів
@@ -87,22 +90,23 @@ export class ResultEditorComponent {
 
         try {
             // Валідація JSON
-            let data: Record<string, unknown>;
+            let data: DatasetData;
             try {
-                data = JSON.parse(dataSet) as Record<string, unknown>;
+                data = JSON.parse(dataSet) as DatasetData;
             } catch(e) {
                 const jsonError = ErrorHandler.handleJsonError(e);
                 throw new Error(jsonError);
             }
 
-            // TODO: Тут має бути виклик API для обробки шаблону
+            // Виклик API для обробки шаблону
             // Поки що просто показуємо шаблон і дані
-            const result = this.mockProcessTemplate(template, data);
+            //const result = this.mockProcessTemplate(template, data);
+            const result = this.handlebarsTemplateService.renderTemplate(template, data);
             
-            this.resultContent.set(result);
+            this.resultContent.set(result.content || '');
             this.isProcessing.set(false);
         } catch (error) {
-            console.error('Error processing template:', error);
+            //console.error('Error processing template:', error);
             const errorMessage = ErrorHandler.handleGenericError(error, 'Помилка обробки шаблону');
             this.processError.set(errorMessage);
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
@@ -114,6 +118,7 @@ export class ResultEditorComponent {
      * Тимчасова функція для імітації обробки шаблону
      * TODO: Замінити на реальний виклик API
      */
+/*    
     private mockProcessTemplate(template: string, data: Record<string, unknown>): string {
         // Простий mock - замінюємо {{key}} на значення з data
         let result = template;
@@ -145,19 +150,12 @@ export class ResultEditorComponent {
         
         return result;
     }
-
+*/
     /**
      * Очищує результат
      */
     clearResult(): void {
         this.resultContent.set('');
         this.processError.set('');
-    }
-
-    /**
-     * Перезапускає обробку
-     */
-    reprocess(): void {
-        this.processTemplate();
     }
 }

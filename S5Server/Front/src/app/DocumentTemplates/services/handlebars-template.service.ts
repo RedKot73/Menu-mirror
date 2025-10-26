@@ -1,13 +1,9 @@
 import { Injectable } from '@angular/core';
 import Handlebars from 'handlebars';
-import { DocTemplateUtils, TemplateFormat } from '../models/shared.models';
+import { DatasetData, TemplateRenderResult } from '../models/template.types';
+//import { /*DocTemplateUtils,*/ TemplateFormat } from '../models/shared.models';
 
-export interface TemplateRenderResult {
-  success: boolean;
-  content?: string;
-  error?: string;
-}
-
+/*
 export interface ClientTemplateProcessor {
   format: TemplateFormat.Html | TemplateFormat.Txt;
   supportsClientRendering: true;
@@ -19,6 +15,7 @@ export interface ServerTemplateProcessor {
 }
 
 export type TemplateProcessor = ClientTemplateProcessor | ServerTemplateProcessor;
+*/
 
 @Injectable({
   providedIn: 'root'
@@ -32,6 +29,7 @@ export class HandlebarsTemplateService {
   /**
    * Получает процессор для указанного формата
    */
+  /*
   getTemplateProcessor(format: TemplateFormat): TemplateProcessor {
     if (format === TemplateFormat.Html || format === TemplateFormat.Txt) {
       return {
@@ -45,12 +43,14 @@ export class HandlebarsTemplateService {
       supportsClientRendering: false
     };
   }
+  */
 
   /**
    * Компилирует и рендерит шаблон с данными на клиенте (только для HTML/TXT)
    */
-  renderTemplate(templateContent: string, data: any, format: TemplateFormat): TemplateRenderResult {
+  renderTemplate(templateContent: string, data: DatasetData/*, format: TemplateFormat*/): TemplateRenderResult {
     try {
+      /*
       // Проверяем поддержку клиентского рендеринга
       if (!DocTemplateUtils.supportsClientRendering(format)) {
         return {
@@ -58,8 +58,10 @@ export class HandlebarsTemplateService {
           error: `Формат ${format} не поддерживает клиентский рендеринг. Используйте серверный API.`
         };
       }
+      */
 
       // Валидация шаблона
+      /*
       const validation = this.validateTemplate(templateContent);
       if (!validation.isValid) {
         return {
@@ -67,6 +69,8 @@ export class HandlebarsTemplateService {
           error: `Ошибка в шаблоне: ${validation.errors.join(', ')}`
         };
       }
+      */
+      //data = { title: "My New Post", body: "This is my first post!" }
 
       // Компиляция шаблона
       const template = Handlebars.compile(templateContent);
@@ -79,10 +83,11 @@ export class HandlebarsTemplateService {
         content: renderedContent
       };
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
       return {
         success: false,
-        error: `Ошибка рендеринга: ${error.message || 'Неизвестная ошибка'}`
+        error: `Ошибка рендеринга: ${errorMessage}`
       };
     }
   }
@@ -90,6 +95,7 @@ export class HandlebarsTemplateService {
   /**
    * Валидирует синтаксис Handlebars шаблона
    */
+/*  
   validateTemplate(templateContent: string): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
@@ -122,10 +128,11 @@ export class HandlebarsTemplateService {
       };
     }
   }
-
+*/
   /**
    * Получает список переменных из шаблона
    */
+/*  
   extractTemplateVariables(templateContent: string): string[] {
     const variables = new Set<string>();
     
@@ -149,10 +156,11 @@ export class HandlebarsTemplateService {
 
     return Array.from(variables).sort();
   }
-
+*/
   /**
    * Создает пример данных на основе переменных в шаблоне
    */
+/*  
   generateSampleData(templateContent: string): any {
     const variables = this.extractTemplateVariables(templateContent);
     const sampleData: any = {};
@@ -174,7 +182,7 @@ export class HandlebarsTemplateService {
 
     return sampleData;
   }
-
+*/
   /**
    * Регистрирует кастомные помощники Handlebars
    */
@@ -241,7 +249,7 @@ export class HandlebarsTemplateService {
       return value + 1;
     });
   }
-
+/*
   private checkBracketBalance(content: string): { balanced: boolean } {
     let count = 0;
     let inHandlebars = false;
@@ -295,12 +303,12 @@ export class HandlebarsTemplateService {
     
     return errors;
   }
-
+*/
   private isHandlebarsHelper(variable: string): boolean {
     const helpers = ['if', 'unless', 'each', 'with', 'lookup', 'log', 'formatDate', 'formatNumber', 'ifCond', 'inc'];
     return helpers.includes(variable.split('.')[0]);
   }
-
+/*
   private getSampleValueForVariable(variable: string): any {
     const varName = variable.toLowerCase();
     
@@ -329,4 +337,5 @@ export class HandlebarsTemplateService {
     
     return 'Пример значения';
   }
+  */
 }

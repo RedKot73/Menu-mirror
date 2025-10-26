@@ -18,6 +18,10 @@
             </button>
 
             <mat-menu #soldierMenu="matMenu">
+                <button mat-menu-item (click)="edit(soldier)">
+                    <mat-icon color="accent">edit</mat-icon>
+                    <span>Редагувати</span>
+                </button>
                 <button mat-menu-item (click)="assign(soldier)">
                     <mat-icon color="primary">assignment_ind</mat-icon>
                     <span>Придати до підрозділу</span>
@@ -26,12 +30,9 @@
                     <mat-icon color="primary">swap_horiz</mat-icon>
                     <span>Перемістити до іншого підрозділу</span>
                 </button>
-                <button mat-menu-item (click)="edit(soldier)">
-                    <mat-icon color="accent">edit</mat-icon>
-                    <span>Редагувати</span>
-                </button>
-                <button mat-menu-item (click)="delete(soldier)">
-                    <mat-icon color="warn">delete</mat-icon>
+                <mat-divider></mat-divider>
+                <button mat-menu-item (click)="delete(soldier)" class="delete-action">
+                    <mat-icon>delete</mat-icon>
                     <span>Видалити</span>
                 </button>
             </mat-menu>

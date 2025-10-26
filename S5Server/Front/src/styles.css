@@ -2,3 +2,17 @@
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* ==================== Общие стили для меню действий ==================== */
+/* Стиль для опасных действий (удаление) в меню */
+.delete-action {
+  color: #f44336 !important;
+}
+
+.delete-action mat-icon {
+  color: #f44336;
+}
+
+.delete-action:hover {
+  background-color: #ffebee !important;
+}
