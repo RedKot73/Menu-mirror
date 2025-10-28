@@ -40,6 +40,8 @@
     "@types/handlebars": "^4.1.0",
     "codemirror": "^6.0.2",
     "handlebars": "^4.7.8",
+    "ngx-quill": "^28.0.1",
+    "quill": "^2.0.2",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"

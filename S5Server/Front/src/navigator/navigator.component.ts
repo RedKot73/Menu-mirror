@@ -9,10 +9,10 @@ import { MatMenuModule } from '@angular/material/menu';
   template: `
     <mat-toolbar class="sidenav-container">
       <button matButton [matMenuTriggerFor]="dictionaries">Довідники</button>
+      <!--
       <button matButton routerLink="/test" routerLinkActive="active-link">Шаблони документів New</button>
-<!--       
-      <button matButton routerLink="/doc-templates" routerLinkActive="active-link">Робота з шаблонами</button>
--->
+      -->
+      <button matButton routerLink="/quill-demo" routerLinkActive="active-link">Quill Demo</button>
       <button matButton routerLink="/templates" routerLinkActive="active-link">Шаблони документів</button>
       
       <button matButton routerLink="/units" routerLinkActive="active-link">Підрозділи</button>

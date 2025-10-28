@@ -22,6 +22,11 @@ export const routes: Routes = [
         title: 'Тестова сторінка'
     },
     {
+        path: 'quill-demo',
+        loadComponent: () => import('./DocumentTemplates/components/QuillDemo.component').then(m => m.QuillDemoComponent),
+        title: 'Quill WYSIWYG Редактор - Демо'
+    },
+    {
         path: 'dictArea',
         loadComponent: () => import('../dictionaries/dictAreaPage.component').then(m => m.dictAreaPage),
         title: 'Напрямок ЛБЗ'
@@ -63,16 +68,9 @@ export const routes: Routes = [
     },
     {
         path: 'templates', title: 'Шаблони документів',
-        loadComponent: () => import('./DocumentTemplates/DocTemplatesTree.component')//import('./DocumentTemplates/DocTemplatesTree.component')
+        loadComponent: () => import('./DocumentTemplates/DocTemplatesTree.component')
         .then(m => m.DocTemplatesTree)
     },
-    /*
-    {
-        path: 'doc-templates', title: 'Робота з шаблонами',
-        loadComponent: () => import('./test/DocTemplate.component')
-        .then(m => m.DocTemplateComponent)
-    },
-    */
     { path: 'orders', title: 'Розпорядження', component: OrdersPage },
     { path: 'reports', title: 'Донесення', component: ReportsPage },
     { path: 'users', title: 'Користувачі', component: UsersPage },

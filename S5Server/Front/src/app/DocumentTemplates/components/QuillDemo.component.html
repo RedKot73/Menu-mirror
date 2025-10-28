@@ -1,0 +1,113 @@
+<div class="demo-container">
+  <mat-card class="editor-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>edit_note</mat-icon>
+        Quill WYSIWYG Редактор (ngx-quill)
+      </mat-card-title>
+      <mat-card-subtitle>
+        Використання Delta (JSON) формату для збереження контенту
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="editor-wrapper">
+        <quill-editor
+          [(ngModel)]="editorContent"
+          [modules]="editorModules"
+          [styles]="editorStyles"
+          [readOnly]="readOnly()"
+          [placeholder]="'Почніть вводити текст...'"
+          [sanitize]="true"
+          [debounceTime]="300"
+          format="object"
+          theme="snow"
+          (onEditorCreated)="onEditorCreated($event)"
+          (onContentChanged)="onContentChanged($event)"
+          (onSelectionChanged)="onSelectionChanged($event)"
+        ></quill-editor>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <button mat-raised-button color="primary" (click)="logContent()">
+        <mat-icon>code</mat-icon>
+        Показати контент в консолі
+      </button>
+      
+      <button mat-raised-button (click)="clearContent()">
+        <mat-icon>clear</mat-icon>
+        Очистити
+      </button>
+      
+      <button mat-raised-button (click)="loadSample()">
+        <mat-icon>refresh</mat-icon>
+        Завантажити приклад
+      </button>
+
+      <mat-slide-toggle 
+        [checked]="readOnly()"
+        (change)="toggleReadOnly()"
+        class="readonly-toggle">
+        Тільки читання
+      </mat-slide-toggle>
+    </mat-card-actions>
+  </mat-card>
+
+  <mat-card class="preview-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>info</mat-icon>
+        Інформація про формати
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="info-section">
+        <h3>✅ Переваги Delta (JSON) формату:</h3>
+        <ul>
+          <li><strong>Точне збереження структури</strong> - без втрати форматування</li>
+          <li><strong>Незалежність від HTML</strong> - міграція між редакторами</li>
+          <li><strong>Версіювання</strong> - зручне відстеження змін</li>
+          <li><strong>Безпека</strong> - немає проблем з XSS атаками</li>
+          <li><strong>Продуктивність</strong> - швидкий парсинг та рендеринг</li>
+        </ul>
+
+        <mat-divider></mat-divider>
+
+        <h3>⚠️ Проблеми HTML формату:</h3>
+        <ul>
+          <li>Втрата форматування при парсингу</li>
+          <li>Різні браузери рендерять по-різному</li>
+          <li>Проблеми з безпекою (XSS)</li>
+          <li>Складність міграції на інші редактори</li>
+          <li>Quill v2 має issues з getSemanticHTML()</li>
+        </ul>
+
+        <mat-divider></mat-divider>
+
+        <h3>🔧 Налаштування компонента:</h3>
+        <ul>
+          <li><code>format="object"</code> - використання Delta (JSON)</li>
+          <li><code>sanitize="true"</code> - санітизація контенту</li>
+          <li><code>debounceTime="300"</code> - затримка оновлення моделі</li>
+          <li><code>readOnly</code> - режим тільки для читання</li>
+          <li><code>modules</code> - конфігурація toolbar та модулів</li>
+        </ul>
+
+        <mat-divider></mat-divider>
+
+        <div class="code-example">
+          <h3>📋 Приклад Delta структури:</h3>
+          <pre><code>{{'{
+  "ops": [
+    { "insert": "Hello " },
+    { "insert": "World", "attributes": { "bold": true } },
+    { "insert": "!\\n" }
+  ]
+}'}}</code></pre>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

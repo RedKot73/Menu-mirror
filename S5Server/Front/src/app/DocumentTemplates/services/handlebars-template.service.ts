@@ -188,7 +188,7 @@ export class HandlebarsTemplateService {
    */
   private registerHelpers(): void {
     // Помощник для форматирования дат
-    Handlebars.registerHelper('formatDate', function(date: any, format: string) {
+    Handlebars.registerHelper('formatDate', function (date: string | number | Date, format: string) {
       if (!date) {return '';}
       
       const d = new Date(date);
@@ -212,9 +212,9 @@ export class HandlebarsTemplateService {
     });
 
     // Помощник для форматирования чисел
-    Handlebars.registerHelper('formatNumber', function(number: any, decimals?: number) {
-      if (typeof number !== 'number') {return number;}
-      return number.toLocaleString('ru-RU', { 
+    Handlebars.registerHelper('formatNumber', function(value: number, decimals?: number) {
+      if (typeof value !== 'number') {return value;}
+      return value.toLocaleString('ru-RU', { 
         minimumFractionDigits: decimals || 0,
         maximumFractionDigits: decimals || 2
       });
