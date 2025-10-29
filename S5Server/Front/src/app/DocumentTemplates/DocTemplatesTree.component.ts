@@ -253,8 +253,8 @@ export class DocTemplatesTree implements AfterViewInit, OnDestroy {
    * Оновлює контент для ResultEditor з поточних редакторів
    */
   private updateResultContent(): void {
-    // Отримуємо контент з TemplateEditor
-    const templateContent = this.templateEditor?.templateContentControl.value || '';
+    // Отримуємо HTML контент з TemplateEditor для Handlebars
+    const templateContent = this.templateEditor?.editorContent() || '';
     this.templateContent.set(templateContent);
 
     // Отримуємо контент з DataSetEditor

@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed, effect, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormControl } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
@@ -8,10 +8,11 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
+import { QuillModule } from 'ngx-quill';
+import Quill from 'quill';
 
 import { DocumentTemplateService } from '../services/document-template.service';
 import { TemplateDto } from '../models/document-template.models';
-import { CodeMirrorEditorComponent } from './CodeMirrorEditor.component';
 import { DocTemplateUtils } from '../models/shared.models';
 
 @Component({
@@ -19,14 +20,14 @@ import { DocTemplateUtils } from '../models/shared.models';
     standalone: true,
     imports: [
         CommonModule,
-        ReactiveFormsModule,
+        FormsModule,
         MatButtonModule,
         MatIconModule,
         MatDividerModule,
         MatProgressSpinnerModule,
         MatTooltipModule,
         MatChipsModule,
-        CodeMirrorEditorComponent
+        QuillModule
     ],
     templateUrl: './TemplateEditor.component.html',
     styleUrl: './TemplateEditor.component.scss'
@@ -42,14 +43,36 @@ export class TemplateEditorComponent {
     isLoading = signal<boolean>(false);
     loadError = signal<string>('');
 
-    // FormControl для редагування контенту
-    templateContentControl = new FormControl<string>('', { nonNullable: true });
+    // HTML контент для Quill редактора (для Handlebars)
+    editorContent = signal<string>('');
 
     // Збереження оригінального контенту для порівняння
     private originalContent = signal<string>('');
 
     // Signal для відстеження стану форми
-    private formDirty = signal<boolean>(false);
+    formDirty = signal<boolean>(false);
+
+    // Інстанс Quill редактора
+    private quillEditor: Quill | null = null;
+
+    // Конфігурація модулів Quill
+    editorModules = {
+        toolbar: [
+            [{ header: [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            [{ align: [] }],
+            [{ color: [] }, { background: [] }],
+            ['link'],
+            ['blockquote', 'code-block'],
+            ['clean']
+        ]
+    };
+
+    // Стили редактора
+    editorStyles = {
+        height: '100%'
+    };
 
     // Обчислюване значення: чи є шаблон тільки для читання
     isReadonly = computed(() => {
@@ -77,11 +100,16 @@ export class TemplateEditorComponent {
     }
 
     /**
-     * Обробник зміни контенту в CodeMirror редакторі
+     * Викликається при створенні Quill редактора
      */
-    onEditorContentChange(newContent: string): void {
-        this.templateContentControl.setValue(newContent);
-        this.templateContentControl.markAsDirty();
+    onEditorCreated(quill: Quill): void {
+        this.quillEditor = quill;
+    }
+
+    /**
+     * Обробник зміни контенту в Quill редакторі
+     */
+    onEditorContentChange(_event: unknown): void {
         this.formDirty.set(true);
     }
 
@@ -101,12 +129,10 @@ export class TemplateEditorComponent {
 
         this.documentTemplateService.getTemplateContent(template.id).subscribe({
             next: (content: string) => {
-                // Встановлюємо значення
-                this.templateContentControl.setValue(content);
-                this.templateContentControl.markAsPristine();
-                this.templateContentControl.markAsUntouched();
-                this.formDirty.set(false);
+                // Встановлюємо HTML контент безпосередньо
+                this.editorContent.set(content);
                 this.originalContent.set(content);
+                this.formDirty.set(false);
                 this.isLoading.set(false);
             },
             error: (error) => {
@@ -130,18 +156,18 @@ export class TemplateEditorComponent {
             return;
         }
 
-        if (!this.templateContentControl.dirty) {
+        if (!this.formDirty()) {
             this.snackBar.open('Немає змін для збереження', 'Закрити', { duration: 3000 });
             return;
         }
 
-        const newContent = this.templateContentControl.value;
+        // Отримуємо HTML контент для Handlebars
+        const newContent = this.editorContent();
         this.isLoading.set(true);
 
         this.documentTemplateService.saveTemplateContent(currentTemplate.id, newContent).subscribe({
             next: () => {
                 this.snackBar.open('Шаблон успішно збережено!', 'Закрити', { duration: 3000 });
-                this.templateContentControl.markAsPristine();
                 this.formDirty.set(false);
                 this.originalContent.set(newContent);
                 this.isLoading.set(false);
@@ -161,7 +187,7 @@ export class TemplateEditorComponent {
     reloadContent(): void {
         const currentTemplate = this.template();
         if (currentTemplate) {
-            if (this.templateContentControl.dirty) {
+            if (this.formDirty()) {
                 const confirmed = confirm('У вас є незбережені зміни. Ви впевнені, що хочете перезавантажити?');
                 if (!confirmed) {
                     return;
@@ -172,16 +198,14 @@ export class TemplateEditorComponent {
     }
 
     /**
+    /**
      * Очищує редактор
      */
     private clearEditor(): void {
-        this.templateContentControl.setValue('');
-        this.templateContentControl.markAsPristine();
-        this.templateContentControl.markAsUntouched();
+        this.editorContent.set('');
         this.formDirty.set(false);
         this.originalContent.set('');
     }
-
     /**
      * Перевіряє, чи підтримується редагування для даного формату
      */

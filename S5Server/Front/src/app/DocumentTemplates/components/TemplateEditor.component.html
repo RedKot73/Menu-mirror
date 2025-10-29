@@ -61,14 +61,22 @@
     </div>
     } @else {
     <div class="editor-content">
-        <app-codemirror-editor [content]="templateContentControl.value"
-                               [language]="template()?.format || 'txt'"
-                               (contentChange)="onEditorContentChange($event)"
-                               (save)="saveTemplateContent()"
-                               [readOnly]="isReadonly()"
-                               class="codemirror-container"></app-codemirror-editor>
+        <quill-editor
+            [(ngModel)]="editorContent"
+            [modules]="editorModules"
+            [styles]="editorStyles"
+            [readOnly]="isReadonly()"
+            [placeholder]="'Введіть текст шаблону...'"
+            [sanitize]="true"
+            [debounceTime]="300"
+            format="html"
+            theme="snow"
+            (onEditorCreated)="onEditorCreated($event)"
+            (onContentChanged)="onEditorContentChange($event)"
+            class="quill-container">
+        </quill-editor>
 
-        @if (templateContentControl.dirty) {
+        @if (formDirty()) {
         <div class="unsaved-indicator">
             <mat-icon>edit</mat-icon>
             <span>Є незбережені зміни</span>

@@ -64,10 +64,16 @@
     </div>
     } @else if (resultContent()) {
     <div class="editor-content">
-        <app-codemirror-editor [content]="resultContent()"
-                               [language]="'html'"
-                               [readOnly]="true"
-                               class="codemirror-container"></app-codemirror-editor>
+        <quill-editor
+            [(ngModel)]="resultContent"
+            [modules]="editorModules"
+            [styles]="editorStyles"
+            [readOnly]="true"
+            [placeholder]="'Результат обробки відображатиметься тут...'"
+            format="html"
+            theme="snow"
+            class="quill-container">
+        </quill-editor>
     </div>
     } @else {
     <div class="no-template-selected">

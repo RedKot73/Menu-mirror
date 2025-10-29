@@ -10,8 +10,7 @@
       </mat-card-subtitle>
     </mat-card-header>
 
-    <mat-card-content>
-      <div class="editor-wrapper">
+    <mat-card-content  class="editor-wrapper">
         <quill-editor
           [(ngModel)]="editorContent"
           [modules]="editorModules"
@@ -26,7 +25,6 @@
           (onContentChanged)="onContentChanged($event)"
           (onSelectionChanged)="onSelectionChanged($event)"
         ></quill-editor>
-      </div>
     </mat-card-content>
 
     <mat-card-actions>

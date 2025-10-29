@@ -12,7 +12,7 @@ import Quill from 'quill';
 @Component({
     selector: 'app-quill-demo',
     standalone: true,
-    styleUrls: ['./QuillDemo.component.scss'],
+    styleUrls: ['./Quill.component.scss'],
     imports: [
         CommonModule,
         FormsModule,
@@ -23,7 +23,7 @@ import Quill from 'quill';
         MatDividerModule,
         MatSlideToggleModule
     ],
-    templateUrl: './QuillDemo.component.html'
+    templateUrl: './Quill.component.html'
 })
 export class QuillDemoComponent {
     // Используем Delta (JSON) вместо HTML для лучшей совместимости

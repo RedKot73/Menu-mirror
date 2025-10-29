@@ -1,5 +1,6 @@
 import { Component, inject, signal, computed, input, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
@@ -7,8 +8,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
+import { QuillModule } from 'ngx-quill';
 
-import { CodeMirrorEditorComponent } from './CodeMirrorEditor.component';
 import { ErrorHandler } from '../../shared/models/ErrorHandler';
 import { HandlebarsTemplateService } from '../services/handlebars-template.service';
 import { DatasetData } from '../models/template.types';
@@ -18,13 +19,14 @@ import { DatasetData } from '../models/template.types';
     standalone: true,
     imports: [
         CommonModule,
+        FormsModule,
         MatButtonModule,
         MatIconModule,
         MatDividerModule,
         MatProgressSpinnerModule,
         MatTooltipModule,
         MatChipsModule,
-        CodeMirrorEditorComponent
+        QuillModule
     ],
     templateUrl: './ResultEditor.component.html',
     styleUrl: './TemplateEditor.component.scss'
@@ -43,6 +45,16 @@ export class ResultEditorComponent {
 
     // Результат обробки
     resultContent = signal<string>('');
+
+    // Конфігурація модулів Quill для readonly режиму
+    editorModules = {
+        toolbar: false // Вимикаємо toolbar для readonly
+    };
+
+    // Стили редактора
+    editorStyles = {
+        height: '100%'
+    };
 
     // Обчислюване значення: чи є контент для обробки
     hasContent = computed(() => {
@@ -99,8 +111,6 @@ export class ResultEditorComponent {
             }
 
             // Виклик API для обробки шаблону
-            // Поки що просто показуємо шаблон і дані
-            //const result = this.mockProcessTemplate(template, data);
             const result = this.handlebarsTemplateService.renderTemplate(template, data);
             
             this.resultContent.set(result.content || '');
@@ -114,43 +124,6 @@ export class ResultEditorComponent {
         }
     }
 
-    /**
-     * Тимчасова функція для імітації обробки шаблону
-     * TODO: Замінити на реальний виклик API
-     */
-/*    
-    private mockProcessTemplate(template: string, data: Record<string, unknown>): string {
-        // Простий mock - замінюємо {{key}} на значення з data
-        let result = template;
-        
-        const replaceTokens = (obj: Record<string, unknown>, prefix: string = '') => {
-            for (const key in obj) {
-                if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                    const fullKey = prefix ? `${prefix}.${key}` : key;
-                    const value = obj[key];
-                    
-                    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-                        replaceTokens(value as Record<string, unknown>, fullKey);
-                    } else {
-                        // Заміна {{key}} та {{ key }}
-                        const patterns = [
-                            new RegExp(`\\{\\{\\s*${fullKey}\\s*\\}\\}`, 'g'),
-                            new RegExp(`\\{\\{${fullKey}\\}\\}`, 'g')
-                        ];
-                        
-                        patterns.forEach(pattern => {
-                            result = result.replace(pattern, String(value));
-                        });
-                    }
-                }
-            }
-        };
-
-        replaceTokens(data);
-        
-        return result;
-    }
-*/
     /**
      * Очищує результат
      */
