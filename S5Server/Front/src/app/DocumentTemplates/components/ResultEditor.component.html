@@ -30,6 +30,20 @@
             </button>
 
             <button mat-icon-button
+                    (click)="exportToWord()"
+                    [disabled]="!resultContent()"
+                    matTooltip="Експортувати в Word (.doc)">
+                <mat-icon>description</mat-icon>
+            </button>
+
+            <button mat-icon-button
+                    (click)="exportToRtf()"
+                    [disabled]="!resultContent()"
+                    matTooltip="Експортувати в RTF">
+                <mat-icon>article</mat-icon>
+            </button>
+
+            <button mat-icon-button
                     (click)="clearResult()"
                     [disabled]="!resultContent()"
                     matTooltip="Очистити результат">
@@ -43,6 +57,23 @@
                     matTooltip="Обробити шаблон">
                 <mat-icon>play_arrow</mat-icon>
                 Обробити
+            </button>
+
+            <button mat-raised-button
+                    color="accent"
+                    (click)="exportToWord()"
+                    [disabled]="!resultContent()"
+                    matTooltip="Експортувати результат у Word (.doc)">
+                <mat-icon>description</mat-icon>
+                Експорт в Word (.doc)
+            </button>
+
+            <button mat-raised-button
+                    (click)="exportToRtf()"
+                    [disabled]="!resultContent()"
+                    matTooltip="Експортувати результат у RTF">
+                <mat-icon>article</mat-icon>
+                Експорт в RTF
             </button>
         </div>
     </div>
@@ -65,6 +96,7 @@
     } @else if (resultContent()) {
     <div class="editor-content">
         <quill-editor
+            #resultQuillEditor
             [(ngModel)]="resultContent"
             [modules]="editorModules"
             [styles]="editorStyles"

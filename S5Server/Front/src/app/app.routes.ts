@@ -23,7 +23,7 @@ export const routes: Routes = [
     },
     {
         path: 'quill-demo',
-        loadComponent: () => import('./DocumentTemplates/components/QuillDemo.component').then(m => m.QuillDemoComponent),
+        loadComponent: () => import('./DocumentTemplates/components/Quill.component').then(m => m.QuillDemoComponent),
         title: 'Quill WYSIWYG Редактор - Демо'
     },
     {

@@ -39,6 +39,7 @@
     "@codemirror/view": "^6.38.6",
     "@types/handlebars": "^4.1.0",
     "codemirror": "^6.0.2",
+    "file-saver": "^2.0.5",
     "handlebars": "^4.7.8",
     "ngx-quill": "^28.0.1",
     "quill": "^2.0.2",
@@ -50,7 +51,12 @@
     "@angular/build": "^20.2.2",
     "@angular/cli": "^20.2.2",
     "@angular/compiler-cli": "^20.2.0",
+    "@types/file-saver": "^2.0.7",
     "eslint": "^9.37.0",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "vite": "^7.1.11"
+  },
+  "overrides": {
+    "vite": "^7.1.11"
   }
 }
