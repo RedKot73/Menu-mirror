@@ -29,7 +29,7 @@ import { DatasetData } from '../models/template.types';
         QuillModule
     ],
     templateUrl: './ResultEditor.component.html',
-    styleUrl: './TemplateEditor.component.scss'
+    styleUrl: './Editors.component.scss'
 })
 export class ResultEditorComponent {
     private handlebarsTemplateService = inject(HandlebarsTemplateService);
@@ -49,11 +49,6 @@ export class ResultEditorComponent {
     // Конфігурація модулів Quill для readonly режиму
     editorModules = {
         toolbar: false // Вимикаємо toolbar для readonly
-    };
-
-    // Стили редактора
-    editorStyles = {
-        height: '100%'
     };
 
     // Обчислюване значення: чи є контент для обробки

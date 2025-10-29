@@ -30,7 +30,7 @@ import { ErrorHandler } from '../../shared/models/ErrorHandler';
         CodeMirrorEditorComponent
     ],
     templateUrl: './DataSetEditor.component.html',
-    styleUrl: './TemplateEditor.component.scss'
+    styleUrl: './Editors.component.scss'
 })
 export class DataSetEditorComponent {
     private dataSetService = inject(TemplateDataSetService);

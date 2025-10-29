@@ -70,8 +70,8 @@
                                (contentChange)="onEditorContentChange($event)"
                                (save)="saveDataSetContent()"
                                [readOnly]="isReadonly()"
-                               class="codemirror-container"></app-codemirror-editor>
-
+                               class="codemirror-container">
+        </app-codemirror-editor>
         @if (dataJsonControl.dirty) {
         <div class="unsaved-indicator">
             <mat-icon>edit</mat-icon>

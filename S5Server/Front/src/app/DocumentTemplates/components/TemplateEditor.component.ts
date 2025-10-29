@@ -30,7 +30,7 @@ import { DocTemplateUtils } from '../models/shared.models';
         QuillModule
     ],
     templateUrl: './TemplateEditor.component.html',
-    styleUrl: './TemplateEditor.component.scss'
+    styleUrl: './Editors.component.scss'
 })
 export class TemplateEditorComponent {
     private documentTemplateService = inject(DocumentTemplateService);
@@ -67,11 +67,6 @@ export class TemplateEditorComponent {
             ['blockquote', 'code-block'],
             ['clean']
         ]
-    };
-
-    // Стили редактора
-    editorStyles = {
-        height: '100%'
     };
 
     // Обчислюване значення: чи є шаблон тільки для читання
