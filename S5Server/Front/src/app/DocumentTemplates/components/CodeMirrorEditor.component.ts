@@ -84,6 +84,7 @@ export class CodeMirrorEditorComponent implements AfterViewInit, OnChanges, OnDe
   private initializeEditor(): void {
     const extensions = [
       basicSetup,
+      EditorView.lineWrapping, // Автоматичне перенесення довгих рядків
       this.getLanguageExtension(),
       oneDark,
       keymap.of(defaultKeymap),

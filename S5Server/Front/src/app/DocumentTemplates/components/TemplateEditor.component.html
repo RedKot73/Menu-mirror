@@ -26,6 +26,17 @@
         </div>
 
         <div class="editor-actions">
+            <mat-slide-toggle 
+                [checked]="isHtmlMode()"
+                (change)="toggleEditorMode()"
+                [disabled]="isLoading() || !template()"
+                class="editor-mode-toggle">
+                <span class="toggle-label">
+                    <mat-icon>{{ isHtmlMode() ? 'code' : 'text_fields' }}</mat-icon>
+                    {{ isHtmlMode() ? 'HTML' : 'Text' }}
+                </span>
+            </mat-slide-toggle>
+
             <button mat-icon-button
                     (click)="reloadContent()"
                     [disabled]="isLoading()"
@@ -61,6 +72,8 @@
     </div>
     } @else {
     <div class="editor-content">
+        @if (!isHtmlMode()) {
+        <!-- Text режим: Quill WYSIWYG редактор -->
         <quill-editor
             [(ngModel)]="editorContent"
             [modules]="editorModules"
@@ -72,8 +85,20 @@
             theme="snow"
             (onEditorCreated)="onEditorCreated($event)"
             (onContentChanged)="onEditorContentChange($event)"
+            (ngModelChange)="templateContentControl.setValue($event); templateContentControl.markAsDirty()"
             class="quill-container">
         </quill-editor>
+        } @else {
+        <!-- HTML режим: CodeMirror редактор -->
+        <app-codemirror-editor 
+            [content]="templateContentControl.value || ''"
+            [language]="'html'"
+            (contentChange)="onCodeMirrorContentChange($event)"
+            (save)="saveTemplateContent()"
+            [readOnly]="isReadonly()"
+            class="codemirror-container">
+        </app-codemirror-editor>
+        }
 
         @if (formDirty()) {
         <div class="unsaved-indicator">

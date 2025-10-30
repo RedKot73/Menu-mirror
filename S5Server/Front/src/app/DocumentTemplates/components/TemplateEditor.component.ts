@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed, effect, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
@@ -8,8 +8,11 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { QuillModule } from 'ngx-quill';
 import Quill from 'quill';
+import { html as beautifyHtml } from 'js-beautify';
+import { CodeMirrorEditorComponent } from './CodeMirrorEditor.component';
 
 import { DocumentTemplateService } from '../services/document-template.service';
 import { TemplateDto } from '../models/document-template.models';
@@ -21,13 +24,16 @@ import { DocTemplateUtils } from '../models/shared.models';
     imports: [
         CommonModule,
         FormsModule,
+        ReactiveFormsModule,
         MatButtonModule,
         MatIconModule,
         MatDividerModule,
         MatProgressSpinnerModule,
         MatTooltipModule,
         MatChipsModule,
-        QuillModule
+        MatSlideToggleModule,
+        QuillModule,
+        CodeMirrorEditorComponent
     ],
     templateUrl: './TemplateEditor.component.html',
     styleUrl: './Editors.component.scss'
@@ -43,14 +49,20 @@ export class TemplateEditorComponent {
     isLoading = signal<boolean>(false);
     loadError = signal<string>('');
 
-    // HTML контент для Quill редактора (для Handlebars)
+    // FormControl для синхронізації між редакторами
+    templateContentControl = new FormControl<string>('');
+
+    // Signal для відображення в Quill (використовуємо FormControl.value)
     editorContent = signal<string>('');
+
+    // Режим редактора: false = Text (Quill), true = HTML (CodeMirror)
+    isHtmlMode = signal<boolean>(false);
 
     // Збереження оригінального контенту для порівняння
     private originalContent = signal<string>('');
 
     // Signal для відстеження стану форми
-    formDirty = signal<boolean>(false);
+    formDirty = computed(() => this.templateContentControl.dirty);
 
     // Інстанс Quill редактора
     private quillEditor: Quill | null = null;
@@ -105,7 +117,62 @@ export class TemplateEditorComponent {
      * Обробник зміни контенту в Quill редакторі
      */
     onEditorContentChange(_event: unknown): void {
-        this.formDirty.set(true);
+        // FormControl.dirty автоматично оновлюється
+        // Синхронізуємо з signal
+        this.editorContent.set(this.templateContentControl.value || '');
+    }
+
+    /**
+     * Обробник зміни контенту в CodeMirror редакторі
+     */
+    onCodeMirrorContentChange(newContent: string): void {
+        this.templateContentControl.setValue(newContent);
+        this.templateContentControl.markAsDirty();
+    }
+
+    /**
+     * Перемикач між Text (Quill) та HTML (CodeMirror) режимами
+     */
+    toggleEditorMode(): void {
+        const currentContent = this.templateContentControl.value || '';
+        this.isHtmlMode.update(mode => !mode);
+        
+        // Синхронізуємо контент при перемиканні
+        if (this.isHtmlMode()) {
+            // Переходимо в HTML режим - форматуємо HTML для читабельності
+            const formattedHtml = this.formatHtml(currentContent);
+            this.templateContentControl.setValue(formattedHtml);
+        } else {
+            // Переходимо в Text режим - оновлюємо signal для Quill
+            this.editorContent.set(currentContent);
+        }
+    }
+
+    /**
+     * Форматує HTML для кращої читабельності
+     */
+    private formatHtml(html: string): string {
+        if (!html || html.trim() === '') {
+            return html;
+        }
+
+        try {
+            return beautifyHtml(html, {
+                indent_size: 2,
+                indent_char: ' ',
+                max_preserve_newlines: 2,
+                preserve_newlines: true,
+                end_with_newline: false,
+                wrap_line_length: 0,
+                indent_inner_html: true,
+                unformatted: ['code', 'pre'],
+                content_unformatted: ['pre', 'textarea'],
+                extra_liners: []
+            });
+        } catch (error) {
+            console.error('Помилка форматування HTML:', error);
+            return html;
+        }
     }
 
     /**
@@ -124,10 +191,11 @@ export class TemplateEditorComponent {
 
         this.documentTemplateService.getTemplateContent(template.id).subscribe({
             next: (content: string) => {
-                // Встановлюємо HTML контент безпосередньо
+                // Встановлюємо HTML контент в FormControl
+                this.templateContentControl.setValue(content, { emitEvent: false });
+                this.templateContentControl.markAsPristine();
                 this.editorContent.set(content);
                 this.originalContent.set(content);
-                this.formDirty.set(false);
                 this.isLoading.set(false);
             },
             error: (error) => {
@@ -157,13 +225,13 @@ export class TemplateEditorComponent {
         }
 
         // Отримуємо HTML контент для Handlebars
-        const newContent = this.editorContent();
+        const newContent = this.templateContentControl.value || '';
         this.isLoading.set(true);
 
         this.documentTemplateService.saveTemplateContent(currentTemplate.id, newContent).subscribe({
             next: () => {
                 this.snackBar.open('Шаблон успішно збережено!', 'Закрити', { duration: 3000 });
-                this.formDirty.set(false);
+                this.templateContentControl.markAsPristine();
                 this.originalContent.set(newContent);
                 this.isLoading.set(false);
             },
@@ -193,12 +261,11 @@ export class TemplateEditorComponent {
     }
 
     /**
-    /**
      * Очищує редактор
      */
     private clearEditor(): void {
         this.editorContent.set('');
-        this.formDirty.set(false);
+        this.templateContentControl.reset('', { emitEvent: false });
         this.originalContent.set('');
     }
     /**
