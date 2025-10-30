@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed, effect, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
@@ -8,15 +8,12 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { QuillModule } from 'ngx-quill';
-import Quill from 'quill';
-import { html as beautifyHtml } from 'js-beautify';
-import { CodeMirrorEditorComponent } from './CodeMirrorEditor.component';
+import { EditorComponent, TINYMCE_SCRIPT_SRC } from '@tinymce/tinymce-angular';
 
 import { DocumentTemplateService } from '../services/document-template.service';
 import { TemplateDto } from '../models/document-template.models';
 import { DocTemplateUtils } from '../models/shared.models';
+import { TINYMCE_BASE_CONFIG } from './tinymce.config';
 
 @Component({
     selector: 'app-template-editor',
@@ -24,16 +21,16 @@ import { DocTemplateUtils } from '../models/shared.models';
     imports: [
         CommonModule,
         FormsModule,
-        ReactiveFormsModule,
         MatButtonModule,
         MatIconModule,
         MatDividerModule,
         MatProgressSpinnerModule,
         MatTooltipModule,
         MatChipsModule,
-        MatSlideToggleModule,
-        QuillModule,
-        CodeMirrorEditorComponent
+        EditorComponent
+    ],
+    providers: [
+        { provide: TINYMCE_SCRIPT_SRC, useValue: 'tinymce/tinymce.min.js' }
     ],
     templateUrl: './TemplateEditor.component.html',
     styleUrl: './Editors.component.scss'
@@ -49,37 +46,17 @@ export class TemplateEditorComponent {
     isLoading = signal<boolean>(false);
     loadError = signal<string>('');
 
-    // FormControl для синхронізації між редакторами
-    templateContentControl = new FormControl<string>('');
-
-    // Signal для відображення в Quill (використовуємо FormControl.value)
+    // Контент редактора
     editorContent = signal<string>('');
-
-    // Режим редактора: false = Text (Quill), true = HTML (CodeMirror)
-    isHtmlMode = signal<boolean>(false);
 
     // Збереження оригінального контенту для порівняння
     private originalContent = signal<string>('');
 
-    // Signal для відстеження стану форми
-    formDirty = computed(() => this.templateContentControl.dirty);
+    // Signal для відстеження змін
+    formDirty = signal<boolean>(false);
 
-    // Інстанс Quill редактора
-    private quillEditor: Quill | null = null;
-
-    // Конфігурація модулів Quill
-    editorModules = {
-        toolbar: [
-            [{ header: [1, 2, 3, false] }],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ list: 'ordered' }, { list: 'bullet' }],
-            [{ align: [] }],
-            [{ color: [] }, { background: [] }],
-            ['link'],
-            ['blockquote', 'code-block'],
-            ['clean']
-        ]
-    };
+    // Конфігурація TinyMCE (використовуємо базову конфігурацію)
+    tinymceConfig = TINYMCE_BASE_CONFIG;
 
     // Обчислюване значення: чи є шаблон тільки для читання
     isReadonly = computed(() => {
@@ -107,71 +84,16 @@ export class TemplateEditorComponent {
     }
 
     /**
-     * Викликається при створенні Quill редактора
+     * Обробник зміни контенту в TinyMCE
      */
-    onEditorCreated(quill: Quill): void {
-        this.quillEditor = quill;
-    }
-
-    /**
-     * Обробник зміни контенту в Quill редакторі
-     */
-    onEditorContentChange(_event: unknown): void {
-        // FormControl.dirty автоматично оновлюється
-        // Синхронізуємо з signal
-        this.editorContent.set(this.templateContentControl.value || '');
-    }
-
-    /**
-     * Обробник зміни контенту в CodeMirror редакторі
-     */
-    onCodeMirrorContentChange(newContent: string): void {
-        this.templateContentControl.setValue(newContent);
-        this.templateContentControl.markAsDirty();
-    }
-
-    /**
-     * Перемикач між Text (Quill) та HTML (CodeMirror) режимами
-     */
-    toggleEditorMode(): void {
-        const currentContent = this.templateContentControl.value || '';
-        this.isHtmlMode.update(mode => !mode);
+    onEditorContentChange(newContent: string): void {
+        this.editorContent.set(newContent);
         
-        // Синхронізуємо контент при перемиканні
-        if (this.isHtmlMode()) {
-            // Переходимо в HTML режим - форматуємо HTML для читабельності
-            const formattedHtml = this.formatHtml(currentContent);
-            this.templateContentControl.setValue(formattedHtml);
+        // Перевіряємо, чи контент відрізняється від оригіналу
+        if (newContent !== this.originalContent()) {
+            this.formDirty.set(true);
         } else {
-            // Переходимо в Text режим - оновлюємо signal для Quill
-            this.editorContent.set(currentContent);
-        }
-    }
-
-    /**
-     * Форматує HTML для кращої читабельності
-     */
-    private formatHtml(html: string): string {
-        if (!html || html.trim() === '') {
-            return html;
-        }
-
-        try {
-            return beautifyHtml(html, {
-                indent_size: 2,
-                indent_char: ' ',
-                max_preserve_newlines: 2,
-                preserve_newlines: true,
-                end_with_newline: false,
-                wrap_line_length: 0,
-                indent_inner_html: true,
-                unformatted: ['code', 'pre'],
-                content_unformatted: ['pre', 'textarea'],
-                extra_liners: []
-            });
-        } catch (error) {
-            console.error('Помилка форматування HTML:', error);
-            return html;
+            this.formDirty.set(false);
         }
     }
 
@@ -191,11 +113,10 @@ export class TemplateEditorComponent {
 
         this.documentTemplateService.getTemplateContent(template.id).subscribe({
             next: (content: string) => {
-                // Встановлюємо HTML контент в FormControl
-                this.templateContentControl.setValue(content, { emitEvent: false });
-                this.templateContentControl.markAsPristine();
+                // Встановлюємо HTML контент
                 this.editorContent.set(content);
                 this.originalContent.set(content);
+                this.formDirty.set(false);
                 this.isLoading.set(false);
             },
             error: (error) => {
@@ -225,13 +146,13 @@ export class TemplateEditorComponent {
         }
 
         // Отримуємо HTML контент для Handlebars
-        const newContent = this.templateContentControl.value || '';
+        const newContent = this.editorContent();
         this.isLoading.set(true);
 
         this.documentTemplateService.saveTemplateContent(currentTemplate.id, newContent).subscribe({
             next: () => {
                 this.snackBar.open('Шаблон успішно збережено!', 'Закрити', { duration: 3000 });
-                this.templateContentControl.markAsPristine();
+                this.formDirty.set(false);
                 this.originalContent.set(newContent);
                 this.isLoading.set(false);
             },
@@ -265,8 +186,8 @@ export class TemplateEditorComponent {
      */
     private clearEditor(): void {
         this.editorContent.set('');
-        this.templateContentControl.reset('', { emitEvent: false });
         this.originalContent.set('');
+        this.formDirty.set(false);
     }
     /**
      * Перевіряє, чи підтримується редагування для даного формату

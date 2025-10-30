@@ -26,17 +26,6 @@
         </div>
 
         <div class="editor-actions">
-            <mat-slide-toggle 
-                [checked]="isHtmlMode()"
-                (change)="toggleEditorMode()"
-                [disabled]="isLoading() || !template()"
-                class="editor-mode-toggle">
-                <span class="toggle-label">
-                    <mat-icon>{{ isHtmlMode() ? 'code' : 'text_fields' }}</mat-icon>
-                    {{ isHtmlMode() ? 'HTML' : 'Text' }}
-                </span>
-            </mat-slide-toggle>
-
             <button mat-icon-button
                     (click)="reloadContent()"
                     [disabled]="isLoading()"
@@ -72,33 +61,16 @@
     </div>
     } @else {
     <div class="editor-content">
-        @if (!isHtmlMode()) {
-        <!-- Text режим: Quill WYSIWYG редактор -->
-        <quill-editor
-            [(ngModel)]="editorContent"
-            [modules]="editorModules"
-            [readOnly]="isReadonly()"
-            [placeholder]="'Введіть текст шаблону...'"
-            [sanitize]="true"
-            [debounceTime]="300"
-            format="html"
-            theme="snow"
-            (onEditorCreated)="onEditorCreated($event)"
-            (onContentChanged)="onEditorContentChange($event)"
-            (ngModelChange)="templateContentControl.setValue($event); templateContentControl.markAsDirty()"
-            class="quill-container">
-        </quill-editor>
-        } @else {
-        <!-- HTML режим: CodeMirror редактор -->
-        <app-codemirror-editor 
-            [content]="templateContentControl.value || ''"
-            [language]="'html'"
-            (contentChange)="onCodeMirrorContentChange($event)"
-            (save)="saveTemplateContent()"
-            [readOnly]="isReadonly()"
-            class="codemirror-container">
-        </app-codemirror-editor>
-        }
+        <!-- TinyMCE редактор з вбудованим перемикачем Text/HTML (кнопка "Source code") -->
+        <div class="tinymce-container">
+            <editor
+                [(ngModel)]="editorContent"
+                [init]="tinymceConfig"
+                licenseKey="gpl"
+                [disabled]="isReadonly()"
+                (ngModelChange)="onEditorContentChange($any($event))">
+            </editor>
+        </div>
 
         @if (formDirty()) {
         <div class="unsaved-indicator">

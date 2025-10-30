@@ -8,11 +8,12 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
-import { QuillModule } from 'ngx-quill';
+import { EditorComponent, TINYMCE_SCRIPT_SRC } from '@tinymce/tinymce-angular';
 
 import { ErrorHandler } from '../../shared/models/ErrorHandler';
 import { HandlebarsTemplateService } from '../services/handlebars-template.service';
 import { DatasetData } from '../models/template.types';
+import { TINYMCE_READONLY_CONFIG } from './tinymce.config';
 
 @Component({
     selector: 'app-result-editor',
@@ -26,7 +27,10 @@ import { DatasetData } from '../models/template.types';
         MatProgressSpinnerModule,
         MatTooltipModule,
         MatChipsModule,
-        QuillModule
+        EditorComponent
+    ],
+    providers: [
+        { provide: TINYMCE_SCRIPT_SRC, useValue: 'tinymce/tinymce.min.js' }
     ],
     templateUrl: './ResultEditor.component.html',
     styleUrl: './Editors.component.scss'
@@ -46,10 +50,8 @@ export class ResultEditorComponent {
     // Результат обробки
     resultContent = signal<string>('');
 
-    // Конфігурація модулів Quill для readonly режиму
-    editorModules = {
-        toolbar: false // Вимикаємо toolbar для readonly
-    };
+    // Конфігурація TinyMCE для readonly режиму
+    tinymceConfig = TINYMCE_READONLY_CONFIG;
 
     // Обчислюване значення: чи є контент для обробки
     hasContent = computed(() => {

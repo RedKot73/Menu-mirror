@@ -95,16 +95,14 @@
     </div>
     } @else if (resultContent()) {
     <div class="editor-content">
-        <quill-editor
-            #resultQuillEditor
-            [(ngModel)]="resultContent"
-            [modules]="editorModules"
-            [readOnly]="true"
-            [placeholder]="'Результат обробки відображатиметься тут...'"
-            format="html"
-            theme="snow"
-            class="quill-container">
-        </quill-editor>
+        <div class="tinymce-container">
+            <editor
+                [(ngModel)]="resultContent"
+                [init]="tinymceConfig"
+                licenseKey="gpl"
+                [disabled]="true">
+            </editor>
+        </div>
     </div>
     } @else {
     <div class="no-template-selected">

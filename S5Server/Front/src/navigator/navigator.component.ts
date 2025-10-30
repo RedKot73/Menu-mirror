@@ -12,7 +12,6 @@ import { MatMenuModule } from '@angular/material/menu';
       <!--
       <button matButton routerLink="/test" routerLinkActive="active-link">Шаблони документів New</button>
       -->
-      <button matButton routerLink="/quill-demo" routerLinkActive="active-link">Quill Demo</button>
       <button matButton routerLink="/templates" routerLinkActive="active-link">Шаблони документів</button>
       
       <button matButton routerLink="/units" routerLinkActive="active-link">Підрозділи</button>

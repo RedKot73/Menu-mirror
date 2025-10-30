@@ -22,11 +22,6 @@ export const routes: Routes = [
         title: 'Тестова сторінка'
     },
     {
-        path: 'quill-demo',
-        loadComponent: () => import('./DocumentTemplates/components/Quill.component').then(m => m.QuillDemoComponent),
-        title: 'Quill WYSIWYG Редактор - Демо'
-    },
-    {
         path: 'dictArea',
         loadComponent: () => import('../dictionaries/dictAreaPage.component').then(m => m.dictAreaPage),
         title: 'Напрямок ЛБЗ'
