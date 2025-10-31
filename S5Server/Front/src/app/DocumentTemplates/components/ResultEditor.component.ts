@@ -42,6 +42,9 @@ export class ResultEditorComponent {
     // Input signals для отримання контенту з інших редакторів
     templateContent = input<string>('');
     dataSetContent = input<string>('');
+    
+    // Input signal для відновлення збереженого результату
+    savedResultContent = input<string>('');
 
     // Стан завантаження
     isProcessing = signal<boolean>(false);
@@ -71,13 +74,20 @@ export class ResultEditorComponent {
         effect(() => {
             const template = this.templateContent();
             const dataSet = this.dataSetContent();
+            const savedResult = this.savedResultContent();
             
-            // Автоматично обробляємо при зміні контенту, якщо обидва поля заповнені
-            if (template && dataSet) {
-                this.processTemplate();
-            } else {
-                this.resultContent.set('');
+            // Якщо є збережений результат, використовуємо його
+            if (savedResult) {
+                this.resultContent.set(savedResult);
                 this.processError.set('');
+            } else {
+                // Автоматично обробляємо при зміні контенту, якщо обидва поля заповнені
+                if (template && dataSet) {
+                    this.processTemplate();
+                } else {
+                    this.resultContent.set('');
+                    this.processError.set('');
+                }
             }
         });
     }

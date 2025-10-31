@@ -12,6 +12,7 @@ export const TINYMCE_BASE_CONFIG: EditorComponent['init'] = {
         'undo redo | blocks | bold italic underline strikethrough',
         'alignleft aligncenter alignright | bullist numlist | link table | code | help'
     ],
+    toolbar_mode: 'scrolling',
     menubar: false,
     min_height: 400,
     resize: true,

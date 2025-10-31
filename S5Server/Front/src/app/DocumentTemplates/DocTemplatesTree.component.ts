@@ -37,6 +37,7 @@ export class DocTemplatesTree implements AfterViewInit, OnDestroy {
   @ViewChild('containerRef') containerRef!: ElementRef<HTMLElement>;
   @ViewChild('templateEditor') templateEditor?: TemplateEditorComponent;
   @ViewChild('dataSetEditor') dataSetEditor?: DataSetEditorComponent;
+  @ViewChild('resultEditor') resultEditor?: ResultEditorComponent;
   
   selectedTemplate = signal<TemplateDto | null>(null);
   selectedDataSet = signal<TemplateDataSetListItem | null>(null);
@@ -44,6 +45,18 @@ export class DocTemplatesTree implements AfterViewInit, OnDestroy {
   // Signals для контенту редакторів (для ResultEditor)
   templateContent = signal<string>('');
   dataSetContent = signal<string>('');
+  
+  // Signal для відстеження активної вкладки
+  activeTabIndex = signal<number>(0);
+  
+  // Signal для контролю рендерингу TemplateEditor
+  shouldRenderTemplateEditor = signal<boolean>(true);
+  
+  // Signal для контролю рендерингу ResultEditor
+  shouldRenderResultEditor = signal<boolean>(true);
+  
+  // Signal для збереження результату обробки
+  resultContent = signal<string>('');
 
   // Panel signals (replacing sidenav signals)
   navPanelWidth = signal(this.getSavedNavPanelWidth());
@@ -229,6 +242,10 @@ export class DocTemplatesTree implements AfterViewInit, OnDestroy {
     this.selectedTemplate.set(template);
     // Сбрасываем выбранный набор данных при смене шаблона
     this.selectedDataSet.set(null);
+    // Очищаємо збережений контент при виборі нового шаблону
+    this.templateContent.set('');
+    // Очищаємо збережений результат
+    this.resultContent.set('');
   }
 
   /**
@@ -243,22 +260,45 @@ export class DocTemplatesTree implements AfterViewInit, OnDestroy {
    * Оновлює контент для ResultEditor
    */
   onTabChange(index: number): void {
-    // Вкладка "Результат обробки" - індекс 2
-    if (index === 2) {
-      this.updateResultContent();
+    const previousIndex = this.activeTabIndex();
+    
+    // Зберігаємо контент з TemplateEditor перед переключенням
+    if (previousIndex === 0 && index !== 0) {
+      const content = this.templateEditor?.editorContent() || '';
+      this.templateContent.set(content);
+      
+      // Знищуємо редактор
+      this.shouldRenderTemplateEditor.set(false);
     }
-  }
-
-  /**
-   * Оновлює контент для ResultEditor з поточних редакторів
-   */
-  private updateResultContent(): void {
-    // Отримуємо HTML контент з TemplateEditor для Handlebars
-    const templateContent = this.templateEditor?.editorContent() || '';
-    this.templateContent.set(templateContent);
-
-    // Отримуємо контент з DataSetEditor
-    const dataSetContent = this.dataSetEditor?.dataJsonControl.value || '';
-    this.dataSetContent.set(dataSetContent);
+    
+    // Зберігаємо результат з ResultEditor перед переключенням
+    if (previousIndex === 2 && index !== 2) {
+      const result = this.resultEditor?.resultContent() || '';
+      this.resultContent.set(result);
+      
+      // Знищуємо ResultEditor
+      this.shouldRenderResultEditor.set(false);
+    }
+    
+    // Зберігаємо контент з DataSetEditor якщо переходимо на вкладку результату
+    if (index === 2) {
+      const dataSetContent = this.dataSetEditor?.dataJsonControl.value || '';
+      this.dataSetContent.set(dataSetContent);
+      
+      // Відновлюємо ResultEditor
+      setTimeout(() => {
+        this.shouldRenderResultEditor.set(true);
+      }, 0);
+    }
+    
+    // Відновлюємо редактор при поверненні на вкладку шаблону
+    if (index === 0) {
+      // Використовуємо setTimeout щоб дати Angular час на оновлення DOM
+      setTimeout(() => {
+        this.shouldRenderTemplateEditor.set(true);
+      }, 0);
+    }
+    
+    this.activeTabIndex.set(index);
   }
 } 

@@ -34,10 +34,13 @@
     <div class="panel content-panel" [style.width.%]="contentPanelWidth()">
         <mat-tab-group dynamicHeight (selectedIndexChange)="onTabChange($event)">
             <mat-tab label="Шаблон">
-                <!-- Template Editor -->
-                <app-template-editor #templateEditor
-                                     [template]="selectedTemplate()">
-                </app-template-editor>
+                <!-- Template Editor - умовний рендеринг для пересоздання -->
+                @if (shouldRenderTemplateEditor()) {
+                    <app-template-editor #templateEditor
+                                         [template]="selectedTemplate()"
+                                         [savedContent]="templateContent()">
+                    </app-template-editor>
+                }
             </mat-tab>
             <mat-tab label="Дані документа">
                 <!-- DataSet Editor -->
@@ -46,10 +49,14 @@
                 </app-dataset-editor>
             </mat-tab>
             <mat-tab label="Результат обробки">
-                <!-- Result Editor -->
-                <app-result-editor [templateContent]="templateContent()"
-                                   [dataSetContent]="dataSetContent()">
-                </app-result-editor>
+                <!-- Result Editor - умовний рендеринг для пересоздання -->
+                @if (shouldRenderResultEditor()) {
+                    <app-result-editor #resultEditor
+                                       [templateContent]="templateContent()"
+                                       [dataSetContent]="dataSetContent()"
+                                       [savedResultContent]="resultContent()">
+                    </app-result-editor>
+                }
             </mat-tab>
         </mat-tab-group>
     </div>

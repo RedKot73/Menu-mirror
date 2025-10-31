@@ -41,6 +41,9 @@ export class TemplateEditorComponent {
 
     // Input signal для отримання шаблону ззовні
     template = input<TemplateDto | null>(null);
+    
+    // Input signal для відновлення збереженого контенту
+    savedContent = input<string>('');
 
     // Стан завантаження та помилок
     isLoading = signal<boolean>(false);
@@ -60,8 +63,8 @@ export class TemplateEditorComponent {
 
     // Обчислюване значення: чи є шаблон тільки для читання
     isReadonly = computed(() => {
-        return this.template() !== null &&
-            this.template()!.isPublished;
+        return this.template()!.isPublished;
+            /*this.template() !== null*/
     });
 
     // Обчислюване значення: чи можна зберегти
@@ -75,8 +78,18 @@ export class TemplateEditorComponent {
         // Реагуємо на зміну шаблону
         effect(() => {
             const currentTemplate = this.template();
+            const saved = this.savedContent();
+            
             if (currentTemplate) {
-                this.loadTemplateContent(currentTemplate);
+                // Якщо є збережений контент, використовуємо його
+                if (saved) {
+                    this.editorContent.set(saved);
+                    this.originalContent.set(saved);
+                    this.formDirty.set(false);
+                } else {
+                    // Інакше завантажуємо з сервера
+                    this.loadTemplateContent(currentTemplate);
+                }
             } else {
                 this.clearEditor();
             }
