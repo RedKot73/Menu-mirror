@@ -8,12 +8,13 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
-import { EditorComponent, TINYMCE_SCRIPT_SRC } from '@tinymce/tinymce-angular';
+import { AngularEditorModule } from '@kolkov/angular-editor';
+import { HttpClientModule } from '@angular/common/http';
 
 import { ErrorHandler } from '../../shared/models/ErrorHandler';
 import { HandlebarsTemplateService } from '../services/handlebars-template.service';
 import { DatasetData } from '../models/template.types';
-import { TINYMCE_READONLY_CONFIG } from './tinymce.config';
+import { ANGULAR_EDITOR_READONLY_CONFIG } from './angular-editor.config';
 
 @Component({
     selector: 'app-result-editor',
@@ -27,10 +28,8 @@ import { TINYMCE_READONLY_CONFIG } from './tinymce.config';
         MatProgressSpinnerModule,
         MatTooltipModule,
         MatChipsModule,
-        EditorComponent
-    ],
-    providers: [
-        { provide: TINYMCE_SCRIPT_SRC, useValue: 'tinymce/tinymce.min.js' }
+        AngularEditorModule,
+        HttpClientModule
     ],
     templateUrl: './ResultEditor.component.html',
     styleUrl: './Editors.component.scss'
@@ -42,9 +41,6 @@ export class ResultEditorComponent {
     // Input signals для отримання контенту з інших редакторів
     templateContent = input<string>('');
     dataSetContent = input<string>('');
-    
-    // Input signal для відновлення збереженого результату
-    savedResultContent = input<string>('');
 
     // Стан завантаження
     isProcessing = signal<boolean>(false);
@@ -53,8 +49,8 @@ export class ResultEditorComponent {
     // Результат обробки
     resultContent = signal<string>('');
 
-    // Конфігурація TinyMCE для readonly режиму
-    tinymceConfig = TINYMCE_READONLY_CONFIG;
+    // Конфігурація Angular Editor для readonly режиму
+    editorConfig = ANGULAR_EDITOR_READONLY_CONFIG;
 
     // Обчислюване значення: чи є контент для обробки
     hasContent = computed(() => {
@@ -74,20 +70,13 @@ export class ResultEditorComponent {
         effect(() => {
             const template = this.templateContent();
             const dataSet = this.dataSetContent();
-            const savedResult = this.savedResultContent();
             
-            // Якщо є збережений результат, використовуємо його
-            if (savedResult) {
-                this.resultContent.set(savedResult);
-                this.processError.set('');
+            // Автоматично обробляємо при зміні контенту, якщо обидва поля заповнені
+            if (template && dataSet) {
+                this.processTemplate();
             } else {
-                // Автоматично обробляємо при зміні контенту, якщо обидва поля заповнені
-                if (template && dataSet) {
-                    this.processTemplate();
-                } else {
-                    this.resultContent.set('');
-                    this.processError.set('');
-                }
+                this.resultContent.set('');
+                this.processError.set('');
             }
         });
     }

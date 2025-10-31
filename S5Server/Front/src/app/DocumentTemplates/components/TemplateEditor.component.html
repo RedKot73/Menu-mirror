@@ -61,15 +61,13 @@
     </div>
     } @else {
     <div class="editor-content">
-        <!-- TinyMCE редактор з вбудованим перемикачем Text/HTML (кнопка "Source code") -->
-        <div class="tinymce-container">
-            <editor
+        <!-- Angular Editor з вбудованим перемикачем Text/HTML -->
+        <div class="angular-editor-container">
+            <angular-editor
                 [(ngModel)]="editorContent"
-                [init]="tinymceConfig"
-                licenseKey="gpl"
-                [disabled]="isReadonly()"
+                [config]="editorConfig"
                 (ngModelChange)="onEditorContentChange($any($event))">
-            </editor>
+            </angular-editor>
         </div>
 
         @if (formDirty()) {

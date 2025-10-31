@@ -52,8 +52,8 @@
               },
               {
                 "glob": "**/*",
-                "input": "node_modules/tinymce",
-                "output": "/tinymce/"
+                "input": "src/assets",
+                "output": "/assets/"
               }
             ],
             "styles": [

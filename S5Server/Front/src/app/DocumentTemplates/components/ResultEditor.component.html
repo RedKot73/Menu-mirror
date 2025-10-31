@@ -95,13 +95,11 @@
     </div>
     } @else if (resultContent()) {
     <div class="editor-content">
-        <div class="tinymce-container">
-            <editor
+        <div class="angular-editor-container">
+            <angular-editor
                 [(ngModel)]="resultContent"
-                [init]="tinymceConfig"
-                licenseKey="gpl"
-                [disabled]="true">
-            </editor>
+                [config]="editorConfig">
+            </angular-editor>
         </div>
     </div>
     } @else {

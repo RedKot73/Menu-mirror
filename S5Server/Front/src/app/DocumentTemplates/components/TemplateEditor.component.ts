@@ -8,12 +8,12 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
-import { EditorComponent, TINYMCE_SCRIPT_SRC } from '@tinymce/tinymce-angular';
+import { AngularEditorModule } from '@kolkov/angular-editor';
 
 import { DocumentTemplateService } from '../services/document-template.service';
 import { TemplateDto } from '../models/document-template.models';
 import { DocTemplateUtils } from '../models/shared.models';
-import { TINYMCE_BASE_CONFIG } from './tinymce.config';
+import { ANGULAR_EDITOR_BASE_CONFIG } from './angular-editor.config';
 
 @Component({
     selector: 'app-template-editor',
@@ -27,10 +27,7 @@ import { TINYMCE_BASE_CONFIG } from './tinymce.config';
         MatProgressSpinnerModule,
         MatTooltipModule,
         MatChipsModule,
-        EditorComponent
-    ],
-    providers: [
-        { provide: TINYMCE_SCRIPT_SRC, useValue: 'tinymce/tinymce.min.js' }
+        AngularEditorModule
     ],
     templateUrl: './TemplateEditor.component.html',
     styleUrl: './Editors.component.scss'
@@ -41,9 +38,6 @@ export class TemplateEditorComponent {
 
     // Input signal для отримання шаблону ззовні
     template = input<TemplateDto | null>(null);
-    
-    // Input signal для відновлення збереженого контенту
-    savedContent = input<string>('');
 
     // Стан завантаження та помилок
     isLoading = signal<boolean>(false);
@@ -58,8 +52,8 @@ export class TemplateEditorComponent {
     // Signal для відстеження змін
     formDirty = signal<boolean>(false);
 
-    // Конфігурація TinyMCE (використовуємо базову конфігурацію)
-    tinymceConfig = TINYMCE_BASE_CONFIG;
+    // Конфігурація Angular Editor (використовуємо базову конфігурацію)
+    editorConfig = ANGULAR_EDITOR_BASE_CONFIG;
 
     // Обчислюване значення: чи є шаблон тільки для читання
     isReadonly = computed(() => {
@@ -78,18 +72,10 @@ export class TemplateEditorComponent {
         // Реагуємо на зміну шаблону
         effect(() => {
             const currentTemplate = this.template();
-            const saved = this.savedContent();
             
             if (currentTemplate) {
-                // Якщо є збережений контент, використовуємо його
-                if (saved) {
-                    this.editorContent.set(saved);
-                    this.originalContent.set(saved);
-                    this.formDirty.set(false);
-                } else {
-                    // Інакше завантажуємо з сервера
-                    this.loadTemplateContent(currentTemplate);
-                }
+                // Завантажуємо контент з сервера
+                this.loadTemplateContent(currentTemplate);
             } else {
                 this.clearEditor();
             }
