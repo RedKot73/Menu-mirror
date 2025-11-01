@@ -61,13 +61,18 @@
     </div>
     } @else {
     <div class="editor-content">
-        <!-- Angular Editor з вбудованим перемикачем Text/HTML -->
-        <div class="angular-editor-container">
-            <angular-editor
-                [(ngModel)]="editorContent"
-                [config]="editorConfig"
-                (ngModelChange)="onEditorContentChange($any($event))">
-            </angular-editor>
+        <!-- ngx-editor -->
+        <div class="ngx-editor-container">
+            <div class="NgxEditor__Wrapper">
+                <ngx-editor-menu [editor]="editor" [toolbar]="toolbar"></ngx-editor-menu>
+                <ngx-editor
+                    [editor]="editor"
+                    [(ngModel)]="editorContent"
+                    [disabled]="isReadonly()"
+                    [placeholder]="'Введіть текст шаблону...'"
+                    (ngModelChange)="onEditorContentChange($any($event))">
+                </ngx-editor>
+            </div>
         </div>
 
         @if (formDirty()) {

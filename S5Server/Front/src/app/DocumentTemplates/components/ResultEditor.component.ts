@@ -1,6 +1,6 @@
-import { Component, inject, signal, computed, input, effect } from '@angular/core';
+import { Component, inject, signal, computed, input, effect, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
@@ -8,13 +8,12 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
-import { AngularEditorModule } from '@kolkov/angular-editor';
-import { HttpClientModule } from '@angular/common/http';
+import { Editor, NgxEditorModule, Toolbar } from 'ngx-editor';
 
 import { ErrorHandler } from '../../shared/models/ErrorHandler';
 import { HandlebarsTemplateService } from '../services/handlebars-template.service';
 import { DatasetData } from '../models/template.types';
-import { ANGULAR_EDITOR_READONLY_CONFIG } from './angular-editor.config';
+import { NGX_EDITOR_TOOLBAR_READONLY } from './ngx-editor.config';
 
 @Component({
     selector: 'app-result-editor',
@@ -22,21 +21,25 @@ import { ANGULAR_EDITOR_READONLY_CONFIG } from './angular-editor.config';
     imports: [
         CommonModule,
         FormsModule,
+        ReactiveFormsModule,
         MatButtonModule,
         MatIconModule,
         MatDividerModule,
         MatProgressSpinnerModule,
         MatTooltipModule,
         MatChipsModule,
-        AngularEditorModule,
-        HttpClientModule
+        NgxEditorModule
     ],
     templateUrl: './ResultEditor.component.html',
     styleUrl: './Editors.component.scss'
 })
-export class ResultEditorComponent {
+export class ResultEditorComponent implements OnDestroy {
     private handlebarsTemplateService = inject(HandlebarsTemplateService);
     private snackBar = inject(MatSnackBar);
+
+    // Инстанс ngx-editor для readonly режима
+    editor!: Editor;
+    toolbar: Toolbar = NGX_EDITOR_TOOLBAR_READONLY;
 
     // Input signals для отримання контенту з інших редакторів
     templateContent = input<string>('');
@@ -48,9 +51,6 @@ export class ResultEditorComponent {
 
     // Результат обробки
     resultContent = signal<string>('');
-
-    // Конфігурація Angular Editor для readonly режиму
-    editorConfig = ANGULAR_EDITOR_READONLY_CONFIG;
 
     // Обчислюване значення: чи є контент для обробки
     hasContent = computed(() => {
@@ -66,6 +66,9 @@ export class ResultEditorComponent {
     });
 
     constructor() {
+        // Создаем экземпляр редактора
+        this.editor = new Editor();
+        
         // Реагуємо на зміну контенту
         effect(() => {
             const template = this.templateContent();
@@ -393,5 +396,12 @@ export class ResultEditorComponent {
             .replace(/[\u0080-\uffff]/g, (char) => {
                 return '\\u' + char.charCodeAt(0) + '?';
             });
+    }
+
+    /**
+     * Очистка ресурсов при уничтожении компонента
+     */
+    ngOnDestroy(): void {
+        this.editor.destroy();
     }
 }

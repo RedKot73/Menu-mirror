@@ -1,6 +1,6 @@
-import { Component, inject, signal, computed, effect, input } from '@angular/core';
+import { Component, inject, signal, computed, effect, input, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
@@ -8,12 +8,12 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
-import { AngularEditorModule } from '@kolkov/angular-editor';
+import { Editor, NgxEditorModule, Toolbar } from 'ngx-editor';
 
 import { DocumentTemplateService } from '../services/document-template.service';
 import { TemplateDto } from '../models/document-template.models';
 import { DocTemplateUtils } from '../models/shared.models';
-import { ANGULAR_EDITOR_BASE_CONFIG } from './angular-editor.config';
+import { NGX_EDITOR_TOOLBAR, NGX_EDITOR_TOOLBAR_READONLY } from './ngx-editor.config';
 
 @Component({
     selector: 'app-template-editor',
@@ -21,20 +21,27 @@ import { ANGULAR_EDITOR_BASE_CONFIG } from './angular-editor.config';
     imports: [
         CommonModule,
         FormsModule,
+        ReactiveFormsModule,
         MatButtonModule,
         MatIconModule,
         MatDividerModule,
         MatProgressSpinnerModule,
         MatTooltipModule,
         MatChipsModule,
-        AngularEditorModule
+        NgxEditorModule
     ],
     templateUrl: './TemplateEditor.component.html',
     styleUrl: './Editors.component.scss'
 })
-export class TemplateEditorComponent {
+export class TemplateEditorComponent implements OnDestroy {
     private documentTemplateService = inject(DocumentTemplateService);
     private snackBar = inject(MatSnackBar);
+
+    // Инстанс ngx-editor
+    editor!: Editor;
+    
+    // Панель инструментов
+    toolbar: Toolbar = NGX_EDITOR_TOOLBAR;
 
     // Input signal для отримання шаблону ззовні
     template = input<TemplateDto | null>(null);
@@ -52,9 +59,6 @@ export class TemplateEditorComponent {
     // Signal для відстеження змін
     formDirty = signal<boolean>(false);
 
-    // Конфігурація Angular Editor (використовуємо базову конфігурацію)
-    editorConfig = ANGULAR_EDITOR_BASE_CONFIG;
-
     // Обчислюване значення: чи є шаблон тільки для читання
     isReadonly = computed(() => {
         return this.template()!.isPublished;
@@ -69,9 +73,19 @@ export class TemplateEditorComponent {
     });
 
     constructor() {
+        // Создаем экземпляр редактора
+        this.editor = new Editor();
+        
         // Реагуємо на зміну шаблону
         effect(() => {
             const currentTemplate = this.template();
+            
+            // Обновляем панель инструментов в зависимости от режима
+            if (currentTemplate?.isPublished) {
+                this.toolbar = NGX_EDITOR_TOOLBAR_READONLY;
+            } else {
+                this.toolbar = NGX_EDITOR_TOOLBAR;
+            }
             
             if (currentTemplate) {
                 // Завантажуємо контент з сервера
@@ -202,5 +216,12 @@ export class TemplateEditorComponent {
      */
     getStatusLabel(isPublished: boolean): string {
         return DocTemplateUtils.getStatusLabel(isPublished);
+    }
+
+    /**
+     * Очистка ресурсов при уничтожении компонента
+     */
+    ngOnDestroy(): void {
+        this.editor.destroy();
     }
 }
