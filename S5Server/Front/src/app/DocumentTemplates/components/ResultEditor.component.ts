@@ -13,7 +13,7 @@ import { Editor, NgxEditorModule, Toolbar } from 'ngx-editor';
 import { ErrorHandler } from '../../shared/models/ErrorHandler';
 import { HandlebarsTemplateService } from '../services/handlebars-template.service';
 import { DatasetData } from '../models/template.types';
-import { NGX_EDITOR_TOOLBAR_READONLY } from './ngx-editor.config';
+import { NGX_EDITOR_TOOLBAR, /*NGX_EDITOR_TOOLBAR_READONLY*/ } from './ngx-editor.config';
 
 @Component({
     selector: 'app-result-editor',
@@ -39,7 +39,8 @@ export class ResultEditorComponent implements OnDestroy {
 
     // Инстанс ngx-editor для readonly режима
     editor!: Editor;
-    toolbar: Toolbar = NGX_EDITOR_TOOLBAR_READONLY;
+    toolbar: Toolbar = NGX_EDITOR_TOOLBAR;
+    //toolbar: Toolbar = NGX_EDITOR_TOOLBAR_READONLY;
 
     // Input signals для отримання контенту з інших редакторів
     templateContent = input<string>('');

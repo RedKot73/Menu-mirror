@@ -67,12 +67,14 @@
     <div class="editor-content">
         <!-- ngx-editor -->
         <div class="ngx-editor-container">
-            <div class="NgxEditor__Wrapper">
-                <ngx-editor-menu [editor]="editor" [toolbar]="toolbar"></ngx-editor-menu>
-                <ngx-editor [editor]="editor" [(ngModel)]="editorContent" [disabled]="isReadonly()"
-                    [placeholder]="'Введіть текст шаблону...'" (ngModelChange)="onEditorContentChange($any($event))">
-                </ngx-editor>
-            </div>
+            <ngx-editor-menu [editor]="editor" [toolbar]="toolbar"></ngx-editor-menu>
+            <ngx-editor 
+                [editor]="editor" 
+                [(ngModel)]="editorContent" 
+                [disabled]="isReadonly()"
+                [placeholder]="'Введіть текст шаблону...'" 
+                (ngModelChange)="onEditorContentChange($any($event))">
+            </ngx-editor>
         </div>
 
         @if (formDirty()) {
