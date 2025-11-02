@@ -8,12 +8,14 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDialog } from '@angular/material/dialog';
 import { Editor, NgxEditorModule, Toolbar } from 'ngx-editor';
 
 import { DocumentTemplateService } from '../services/document-template.service';
 import { TemplateDto } from '../models/document-template.models';
 import { DocTemplateUtils } from '../models/shared.models';
 import { NGX_EDITOR_TOOLBAR, NGX_EDITOR_TOOLBAR_READONLY } from './ngx-editor.config';
+import { HtmlEditorDialogComponent } from './HtmlEditorDialog.component';
 
 @Component({
     selector: 'app-template-editor',
@@ -36,6 +38,7 @@ import { NGX_EDITOR_TOOLBAR, NGX_EDITOR_TOOLBAR_READONLY } from './ngx-editor.co
 export class TemplateEditorComponent implements OnDestroy {
     private documentTemplateService = inject(DocumentTemplateService);
     private snackBar = inject(MatSnackBar);
+    private dialog = inject(MatDialog);
 
     // Инстанс ngx-editor
     editor!: Editor;
@@ -223,5 +226,32 @@ export class TemplateEditorComponent implements OnDestroy {
      */
     ngOnDestroy(): void {
         this.editor.destroy();
+    }
+
+    /**
+     * Открывает диалог для редактирования HTML кода
+     */
+    editAsHTML(): void {
+        const htmlContent = this.editorContent();
+        
+        const dialogRef = this.dialog.open(HtmlEditorDialogComponent, {
+            width: '90vw',
+            maxWidth: '1400px',
+            height: '80vh',
+            data: {
+                htmlContent: htmlContent,
+                readOnly: this.isReadonly()
+            },
+            disableClose: true
+        });
+
+        dialogRef.afterClosed().subscribe((result: string | undefined) => {
+            if (result !== undefined && result !== htmlContent) {
+                // Пользователь сохранил изменения
+                this.editorContent.set(result);
+                this.formDirty.set(true);
+                this.snackBar.open('HTML код оновлено', 'Закрити', { duration: 3000 });
+            }
+        });
     }
 }

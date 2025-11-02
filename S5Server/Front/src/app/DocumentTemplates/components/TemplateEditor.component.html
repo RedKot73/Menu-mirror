@@ -27,17 +27,21 @@
 
         <div class="editor-actions">
             <button mat-icon-button
-                    (click)="reloadContent()"
-                    [disabled]="isLoading()"
-                    matTooltip="Оновити вміст">
+                (click)="editAsHTML()"
+                [disabled]="isLoading()"
+                matTooltip="Редагувати HTML код">
+                <mat-icon>code</mat-icon>
+            </button>
+
+            <button mat-icon-button
+                (click)="reloadContent()"
+                [disabled]="isLoading()"
+                matTooltip="Оновити вміст">
                 <mat-icon>refresh</mat-icon>
             </button>
 
-            <button mat-raised-button
-                    color="primary"
-                    (click)="saveTemplateContent()"
-                    [disabled]="!canSave()"
-                    matTooltip="Зберегти зміни">
+            <button mat-raised-button color="primary" (click)="saveTemplateContent()" [disabled]="!canSave()"
+                matTooltip="Зберегти зміни">
                 <mat-icon>save</mat-icon>
                 Зберегти
             </button>
@@ -65,12 +69,8 @@
         <div class="ngx-editor-container">
             <div class="NgxEditor__Wrapper">
                 <ngx-editor-menu [editor]="editor" [toolbar]="toolbar"></ngx-editor-menu>
-                <ngx-editor
-                    [editor]="editor"
-                    [(ngModel)]="editorContent"
-                    [disabled]="isReadonly()"
-                    [placeholder]="'Введіть текст шаблону...'"
-                    (ngModelChange)="onEditorContentChange($any($event))">
+                <ngx-editor [editor]="editor" [(ngModel)]="editorContent" [disabled]="isReadonly()"
+                    [placeholder]="'Введіть текст шаблону...'" (ngModelChange)="onEditorContentChange($any($event))">
                 </ngx-editor>
             </div>
         </div>
