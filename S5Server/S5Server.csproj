@@ -56,4 +56,16 @@
     </None>
   </ItemGroup>
 
+  <!-- Copy Angular build files to wwwroot -->
+  <Target Name="PublishAngular" AfterTargets="Publish">
+    <ItemGroup>
+      <AngularFiles Include="Front\dist\Menu\browser\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AngularFiles)" DestinationFolder="$(PublishDir)wwwroot\%(RecursiveDir)" />
+  </Target>
+
+  <ItemGroup>
+    <Content Include="Front\dist\Menu\browser\**\*.*" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
