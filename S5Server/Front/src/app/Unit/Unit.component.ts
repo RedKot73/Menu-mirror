@@ -25,58 +25,8 @@ export type Unit = UnitDto;
         UnitTreeComponent,
         UnitContentComponent
     ],
-    styleUrl: './Unit.component.scss',
-    template: `
-        <div class="container" #containerRef>
-            <div class="panel nav-panel" [style.width.%]="navPanelWidth()" [class.collapsed]="isNavPanelCollapsed()">
-                <div class="panel-header" [class.hidden]="isNavPanelCollapsed()">
-                    <h3>Дерево підрозділів</h3>
-                </div>
-                <div class="panel-content" [class.hidden]="isNavPanelCollapsed()">
-                    <!-- Дерево подразделений -->
-                    <unit-tree 
-                        (unitSelected)="onUnitSelected($event)"
-                        (unitUpdated)="onUnitUpdated($event)"
-                        class="unit-tree">
-                    </unit-tree>
-                </div>
-            </div>
-            
-            <div 
-                class="splitter"
-                [class.dragging]="isDragging()"
-                (mousedown)="startDrag($event)">
-                <div class="splitter-handle"></div>
-                <div class="splitter-controls">
-                    <button 
-                        class="toggle-btn"
-                        (click)="toggleNavPanel()"
-                        [title]="isNavPanelCollapsed() ? 'Показати дерево підрозділів' : 'Приховати дерево підрозділів'">
-                        <span class="arrow" [class.collapsed]="isNavPanelCollapsed()">
-                            {{ isNavPanelCollapsed() ? '▶' : '◀' }}
-                        </span>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="panel content-panel" [style.width.%]="contentPanelWidth()">
-                <div class="panel-header">
-                    <!-- Toolbar с заголовком -->
-                    <div class="unit-toolbar">
-                        <h3>{{ selectedUnitTitle() }}</h3>
-                    </div>
-                </div>
-                <div class="panel-content">
-                    <!-- Основное содержимое -->
-                    <unit-content 
-                        [selectedUnit]="selectedUnit()"
-                        [sidenavOpen]="!isNavPanelCollapsed()"
-                        (showSidenav)="toggleNavPanel()">
-                    </unit-content>
-                </div>
-            </div>
-        </div>
-    `
+    templateUrl: './Unit.component.html',
+    styleUrl: './Unit.component.scss'
 })
 export class UnitsComponent implements AfterViewInit, OnDestroy {
     unitService = inject(UnitService);

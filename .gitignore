@@ -40,14 +40,13 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
-/S5Server/bin/Debug/net9.0
 /S5Server/obj
 /S5Server/Front/.angular
 chrome.devtools.json
 /S5Server/Front/dist/Menu/browser
 /S5Server/Front/dist/Menu
 /S5Server/Front/node_modules
-/S5Server/bin/Release/net9.0
 /S5Server/publish
 /S5Server/wwwroot
 /Publish/S5Server
+/S5Server/bin
