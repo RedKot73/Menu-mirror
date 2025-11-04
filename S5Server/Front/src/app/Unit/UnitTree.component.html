@@ -1,0 +1,34 @@
+<div class="tree-container">
+    <div class="tree-header">
+        <button mat-raised-button color="primary" (click)="refresh()" [disabled]="loading()">
+            <mat-icon>refresh</mat-icon>
+            Оновити
+        </button>
+        <button mat-raised-button color="primary" (click)="CreateUnit()" [disabled]="loading()">
+            <mat-icon>add</mat-icon>
+            Створити
+        </button>
+    </div>
+
+    @if (loading()) {
+        <div class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+            <span>Завантаження дерева підрозділів...</span>
+        </div>
+    } @else {
+        <mat-tree [dataSource]="dataSource" [childrenAccessor]="childrenAccessor" [expansionKey]="expansionKey" class="unit-tree">
+            <!-- Универсальный узел дерева -->
+            <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle class="tree-node">
+                <unit-tree-node 
+                    [node]="node"
+                    [isExpanded]="expansionModel.isSelected(node.id)"
+                    (toggleNode)="toggleNode($event)"
+                    (selectNode)="selectUnit($event)"
+                    (addChild)="addChild($event)"
+                    (editNode)="edit($event)"
+                    (deleteNode)="delete($event)">
+                </unit-tree-node>
+            </mat-tree-node>
+        </mat-tree>
+    }
+</div>

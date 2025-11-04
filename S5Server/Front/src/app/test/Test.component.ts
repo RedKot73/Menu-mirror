@@ -4,66 +4,30 @@ import {
 } from "@angular/core";
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
-
-import { DocTemplateComponent } from '../DocumentTemplates/components/DocTemplate.component';
-import { DataSetTableComponent } from '../DocumentTemplates/components/DataSetTable.component';
-import { TemplateDto } from '../DocumentTemplates/models/document-template.models';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-test',
   imports: [
     CommonModule,
-    DocTemplateComponent,
-    DataSetTableComponent
+    MatTooltipModule,
   ],
-  styleUrl: './Test.component.scss',
-  template: `
-        <div class="container" #containerRef>
-            <div class="panel nav-panel" [style.width.%]="navPanelWidth()" [class.collapsed]="isNavPanelCollapsed()">
-                <div class="panel-content" [class.hidden]="isNavPanelCollapsed()">
-                    <!-- DocTemplate Component -->
-                    <app-page-doc-templates 
-                        [selectedTemplate]="selectedTemplate()"
-                        (templateSelected)="onTemplateSelected($event)">
-                    </app-page-doc-templates>
-                </div>
-            </div>
-
-            <div
-                class="splitter"
-                [class.dragging]="isDragging()"
-                (mousedown)="startDrag($event)">
-                <div class="splitter-handle"></div>
-                <div class="splitter-controls">
-                    <button
-                        class="toggle-btn"
-                        (click)="toggleNavPanel()"
-                        [title]="isNavPanelCollapsed() ? 'Показати управління шаблонами' : 'Приховати управління шаблонами'">
-                        <span class="arrow" [class.collapsed]="isNavPanelCollapsed()">
-                            {{ isNavPanelCollapsed() ? '▶' : '◀' }}
-                        </span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="panel content-panel" [style.width.%]="contentPanelWidth()">
-                    <!-- DataSetTable Component -->
-                    <app-template-dataset-table
-                        [selectedTemplate]="selectedTemplate()">
-                    </app-template-dataset-table>
-            </div>
-        </div>
-  `
+  templateUrl: './Test.component.html',
+  styleUrl: './Test.component.scss'
 })
 export class TestComponent implements AfterViewInit, OnDestroy {
+  // --- Injected Dependencies ---
   breakpointObserver = inject(BreakpointObserver);
 
-  // ViewChild for container reference
+  // --- ViewChild References ---
   @ViewChild('containerRef') containerRef!: ElementRef<HTMLElement>;
-  selectedTemplate = signal<TemplateDto | null>(null);
 
-  // Panel signals (replacing sidenav signals)
+  // --- UI State Signals ---
   navPanelWidth = signal(this.getSavedNavPanelWidth());
+  isDragging = signal(false);
+  isNavPanelCollapsed = signal(this.getSavedNavPanelState());
+
+  // --- Computed Signals ---
   contentPanelWidth = computed(() => {
     const isCollapsed = this.isNavPanelCollapsed();
     const navWidth = this.navPanelWidth();
@@ -76,27 +40,27 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     // Если панель развернута, вычисляем оставшуюся ширину
     return 100 - navWidth;
   });
-  isDragging = signal(false);
-  isNavPanelCollapsed = signal(this.getSavedNavPanelState());
-
-  // Panel constants
-  private readonly SPLITTER_WIDTH_PX = 6;
-  private readonly MIN_PANEL_WIDTH_PERCENT = 20;
-  private readonly MAX_PANEL_WIDTH_PERCENT = 100 - this.MIN_PANEL_WIDTH_PERCENT;
-
-  private lastNavPanelWidth = this.getSavedNavPanelWidth();
-  private startX = 0;
-  private startNavWidth = 0;
-  private containerWidth = 0;
-
-  // Event handlers
-  private onMouseMoveHandler = this.onMouseMove.bind(this);
-  private onMouseUpHandler = this.onMouseUp.bind(this);
 
   isMobile = computed(() =>
     this.breakpointObserver.isMatched([Breakpoints.Handset])
   );
 
+  // --- Constants ---
+  private readonly SPLITTER_WIDTH_PX = 6;
+  private readonly MIN_PANEL_WIDTH_PERCENT = 20;
+  private readonly MAX_PANEL_WIDTH_PERCENT = 100 - this.MIN_PANEL_WIDTH_PERCENT;
+
+  // --- Private Variables ---
+  private lastNavPanelWidth = this.getSavedNavPanelWidth();
+  private startX = 0;
+  private startNavWidth = 0;
+  private containerWidth = 0;
+
+  // --- Event Handlers ---
+  private onMouseMoveHandler = this.onMouseMove.bind(this);
+  private onMouseUpHandler = this.onMouseUp.bind(this);
+
+  // --- Constructor ---
   constructor() {
     // Закрываем навигационную панель на мобильных устройствах при старте
     effect(() => {
@@ -110,7 +74,9 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     // Initial width calculation
     this.updateContainerWidth();
-  }  ngOnDestroy(): void {
+  }
+
+  ngOnDestroy(): void {
     // Ensure cleanup in case of component destruction during dragging
     if (this.isDragging()) {
       this.cleanupDragListeners();
@@ -118,15 +84,13 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  // --- Methods ---
+  // --- Public Methods ---
 
-  /** Updates the width of the container, minus the splitter width. */
-  private updateContainerWidth(): void {
-    if (this.containerRef) {
-      this.containerWidth = this.containerRef.nativeElement.offsetWidth - this.SPLITTER_WIDTH_PX;
-    }
-  }
-
+  /**
+   * Начинает процесс перетаскивания разделителя панелей.
+   * Инициализирует обработчики событий мыши и устанавливает начальные значения.
+   * @param event - Событие mousedown
+   */
   startDrag(event: MouseEvent) {
     // Не начинаем перетаскивание, если кликнули по кнопке
     if ((event.target as HTMLElement).closest('.toggle-btn')) {
@@ -153,54 +117,10 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     document.body.style.userSelect = 'none';
   }
 
-  private onMouseMove(event: MouseEvent) {
-    if (!this.isDragging() || this.containerWidth <= 0) {return;}
-
-    const deltaX = event.clientX - this.startX;
-    const deltaPercent = (deltaX / this.containerWidth) * 100;
-    let newNavWidth = this.startNavWidth + deltaPercent;
-
-    // Use fixed percentage limits to avoid conflicts with CSS min-width
-    newNavWidth = Math.max(
-      this.MIN_PANEL_WIDTH_PERCENT,
-      Math.min(this.MAX_PANEL_WIDTH_PERCENT, newNavWidth)
-    );
-
-    this.navPanelWidth.set(newNavWidth);
-  }
-
-  private onMouseUp() {
-    this.isDragging.set(false);
-    this.saveNavPanelWidth(this.navPanelWidth());
-    this.cleanupDragListeners();
-  }
-
-  private cleanupDragListeners(): void {
-    document.removeEventListener('mousemove', this.onMouseMoveHandler);
-    document.removeEventListener('mouseup', this.onMouseUpHandler);
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
-  }
-
-  private getSavedNavPanelState(): boolean {
-    const saved = localStorage.getItem('unitNavPanelCollapsed');
-    return saved !== null ? saved === 'true' : false;
-  }
-
-  private getSavedNavPanelWidth(): number {
-    const saved = localStorage.getItem('unitNavPanelWidth');
-    return saved !== null ? parseInt(saved, 10) : 50;
-  }
-
-  private saveNavPanelState(collapsed: boolean) {
-    localStorage.setItem('unitNavPanelCollapsed', collapsed.toString());
-  }
-
-  private saveNavPanelWidth(width: number) {
-    localStorage.setItem('unitNavPanelWidth', width.toString());
-  }
-
-  /** Переключает состояние навигационной панели (свернута/развернута) */
+  /**
+   * Переключает состояние навигационной панели (свернута/развернута).
+   * Сохраняет состояние в localStorage.
+   */
   toggleNavPanel(): void {
     if (this.isNavPanelCollapsed()) {
       // Разворачиваем панель
@@ -218,8 +138,8 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
-   * Recalculate container width on window resize to ensure correct boundary checks
-   * and percentage calculations on the next drag operation.
+   * Обработчик изменения размера окна.
+   * Пересчитывает ширину контейнера и корректирует ширину панелей при необходимости.
    */
   @HostListener('window:resize')
   onWindowResize() {
@@ -238,10 +158,91 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  // --- Private Methods ---
+
   /**
-   * Обработчик выбора шаблона из DocTemplate компонента
+   * Обновляет ширину контейнера, вычитая ширину разделителя.
    */
-  onTemplateSelected(template: TemplateDto | null): void {
-    this.selectedTemplate.set(template);
+  private updateContainerWidth(): void {
+    if (this.containerRef) {
+      this.containerWidth = this.containerRef.nativeElement.offsetWidth - this.SPLITTER_WIDTH_PX;
+    }
   }
+
+  /**
+   * Обработчик перемещения мыши во время перетаскивания.
+   * Вычисляет новую ширину панели на основе смещения курсора.
+   */
+  private onMouseMove(event: MouseEvent) {
+    if (!this.isDragging() || this.containerWidth <= 0) { return; }
+
+    const deltaX = event.clientX - this.startX;
+    const deltaPercent = (deltaX / this.containerWidth) * 100;
+    let newNavWidth = this.startNavWidth + deltaPercent;
+
+    // Use fixed percentage limits to avoid conflicts with CSS min-width
+    newNavWidth = Math.max(
+      this.MIN_PANEL_WIDTH_PERCENT,
+      Math.min(this.MAX_PANEL_WIDTH_PERCENT, newNavWidth)
+    );
+
+    this.navPanelWidth.set(newNavWidth);
+  }
+
+  /**
+   * Обработчик отпускания кнопки мыши после перетаскивания.
+   * Завершает процесс перетаскивания и сохраняет новую ширину.
+   */
+  private onMouseUp() {
+    this.isDragging.set(false);
+    this.saveNavPanelWidth(this.navPanelWidth());
+    this.cleanupDragListeners();
+  }
+
+  /**
+   * Удаляет обработчики событий мыши и восстанавливает стандартный курсор.
+   */
+  private cleanupDragListeners(): void {
+    document.removeEventListener('mousemove', this.onMouseMoveHandler);
+    document.removeEventListener('mouseup', this.onMouseUpHandler);
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  }
+
+  // --- LocalStorage Methods ---
+
+  /**
+   * Получает сохраненное состояние навигационной панели из localStorage.
+   * @returns true если панель была свернута, false если развернута
+   */
+  private getSavedNavPanelState(): boolean {
+    const saved = localStorage.getItem('testNavPanelCollapsed');
+    return saved !== null ? saved === 'true' : false;
+  }
+
+  /**
+   * Получает сохраненную ширину навигационной панели из localStorage.
+   * @returns Ширина панели в процентах (по умолчанию 50%)
+   */
+  private getSavedNavPanelWidth(): number {
+    const saved = localStorage.getItem('testNavPanelWidth');
+    return saved !== null ? parseInt(saved, 10) : 50;
+  }
+
+  /**
+   * Сохраняет состояние навигационной панели в localStorage.
+   * @param collapsed - true если панель свернута, false если развернута
+   */
+  private saveNavPanelState(collapsed: boolean) {
+    localStorage.setItem('testNavPanelCollapsed', collapsed.toString());
+  }
+
+  /**
+   * Сохраняет ширину навигационной панели в localStorage.
+   * @param width - Ширина панели в процентах
+   */
+  private saveNavPanelWidth(width: number) {
+    localStorage.setItem('testNavPanelWidth', width.toString());
+  }
+
 } 

@@ -17,7 +17,7 @@ import { UnitContentComponent } from './UnitContent.component';
 export type Unit = UnitDto;
 
 @Component({
-    selector: "page-units",
+    selector: "app-page-units",
     imports: [
         CommonModule,
         MatCardModule,
