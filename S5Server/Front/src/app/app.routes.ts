@@ -18,7 +18,7 @@ import { Component } from '@angular/core';
 export const routes: Routes = [
     {
         path: 'test',
-        loadComponent: () => import('../app/test/Test.component').then(m => m.TestComponent),
+        loadComponent: () => import('../app/test/Test.page').then(m => m.TestComponent),
         title: 'Тестова сторінка'
     },
     {
@@ -58,7 +58,7 @@ export const routes: Routes = [
     },
     { 
         path: 'units', title: 'Підрозділи',
-        loadComponent: () => import('../app/Unit/Unit.component')
+        loadComponent: () => import('../app/Unit/Unit.page')
         .then(m => m.UnitsComponent) 
     },
     {

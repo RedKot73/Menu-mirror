@@ -27,7 +27,7 @@ import { TemplateDataSetListItem } from '../DocumentTemplates/models/template-da
     DataSetEditorComponent,
     ResultEditorComponent,
   ],
-  styleUrl: '../test/Test.component.scss',
+  styleUrl: './DocTemplatesTree.component.scss',
   templateUrl: './DocTemplatesTree.component.html'
 })
 export class DocTemplatesTree implements AfterViewInit, OnDestroy {
