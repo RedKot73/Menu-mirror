@@ -17,7 +17,7 @@ import { UnitContentComponent } from './UnitContent.component';
 export type Unit = UnitDto;
 
 @Component({
-    selector: "app-page-units",
+    selector: "app-units-page",
     imports: [
         CommonModule,
         MatCardModule,
@@ -25,8 +25,8 @@ export type Unit = UnitDto;
         UnitTreeComponent,
         UnitContentComponent
     ],
-    templateUrl: './Unit.component.html',
-    styleUrl: './Unit.component.scss'
+    templateUrl: './Unit.page.html',
+    styleUrl: './Unit.page.scss'
 })
 export class UnitsComponent implements AfterViewInit, OnDestroy {
     unitService = inject(UnitService);

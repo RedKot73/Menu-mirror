@@ -7,13 +7,13 @@ import { CommonModule } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
-  selector: 'app-test',
+  selector: 'app-test-page',
   imports: [
     CommonModule,
     MatTooltipModule,
   ],
-  templateUrl: './Test.component.html',
-  styleUrl: './Test.component.scss'
+  templateUrl: './Test.page.html',
+  styleUrl: './Test.page.scss'
 })
 export class TestComponent implements AfterViewInit, OnDestroy {
   // --- Injected Dependencies ---
