@@ -1,19 +1,39 @@
 import {
-  Component, inject, signal, computed, effect,
-  HostListener, ElementRef, ViewChild, AfterViewInit, OnDestroy
-} from "@angular/core";
+  Component,
+  inject,
+  signal,
+  computed,
+  effect,
+  HostListener,
+  ElementRef,
+  ViewChild,
+  AfterViewInit,
+  OnDestroy,
+} from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+
+import { UnitDto } from '../Unit/services/unit.service';
+import { UnitTreeComponent } from '../Unit/UnitTree.component';
+import { DataSetEditorComponent } from '../DocumentTemplates/components/DataSetEditor.component';
+
+export type Unit = UnitDto;
 
 @Component({
   selector: 'app-test-page',
   imports: [
     CommonModule,
     MatTooltipModule,
+    MatIconModule,
+    MatButtonModule,
+    UnitTreeComponent,
+    DataSetEditorComponent,
   ],
   templateUrl: './Test.page.html',
-  styleUrl: './Test.page.scss'
+  styleUrl: './Test.page.scss',
 })
 export class TestComponent implements AfterViewInit, OnDestroy {
   // --- Injected Dependencies ---
@@ -21,6 +41,7 @@ export class TestComponent implements AfterViewInit, OnDestroy {
 
   // --- ViewChild References ---
   @ViewChild('containerRef') containerRef!: ElementRef<HTMLElement>;
+  @ViewChild(UnitTreeComponent) unitTree!: UnitTreeComponent;
 
   // --- UI State Signals ---
   navPanelWidth = signal(this.getSavedNavPanelWidth());
@@ -41,9 +62,11 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     return 100 - navWidth;
   });
 
-  isMobile = computed(() =>
-    this.breakpointObserver.isMatched([Breakpoints.Handset])
-  );
+  isMobile = computed(() => this.breakpointObserver.isMatched([Breakpoints.Handset]));
+  // Computed signal for tree loading state
+  loading = computed(() => {
+    return this.unitTree?.loading() ?? false;
+  });
 
   // --- Constants ---
   private readonly SPLITTER_WIDTH_PX = 6;
@@ -174,7 +197,9 @@ export class TestComponent implements AfterViewInit, OnDestroy {
    * Вычисляет новую ширину панели на основе смещения курсора.
    */
   private onMouseMove(event: MouseEvent) {
-    if (!this.isDragging() || this.containerWidth <= 0) { return; }
+    if (!this.isDragging() || this.containerWidth <= 0) {
+      return;
+    }
 
     const deltaX = event.clientX - this.startX;
     const deltaPercent = (deltaX / this.containerWidth) * 100;
@@ -245,4 +270,10 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     localStorage.setItem('testNavPanelWidth', width.toString());
   }
 
-} 
+  /**
+   * Обновляет дерево подразделений
+   */
+  refresh() {
+    this.unitTree?.refresh();
+  }
+}

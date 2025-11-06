@@ -31,14 +31,24 @@
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  
+  justify-content: space-between; // Размещаем элементы по краям
+  gap: 16px;
+
   h3 {
     margin: 0;
     font-size: 16px;
     font-weight: 500;
     color: #1976d2;
+    flex-shrink: 0; // Заголовок не сжимается
   }
-  
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0; // Кнопки не сжимаются
+  }
+
   .unit-toolbar {
     width: 100%;
     margin: -16px;
@@ -48,14 +58,14 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    
+
     h3 {
       margin: 0;
       color: white;
       font-size: 20px;
       font-weight: 500;
     }
-    
+
     button {
       color: white;
     }
@@ -66,7 +76,7 @@
   flex: 1;
   padding: 0;
   overflow: auto;
-  
+
   .unit-tree {
     height: 100%;
     padding: 8px;
@@ -130,7 +140,7 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .toggle-btn:hover {

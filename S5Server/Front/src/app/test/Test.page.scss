@@ -21,7 +21,7 @@
 .content-panel {
   background-color: #fafafa;
   overflow: hidden; /* Важливо: запобігає переповненню */
-  
+
   /* Забезпечуємо, що вміст займає всю висоту */
   > * {
     height: 100%;
@@ -33,6 +33,10 @@
   background-color: #e3f2fd;
   border-bottom: 1px solid #ddd;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .panel-header h3 {
@@ -40,12 +44,25 @@
   font-size: 16px;
   font-weight: 500;
   color: #1976d2;
+  flex-shrink: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0; // Кнопки не сжимаются
 }
 
 .panel-content {
   flex: 1;
+  padding: 0;
   overflow: auto;
-  padding: 0; /* Убираем отступы, так как компоненты сами управляют своими отступами */
+
+  .unit-tree {
+    height: 100%;
+    padding: 8px;
+  }
 }
 
 .content-box {
@@ -113,7 +130,7 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .toggle-btn:hover {
@@ -155,18 +172,19 @@ li {
   margin-bottom: 8px;
 }
 
-button {
-  padding: 8px 16px;
-  background-color: #2196f3;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
+// Удалены глобальные стили button, которые конфликтовали с Material Design
+// button {
+//   padding: 8px 16px;
+//   background-color: #2196f3;
+//   color: white;
+//   border: none;
+//   border-radius: 4px;
+//   cursor: pointer;
+// }
 
-button:hover {
-  background-color: #1976d2;
-}
+// button:hover {
+//   background-color: #1976d2;
+// }
 
 // ===== TEMPLATE TABLE STYLES =====
 
@@ -178,7 +196,7 @@ button:hover {
 .templates-table {
   width: 100%;
   background-color: white;
-  
+
   .mat-mdc-header-cell {
     font-weight: 600;
     color: #1976d2;
@@ -194,11 +212,11 @@ button:hover {
   .mat-mdc-row {
     transition: background-color 0.2s ease;
     cursor: pointer;
-    
+
     &:hover {
       background-color: #f5f5f5;
     }
-    
+
     &.selected-row {
       background-color: #e3f2fd;
     }
@@ -229,22 +247,22 @@ button:hover {
 .format-chip {
   font-size: 10px;
   min-height: 20px;
-  
+
   &.format-html {
     background-color: #e8f5e8;
     color: #2e7d32;
   }
-  
+
   &.format-txt {
     background-color: #fff3e0;
     color: #f57c00;
   }
-  
+
   &.format-docx {
     background-color: #e3f2fd;
     color: #1976d2;
   }
-  
+
   &.format-pdf {
     background-color: #fce4ec;
     color: #c2185b;
@@ -257,7 +275,7 @@ button:hover {
   color: #2e7d32;
   font-size: 10px;
   min-height: 20px;
-  
+
   mat-icon {
     font-size: 12px;
     width: 12px;
@@ -270,7 +288,7 @@ button:hover {
   color: #f57c00;
   font-size: 10px;
   min-height: 20px;
-  
+
   mat-icon {
     font-size: 12px;
     width: 12px;
@@ -291,30 +309,8 @@ button:hover {
   color: #1976d2;
 }
 
-// Panel header improvements
-.panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  
-  .header-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  button {
-    background: none;
-    border: none;
-    color: #1976d2;
-    padding: 4px;
-    
-    &:hover {
-      background-color: rgba(25, 118, 210, 0.1);
-      border-radius: 4px;
-    }
-  }
-}
+// Удалены дублированные стили Panel header improvements, которые конфликтовали с Material Design
+// Основные стили .panel-header уже определены выше в файле
 
 // Content panel improvements
 .unit-toolbar {
@@ -346,7 +342,7 @@ button:hover {
   padding: 4px 8px;
   border-radius: 4px;
   font-weight: 500;
-  
+
   &.published {
     background-color: #e8f5e8;
     color: #2e7d32;
@@ -358,19 +354,19 @@ button:hover {
   background-color: white;
   padding: 24px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
   h4 {
     margin: 0 0 16px 0;
     color: #1976d2;
     font-size: 16px;
     font-weight: 500;
   }
-  
+
   p {
     margin: 8px 0;
     font-size: 14px;
-    
+
     strong {
       color: #333;
       font-weight: 500;
@@ -388,7 +384,7 @@ button:hover {
   height: 50%;
   color: #666;
   text-align: center;
-  
+
   mat-icon {
     font-size: 48px;
     width: 48px;
@@ -396,7 +392,7 @@ button:hover {
     margin-bottom: 16px;
     opacity: 0.5;
   }
-  
+
   p {
     font-size: 16px;
     margin: 0;

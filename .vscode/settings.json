@@ -1,0 +1,33 @@
+{
+  // HTML форматирование
+  "html.format.wrapAttributes": "force-expand-multiline",
+  "html.format.wrapLineLength": 80,
+  "html.format.wrapAttributesIndentSize": 4,
+  "html.format.indentInnerHtml": false,
+  "html.format.preserveNewLines": true,
+  "html.format.maxPreserveNewLines": 2,
+  "html.format.indentHandlebars": false,
+  "html.format.extraLiners": "head, body, /html",
+  
+  // TypeScript/JavaScript форматирование
+  "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": false,
+  "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": false,
+  
+  // Prettier как форматтер по умолчанию
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[scss]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  }
+}

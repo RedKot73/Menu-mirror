@@ -1,7 +1,15 @@
 import {
-  Component, inject, signal, computed, effect,
-  HostListener, ElementRef, ViewChild, AfterViewInit, OnDestroy
-} from "@angular/core";
+  Component,
+  inject,
+  signal,
+  computed,
+  effect,
+  HostListener,
+  ElementRef,
+  ViewChild,
+  AfterViewInit,
+  OnDestroy,
+} from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -16,7 +24,7 @@ import { TemplateDto } from '../DocumentTemplates/models/document-template.model
 import { TemplateDataSetListItem } from '../DocumentTemplates/models/template-dataset.models';
 
 @Component({
-  selector: 'app-doc-templates-tree',
+  selector: 'app-doc-templates-page',
   imports: [
     CommonModule,
     MatTabsModule,
@@ -27,8 +35,8 @@ import { TemplateDataSetListItem } from '../DocumentTemplates/models/template-da
     DataSetEditorComponent,
     ResultEditorComponent,
   ],
-  styleUrl: './DocTemplatesTree.component.scss',
-  templateUrl: './DocTemplatesTree.component.html'
+  styleUrl: './DocTemplatesTree.page.scss',
+  templateUrl: './DocTemplatesTree.page.html',
 })
 export class DocTemplatesTree implements AfterViewInit, OnDestroy {
   breakpointObserver = inject(BreakpointObserver);
@@ -38,7 +46,7 @@ export class DocTemplatesTree implements AfterViewInit, OnDestroy {
   @ViewChild('templateEditor') templateEditor?: TemplateEditorComponent;
   @ViewChild('dataSetEditor') dataSetEditor?: DataSetEditorComponent;
   @ViewChild('resultEditor') resultEditor?: ResultEditorComponent;
-  
+
   selectedTemplate = signal<TemplateDto | null>(null);
   selectedDataSet = signal<TemplateDataSetListItem | null>(null);
 
@@ -77,9 +85,7 @@ export class DocTemplatesTree implements AfterViewInit, OnDestroy {
   private onMouseMoveHandler = this.onMouseMove.bind(this);
   private onMouseUpHandler = this.onMouseUp.bind(this);
 
-  isMobile = computed(() =>
-    this.breakpointObserver.isMatched([Breakpoints.Handset])
-  );
+  isMobile = computed(() => this.breakpointObserver.isMatched([Breakpoints.Handset]));
 
   constructor() {
     // Закрываем навигационную панель на мобильных устройствах при старте
@@ -139,7 +145,9 @@ export class DocTemplatesTree implements AfterViewInit, OnDestroy {
   }
 
   private onMouseMove(event: MouseEvent) {
-    if (!this.isDragging() || this.containerWidth <= 0) { return; }
+    if (!this.isDragging() || this.containerWidth <= 0) {
+      return;
+    }
 
     const deltaX = event.clientX - this.startX;
     const deltaPercent = (deltaX / this.containerWidth) * 100;
@@ -254,4 +262,4 @@ export class DocTemplatesTree implements AfterViewInit, OnDestroy {
       this.dataSetContent.set(dataSetContent);
     }
   }
-} 
+}
