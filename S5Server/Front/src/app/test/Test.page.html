@@ -7,18 +7,26 @@
     <div class="panel-header" [class.hidden]="isNavPanelCollapsed()">
       <h3>Дерево підрозділів</h3>
       <div class="header-actions">
-        <button mat-raised-button
-            color="primary"
-            (click)="refresh()"
-            [disabled]="loading()">
+        <button mat-raised-button color="primary" (click)="refresh()" [disabled]="loading()">
           <mat-icon>refresh</mat-icon>
           Оновити
         </button>
       </div>
     </div>
     <div class="panel-content" [class.hidden]="isNavPanelCollapsed()">
-      <!-- Дерево подразделений -->
-      <unit-tree class="unit-tree"> </unit-tree>
+      <!-- Дерево подразделений с кастомными действиями -->
+      <unit-tree class="unit-tree">
+        <!-- Кастомный шаблон действий узла -->
+        <ng-template #nodeActions let-node>
+          <button
+            mat-icon-button
+            matTooltip="Додати до списку вибору"
+            (click)="addUnitToSelection(node); $event.stopPropagation()"
+          >
+            <mat-icon color="primary">add_circle</mat-icon>
+          </button>
+        </ng-template>
+      </unit-tree>
     </div>
   </div>
 
@@ -39,8 +47,80 @@
   </div>
 
   <div class="panel content-panel" [style.width.%]="contentPanelWidth()">
-                <!-- DataSet Editor -->
-                <app-dataset-editor>
-                </app-dataset-editor>
+    <mat-tab-group dynamicHeight (selectedIndexChange)="onTabChange($event)">
+      <mat-tab label="Вибрані підрозділи ({{ selectedUnits().length }})">
+        <div class="selected-units-list">
+          @if (selectedUnits().length === 0) {
+          <div class="empty-list">
+            <mat-icon>inbox</mat-icon>
+            <p>Список порожній. Додайте підрозділи з дерева.</p>
+          </div>
+          } @else {
+          <div class="units-list">
+            @for (unit of selectedUnits(); track unit.id) {
+            <!-- Детальная информация о подразделении -->
+            <mat-card class="unit-details-card">
+              <mat-card-header>
+                <mat-card-title>{{ unit.shortName }}</mat-card-title>
+                <button
+                  mat-icon-button
+                  matTooltip="Видалити зі списку"
+                  (click)="removeUnitFromSelection(unit.id)"
+                  class="remove-button"
+                >
+                  <mat-icon color="warn">remove_circle</mat-icon>
+                </button>
+              </mat-card-header>
+
+              <mat-card-content>
+                <div class="unit-info-grid">
+                  <div class="info-item inline">
+                    <strong>Тип підрозділу:</strong>
+                    <span>{{ unit.unitType || 'Не вказано' }}</span>
+                  </div>
+                  @if (unit.parentShortName) {
+                  <div class="info-item inline">
+                    <strong>Батьківський підрозділ:</strong>
+                    <span>{{ unit.parentShortName }}</span>
+                  </div>
+                  } @if (unit.assignedShortName) {
+                  <div class="info-item inline">
+                    <strong>Приданий до:</strong>
+                    <span>{{ unit.assignedShortName }}</span>
+                  </div>
+                  } @if (unit.comment) {
+                  <div class="info-item full-width comment">
+                    <strong>Коментар:</strong>
+                    <span>{{ unit.comment }}</span>
+                  </div>
+                  }
+                </div>
+
+                <mat-accordion class="sections-accordion">
+                  <mat-expansion-panel class="unit-section-panel">
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>
+                        <mat-icon color="primary">group</mat-icon>
+                        Особовий склад
+                      </mat-panel-title>
+                    </mat-expansion-panel-header>
+
+                    <div class="section-content">
+                      <app-page-soldiers [filterByUnitId]="unit.id"></app-page-soldiers>
+                    </div>
+                  </mat-expansion-panel>
+                </mat-accordion>
+              </mat-card-content>
+            </mat-card>
+            }
+          </div>
+          }
+        </div>
+      </mat-tab>
+      <mat-tab label="Дані документа">
+        <!-- DataSet Editor -->
+        <app-codemirror-editor> </app-codemirror-editor>
+      </mat-tab>
+    </mat-tab-group>
   </div>
 </div>

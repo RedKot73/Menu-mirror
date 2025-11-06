@@ -15,10 +15,16 @@ import { CommonModule } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatCardModule } from '@angular/material/card';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 import { UnitDto } from '../Unit/services/unit.service';
 import { UnitTreeComponent } from '../Unit/UnitTree.component';
-import { DataSetEditorComponent } from '../DocumentTemplates/components/DataSetEditor.component';
+//import { DataSetEditorComponent } from '../DocumentTemplates/components/DataSetEditor.component';
+import { UnitTreeNode } from '../Unit/unit-tree-node.component';
+import { SoldiersComponent } from '../Soldier/Soldier.component';
+import {CodeMirrorEditorComponent} from "../DocumentTemplates/components/CodeMirrorEditor.component";
 
 export type Unit = UnitDto;
 
@@ -29,8 +35,13 @@ export type Unit = UnitDto;
     MatTooltipModule,
     MatIconModule,
     MatButtonModule,
+    MatTabsModule,
+    MatCardModule,
+    MatExpansionModule,
     UnitTreeComponent,
-    DataSetEditorComponent,
+    //DataSetEditorComponent,
+    CodeMirrorEditorComponent,
+    SoldiersComponent,
   ],
   templateUrl: './Test.page.html',
   styleUrl: './Test.page.scss',
@@ -47,6 +58,9 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   navPanelWidth = signal(this.getSavedNavPanelWidth());
   isDragging = signal(false);
   isNavPanelCollapsed = signal(this.getSavedNavPanelState());
+
+  // --- Selected Units List ---
+  selectedUnits = signal<UnitTreeNode[]>([]);
 
   // --- Computed Signals ---
   contentPanelWidth = computed(() => {
@@ -275,5 +289,43 @@ export class TestComponent implements AfterViewInit, OnDestroy {
    */
   refresh() {
     this.unitTree?.refresh();
+  }
+
+  /**
+   * Добавляет подразделение в список выбранных
+   */
+  addUnitToSelection(node: UnitTreeNode) {
+    const currentList = this.selectedUnits();
+    // Проверяем, нет ли уже этого подразделения в списке
+    if (!currentList.find((u) => u.id === node.id)) {
+      this.selectedUnits.set([...currentList, node]);
+    }
+  }
+
+  /**
+   * Удаляет подразделение из списка выбранных
+   */
+  removeUnitFromSelection(nodeId: string) {
+    const currentList = this.selectedUnits();
+    this.selectedUnits.set(currentList.filter((u) => u.id !== nodeId));
+  }
+
+  /**
+   * Обробник зміни вкладки в правій панелі
+   * Оновлює контент для ResultEditor
+   */
+  onTabChange(index: number): void {
+    console.info('Selected tab index:', index);
+    /*
+    // Отримуємо HTML контент з TemplateEditor
+    const templateContent = this.templateEditor?.editorContent() || '';
+    this.templateContent.set(templateContent);
+
+    // Якщо переходимо на вкладку результату, також оновлюємо дані
+    if (index === 2) {
+      const dataSetContent = this.dataSetEditor?.dataJsonControl.value || '';
+      this.dataSetContent.set(dataSetContent);
+    }
+    */
   }
 }

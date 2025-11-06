@@ -41,7 +41,7 @@ export class CodeMirrorEditorComponent implements AfterViewInit, OnChanges, OnDe
   @ViewChild('editorContainer', { static: true }) editorRef!: ElementRef<HTMLDivElement>;
   
   @Input() content: string = '';
-  @Input() language: string = 'html'; // Підтримувані: 'html', 'javascript', 'txt', 'handlebars'
+  @Input() language: string = 'html'; 
   @Input() readOnly: boolean = false;
   
   @Output() contentChange = new EventEmitter<string>();

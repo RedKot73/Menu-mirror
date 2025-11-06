@@ -8,21 +8,20 @@
 .panel {
   display: flex;
   flex-direction: column;
-  min-width: 0; /* Встановлюємо 0, щоб дозволити згортання */
+  min-width: 0;
   max-width: 80%;
   overflow: hidden;
 }
 
 .nav-panel {
   background-color: #f5f5f5;
-  min-width: 200px; /* Мінімальна ширина лише для розгорнутого стану */
+  min-width: 200px;
 }
 
 .content-panel {
   background-color: #fafafa;
-  overflow: hidden; /* Важливо: запобігає переповненню */
+  overflow: hidden;
 
-  /* Забезпечуємо, що вміст займає всю висоту */
   > * {
     height: 100%;
   }
@@ -51,7 +50,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0; // Кнопки не сжимаются
+  flex-shrink: 0;
 }
 
 .panel-content {
@@ -63,14 +62,6 @@
     height: 100%;
     padding: 8px;
   }
-}
-
-.content-box {
-  margin-top: 20px;
-  padding: 16px;
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
 }
 
 .splitter {
@@ -146,7 +137,7 @@
 }
 
 .arrow.collapsed {
-  transform: translateX(1px); /* Slight adjustment for visual balance */
+  transform: translateX(1px);
 }
 
 .panel.collapsed {
@@ -163,238 +154,118 @@
   display: none !important;
 }
 
-ul {
-  list-style-type: disc;
-  padding-left: 20px;
-}
+// ===== SELECTED UNITS LIST STYLES =====
 
-li {
-  margin-bottom: 8px;
-}
-
-// Удалены глобальные стили button, которые конфликтовали с Material Design
-// button {
-//   padding: 8px 16px;
-//   background-color: #2196f3;
-//   color: white;
-//   border: none;
-//   border-radius: 4px;
-//   cursor: pointer;
-// }
-
-// button:hover {
-//   background-color: #1976d2;
-// }
-
-// ===== TEMPLATE TABLE STYLES =====
-
-.templates-container {
+.selected-units-list {
+  padding: 16px;
   height: 100%;
-  overflow: auto;
-}
-
-.templates-table {
-  width: 100%;
-  background-color: white;
-
-  .mat-mdc-header-cell {
-    font-weight: 600;
-    color: #1976d2;
-    font-size: 12px;
-    padding: 8px 12px;
-  }
-
-  .mat-mdc-cell {
-    padding: 8px 12px;
-    font-size: 13px;
-  }
-
-  .mat-mdc-row {
-    transition: background-color 0.2s ease;
-    cursor: pointer;
-
-    &:hover {
-      background-color: #f5f5f5;
-    }
-
-    &.selected-row {
-      background-color: #e3f2fd;
-    }
-  }
-}
-
-.clickable-cell {
-  cursor: pointer;
-}
-
-.template-name {
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 2px;
-}
-
-.template-description {
-  font-size: 11px;
-  color: #666;
-  font-style: italic;
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-// Format chips
-.format-chip {
-  font-size: 10px;
-  min-height: 20px;
-
-  &.format-html {
-    background-color: #e8f5e8;
-    color: #2e7d32;
-  }
-
-  &.format-txt {
-    background-color: #fff3e0;
-    color: #f57c00;
-  }
-
-  &.format-docx {
-    background-color: #e3f2fd;
-    color: #1976d2;
-  }
-
-  &.format-pdf {
-    background-color: #fce4ec;
-    color: #c2185b;
-  }
-}
-
-// Status chips
-.status-published {
-  background-color: #e8f5e8;
-  color: #2e7d32;
-  font-size: 10px;
-  min-height: 20px;
-
-  mat-icon {
-    font-size: 12px;
-    width: 12px;
-    height: 12px;
-  }
-}
-
-.status-draft {
-  background-color: #fff3e0;
-  color: #f57c00;
-  font-size: 10px;
-  min-height: 20px;
-
-  mat-icon {
-    font-size: 12px;
-    width: 12px;
-    height: 12px;
-  }
-}
-
-// Loading and empty states
-.loading-indicator,
-.no-data {
-  text-align: center;
-  padding: 32px;
-  color: #666;
-  font-style: italic;
-}
-
-.loading-indicator {
-  color: #1976d2;
-}
-
-// Удалены дублированные стили Panel header improvements, которые конфликтовали с Material Design
-// Основные стили .panel-header уже определены выше в файле
-
-// Content panel improvements
-.unit-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.template-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 12px;
-}
-
-.format-info {
-  background-color: #e3f2fd;
-  color: #1976d2;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-weight: 500;
-}
-
-.status-info {
-  background-color: #fff3e0;
-  color: #f57c00;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-weight: 500;
-
-  &.published {
-    background-color: #e8f5e8;
-    color: #2e7d32;
-  }
-}
-
-// Template details section
-.template-details {
-  background-color: white;
-  padding: 24px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-  h4 {
-    margin: 0 0 16px 0;
-    color: #1976d2;
-    font-size: 16px;
-    font-weight: 500;
-  }
-
-  p {
-    margin: 8px 0;
-    font-size: 14px;
-
-    strong {
-      color: #333;
-      font-weight: 500;
-      min-width: 100px;
-      display: inline-block;
-    }
-  }
-}
-
-.no-selection {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 50%;
-  color: #666;
-  text-align: center;
 
-  mat-icon {
-    font-size: 48px;
-    width: 48px;
-    height: 48px;
-    margin-bottom: 16px;
-    opacity: 0.5;
+  .empty-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    text-align: center;
+
+    mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      opacity: 0.3;
+      margin-bottom: 16px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+    }
   }
 
-  p {
-    font-size: 16px;
-    margin: 0;
+  .units-list {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+// Стили для карточек подразделений
+.unit-details-card {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 12px;
+
+  mat-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .remove-button {
+      margin-left: auto;
+    }
+  }
+
+  .unit-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      strong {
+        color: rgba(0, 0, 0, 0.6);
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      span {
+        font-size: 16px;
+        font-weight: 400;
+      }
+
+      &.inline {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+      }
+
+      &.full-width {
+        grid-column: 1 / -1;
+      }
+
+      &.comment {
+        flex-direction: column;
+        gap: 8px;
+
+        span {
+          word-wrap: break-word;
+          word-break: break-word;
+          white-space: pre-wrap;
+          max-width: 100%;
+          overflow-wrap: break-word;
+          hyphens: auto;
+          font-style: italic;
+          color: rgba(0, 0, 0, 0.6);
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .selected-units-list {
+    padding: 8px;
+  }
+
+  .unit-details-card .unit-info-grid {
+    grid-template-columns: 1fr;
   }
 }
