@@ -4,130 +4,179 @@ import { Observable } from 'rxjs';
 import { LookupDto } from '../../shared/models/lookup.models';
 
 export interface UnitDto {
-    id: string;
-    parentId?: string;
-    parentShortName?: string;
-    assignedUnitId?: string;
-    assignedShortName?: string;
-    name: string;
-    shortName?: string;
-    militaryNumber?: string;
-    forceTypeId?: string;
-    forceType?: string;
-    unitTypeId?: string;
-    unitType?: string;
-    orderVal: number;
-    comment?: string;
+  id: string;
+  parentId?: string;
+  parentShortName?: string;
+  assignedUnitId?: string;
+  assignedShortName?: string;
+  name: string;
+  shortName?: string;
+  militaryNumber?: string;
+  forceTypeId?: string;
+  forceType?: string;
+  unitTypeId?: string;
+  unitType?: string;
+  orderVal: number;
+  comment?: string;
 }
 
 export interface UnitTreeItemDto extends UnitDto {
-    hasChildren: boolean;
+  hasChildren: boolean;
 }
 
 export interface UnitCreateDto {
-    parentId?: string;
-    assignedUnitId?: string;
-    name: string;
-    shortName: string;
-    militaryNumber?: string;
-    forceTypeId?: string;
-    unitTypeId?: string;
-    orderVal: number;
-    comment?: string;
+  parentId?: string;
+  assignedUnitId?: string;
+  name: string;
+  shortName: string;
+  militaryNumber?: string;
+  forceTypeId?: string;
+  unitTypeId?: string;
+  orderVal: number;
+  comment?: string;
 }
 
+// DTO для набора данных солдата
+export interface SoldierDataSetDto {
+  id: string;
+  firstName: string;
+  midleName?: string;
+  lastName?: string;
+  fio: string;
+  nickName?: string;
+  unitId: string;
+  unitShortName: string;
+  assignedUnitId?: string;
+  assignedUnitShortName?: string;
+  rankId: string;
+  rankShortValue: string;
+  positionId: string;
+  positionValue: string;
+  stateId: string;
+  stateValue: string;
+  comment?: string;
+}
+
+// DTO для набора данных підрозділу з особовим складом
+export interface UnitDataSetDto {
+  id: string;
+  parentId?: string;
+  parentShortName?: string;
+  assignedShortName?: string;
+  shortName: string;
+  unitTypeId?: string;
+  unitType?: string;
+  comment?: string;
+  soldiers: SoldierDataSetDto[];
+}
+
+export type HttpGetParams = Record<string, string | number | boolean>;
+
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root',
 })
 export class UnitService {
-    readonly api = '/api/Unit';
-    private http = inject(HttpClient);
+  readonly api = '/api/Unit';
+  private http = inject(HttpClient);
 
-    createItemsSignal() {
-        return signal<UnitDto[]>([]);
+  createItemsSignal() {
+    return signal<UnitDto[]>([]);
+  }
+
+  // CRUD операции
+  getAll(search?: string, parentId?: string): Observable<UnitDto[]> {
+    const params: HttpGetParams = {};
+    if (search) {
+      params['search'] = search;
+    }
+    if (parentId) {
+      params['parentId'] = parentId;
     }
 
-    // CRUD операции
-    getAll(search?: string, parentId?: string): Observable<UnitDto[]> {
-        const params: any = {};
-        if (search) {params.search = search;}
-        if (parentId) {params.parentId = parentId;}
-        
-        return this.http.get<UnitDto[]>(this.api, { params });
+    return this.http.get<UnitDto[]>(this.api, { params });
+  }
+
+  // Специальный метод для дерева с ленивой загрузкой
+  getTreeItems(search?: string, parentId?: string): Observable<UnitTreeItemDto[]> {
+    const params: HttpGetParams = {};
+    if (search) {
+      params['search'] = search;
+    }
+    if (parentId !== undefined) {
+      params['parentId'] = parentId;
     }
 
-    // Специальный метод для дерева с ленивой загрузкой
-    getTreeItems(search?: string, parentId?: string): Observable<UnitTreeItemDto[]> {
-        const params: any = {};
-        if (search) {params.search = search;}
-        if (parentId !== undefined) {params.parentId = parentId;}
-        
-        return this.http.get<UnitTreeItemDto[]>(this.api, { params });
-    }
+    return this.http.get<UnitTreeItemDto[]>(this.api, { params });
+  }
 
-    getById(id: string): Observable<UnitDto> {
-        return this.http.get<UnitDto>(`${this.api}/${id}`);
-    }
+  getById(id: string): Observable<UnitDto> {
+    return this.http.get<UnitDto>(`${this.api}/${id}`);
+  }
 
-    create(item: UnitCreateDto): Observable<UnitDto> {
-        return this.http.post<UnitDto>(this.api, item);
-    }
+  create(item: UnitCreateDto): Observable<UnitDto> {
+    return this.http.post<UnitDto>(this.api, item);
+  }
 
-    update(id: string, item: UnitDto): Observable<void> {
-        return this.http.put<void>(`${this.api}/${id}`, item);
-    }
+  update(id: string, item: UnitDto): Observable<void> {
+    return this.http.put<void>(`${this.api}/${id}`, item);
+  }
 
-    delete(id: string): Observable<void> {
-        return this.http.delete<void>(`${this.api}/${id}`);
-    }
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.api}/${id}`);
+  }
 
-    // Методы для работы с иерархией
-    hasChildren(id: string): Observable<boolean> {
-        return this.http.get<boolean>(`${this.api}/${id}/has-children`);
-    }
+  // Методы для работы с иерархией
+  hasChildren(id: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.api}/${id}/has-children`);
+  }
 
-    getChildren(id: string): Observable<UnitDto[]> {
-        return this.http.get<UnitDto[]>(`${this.api}/${id}/children`);
-    }
+  getChildren(id: string): Observable<UnitDto[]> {
+    return this.http.get<UnitDto[]>(`${this.api}/${id}/children`);
+  }
 
-    hasAssignedUnits(id: string): Observable<boolean> {
-        return this.http.get<boolean>(`${this.api}/${id}/has-assigned`);
-    }
+  hasAssignedUnits(id: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.api}/${id}/has-assigned`);
+  }
 
-    getAssignedUnits(id: string): Observable<UnitDto[]> {
-        return this.http.get<UnitDto[]>(`${this.api}/${id}/assigned`);
-    }
+  getAssignedUnits(id: string): Observable<UnitDto[]> {
+    return this.http.get<UnitDto[]>(`${this.api}/${id}/assigned`);
+  }
 
-    // Методы для управления дочерними подразделениями
-    addExistingChild(parentId: string, childId: string): Observable<void> {
-        return this.http.post<void>(`${this.api}/${parentId}/add-exists-child/${childId}`, {});
-    }
+  // Методы для управления дочерними подразделениями
+  addExistingChild(parentId: string, childId: string): Observable<void> {
+    return this.http.post<void>(`${this.api}/${parentId}/add-exists-child/${childId}`, {});
+  }
 
-    removeChild(parentId: string, childId: string): Observable<void> {
-        return this.http.post<void>(`${this.api}/${parentId}/remove-child/${childId}`, {});
-    }
+  removeChild(parentId: string, childId: string): Observable<void> {
+    return this.http.post<void>(`${this.api}/${parentId}/remove-child/${childId}`, {});
+  }
 
-    // Методы для управления приданными подразделениями
-    addAssignedUnit(unitId: string, assignedId: string): Observable<void> {
-        return this.http.post<void>(`${this.api}/${unitId}/add-assigned/${assignedId}`, {});
-    }
+  // Методы для управления приданными подразделениями
+  addAssignedUnit(unitId: string, assignedId: string): Observable<void> {
+    return this.http.post<void>(`${this.api}/${unitId}/add-assigned/${assignedId}`, {});
+  }
 
-    removeAssignedUnit(unitId: string, assignedId: string): Observable<void> {
-        return this.http.post<void>(`${this.api}/${unitId}/remove-assigned/${assignedId}`, {});
-    }
+  removeAssignedUnit(unitId: string, assignedId: string): Observable<void> {
+    return this.http.post<void>(`${this.api}/${unitId}/remove-assigned/${assignedId}`, {});
+  }
 
-    //Работают по разному, не путать
-    // GET /api/.../lookup - Получить список для автозаполнения
-    // GET /api/.../sel_list - Получить список для селекта
-    lookup(term: string, limit: number = 10): Observable<LookupDto[]> {
-        const params = { term, limit: limit.toString() };
-        return this.http.get<LookupDto[]>(`${this.api}/lookup`, { params });
-    }
+  //Работают по разному, не путать
+  // GET /api/.../lookup - Получить список для автозаполнения
+  // GET /api/.../sel_list - Получить список для селекта
+  lookup(term: string, limit: number = 10): Observable<LookupDto[]> {
+    const params = { term, limit: limit.toString() };
+    return this.http.get<LookupDto[]>(`${this.api}/lookup`, { params });
+  }
 
-    //Работают по разному, не путать
-    // GET /api/.../lookup - Получить список для автозаполнения
-    // GET /api/.../sel_list - Получить список для селекта
-    getSelectList(): Observable<LookupDto[]> {
-        return this.http.get<LookupDto[]>(`${this.api}/sel_list`);
-    }
+  //Работают по разному, не путать
+  // GET /api/.../lookup - Получить список для автозаполнения
+  // GET /api/.../sel_list - Получить список для селекта
+  getSelectList(): Observable<LookupDto[]> {
+    return this.http.get<LookupDto[]>(`${this.api}/sel_list`);
+  }
+
+  // Получить набор данных підрозділу з особовим складом для формування документів
+  getUnitDataSet(id: string): Observable<UnitDataSetDto> {
+    return this.http.get<UnitDataSetDto>(`${this.api}/${id}/data-set`);
+  }
 }

@@ -124,25 +124,88 @@
                       @if (unit.soldiers.length === 0) {
                       <p class="no-soldiers">Особовий склад відсутній</p>
                       } @else {
-                      <div class="soldiers-list">
-                        @for (soldier of unit.soldiers; track soldier.id) {
-                        <div class="soldier-item">
-                          <div class="soldier-info">
-                            <span class="soldier-fio">{{ soldier.fio }}</span>
-                            @if (soldier.nickName) {
-                            <span class="soldier-nickname">"{{ soldier.nickName }}"</span>
-                            }
-                            <span class="soldier-rank">{{ soldier.rankShortValue }}</span>
-                            <span class="soldier-position">{{ soldier.positionValue }}</span>
-                          </div>
-                          <div class="soldier-status">
-                            <span [class]="'status-badge status-' + soldier.stateId">{{
-                              soldier.stateValue
-                            }}</span>
-                          </div>
-                        </div>
-                        }
-                      </div>
+                      <table
+                        mat-table
+                        [dataSource]="unit.soldiers"
+                        class="mat-elevation-z8"
+                        style="width: 100%; margin-top: 1em"
+                      >
+                        <!-- FIO Column -->
+                        <ng-container matColumnDef="fio">
+                          <th mat-header-cell *matHeaderCellDef>ПІБ</th>
+                          <td mat-cell *matCellDef="let soldier">
+                            <span class="fio">{{ soldier.fio }}</span>
+                          </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="nickName">
+                          <th mat-header-cell *matHeaderCellDef>Позивний</th>
+                          <td mat-cell *matCellDef="let soldier">{{ soldier.nickName }}</td>
+                        </ng-container>
+
+                        <!-- Rank Column -->
+                        <ng-container matColumnDef="rankShortValue">
+                          <th mat-header-cell *matHeaderCellDef>Звання</th>
+                          <td mat-cell *matCellDef="let soldier">
+                            {{ soldier.rankShortValue }}
+                          </td>
+                        </ng-container>
+
+                        <!-- Position Column -->
+                        <ng-container matColumnDef="positionValue">
+                          <th mat-header-cell *matHeaderCellDef>Посада</th>
+                          <td mat-cell *matCellDef="let soldier">
+                            {{ soldier.positionValue }}
+                          </td>
+                        </ng-container>
+
+                        <!-- State Column -->
+                        <ng-container matColumnDef="stateValue">
+                          <th mat-header-cell *matHeaderCellDef>Статус</th>
+                          <td mat-cell *matCellDef="let soldier">
+                            <span class="state-badge">{{ soldier.stateValue }}</span>
+                          </td>
+                        </ng-container>
+
+                        <!-- Assigned Unit Column -->
+                        <ng-container matColumnDef="assignedUnitShortName">
+                          <th mat-header-cell *matHeaderCellDef>Приданий до</th>
+                          <td mat-cell *matCellDef="let soldier">
+                            {{ soldier.assignedUnitShortName || '-' }}
+                          </td>
+                        </ng-container>
+
+                        <!-- Comment Column -->
+                        <ng-container matColumnDef="comment">
+                          <th mat-header-cell *matHeaderCellDef>Коментар</th>
+                          <td mat-cell *matCellDef="let soldier" class="comment-cell">
+                            <span
+                              class="comment-text"
+                              [matTooltip]="
+                                soldier.comment && soldier.comment.length > 50
+                                  ? soldier.comment
+                                  : ''
+                              "
+                              [title]="
+                                soldier.comment && soldier.comment.length > 50
+                                  ? soldier.comment
+                                  : ''
+                              "
+                            >
+                              {{
+                                soldier.comment
+                                  ? soldier.comment.length > 50
+                                    ? (soldier.comment | slice : 0 : 50) + '...'
+                                    : soldier.comment
+                                  : '-'
+                              }}
+                            </span>
+                          </td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+                      </table>
                       }
                     </div>
                   </mat-expansion-panel>

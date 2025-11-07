@@ -286,92 +286,54 @@
   }
 }
 
-// Стили для списка солдат
-.soldiers-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-}
-
-.soldier-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px;
-  background-color: #fafafa;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
-
-  &:hover {
-    background-color: #f0f0f0;
-  }
-
-  .soldier-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-
-    .soldier-fio {
-      font-weight: 500;
-      font-size: 14px;
-      color: #333;
-    }
-
-    .soldier-nickname {
-      font-style: italic;
-      font-size: 13px;
-      color: #666;
-    }
-
-    .soldier-rank {
-      font-size: 12px;
-      color: #1976d2;
-      font-weight: 500;
-    }
-
-    .soldier-position {
-      font-size: 12px;
-      color: #666;
-    }
-  }
-
-  .soldier-status {
-    flex-shrink: 0;
-
-    .status-badge {
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 500;
-      white-space: nowrap;
-
-      // Можна додати різні кольори для різних статусів
-      &.status-active {
-        background-color: #e8f5e9;
-        color: #2e7d32;
-      }
-
-      &.status-200 {
-        background-color: #fff3e0;
-        color: #f57c00;
-      }
-
-      &.status-300 {
-        background-color: #fce4ec;
-        color: #c2185b;
-      }
-    }
-  }
-}
-
-.no-soldiers {
+// Стили для таблицы солдат
+.section-content {
   padding: 16px;
-  text-align: center;
-  color: #666;
-  font-style: italic;
-  margin: 0;
+
+  table {
+    background: white;
+  }
+
+  .fio {
+    font-weight: 500;
+    color: #1976d2;
+  }
+
+  .state-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+  }
+
+  .comment-cell {
+    max-width: 200px;
+    width: 200px;
+  }
+
+  .comment-text {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    cursor: help;
+  }
+
+  .delete-action {
+    color: #f44336;
+  }
+
+  .no-soldiers {
+    padding: 16px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    margin: 0;
+  }
 }
 
 @media (max-width: 768px) {
@@ -381,17 +343,5 @@
 
   .unit-details-card .unit-info-grid {
     grid-template-columns: 1fr;
-  }
-
-  .soldier-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-
-    .soldier-status {
-      width: 100%;
-      display: flex;
-      justify-content: flex-end;
-    }
   }
 }

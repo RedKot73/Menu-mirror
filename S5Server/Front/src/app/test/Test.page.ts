@@ -11,8 +11,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { CommonModule, SlicePipe } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -21,53 +20,23 @@ import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTableModule } from '@angular/material/table';
+import { MatSortModule } from '@angular/material/sort';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 
-import { UnitDto } from '../Unit/services/unit.service';
+import { UnitService, UnitDataSetDto } from '../Unit/services/unit.service';
 import { UnitTreeComponent } from '../Unit/UnitTree.component';
-//import { DataSetEditorComponent } from '../DocumentTemplates/components/DataSetEditor.component';
 import { UnitTreeNode } from '../Unit/unit-tree-node.component';
-import { SoldiersComponent } from '../Soldier/Soldier.component';
 import { CodeMirrorEditorComponent } from '../DocumentTemplates/components/CodeMirrorEditor.component';
-
-export type Unit = UnitDto;
-
-// DTO для набора данных підрозділу з особовим складом
-export interface SoldierDataSetDto {
-  id: string;
-  firstName: string;
-  midleName?: string;
-  lastName?: string;
-  fio: string;
-  nickName?: string;
-  unitId: string;
-  unitShortName: string;
-  assignedUnitId?: string;
-  assignedUnitShortName?: string;
-  rankId: string;
-  rankShortValue: string;
-  positionId: string;
-  positionValue: string;
-  stateId: string;
-  stateValue: string;
-  comment?: string;
-}
-
-export interface UnitDataSetDto {
-  id: string;
-  parentId?: string;
-  parentShortName?: string;
-  assignedShortName?: string;
-  shortName: string;
-  unitTypeId?: string;
-  unitType?: string;
-  comment?: string;
-  soldiers: SoldierDataSetDto[];
-}
+import { ErrorHandler } from '../shared/models/ErrorHandler';
 
 @Component({
   selector: 'app-test-page',
   imports: [
     CommonModule,
+    SlicePipe,
     MatTooltipModule,
     MatIconModule,
     MatButtonModule,
@@ -76,17 +45,20 @@ export interface UnitDataSetDto {
     MatExpansionModule,
     MatFormFieldModule,
     MatSelectModule,
+    MatTableModule,
+    MatSortModule,
+    MatMenuModule,
+    MatDividerModule,
     UnitTreeComponent,
-    //DataSetEditorComponent,
     CodeMirrorEditorComponent,
-    SoldiersComponent,
   ],
   templateUrl: './Test.page.html',
   styleUrl: './Test.page.scss',
 })
 export class TestComponent implements AfterViewInit, OnDestroy {
   // --- Injected Dependencies ---
-  private http = inject(HttpClient);
+  private unitService = inject(UnitService);
+  private snackBar = inject(MatSnackBar);
   breakpointObserver = inject(BreakpointObserver);
 
   // --- ViewChild References ---
@@ -103,6 +75,17 @@ export class TestComponent implements AfterViewInit, OnDestroy {
 
   // --- JSON Data for Editor ---
   selectedUnitsJson = signal<string>('');
+
+  // --- Table Configuration ---
+  displayedColumns = [
+    'fio',
+    'nickName',
+    'rankShortValue',
+    'positionValue',
+    'stateValue',
+    'assignedUnitShortName',
+    'comment',
+  ];
 
   // --- Computed Signals ---
   contentPanelWidth = computed(() => {
@@ -344,13 +327,18 @@ export class TestComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    // Загружаем полный DataSet подразделения через API
-    this.http.get<UnitDataSetDto>(`/api/Unit/${node.id}/data-set`).subscribe({
+    // Загружаем полный DataSet подразделения через UnitService
+    this.unitService.getUnitDataSet(node.id).subscribe({
       next: (unitDataSet) => {
         this.selectedUnits.set([...currentList, unitDataSet]);
       },
       error: (error) => {
         console.error('Помилка завантаження даних підрозділу:', error);
+        const errorMessage = ErrorHandler.handleHttpError(
+          error,
+          'Помилка завантаження даних підрозділу:'
+        );
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
     });
   }
