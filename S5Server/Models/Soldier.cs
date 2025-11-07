@@ -95,6 +95,48 @@ namespace S5Server.Models
         };
     }
 
+    public record SoldierDataSetDto(
+        string Id,
+        string FirstName,
+        string? MidleName,
+        string? LastName,
+        string Fio,
+        string? NickName,
+        string UnitId,
+        string UnitShortName,
+        string? AssignedUnitId,
+        string? AssignedUnitShortName,
+        string RankId,
+        string RankShortValue,
+        string PositionId,
+        string PositionValue,
+        string StateId,
+        string StateValue,
+        string? Comment
+    )
+    {
+        public static SoldierDataSetDto ToDto(Soldier e) =>
+            new(
+                e.Id,
+                e.FirstName,
+                e.MidleName,
+                e.LastName,
+                e.FIO,
+                e.NickName,
+                e.UnitId,
+                e.Unit?.ShortName ?? e.Unit?.Name ?? string.Empty,
+                e.AssignedUnitId,
+                e.AssignedUnit?.ShortName ?? e.AssignedUnit?.Name,
+                e.RankId,
+                e.Rank?.ShortValue ?? e.Rank?.Value ?? string.Empty,
+                e.PositionId,
+                e.Position?.Value ?? string.Empty,
+                e.StateId,
+                e.State?.Value ?? string.Empty,
+                e.Comment
+            );
+    }
+
     /// <summary>
     /// Боєць
     /// </summary>
@@ -138,7 +180,7 @@ namespace S5Server.Models
         /// <summary>
         /// Підрозділ
         /// </summary>
-        [ValidateNever, 
+        [ValidateNever,
             Required(ErrorMessage = UIConstant.RequiredMsg)]
         public virtual Unit Unit { get; set; } = default!;
 

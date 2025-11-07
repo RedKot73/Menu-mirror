@@ -56,7 +56,7 @@ namespace S5Server.Models
     }
 
     /// <summary>
-    /// Расширенный DTO для дерева: добавляет признак наличия дочірних підрозділів.
+    /// Расширенный DTO для дерева: добавляет признак наличия дочірніх підрозділів.
     /// </summary>
     public record UnitTreeItemDto(
         string Id,
@@ -103,6 +103,34 @@ namespace S5Server.Models
         string? Comment
     );
 
+    /// <summary>
+    /// DTO для набора данных підрозділу для Angular (формування документу)
+    /// Soldiers включает список особового складу підрозділу (основних бійців UnitId == Id).
+    /// </summary>
+    public record UnitDataSetDto(
+        string Id,
+        string? ParentId,
+        string? ParentShortName,
+        string? AssignedShortName,
+        string ShortName,
+        string? UnitTypeId,
+        string? UnitType,
+        string? Comment,
+        SoldierDataSetDto[] Soldiers
+    )
+    {
+        public static UnitDataSetDto From(Unit u, IEnumerable<SoldierDataSetDto> soldiers) => new(
+            u.Id,
+            u.ParentId,
+            u.Parent?.ShortName,
+            u.AssignedUnit?.ShortName ?? u.AssignedUnit?.Name,
+            u.ShortName,
+            u.UnitTypeId,
+            u.UnitType?.ShortValue,
+            u.Comment,
+            soldiers.ToArray()
+        );
+    }
 
     /// <summary>
     /// Підрозділ (організаційно-штатна бойова одиниця).

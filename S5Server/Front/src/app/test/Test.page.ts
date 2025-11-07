@@ -12,21 +12,57 @@ import {
 } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 
 import { UnitDto } from '../Unit/services/unit.service';
 import { UnitTreeComponent } from '../Unit/UnitTree.component';
 //import { DataSetEditorComponent } from '../DocumentTemplates/components/DataSetEditor.component';
 import { UnitTreeNode } from '../Unit/unit-tree-node.component';
 import { SoldiersComponent } from '../Soldier/Soldier.component';
-import {CodeMirrorEditorComponent} from "../DocumentTemplates/components/CodeMirrorEditor.component";
+import { CodeMirrorEditorComponent } from '../DocumentTemplates/components/CodeMirrorEditor.component';
 
 export type Unit = UnitDto;
+
+// DTO для набора данных підрозділу з особовим складом
+export interface SoldierDataSetDto {
+  id: string;
+  firstName: string;
+  midleName?: string;
+  lastName?: string;
+  fio: string;
+  nickName?: string;
+  unitId: string;
+  unitShortName: string;
+  assignedUnitId?: string;
+  assignedUnitShortName?: string;
+  rankId: string;
+  rankShortValue: string;
+  positionId: string;
+  positionValue: string;
+  stateId: string;
+  stateValue: string;
+  comment?: string;
+}
+
+export interface UnitDataSetDto {
+  id: string;
+  parentId?: string;
+  parentShortName?: string;
+  assignedShortName?: string;
+  shortName: string;
+  unitTypeId?: string;
+  unitType?: string;
+  comment?: string;
+  soldiers: SoldierDataSetDto[];
+}
 
 @Component({
   selector: 'app-test-page',
@@ -38,6 +74,8 @@ export type Unit = UnitDto;
     MatTabsModule,
     MatCardModule,
     MatExpansionModule,
+    MatFormFieldModule,
+    MatSelectModule,
     UnitTreeComponent,
     //DataSetEditorComponent,
     CodeMirrorEditorComponent,
@@ -48,6 +86,7 @@ export type Unit = UnitDto;
 })
 export class TestComponent implements AfterViewInit, OnDestroy {
   // --- Injected Dependencies ---
+  private http = inject(HttpClient);
   breakpointObserver = inject(BreakpointObserver);
 
   // --- ViewChild References ---
@@ -59,8 +98,11 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   isDragging = signal(false);
   isNavPanelCollapsed = signal(this.getSavedNavPanelState());
 
-  // --- Selected Units List ---
-  selectedUnits = signal<UnitTreeNode[]>([]);
+  // --- Selected Units List with DataSets ---
+  selectedUnits = signal<UnitDataSetDto[]>([]);
+
+  // --- JSON Data for Editor ---
+  selectedUnitsJson = signal<string>('');
 
   // --- Computed Signals ---
   contentPanelWidth = computed(() => {
@@ -293,13 +335,24 @@ export class TestComponent implements AfterViewInit, OnDestroy {
 
   /**
    * Добавляет подразделение в список выбранных
+   * Загружает полный DataSet с особовим складом через API
    */
   addUnitToSelection(node: UnitTreeNode) {
     const currentList = this.selectedUnits();
     // Проверяем, нет ли уже этого подразделения в списке
-    if (!currentList.find((u) => u.id === node.id)) {
-      this.selectedUnits.set([...currentList, node]);
+    if (currentList.find((u) => u.id === node.id)) {
+      return;
     }
+
+    // Загружаем полный DataSet подразделения через API
+    this.http.get<UnitDataSetDto>(`/api/Unit/${node.id}/data-set`).subscribe({
+      next: (unitDataSet) => {
+        this.selectedUnits.set([...currentList, unitDataSet]);
+      },
+      error: (error) => {
+        console.error('Помилка завантаження даних підрозділу:', error);
+      },
+    });
   }
 
   /**
@@ -312,20 +365,15 @@ export class TestComponent implements AfterViewInit, OnDestroy {
 
   /**
    * Обробник зміни вкладки в правій панелі
-   * Оновлює контент для ResultEditor
+   * Оновлює контент для редактора
    */
   onTabChange(index: number): void {
-    console.info('Selected tab index:', index);
-    /*
-    // Отримуємо HTML контент з TemplateEditor
-    const templateContent = this.templateEditor?.editorContent() || '';
-    this.templateContent.set(templateContent);
-
-    // Якщо переходимо на вкладку результату, також оновлюємо дані
-    if (index === 2) {
-      const dataSetContent = this.dataSetEditor?.dataJsonControl.value || '';
-      this.dataSetContent.set(dataSetContent);
+    // Якщо переходимо на вкладку "Дані документа" (index === 1)
+    if (index === 1) {
+      const units = this.selectedUnits();
+      // Конвертуємо selectedUnits в JSON з форматуванням
+      const jsonString = JSON.stringify(units, null, 2);
+      this.selectedUnitsJson.set(jsonString);
     }
-    */
   }
 }

@@ -78,6 +78,21 @@
                     <strong>Тип підрозділу:</strong>
                     <span>{{ unit.unitType || 'Не вказано' }}</span>
                   </div>
+
+                  <div class="info-item inline">
+                    <strong>Завдання:</strong>
+                    <mat-form-field appearance="outline" class="task-select">
+                      <mat-select placeholder="Оберіть завдання">
+                        <mat-option value="reserve">Резерв (30)</mat-option>
+                        <mat-option value="combat">Бойовий виліт (100)</mat-option>
+                        <mat-option value="recon">Реко (100)</mat-option>
+                        <mat-option value="engineer">Інженери (100)</mat-option>
+                        <mat-option value="guard">Охорона (100)</mat-option>
+                        <mat-option value="notUsed">Не застосовувався (Х)</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+
                   @if (unit.parentShortName) {
                   <div class="info-item inline">
                     <strong>Батьківський підрозділ:</strong>
@@ -101,12 +116,34 @@
                     <mat-expansion-panel-header>
                       <mat-panel-title>
                         <mat-icon color="primary">group</mat-icon>
-                        Особовий склад
+                        Особовий склад ({{ unit.soldiers.length }})
                       </mat-panel-title>
                     </mat-expansion-panel-header>
 
                     <div class="section-content">
-                      <app-page-soldiers [filterByUnitId]="unit.id"></app-page-soldiers>
+                      @if (unit.soldiers.length === 0) {
+                      <p class="no-soldiers">Особовий склад відсутній</p>
+                      } @else {
+                      <div class="soldiers-list">
+                        @for (soldier of unit.soldiers; track soldier.id) {
+                        <div class="soldier-item">
+                          <div class="soldier-info">
+                            <span class="soldier-fio">{{ soldier.fio }}</span>
+                            @if (soldier.nickName) {
+                            <span class="soldier-nickname">"{{ soldier.nickName }}"</span>
+                            }
+                            <span class="soldier-rank">{{ soldier.rankShortValue }}</span>
+                            <span class="soldier-position">{{ soldier.positionValue }}</span>
+                          </div>
+                          <div class="soldier-status">
+                            <span [class]="'status-badge status-' + soldier.stateId">{{
+                              soldier.stateValue
+                            }}</span>
+                          </div>
+                        </div>
+                        }
+                      </div>
+                      }
                     </div>
                   </mat-expansion-panel>
                 </mat-accordion>
@@ -119,7 +156,12 @@
       </mat-tab>
       <mat-tab label="Дані документа">
         <!-- DataSet Editor -->
-        <app-codemirror-editor> </app-codemirror-editor>
+        <app-codemirror-editor
+          [content]="selectedUnitsJson()"
+          [language]="'javascript'"
+          [readOnly]="false"
+        >
+        </app-codemirror-editor>
       </mat-tab>
     </mat-tab-group>
   </div>
