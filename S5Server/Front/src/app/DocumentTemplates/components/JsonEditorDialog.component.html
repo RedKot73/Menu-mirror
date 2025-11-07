@@ -1,26 +1,30 @@
 <h2 mat-dialog-title>
-  <mat-icon>code</mat-icon>
-  Редагування HTML коду
+  <mat-icon>data_object</mat-icon>
+  {{ data.title || 'Редагування JSON даних' }}
 </h2>
 
 <mat-dialog-content>
   <div class="editor-toolbar">
     <button
       mat-icon-button
-      (click)="formatHtml()"
+      (click)="formatJson()"
       [disabled]="data.readOnly"
-      matTooltip="Форматувати HTML код"
+      matTooltip="Форматувати JSON"
     >
       <mat-icon>auto_fix_high</mat-icon>
+    </button>
+
+    <button mat-icon-button (click)="validateJson()" matTooltip="Перевірити валідність JSON">
+      <mat-icon>check_circle</mat-icon>
     </button>
   </div>
 
   <app-codemirror-editor
-    [content]="htmlContent()"
-    [language]="'html'"
+    [content]="jsonContent()"
+    [language]="'javascript'"
     [readOnly]="data.readOnly"
     (contentChange)="onContentChange($event)"
-    class="html-editor"
+    class="json-editor"
   >
   </app-codemirror-editor>
 
@@ -35,9 +39,10 @@
 <mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()">
     <mat-icon>close</mat-icon>
-    Скасувати
+    Закрити
   </button>
 
+  @if (!data.readOnly) {
   <button
     mat-raised-button
     color="primary"
@@ -47,4 +52,5 @@
     <mat-icon>save</mat-icon>
     Застосувати
   </button>
+  }
 </mat-dialog-actions>

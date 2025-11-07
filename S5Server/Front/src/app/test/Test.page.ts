@@ -15,7 +15,6 @@ import { CommonModule, SlicePipe } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { MatTabsModule } from '@angular/material/tabs';
 import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -25,11 +24,12 @@ import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatDialog } from '@angular/material/dialog';
 
 import { UnitService, UnitDataSetDto } from '../Unit/services/unit.service';
 import { UnitTreeComponent } from '../Unit/UnitTree.component';
 import { UnitTreeNode } from '../Unit/unit-tree-node.component';
-import { CodeMirrorEditorComponent } from '../DocumentTemplates/components/CodeMirrorEditor.component';
+import { JsonEditorDialogComponent } from '../DocumentTemplates/components/JsonEditorDialog.component';
 import { ErrorHandler } from '../shared/models/ErrorHandler';
 
 @Component({
@@ -40,7 +40,6 @@ import { ErrorHandler } from '../shared/models/ErrorHandler';
     MatTooltipModule,
     MatIconModule,
     MatButtonModule,
-    MatTabsModule,
     MatCardModule,
     MatExpansionModule,
     MatFormFieldModule,
@@ -50,7 +49,6 @@ import { ErrorHandler } from '../shared/models/ErrorHandler';
     MatMenuModule,
     MatDividerModule,
     UnitTreeComponent,
-    CodeMirrorEditorComponent,
   ],
   templateUrl: './Test.page.html',
   styleUrl: './Test.page.scss',
@@ -59,6 +57,7 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   // --- Injected Dependencies ---
   private unitService = inject(UnitService);
   private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
   breakpointObserver = inject(BreakpointObserver);
 
   // --- ViewChild References ---
@@ -72,9 +71,6 @@ export class TestComponent implements AfterViewInit, OnDestroy {
 
   // --- Selected Units List with DataSets ---
   selectedUnits = signal<UnitDataSetDto[]>([]);
-
-  // --- JSON Data for Editor ---
-  selectedUnitsJson = signal<string>('');
 
   // --- Table Configuration ---
   displayedColumns = [
@@ -352,16 +348,35 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
-   * Обробник зміни вкладки в правій панелі
-   * Оновлює контент для редактора
+   * Відкриває діалог редагування JSON
    */
-  onTabChange(index: number): void {
-    // Якщо переходимо на вкладку "Дані документа" (index === 1)
-    if (index === 1) {
-      const units = this.selectedUnits();
-      // Конвертуємо selectedUnits в JSON з форматуванням
-      const jsonString = JSON.stringify(units, null, 2);
-      this.selectedUnitsJson.set(jsonString);
-    }
+  openJsonEditor(): void {
+    const units = this.selectedUnits();
+    const jsonString = JSON.stringify(units, null, 2);
+
+    const dialogRef = this.dialog.open(JsonEditorDialogComponent, {
+      data: {
+        jsonContent: jsonString,
+        readOnly: false,
+        title: 'Дані документа - Вибрані підрозділи',
+      },
+      width: '90vw',
+      maxWidth: '1400px',
+      height: '80vh',
+      disableClose: false,
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        try {
+          const updatedUnits = JSON.parse(result);
+          this.selectedUnits.set(updatedUnits);
+          this.snackBar.open('Дані успішно оновлено', 'Закрити', { duration: 3000 });
+        } catch (error) {
+          console.error('Error parsing JSON:', error);
+          this.snackBar.open('Помилка парсингу JSON', 'Закрити', { duration: 5000 });
+        }
+      }
+    });
   }
 }
