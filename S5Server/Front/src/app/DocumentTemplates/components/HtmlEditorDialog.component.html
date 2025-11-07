@@ -1,0 +1,50 @@
+<h2 mat-dialog-title>
+  <mat-icon>code</mat-icon>
+  Редагування HTML коду
+</h2>
+
+<mat-dialog-content class="html-editor-dialog-content">
+  <div class="editor-toolbar">
+    <button
+      mat-icon-button
+      (click)="formatHtml()"
+      [disabled]="data.readOnly"
+      matTooltip="Форматувати HTML код"
+    >
+      <mat-icon>auto_fix_high</mat-icon>
+    </button>
+  </div>
+
+  <app-codemirror-editor
+    [content]="htmlContent()"
+    [language]="'html'"
+    [readOnly]="data.readOnly"
+    (contentChange)="onContentChange($event)"
+    class="html-editor"
+  >
+  </app-codemirror-editor>
+
+  @if (isDirty()) {
+  <div class="dirty-indicator">
+    <mat-icon>edit</mat-icon>
+    <span>Є незбережені зміни</span>
+  </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">
+    <mat-icon>close</mat-icon>
+    Скасувати
+  </button>
+
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onSave()"
+    [disabled]="!isDirty() || data.readOnly"
+  >
+    <mat-icon>save</mat-icon>
+    Застосувати
+  </button>
+</mat-dialog-actions>
