@@ -47,19 +47,45 @@
   </div>
 
   <div class="panel content-panel" [style.width.%]="contentPanelWidth()">
-    <div class="content-header">
-      <h3>Вибрані підрозділи ({{ selectedUnits().length }})</h3>
-      <button
-        mat-raised-button
-        color="accent"
-        (click)="openJsonEditor()"
-        [disabled]="selectedUnits().length === 0"
-        matTooltip="Переглянути дані у форматі JSON"
-      >
-        <mat-icon>data_object</mat-icon>
-        Дані документа
-      </button>
-    </div>
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Вибрані підрозділи ({{ selectedUnits().length }})</mat-card-title>
+        <button
+          mat-raised-button
+          color="accent"
+          (click)="openJsonEditor()"
+          [disabled]="selectedUnits().length === 0"
+          matTooltip="Переглянути дані у форматі JSON"
+        >
+          <mat-icon>data_object</mat-icon>
+          Дані документа
+        </button>
+      </mat-card-header>
+
+      <mat-card-content>
+        <mat-form-field appearance="outline" class="document-field">
+          <mat-label>Дата документа</mat-label>
+          <input
+            matInput
+            [matDatepicker]="picker"
+            [value]="documentDate()"
+            (dateChange)="onDocumentDateChange($event)"
+          />
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="document-field">
+          <mat-label>Номер документа</mat-label>
+          <input
+            matInput
+            type="text"
+            [value]="documentNumber()"
+            (input)="onDocumentNumberChange($event)"
+          />
+        </mat-form-field>
+      </mat-card-content>
+    </mat-card>
 
     <div class="selected-units-list">
       @if (selectedUnits().length === 0) {

@@ -21,24 +21,49 @@
 .content-panel {
   background-color: #fafafa;
   overflow: hidden;
-}
-
-.content-header {
-  padding: 16px;
-  background-color: #e3f2fd;
-  border-bottom: 1px solid #ddd;
-  flex-shrink: 0;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  flex-direction: column;
 
-  h3 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 500;
-    color: #1976d2;
+  > mat-card {
     flex-shrink: 0;
+    margin: 0;
+    border-radius: 0;
+
+    mat-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #e3f2fd;
+      padding: 16px;
+      margin: -16px -16px 0 -16px;
+    }
+
+    mat-card-content {
+      display: flex;
+      gap: 12px;
+      padding: 16px;
+
+      .document-field {
+        flex: 1;
+        min-width: 150px;
+
+        ::ng-deep {
+          .mat-mdc-text-field-wrapper {
+            background-color: white;
+          }
+
+          .mat-mdc-form-field-subscript-wrapper {
+            display: none;
+          }
+
+          .mat-mdc-form-field-infix {
+            padding-top: 8px;
+            padding-bottom: 8px;
+            min-height: auto;
+          }
+        }
+      }
+    }
   }
 }
 
@@ -353,6 +378,26 @@
 }
 
 @media (max-width: 768px) {
+  .content-panel > mat-card {
+    mat-card-header {
+      flex-direction: column;
+      gap: 12px;
+
+      button {
+        width: 100%;
+      }
+    }
+
+    mat-card-content {
+      flex-direction: column;
+      gap: 8px;
+
+      .document-field {
+        width: 100%;
+      }
+    }
+  }
+
   .selected-units-list {
     padding: 8px;
   }

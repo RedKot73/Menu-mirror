@@ -19,6 +19,9 @@ import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { MatInputModule } from '@angular/material/input';
+import { MatDatepickerModule, MatDatepickerInputEvent } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
@@ -44,6 +47,9 @@ import { ErrorHandler } from '../shared/models/ErrorHandler';
     MatExpansionModule,
     MatFormFieldModule,
     MatSelectModule,
+    MatInputModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
     MatTableModule,
     MatSortModule,
     MatMenuModule,
@@ -71,6 +77,10 @@ export class TestComponent implements AfterViewInit, OnDestroy {
 
   // --- Selected Units List with DataSets ---
   selectedUnits = signal<UnitDataSetDto[]>([]);
+
+  // --- Document Info ---
+  documentDate = signal<Date>(new Date());
+  documentNumber = signal<string>('');
 
   // --- Table Configuration ---
   displayedColumns = [
@@ -378,5 +388,22 @@ export class TestComponent implements AfterViewInit, OnDestroy {
         }
       }
     });
+  }
+
+  /**
+   * Обробник зміни дати документа
+   */
+  onDocumentDateChange(event: MatDatepickerInputEvent<Date>): void {
+    if (event.value) {
+      this.documentDate.set(event.value);
+    }
+  }
+
+  /**
+   * Обробник зміни номера документа
+   */
+  onDocumentNumberChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.documentNumber.set(input.value);
   }
 }
