@@ -17,6 +17,8 @@ namespace S5Server.Models
         string? NickName,
         string UnitId,
         string UnitShortName,
+        DateTime ArrivedAt,
+        DateTime? DepartedAt,
         string? AssignedUnitId,
         string? AssignedUnitShortName,
         string RankId,
@@ -38,6 +40,8 @@ namespace S5Server.Models
                 e.NickName,
                 e.UnitId,
                 e.Unit?.ShortName ?? e.Unit?.Name ?? string.Empty,
+                e.ArrivedAt == default ? DateTime.UtcNow.Date : e.ArrivedAt,
+                e.DepartedAt,
                 e.AssignedUnitId,
                 e.AssignedUnit?.ShortName ?? e.AssignedUnit?.Name,
                 e.RankId,
@@ -56,6 +60,8 @@ namespace S5Server.Models
             e.LastName = string.IsNullOrWhiteSpace(dto.LastName) ? null : dto.LastName.Trim();
             e.NickName = string.IsNullOrWhiteSpace(dto.NickName) ? null : dto.NickName.Trim();
             e.UnitId = dto.UnitId;
+            e.ArrivedAt = dto.ArrivedAt == default ? DateTime.UtcNow.Date : dto.ArrivedAt;
+            e.DepartedAt = dto.DepartedAt;
             e.AssignedUnitId = dto.AssignedUnitId;
             e.RankId = dto.RankId;
             e.PositionId = dto.PositionId;
@@ -74,6 +80,8 @@ namespace S5Server.Models
         string? NickName,
         string UnitId,
         string? AssignedUnitId,
+        DateTime ArrivedAt,
+        DateTime? DepartedAt,
         string RankId,
         string PositionId,
         string StateId,
@@ -87,6 +95,8 @@ namespace S5Server.Models
             LastName = string.IsNullOrWhiteSpace(LastName) ? null : LastName.Trim(),
             NickName = string.IsNullOrWhiteSpace(NickName) ? null : NickName.Trim(),
             UnitId = UnitId,
+            ArrivedAt = ArrivedAt == default ? DateTime.UtcNow.Date : ArrivedAt,
+            DepartedAt = DepartedAt,
             AssignedUnitId = AssignedUnitId,
             RankId = RankId,
             PositionId = PositionId,
@@ -104,6 +114,8 @@ namespace S5Server.Models
         string? NickName,
         string UnitId,
         string UnitShortName,
+        DateTime ArrivedAt,
+        DateTime? DepartedAt,
         string? AssignedUnitId,
         string? AssignedUnitShortName,
         string RankId,
@@ -125,6 +137,8 @@ namespace S5Server.Models
                 e.NickName,
                 e.UnitId,
                 e.Unit?.ShortName ?? e.Unit?.Name ?? string.Empty,
+                e.ArrivedAt,
+                e.DepartedAt,
                 e.AssignedUnitId,
                 e.AssignedUnit?.ShortName ?? e.AssignedUnit?.Name,
                 e.RankId,
@@ -182,7 +196,9 @@ namespace S5Server.Models
         /// </summary>
         [ValidateNever,
             Required(ErrorMessage = UIConstant.RequiredMsg)]
-        public virtual Unit Unit { get; set; } = default!;
+        public Unit Unit { get; set; } = default!;
+
+
 
         /// <summary>
         /// Приданий до підрозділу
@@ -245,5 +261,17 @@ namespace S5Server.Models
         /// </summary>
         [Display(Name = UIConstant.CommentCaption)]
         public string? Comment { get; set; }
+
+        /// <summary>
+        /// Прибув до підрозділу
+        /// </summary>
+        [Display(Name = "Прибув до підрозділу")]
+        public DateTime ArrivedAt { get; set; } = DateTime.UtcNow.Date;
+
+        /// <summary>
+        /// Вибув з підрозділу
+        /// </summary>
+        [Display(Name = "Вибув з підрозділу")]
+        public DateTime? DepartedAt { get; set; }
     }
 }

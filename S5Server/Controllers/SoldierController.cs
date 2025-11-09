@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+п»їusing Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using S5Server.Data;
@@ -29,14 +29,14 @@ namespace S5Server.Controllers
             .Include(s => s.State);
 
         /// <summary>
-        /// Список військовослужбовців з фільтрацією.
+        /// РЎРїРёСЃРѕРє РІС–Р№СЃСЊРєРѕРІРѕСЃР»СѓР¶Р±РѕРІС†С–РІ Р· С„С–Р»СЊС‚СЂР°С†С–С”СЋ.
         /// </summary>
-        /// <param name="search">Пошук по ПІБ / позивному / номеру частини підрозділу.</param>
-        /// <param name="unitId">Фільтр по основному підрозділу.</param>
-        /// <param name="assignedUnitId">Фільтр по приданому підрозділу.</param>
-        /// <param name="rankId">Фільтр по званню.</param>
-        /// <param name="stateId">Фільтр по статусу.</param>
-        /// <param name="ct">Токен відміни.</param>
+        /// <param name="search">РџРѕС€СѓРє РїРѕ РџР†Р‘ / РїРѕР·РёРІРЅРѕРјСѓ / РЅРѕРјРµСЂСѓ С‡Р°СЃС‚РёРЅРё РїС–РґСЂРѕР·РґС–Р»Сѓ.</param>
+        /// <param name="unitId">Р¤С–Р»СЊС‚СЂ РїРѕ РѕСЃРЅРѕРІРЅРѕРјСѓ РїС–РґСЂРѕР·РґС–Р»Сѓ.</param>
+        /// <param name="assignedUnitId">Р¤С–Р»СЊС‚СЂ РїРѕ РїСЂРёРґР°РЅРѕРјСѓ РїС–РґСЂРѕР·РґС–Р»Сѓ.</param>
+        /// <param name="rankId">Р¤С–Р»СЊС‚СЂ РїРѕ Р·РІР°РЅРЅСЋ.</param>
+        /// <param name="stateId">Р¤С–Р»СЊС‚СЂ РїРѕ СЃС‚Р°С‚СѓСЃСѓ.</param>
+        /// <param name="ct">РўРѕРєРµРЅ РІС–РґРјС–РЅРё.</param>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SoldierDto>>> GetAll(
             [FromQuery] string? search,
@@ -59,6 +59,7 @@ namespace S5Server.Controllers
                 q = q.Where(s => s.AssignedUnitId == assignedUnitId);
 
             var list = await q
+                .AsNoTracking()
                 .OrderBy(s => s.FirstName)
                 .ThenBy(s => s.MidleName)
                 .ThenBy(s => s.LastName)
@@ -69,7 +70,7 @@ namespace S5Server.Controllers
         }
 
         /// <summary>
-        /// Lookup (для автокомпліта по ПІБ / позивному).
+        /// Lookup (РґР»СЏ Р°РІС‚РѕРєРѕРјРїР»С–С‚Р° РїРѕ РџР†Р‘ / РїРѕР·РёРІРЅРѕРјСѓ).
         /// </summary>
         [HttpGet("lookup")]
         public async Task<ActionResult<IEnumerable<LookupDto>>> Lookup(
@@ -84,6 +85,7 @@ namespace S5Server.Controllers
             term = term.Trim();
 
             var data = await Query()
+                .AsNoTracking()
                 .Where(s => s.FirstName.Contains(term))
                 .OrderBy(s => s.FirstName)
                 .ThenBy(s => s.MidleName)
@@ -106,12 +108,13 @@ namespace S5Server.Controllers
         public async Task<ActionResult<SoldierDto>> Create([FromBody] SoldierCreateDto dto,
             CancellationToken ct = default)
         {
-            if (dto is null) return BadRequest("Пустое тело.");
-            if (string.IsNullOrWhiteSpace(dto.FirstName)) return BadRequest("FirstName не может быть пустым.");
-            if (string.IsNullOrWhiteSpace(dto.UnitId)) return BadRequest("UnitId обязателен.");
-            if (string.IsNullOrWhiteSpace(dto.RankId)) return BadRequest("RankId обязателен.");
-            if (string.IsNullOrWhiteSpace(dto.PositionId)) return BadRequest("PositionId обязателен.");
-            if (string.IsNullOrWhiteSpace(dto.StateId)) return BadRequest("StateId обязателен.");
+            if (dto is null) return BadRequest("РџСѓСЃС‚РѕРµ С‚РµР»Рѕ.");
+            if (string.IsNullOrWhiteSpace(dto.FirstName)) return BadRequest("FirstName РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РїСѓСЃС‚С‹Рј.");
+            if (string.IsNullOrWhiteSpace(dto.UnitId)) return BadRequest("UnitId РѕР±СЏР·Р°С‚РµР»РµРЅ.");
+            if (string.IsNullOrWhiteSpace(dto.RankId)) return BadRequest("RankId РѕР±СЏР·Р°С‚РµР»РµРЅ.");
+            if (string.IsNullOrWhiteSpace(dto.PositionId)) return BadRequest("PositionId РѕР±СЏР·Р°С‚РµР»РµРЅ.");
+            if (string.IsNullOrWhiteSpace(dto.StateId)) return BadRequest("StateId РѕР±СЏР·Р°С‚РµР»РµРЅ.");
+
 
             var entity = dto.ToEntity();
 
@@ -122,10 +125,10 @@ namespace S5Server.Controllers
             }
             catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
             {
-                return Conflict("Запись с такими данными уже существует.");
+                return Conflict("Р—Р°РїРёСЃСЊ СЃ С‚Р°РєРёРјРё РґР°РЅРЅС‹РјРё СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚.");
             }
 
-            // Подгружаем навигации для корректного DTO
+            // РџРѕРґРіСЂСѓР¶Р°РµРј РЅР°РІРёРіР°С†РёРё РґР»СЏ РєРѕСЂСЂРµРєС‚РЅРѕРіРѕ DTO
             entity = await Query().FirstAsync(s => s.Id == entity.Id, ct);
             return CreatedAtAction(nameof(Get), new { id = entity.Id }, SoldierDto.ToDto(entity));
         }
@@ -135,14 +138,14 @@ namespace S5Server.Controllers
             [FromBody] SoldierDto dto,
             CancellationToken ct = default)
         {
-            if (dto is null) return BadRequest("Пустое тело.");
-            if (string.IsNullOrWhiteSpace(dto.FirstName)) return BadRequest("FirstName не может быть пустым.");
+            if (dto is null) return BadRequest("РџСѓСЃС‚РѕРµ С‚РµР»Рѕ.");
+            if (string.IsNullOrWhiteSpace(dto.FirstName)) return BadRequest("FirstName РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РїСѓСЃС‚С‹Рј.");
 
             var e = await _set.AsTracking()
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (e is null) return NotFound();
 
-            // Снимок только полей, которые реально обновляем
+            // РЎРЅРёРјРѕРє С‚РѕР»СЊРєРѕ РїРѕР»РµР№, РєРѕС‚РѕСЂС‹Рµ СЂРµР°Р»СЊРЅРѕ РѕР±РЅРѕРІР»СЏРµРј
             var original = (e.FirstName, e.MidleName, e.LastName, e.NickName,
                             e.UnitId, e.AssignedUnitId, e.RankId, e.PositionId, e.StateId, e.Comment);
 
@@ -160,7 +163,7 @@ namespace S5Server.Controllers
             }
             catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
             {
-                return Conflict("Запись уже существует.");
+                return Conflict("Р—Р°РїРёСЃСЊ СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚.");
             }
 
             return NoContent();
@@ -178,39 +181,39 @@ namespace S5Server.Controllers
         }
 
         /// <summary>
-        /// Призначити (придати) бійця до підрозділу.
+        /// РџСЂРёР·РЅР°С‡РёС‚Рё (РїСЂРёРґР°С‚Рё) Р±С–Р№С†СЏ РґРѕ РїС–РґСЂРѕР·РґС–Р»Сѓ.
         /// </summary>
         [HttpPost("{id}/assign/{unitId}")]
         public async Task<IActionResult> Assign(string id, string unitId, CancellationToken ct = default)
         {
             var e = await _set.AsTracking().FirstOrDefaultAsync(s => s.Id == id, ct);
-            if (e is null) return NotFound("Боєць не знайдений.");
+            if (e is null) return NotFound("Р‘РѕС”С†СЊ РЅРµ Р·РЅР°Р№РґРµРЅРёР№.");
             e.AssignedUnitId = unitId;
             await _db.SaveChangesAsync(ct);
             return NoContent();
         }
 
         /// <summary>
-        /// Відмінити придання (unassign).
+        /// Р’С–РґРјС–РЅРёС‚Рё РїСЂРёРґР°РЅРЅСЏ (unassign).
         /// </summary>
         [HttpPost("{id}/unassign")]
         public async Task<IActionResult> Unassign(string id, CancellationToken ct = default)
         {
             var e = await _set.AsTracking().FirstOrDefaultAsync(s => s.Id == id, ct);
-            if (e is null) return NotFound("Боєць не знайдений.");
+            if (e is null) return NotFound("Р‘РѕС”С†СЊ РЅРµ Р·РЅР°Р№РґРµРЅРёР№.");
             e.AssignedUnitId = null;
             await _db.SaveChangesAsync(ct);
             return NoContent();
         }
 
         /// <summary>
-        /// Перевести бійця до іншого основного підрозділу.
+        /// РџРµСЂРµРІРµСЃС‚Рё Р±С–Р№С†СЏ РґРѕ С–РЅС€РѕРіРѕ РѕСЃРЅРѕРІРЅРѕРіРѕ РїС–РґСЂРѕР·РґС–Р»Сѓ.
         /// </summary>
         [HttpPost("{id}/move/{newUnitId}")]
         public async Task<IActionResult> Move(string id, string newUnitId, CancellationToken ct = default)
         {
             var e = await _set.AsTracking().FirstOrDefaultAsync(s => s.Id == id, ct);
-            if (e is null) return NotFound("Боєць не знайдений.");
+            if (e is null) return NotFound("Р‘РѕС”С†СЊ РЅРµ Р·РЅР°Р№РґРµРЅРёР№.");
             e.UnitId = newUnitId;
             await _db.SaveChangesAsync(ct);
             return NoContent();

@@ -160,6 +160,10 @@ namespace S5Server.Data
                 entity.Property(e => e.PositionId).IsRequired().HasColumnType("TEXT(36)");
                 entity.Property(e => e.StateId).IsRequired().HasColumnType("TEXT(36)");
                 entity.Property(e => e.Comment).HasColumnType("TEXT");
+                entity.Property(e => e.ArrivedAt)
+                      .HasColumnType("TEXT");
+                entity.Property(e => e.DepartedAt)
+                      .HasColumnType("TEXT");
 
                 // Основний підрозділ (обов'язковий)
                 entity.HasOne(s => s.Unit)
