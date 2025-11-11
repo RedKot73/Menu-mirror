@@ -1,0 +1,75 @@
+name: Build Self-Contained Release
+
+on:
+  push:
+    branches: [ main, release ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build ${{ matrix.runtime }}
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            runtime: win-x64
+            artifact: S5Server-win-x64.zip
+          - os: ubuntu-latest
+            runtime: linux-x64
+            artifact: S5Server-linux-x64.tar.gz
+          - os: macos-latest
+            runtime: osx-x64
+            artifact: S5Server-osx-x64.tar.gz
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: S5Server/Front/package-lock.json
+    
+    - name: Build Release (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: pwsh
+      run: |
+        .\build-release.ps1 -Runtime ${{ matrix.runtime }} -Configuration Release
+        Compress-Archive -Path "Release/${{ matrix.runtime }}/*" -DestinationPath "${{ matrix.artifact }}"
+    
+    - name: Build Release (Linux/Mac)
+      if: matrix.os != 'windows-latest'
+      shell: bash
+      run: |
+        pwsh -File build-release.ps1 -Runtime ${{ matrix.runtime }} -Configuration Release
+        cd Release/${{ matrix.runtime }}
+        tar -czf ../../${{ matrix.artifact }} .
+    
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.runtime }}
+        path: ${{ matrix.artifact }}
+        retention-days: 30
+    
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ${{ matrix.artifact }}
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

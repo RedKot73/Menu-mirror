@@ -48,5 +48,13 @@ chrome.devtools.json
 /S5Server/Front/node_modules
 /S5Server/publish
 /S5Server/wwwroot
+
+# Build artifacts
+/Release
+/Publish
+*.zip
+*.tar.gz
+S5Server-*.zip
+S5Server-*.tar.gz
 /Publish/S5Server
 /S5Server/bin
