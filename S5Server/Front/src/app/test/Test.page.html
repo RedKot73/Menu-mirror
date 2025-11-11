@@ -261,6 +261,7 @@
                       [class.row-severe]="isSevereStatus(row.stateId)"
                       [class.row-problematic]="isProblematicStatus(row.stateId)"
                       [class.row-recovery]="isRecoveryStatus(row.stateId)"
+                      [class.row-overdue]="isArrivedMoreThan14DaysAgo(row.arrivedAt)"
                     ></tr>
                   </table>
                   }

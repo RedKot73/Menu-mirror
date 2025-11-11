@@ -108,6 +108,20 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   isProblematicStatus = isProblematicStatus;
   isRecoveryStatus = isRecoveryStatus;
 
+  // Проверка даты прибытия (более 14 дней назад)
+  isArrivedMoreThan14DaysAgo(arrivedAt: Date): boolean {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Сброс времени для корректного сравнения дат
+
+    const arrived = new Date(arrivedAt);
+    arrived.setHours(0, 0, 0, 0);
+
+    const fourteenDaysAgo = new Date(today);
+    fourteenDaysAgo.setDate(today.getDate() - 14);
+
+    return arrived <= fourteenDaysAgo;
+  }
+
   // --- Computed Signals ---
   contentPanelWidth = computed(() => {
     const isCollapsed = this.isNavPanelCollapsed();

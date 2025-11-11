@@ -406,3 +406,14 @@
     grid-template-columns: 1fr;
   }
 }
+
+// Раскраска строк для бойцов с датой прибытия более 14 дней назад
+.mat-mdc-row {
+  &.row-overdue {
+    background-color: #ffcdd2 !important; // Красный фон (Material Red 100)
+
+    &:hover {
+      background-color: #ef9a9a !important; // Более темный красный при наведении (Material Red 200)
+    }
+  }
+}
