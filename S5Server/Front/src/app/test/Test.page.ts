@@ -11,7 +11,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { CommonModule, SlicePipe } from '@angular/common';
+import { CommonModule, SlicePipe, DatePipe } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -21,7 +21,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule, MatDatepickerInputEvent } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
+import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
@@ -40,6 +40,7 @@ import { ErrorHandler } from '../shared/models/ErrorHandler';
   imports: [
     CommonModule,
     SlicePipe,
+    DatePipe,
     MatTooltipModule,
     MatIconModule,
     MatButtonModule,
@@ -49,13 +50,13 @@ import { ErrorHandler } from '../shared/models/ErrorHandler';
     MatSelectModule,
     MatInputModule,
     MatDatepickerModule,
-    MatNativeDateModule,
     MatTableModule,
     MatSortModule,
     MatMenuModule,
     MatDividerModule,
     UnitTreeComponent,
   ],
+  providers: [provideNativeDateAdapter()],
   templateUrl: './Test.page.html',
   styleUrl: './Test.page.scss',
 })
@@ -90,6 +91,8 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     'positionValue',
     'stateValue',
     'assignedUnitShortName',
+    'arrivedAt',
+    'departedAt',
     'comment',
   ];
 

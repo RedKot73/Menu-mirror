@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, Inject, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  Inject,
+  OnInit,
+  inject,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { FormsModule, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -7,299 +14,201 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatDatepickerModule, MatDatepickerInputEvent } from '@angular/material/datepicker';
+import { provideNativeDateAdapter } from '@angular/material/core';
 import { forkJoin, Observable, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, startWith, finalize } from 'rxjs/operators';
 import { AsyncPipe } from '@angular/common';
 
-import { SoldierDto } from "../Soldier/services/soldier.service";
-import { UnitService } from "../Unit/services/unit.service";
-import { DictRankService } from "../../ServerService/dictRanks.service";
-import { DictPositionService } from "../../ServerService/dictPosition.service";
-import { DictSoldierStatesService } from "../../ServerService/dictSoldierStates.service";
+import { SoldierDto } from '../Soldier/services/soldier.service';
+import { UnitService } from '../Unit/services/unit.service';
+import { DictRankService } from '../../ServerService/dictRanks.service';
+import { DictPositionService } from '../../ServerService/dictPosition.service';
+import { DictSoldierStatesService } from '../../ServerService/dictSoldierStates.service';
 import { LookupDto } from '../shared/models/lookup.models';
 
 @Component({
-    selector: 'soldier-dialog',
-    imports: [
-        MatFormFieldModule, 
-        MatInputModule, 
-        MatDialogModule, 
-        MatButtonModule, 
-        FormsModule,
-        ReactiveFormsModule,
-        MatSelectModule,
-        MatOptionModule,
-        MatAutocompleteModule,
-        AsyncPipe
-    ],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    template: `
-    <h2 mat-dialog-title>{{ data.id ? 'Редагувати бійця' : 'Створити нового бійця' }}</h2>
-    <div mat-dialog-content class="content">
-      <mat-form-field appearance="outline" floatLabel="always">
-        <mat-label>Прізвище</mat-label>
-        <input matInput [(ngModel)]="data.firstName" required>
-      </mat-form-field>
-      
-      <mat-form-field appearance="outline" floatLabel="always">
-        <mat-label>Ім'я</mat-label>
-        <input matInput [(ngModel)]="data.midleName">
-      </mat-form-field>
-      
-      <mat-form-field appearance="outline" floatLabel="always">
-        <mat-label>По батькові</mat-label>
-        <input matInput [(ngModel)]="data.lastName">
-      </mat-form-field>
-      
-      <mat-form-field appearance="outline" floatLabel="always">
-        <mat-label>Позивний</mat-label>
-        <input matInput [(ngModel)]="data.nickName">
-      </mat-form-field>
-      
-      <mat-form-field appearance="outline" floatLabel="always">
-        <mat-label>Підрозділ</mat-label>
-        <input type="text" 
-               matInput 
-               [formControl]="unitSearchControl" 
-               [matAutocomplete]="unitAuto"
-               placeholder="Основний підрозділ"
-               required>
-        <mat-autocomplete #unitAuto="matAutocomplete" 
-                          [displayWith]="displayUnitFn"
-                          (optionSelected)="onUnitSelected($event)">
-          @if (isLoadingUnits) {
-            <mat-option disabled>Завантаження...</mat-option>
-          }
-          @for (unit of filteredUnits | async; track unit.id) {
-            <mat-option [value]="unit">{{ unit.value }}</mat-option>
-          }
-        </mat-autocomplete>
-      </mat-form-field>
-      
-      <mat-form-field appearance="outline" floatLabel="always">
-        <mat-label>Приданий до підрозділу</mat-label>
-        <input type="text" 
-               matInput 
-               [formControl]="assignedUnitSearchControl" 
-               [matAutocomplete]="assignedUnitAuto"
-               placeholder="Приданий до підрозділу">
-        <mat-autocomplete #assignedUnitAuto="matAutocomplete" 
-                          [displayWith]="displayAssignedUnitFn"
-                          (optionSelected)="onAssignedUnitSelected($event)">
-          <mat-option [value]="null">Не приданий</mat-option>
-          @if (isLoadingAssignedUnits) {
-            <mat-option disabled>Завантаження...</mat-option>
-          }
-          @for (unit of filteredAssignedUnits | async; track unit.id) {
-            <mat-option [value]="unit">{{ unit.value }}</mat-option>
-          }
-        </mat-autocomplete>
-      </mat-form-field>
-      
-      <mat-form-field appearance="outline" floatLabel="always">
-        <mat-label>Звання</mat-label>
-        <mat-select [(ngModel)]="data.rankId" required>
-          @for (rank of dictRanks; track rank.id) {
-            <mat-option [value]="rank.id">{{ rank.value }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-      
-      <mat-form-field appearance="outline" floatLabel="always">
-        <mat-label>Посада</mat-label>
-        <mat-select [(ngModel)]="data.positionId" required>
-          @for (position of dictPositions; track position.id) {
-            <mat-option [value]="position.id">{{ position.value }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-      
-      <mat-form-field appearance="outline" floatLabel="always">
-        <mat-label>Статус</mat-label>
-        <mat-select [(ngModel)]="data.stateId" required>
-          @for (state of dictStates; track state.id) {
-            <mat-option [value]="state.id">{{ state.value }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-      
-      <mat-form-field appearance="outline" floatLabel="always">
-        <mat-label>Коментар</mat-label>
-        <textarea matInput [(ngModel)]="data.comment" rows="3"></textarea>
-      </mat-form-field>
-    </div>
-    <div mat-dialog-actions align="end" class="actions">
-      <button mat-button (click)="onCancel()">Відміна</button>
-      <button mat-raised-button color="primary" (click)="onSave()" 
-              [disabled]="!isFormValid()">
-        Зберегти
-      </button>
-      <button mat-raised-button color="accent" (click)="onSaveAndContinue()" 
-              [disabled]="!isFormValid()">
-        Зберегти і продовжити
-      </button>
-    </div>`,
-    styles: [`
-        .content {
-            display: grid;
-            gap: 12px;
-            min-width: 420px;
-            max-width: 600px;
-            padding-top: 10px !important;
-        }
-        .content .mat-mdc-form-field { width: 100%; }
-        .actions { 
-            gap: 8px; 
-            display: flex;
-            flex-wrap: wrap;
-        }
-        textarea {
-            resize: vertical;
-            min-height: 60px;
-        }
-    `],
+  selector: 'soldier-dialog',
+  imports: [
+    MatFormFieldModule,
+    MatInputModule,
+    MatDialogModule,
+    MatButtonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatAutocompleteModule,
+    MatDatepickerModule,
+    AsyncPipe,
+  ],
+  providers: [provideNativeDateAdapter()],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  templateUrl: './SoldierDialog.html',
+  styleUrl: './SoldierDialog.scss',
 })
 export class SoldierDialogComponent implements OnInit {
-    private unitService = inject(UnitService);
-    private dictRankService = inject(DictRankService);
-    private dictPositionService = inject(DictPositionService);
-    private dictSoldierStatesService = inject(DictSoldierStatesService);
-    private cdr = inject(ChangeDetectorRef);
-    
-    dictRanks: LookupDto[] = [];
-    dictPositions: LookupDto[] = [];
-    dictStates: LookupDto[] = [];
-    
-    // Для автокомплита основного подразделения
-    unitSearchControl = new FormControl<LookupDto | string | null>(null);
-    filteredUnits: Observable<LookupDto[]>;
-    isLoadingUnits = false;
-    selectedUnit: LookupDto | null = null;
-    
-    // Для автокомплита приданного подразделения
-    assignedUnitSearchControl = new FormControl<LookupDto | string | null>(null);
-    filteredAssignedUnits: Observable<LookupDto[]>;
-    isLoadingAssignedUnits = false;
-    selectedAssignedUnit: LookupDto | null = null;
+  private unitService = inject(UnitService);
+  private dictRankService = inject(DictRankService);
+  private dictPositionService = inject(DictPositionService);
+  private dictSoldierStatesService = inject(DictSoldierStatesService);
+  private cdr = inject(ChangeDetectorRef);
 
-    constructor(
-        @Inject(MAT_DIALOG_DATA) public data: SoldierDto,
-        private ref: MatDialogRef<SoldierDialogComponent>
-    ) { 
-        // Настраиваем автокомплит для основного подразделения
-        this.filteredUnits = this.unitSearchControl.valueChanges.pipe(
-            startWith(''),
-            debounceTime(300),
-            distinctUntilChanged(),
-            switchMap(value => {
-                const searchTerm = typeof value === 'string' ? value : 
-                                 (value && typeof value === 'object' && 'value' in value) ? value.value : '';
-                if (searchTerm && searchTerm.length >= 2) {
-                    this.isLoadingUnits = true;
-                    return this.unitService.lookup(searchTerm, 10).pipe(
-                        finalize(() => this.isLoadingUnits = false)
-                    );
-                }
-                return of([]);
-            })
-        );
-        
-        // Настраиваем автокомплит для приданного подразделения
-        this.filteredAssignedUnits = this.assignedUnitSearchControl.valueChanges.pipe(
-            startWith(''),
-            debounceTime(300),
-            distinctUntilChanged(),
-            switchMap(value => {
-                const searchTerm = typeof value === 'string' ? value : 
-                                 (value && typeof value === 'object' && 'value' in value) ? value.value : '';
-                if (searchTerm && searchTerm.length >= 2) {
-                    this.isLoadingAssignedUnits = true;
-                    return this.unitService.lookup(searchTerm, 10).pipe(
-                        finalize(() => this.isLoadingAssignedUnits = false)
-                    );
-                }
-                return of([]);
-            })
-        );
-    }
+  dictRanks: LookupDto[] = [];
+  dictPositions: LookupDto[] = [];
+  dictStates: LookupDto[] = [];
 
-    ngOnInit() {
-        this.loadData();
-        
-        // Если уже есть unitId, найдем и установим соответствующий объект
-        if (this.data.unitId) {
-            this.unitService.getById(this.data.unitId).subscribe(unit => {
-                this.selectedUnit = { id: unit.id, value: unit.shortName || unit.name };
-                this.unitSearchControl.setValue(this.selectedUnit);
-            });
+  // Для автокомплита основного подразделения
+  unitSearchControl = new FormControl<LookupDto | string | null>(null);
+  filteredUnits: Observable<LookupDto[]>;
+  isLoadingUnits = false;
+  selectedUnit: LookupDto | null = null;
+
+  // Для автокомплита приданного подразделения
+  assignedUnitSearchControl = new FormControl<LookupDto | string | null>(null);
+  filteredAssignedUnits: Observable<LookupDto[]>;
+  isLoadingAssignedUnits = false;
+  selectedAssignedUnit: LookupDto | null = null;
+
+  constructor(
+    @Inject(MAT_DIALOG_DATA) public data: SoldierDto,
+    private ref: MatDialogRef<SoldierDialogComponent>
+  ) {
+    // Настраиваем автокомплит для основного подразделения
+    this.filteredUnits = this.unitSearchControl.valueChanges.pipe(
+      startWith(''),
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap((value) => {
+        const searchTerm =
+          typeof value === 'string'
+            ? value
+            : value && typeof value === 'object' && 'value' in value
+            ? value.value
+            : '';
+        if (searchTerm && searchTerm.length >= 2) {
+          this.isLoadingUnits = true;
+          return this.unitService
+            .lookup(searchTerm, 10)
+            .pipe(finalize(() => (this.isLoadingUnits = false)));
         }
-        
-        // Если уже есть assignedUnitId, найдем и установим соответствующий объект
-        if (this.data.assignedUnitId) {
-            this.unitService.getById(this.data.assignedUnitId).subscribe(assignedUnit => {
-                this.selectedAssignedUnit = { id: assignedUnit.id, value: assignedUnit.shortName || assignedUnit.name };
-                this.assignedUnitSearchControl.setValue(this.selectedAssignedUnit);
-            });
+        return of([]);
+      })
+    );
+
+    // Настраиваем автокомплит для приданного подразделения
+    this.filteredAssignedUnits = this.assignedUnitSearchControl.valueChanges.pipe(
+      startWith(''),
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap((value) => {
+        const searchTerm =
+          typeof value === 'string'
+            ? value
+            : value && typeof value === 'object' && 'value' in value
+            ? value.value
+            : '';
+        if (searchTerm && searchTerm.length >= 2) {
+          this.isLoadingAssignedUnits = true;
+          return this.unitService
+            .lookup(searchTerm, 10)
+            .pipe(finalize(() => (this.isLoadingAssignedUnits = false)));
         }
+        return of([]);
+      })
+    );
+  }
+
+  ngOnInit() {
+    this.loadData();
+
+    // Если уже есть unitId, найдем и установим соответствующий объект
+    if (this.data.unitId) {
+      this.unitService.getById(this.data.unitId).subscribe((unit) => {
+        this.selectedUnit = { id: unit.id, value: unit.shortName || unit.name };
+        this.unitSearchControl.setValue(this.selectedUnit);
+      });
     }
 
-    private loadData() {
-        // Используем forkJoin для одновременной загрузки всех данных
-        forkJoin({
-            ranks: this.dictRankService.getSelectList(),
-            positions: this.dictPositionService.getSelectList(),
-            states: this.dictSoldierStatesService.getSelectList()
-        }).subscribe(({ ranks, positions, states }) => {
-            this.dictRanks = ranks;
-            this.dictPositions = positions;
-            this.dictStates = states;
-            
-            // Принудительно обновляем представление после загрузки всех данных
-            this.cdr.detectChanges();
-        });
+    // Если уже есть assignedUnitId, найдем и установим соответствующий объект
+    if (this.data.assignedUnitId) {
+      this.unitService.getById(this.data.assignedUnitId).subscribe((assignedUnit) => {
+        this.selectedAssignedUnit = {
+          id: assignedUnit.id,
+          value: assignedUnit.shortName || assignedUnit.name,
+        };
+        this.assignedUnitSearchControl.setValue(this.selectedAssignedUnit);
+      });
     }
+  }
 
-    // Методы для автокомплита основного подразделения
-    displayUnitFn = (unit: LookupDto | null): string => {
-        return unit ? unit.value : '';
-    }
+  private loadData() {
+    // Используем forkJoin для одновременной загрузки всех данных
+    forkJoin({
+      ranks: this.dictRankService.getSelectList(),
+      positions: this.dictPositionService.getSelectList(),
+      states: this.dictSoldierStatesService.getSelectList(),
+    }).subscribe(({ ranks, positions, states }) => {
+      this.dictRanks = ranks;
+      this.dictPositions = positions;
+      this.dictStates = states;
 
-    onUnitSelected(event: any) {
-        const selectedUnit = event.option.value as LookupDto | null;
-        this.selectedUnit = selectedUnit;
-        this.data.unitId = selectedUnit ? selectedUnit.id : '';
-    }
-    
-    // Методы для автокомплита приданного подразделения
-    displayAssignedUnitFn = (assignedUnit: LookupDto | null): string => {
-        return assignedUnit ? assignedUnit.value : '';
-    }
+      // Принудительно обновляем представление после загрузки всех данных
+      this.cdr.detectChanges();
+    });
+  }
 
-    onAssignedUnitSelected(event: any) {
-        const selectedUnit = event.option.value as LookupDto | null;
-        this.selectedAssignedUnit = selectedUnit;
-        this.data.assignedUnitId = selectedUnit ? selectedUnit.id : undefined;
-    }
+  // Методы для автокомплита основного подразделения
+  displayUnitFn = (unit: LookupDto | null): string => {
+    return unit ? unit.value : '';
+  };
 
-    isFormValid(): boolean {
-        return !!(
-            this.data.firstName?.trim() &&
-            this.data.unitId &&
-            this.data.rankId &&
-            this.data.positionId &&
-            this.data.stateId
-        );
-    }
+  onUnitSelected(event: { option: { value: LookupDto | null } }) {
+    const selectedUnit = event.option.value;
+    this.selectedUnit = selectedUnit;
+    this.data.unitId = selectedUnit ? selectedUnit.id : '';
+  }
 
-    onCancel() { 
-        this.ref.close(); 
-    }
-    
-    onSave() { 
-        this.ref.close({ data: this.data, continue: false }); 
-    }
+  // Методы для автокомплита приданного подразделения
+  displayAssignedUnitFn = (assignedUnit: LookupDto | null): string => {
+    return assignedUnit ? assignedUnit.value : '';
+  };
 
-    onSaveAndContinue() {
-        this.ref.close({ data: this.data, continue: true });
+  onAssignedUnitSelected(event: { option: { value: LookupDto | null } }) {
+    const selectedUnit = event.option.value;
+    this.selectedAssignedUnit = selectedUnit;
+    this.data.assignedUnitId = selectedUnit ? selectedUnit.id : undefined;
+  }
+
+  onArrivedAtChange(event: MatDatepickerInputEvent<Date>) {
+    if (event.value) {
+      this.data.arrivedAt = event.value;
     }
+  }
+
+  onDepartedAtChange(event: MatDatepickerInputEvent<Date>) {
+    this.data.departedAt = event.value || undefined;
+  }
+
+  isFormValid(): boolean {
+    return !!(
+      this.data.firstName?.trim() &&
+      this.data.unitId &&
+      this.data.rankId &&
+      this.data.positionId &&
+      this.data.stateId
+    );
+  }
+
+  onCancel() {
+    this.ref.close();
+  }
+
+  onSave() {
+    this.ref.close({ data: this.data, continue: false });
+  }
+
+  onSaveAndContinue() {
+    this.ref.close({ data: this.data, continue: true });
+  }
 }

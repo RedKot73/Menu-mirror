@@ -1,0 +1,139 @@
+<h2 mat-dialog-title>{{ data.id ? 'Редагувати бійця' : 'Створити нового бійця' }}</h2>
+<div mat-dialog-content class="content">
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Прізвище</mat-label>
+    <input matInput [(ngModel)]="data.firstName" required />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Ім'я</mat-label>
+    <input matInput [(ngModel)]="data.midleName" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>По батькові</mat-label>
+    <input matInput [(ngModel)]="data.lastName" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Позивний</mat-label>
+    <input matInput [(ngModel)]="data.nickName" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Підрозділ</mat-label>
+    <input
+      type="text"
+      matInput
+      [formControl]="unitSearchControl"
+      [matAutocomplete]="unitAuto"
+      placeholder="Основний підрозділ"
+      required
+    />
+    <mat-autocomplete
+      #unitAuto="matAutocomplete"
+      [displayWith]="displayUnitFn"
+      (optionSelected)="onUnitSelected($event)"
+    >
+      @if (isLoadingUnits) {
+      <mat-option disabled>Завантаження...</mat-option>
+      } @for (unit of filteredUnits | async; track unit.id) {
+      <mat-option [value]="unit">{{ unit.value }}</mat-option>
+      }
+    </mat-autocomplete>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Приданий до підрозділу</mat-label>
+    <input
+      type="text"
+      matInput
+      [formControl]="assignedUnitSearchControl"
+      [matAutocomplete]="assignedUnitAuto"
+      placeholder="Приданий до підрозділу"
+    />
+    <mat-autocomplete
+      #assignedUnitAuto="matAutocomplete"
+      [displayWith]="displayAssignedUnitFn"
+      (optionSelected)="onAssignedUnitSelected($event)"
+    >
+      <mat-option [value]="null">Не приданий</mat-option>
+      @if (isLoadingAssignedUnits) {
+      <mat-option disabled>Завантаження...</mat-option>
+      } @for (unit of filteredAssignedUnits | async; track unit.id) {
+      <mat-option [value]="unit">{{ unit.value }}</mat-option>
+      }
+    </mat-autocomplete>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Прибув до підрозділу</mat-label>
+    <input
+      matInput
+      [matDatepicker]="arrivedPicker"
+      [value]="data.arrivedAt"
+      (dateChange)="onArrivedAtChange($event)"
+      required
+    />
+    <mat-datepicker-toggle matIconSuffix [for]="arrivedPicker"></mat-datepicker-toggle>
+    <mat-datepicker #arrivedPicker></mat-datepicker>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Вибув з підрозділу</mat-label>
+    <input
+      matInput
+      [matDatepicker]="departedPicker"
+      [value]="data.departedAt"
+      (dateChange)="onDepartedAtChange($event)"
+    />
+    <mat-datepicker-toggle matIconSuffix [for]="departedPicker"></mat-datepicker-toggle>
+    <mat-datepicker #departedPicker></mat-datepicker>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Звання</mat-label>
+    <mat-select [(ngModel)]="data.rankId" required>
+      @for (rank of dictRanks; track rank.id) {
+      <mat-option [value]="rank.id">{{ rank.value }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Посада</mat-label>
+    <mat-select [(ngModel)]="data.positionId" required>
+      @for (position of dictPositions; track position.id) {
+      <mat-option [value]="position.id">{{ position.value }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Статус</mat-label>
+    <mat-select [(ngModel)]="data.stateId" required>
+      @for (state of dictStates; track state.id) {
+      <mat-option [value]="state.id">{{ state.value }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Коментар</mat-label>
+    <textarea matInput [(ngModel)]="data.comment" rows="3"></textarea>
+  </mat-form-field>
+</div>
+<div mat-dialog-actions align="end" class="actions">
+  <button mat-button (click)="onCancel()">Відміна</button>
+  <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!isFormValid()">
+    Зберегти
+  </button>
+  <button
+    mat-raised-button
+    color="accent"
+    (click)="onSaveAndContinue()"
+    [disabled]="!isFormValid()"
+  >
+    Зберегти і продовжити
+  </button>
+</div>

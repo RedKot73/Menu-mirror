@@ -12,6 +12,8 @@ export interface SoldierDto {
     nickName?: string;
     unitId: string;
     unitShortName: string;
+    arrivedAt: Date;
+    departedAt?: Date;
     assignedUnitId?: string;
     assignedUnitShortName?: string;
     rankId: string;
@@ -29,6 +31,8 @@ export interface SoldierCreateDto {
     lastName?: string;
     nickName?: string;
     unitId: string;
+    arrivedAt: Date;
+    departedAt?: Date;
     assignedUnitId?: string;
     rankId: string;
     positionId: string;

@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LookupDto } from '../../shared/models/lookup.models';
+import { SoldierDto } from '../../Soldier/services/soldier.service';
 
 export interface UnitDto {
   id: string;
@@ -36,27 +37,6 @@ export interface UnitCreateDto {
   comment?: string;
 }
 
-// DTO для набора данных солдата
-export interface SoldierDataSetDto {
-  id: string;
-  firstName: string;
-  midleName?: string;
-  lastName?: string;
-  fio: string;
-  nickName?: string;
-  unitId: string;
-  unitShortName: string;
-  assignedUnitId?: string;
-  assignedUnitShortName?: string;
-  rankId: string;
-  rankShortValue: string;
-  positionId: string;
-  positionValue: string;
-  stateId: string;
-  stateValue: string;
-  comment?: string;
-}
-
 // DTO для набора данных підрозділу з особовим складом
 export interface UnitDataSetDto {
   id: string;
@@ -67,7 +47,7 @@ export interface UnitDataSetDto {
   unitTypeId?: string;
   unitType?: string;
   comment?: string;
-  soldiers: SoldierDataSetDto[];
+  soldiers: SoldierDto[];
 }
 
 export type HttpGetParams = Record<string, string | number | boolean>;

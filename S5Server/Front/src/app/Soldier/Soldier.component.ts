@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild, AfterViewInit, effect, signal, input } from "@angular/core";
+import { Component, inject, ViewChild, AfterViewInit, effect, signal, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -12,232 +12,249 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { FormsModule } from '@angular/forms';
-import { SlicePipe } from '@angular/common';
+import { SlicePipe, DatePipe } from '@angular/common';
 
 import { SoldierDialogComponent } from '../dialogs/SoldierDialog';
-import { ConfirmDialogComponent } from "../dialogs/ConfirmDialog.component";
-import { SoldierService, SoldierDto, SoldierCreateDto } from "./services/soldier.service";
-import { UnitService, UnitDto } from "../Unit/services/unit.service";
+import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
+import { SoldierService, SoldierDto, SoldierCreateDto } from './services/soldier.service';
+import { UnitService, UnitDto } from '../Unit/services/unit.service';
 import { SoldierFiltersComponent } from './soldier-filters.component';
 
 export type Soldier = SoldierDto;
 
 @Component({
-    selector: "app-page-soldiers",
-    imports: [
-        MatTableModule, 
-        MatButtonModule, 
-        MatSortModule, 
-        MatIconModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatSelectModule,
-        MatOptionModule,
-        MatTooltipModule,
-        MatMenuModule,
-        MatDividerModule,
-        FormsModule,
-        SlicePipe,
-        SoldierFiltersComponent
-    ],
-    templateUrl: './Soldier.component.html',
-    styleUrl: './Soldier.component.scss'
+  selector: 'app-page-soldiers',
+  imports: [
+    MatTableModule,
+    MatButtonModule,
+    MatSortModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatTooltipModule,
+    MatMenuModule,
+    MatDividerModule,
+    FormsModule,
+    SlicePipe,
+    DatePipe,
+    SoldierFiltersComponent,
+  ],
+  templateUrl: './Soldier.component.html',
+  styleUrl: './Soldier.component.scss',
 })
 export class SoldiersComponent implements AfterViewInit {
-    soldierService = inject(SoldierService);
-    unitService = inject(UnitService);
-    
-    // Input для фильтрации по подразделению
-    filterByUnitId = input<string | null>(null);
-    
-    items = this.soldierService.createItemsSignal();
-    allUnits = signal<UnitDto[]>([]);
-    dataSource = new MatTableDataSource<Soldier>([]);
-    displayedColumns = ['menu', 'fio', 'nickName', 'rankShortValue', 'positionValue',
-        'stateValue', 'assignedUnitShortName', 'comment'];
-    dialog = inject(MatDialog);
-    
-    // Фильтры
-    searchText = '';
-    selectedAssignedUnitId: string | null = null;
+  soldierService = inject(SoldierService);
+  unitService = inject(UnitService);
 
-    @ViewChild(MatSort) sort!: MatSort;
+  // Input для фильтрации по подразделению
+  filterByUnitId = input<string | null>(null);
 
-    constructor() {
-        effect(() => {
-            this.dataSource.data = this.items();
-        });
-        
-        // Автоматически перезагружаем данные при изменении фильтра подразделения
-        effect(() => {
-            const unitFilter = this.filterByUnitId();
-            if (unitFilter !== null) {
-                this.reload();
-            }
-        });
-    }
+  items = this.soldierService.createItemsSignal();
+  allUnits = signal<UnitDto[]>([]);
+  dataSource = new MatTableDataSource<Soldier>([]);
+  displayedColumns = [
+    'menu',
+    'fio',
+    'nickName',
+    'rankShortValue',
+    'positionValue',
+    'stateValue',
+    'assignedUnitShortName',
+    'arrivedAt',
+    'departedAt',
+    'comment',
+  ];
+  dialog = inject(MatDialog);
 
-    ngAfterViewInit() {
-        this.dataSource.sort = this.sort;
-        
-        // Загружаем все подразделения для фильтров
-        this.unitService.getAll().subscribe(units => {
-            this.allUnits.set(units);
-        });
-        
-        // Загружаем начальные данные
+  // Фильтры
+  searchText = '';
+  selectedAssignedUnitId: string | null = null;
+
+  @ViewChild(MatSort) sort!: MatSort;
+
+  constructor() {
+    effect(() => {
+      this.dataSource.data = this.items();
+    });
+
+    // Автоматически перезагружаем данные при изменении фильтра подразделения
+    effect(() => {
+      const unitFilter = this.filterByUnitId();
+      if (unitFilter !== null) {
         this.reload();
-    }
+      }
+    });
+  }
 
-    reload() {
-        // Определяем параметры для сервера
-        const unitId = this.filterByUnitId() === '' ? undefined : this.filterByUnitId() || undefined;
-        const assignedUnitId = this.selectedAssignedUnitId === '' ? undefined : 
-                              this.selectedAssignedUnitId === 'null' ? 'null' : 
-                              this.selectedAssignedUnitId || undefined;
+  ngAfterViewInit() {
+    this.dataSource.sort = this.sort;
 
-        this.soldierService.getAll(this.searchText, unitId, assignedUnitId)
-            .subscribe(items => {
-                this.items.set(items);
-            });
-    }
+    // Загружаем все подразделения для фильтров
+    this.unitService.getAll().subscribe((units) => {
+      this.allUnits.set(units);
+    });
 
-    onSearchChange(searchText: string) {
-        this.searchText = searchText;
-        this.reload();
-    }
+    // Загружаем начальные данные
+    this.reload();
+  }
 
-    onAssignedUnitFilterChange(assignedUnitId: string | null) {
-        this.selectedAssignedUnitId = assignedUnitId;
-        this.reload();
-    }
+  reload() {
+    // Определяем параметры для сервера
+    const unitId = this.filterByUnitId() === '' ? undefined : this.filterByUnitId() || undefined;
+    const assignedUnitId =
+      this.selectedAssignedUnitId === ''
+        ? undefined
+        : this.selectedAssignedUnitId === 'null'
+        ? 'null'
+        : this.selectedAssignedUnitId || undefined;
 
-    // CREATE
-    add() {
-        const openDialog = () => {
-            const dialogRef = this.dialog.open(SoldierDialogComponent, {
-                width: '600px',
-                data: { 
-                    id: '',
-                    firstName: '', 
-                    midleName: '', 
-                    lastName: '', 
-                    fio: '',
-                    nickName: '', 
-                    unitId: this.filterByUnitId() || '',
-                    unitShortName: '',
-                    assignedUnitId: undefined,
-                    assignedUnitShortName: undefined,
-                    rankId: '',
-                    rankShortValue: '',
-                    positionId: '',
-                    positionValue: '',
-                    stateId: '',
-                    stateValue: '',
-                    comment: '' 
-                } as SoldierDto
-            });
+    this.soldierService.getAll(this.searchText, unitId, assignedUnitId).subscribe((items) => {
+      this.items.set(items);
+    });
+  }
 
-            dialogRef.afterClosed().subscribe(result => {
-                if (result && result.data) {
-                    const createDto: SoldierCreateDto = {
-                        firstName: result.data.firstName,
-                        midleName: result.data.midleName,
-                        lastName: result.data.lastName,
-                        nickName: result.data.nickName,
-                        unitId: result.data.unitId,
-                        assignedUnitId: result.data.assignedUnitId,
-                        rankId: result.data.rankId,
-                        positionId: result.data.positionId,
-                        stateId: result.data.stateId,
-                        comment: result.data.comment
-                    };
-                    
-                    this.soldierService.create(createDto).subscribe(() => {
-                        this.reload();
-                        
-                        // Если нужно продолжить, открываем диалог снова
-                        if (result.continue) {
-                            setTimeout(() => openDialog(), 100);
-                        }
-                    });
-                }
-            });
-        };
+  onSearchChange(searchText: string) {
+    this.searchText = searchText;
+    this.reload();
+  }
 
-        openDialog();
-    }
+  onAssignedUnitFilterChange(assignedUnitId: string | null) {
+    this.selectedAssignedUnitId = assignedUnitId;
+    this.reload();
+  }
 
-    // UPDATE
-    edit(soldier: Soldier) {
-        const dialogRef = this.dialog.open(SoldierDialogComponent, {
-            width: '600px',
-            data: { ...soldier } // Передаем копию объекта для редактирования
-        });
+  // CREATE
+  add() {
+    const openDialog = () => {
+      const dialogRef = this.dialog.open(SoldierDialogComponent, {
+        width: '600px',
+        data: {
+          id: '',
+          firstName: '',
+          midleName: '',
+          lastName: '',
+          fio: '',
+          nickName: '',
+          unitId: this.filterByUnitId() || '',
+          unitShortName: '',
+          arrivedAt: new Date(),
+          departedAt: undefined,
+          assignedUnitId: undefined,
+          assignedUnitShortName: undefined,
+          rankId: '',
+          rankShortValue: '',
+          positionId: '',
+          positionValue: '',
+          stateId: '',
+          stateValue: '',
+          comment: '',
+        } as SoldierDto,
+      });
 
-        dialogRef.afterClosed().subscribe(result => {
-            if (result && result.data) {
-                this.soldierService.update(result.data.id, result.data).subscribe(() => this.reload());
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result && result.data) {
+          const createDto: SoldierCreateDto = {
+            firstName: result.data.firstName,
+            midleName: result.data.midleName,
+            lastName: result.data.lastName,
+            nickName: result.data.nickName,
+            unitId: result.data.unitId,
+            arrivedAt: result.data.arrivedAt,
+            departedAt: result.data.departedAt,
+            assignedUnitId: result.data.assignedUnitId,
+            rankId: result.data.rankId,
+            positionId: result.data.positionId,
+            stateId: result.data.stateId,
+            comment: result.data.comment,
+          };
+
+          this.soldierService.create(createDto).subscribe(() => {
+            this.reload();
+
+            // Если нужно продолжить, открываем диалог снова
+            if (result.continue) {
+              setTimeout(() => openDialog(), 100);
             }
-        });
-    }
+          });
+        }
+      });
+    };
 
-    // DELETE
-    delete(soldier: Soldier) {
-        const ref = this.dialog.open(ConfirmDialogComponent, {
-            width: '360px',
-            maxWidth: '95vw',
-            autoFocus: false,
-            data: {
-                title: 'Видалення бійця',
-                message: `Ви впевнені, що хочете видалити бійця "${soldier.fio}"?`,
-                confirmText: 'Видалити',
-                cancelText: 'Відмінити',
-                color: 'warn',
-                icon: 'warning'
-            }
-        });
-        
-        ref.afterClosed().subscribe(confirmed => {
-            if (confirmed) {
-                this.soldierService.delete(soldier.id).subscribe(() => this.reload());
-            }
-        });
-    }
+    openDialog();
+  }
 
-    // Придать к подразделению
-    assign(soldier: Soldier) {
-        // Здесь можно открыть диалог выбора подразделения
-        // Для простоты сейчас покажем уведомление
-        this.dialog.open(ConfirmDialogComponent, {
-            width: '400px',
-            autoFocus: false,
-            data: {
-                title: 'Придання бійця',
-                message: `Функція придання бійця "${soldier.fio}" до підрозділу буде реалізована пізніше.`,
-                confirmText: 'OK',
-                cancelText: '',
-                color: 'primary',
-                icon: 'info'
-            }
-        });
-    }
+  // UPDATE
+  edit(soldier: Soldier) {
+    const dialogRef = this.dialog.open(SoldierDialogComponent, {
+      width: '600px',
+      data: { ...soldier }, // Передаем копию объекта для редактирования
+    });
 
-    // Переместить в другое подразделение
-    move(soldier: Soldier) {
-        // Здесь можно открыть диалог выбора подразделения
-        // Для простоты сейчас покажем уведомление
-        this.dialog.open(ConfirmDialogComponent, {
-            width: '400px',
-            autoFocus: false,
-            data: {
-                title: 'Переміщення бійця',
-                message: `Функція переміщення бійця "${soldier.fio}" до іншого підрозділу буде реалізована пізніше.`,
-                confirmText: 'OK',
-                cancelText: '',
-                color: 'primary',
-                icon: 'info'
-            }
-        });
-    }
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result && result.data) {
+        this.soldierService.update(result.data.id, result.data).subscribe(() => this.reload());
+      }
+    });
+  }
+
+  // DELETE
+  delete(soldier: Soldier) {
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '360px',
+      maxWidth: '95vw',
+      autoFocus: false,
+      data: {
+        title: 'Видалення бійця',
+        message: `Ви впевнені, що хочете видалити бійця "${soldier.fio}"?`,
+        confirmText: 'Видалити',
+        cancelText: 'Відмінити',
+        color: 'warn',
+        icon: 'warning',
+      },
+    });
+
+    ref.afterClosed().subscribe((confirmed) => {
+      if (confirmed) {
+        this.soldierService.delete(soldier.id).subscribe(() => this.reload());
+      }
+    });
+  }
+
+  // Придать к подразделению
+  assign(soldier: Soldier) {
+    // Здесь можно открыть диалог выбора подразделения
+    // Для простоты сейчас покажем уведомление
+    this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      autoFocus: false,
+      data: {
+        title: 'Придання бійця',
+        message: `Функція придання бійця "${soldier.fio}" до підрозділу буде реалізована пізніше.`,
+        confirmText: 'OK',
+        cancelText: '',
+        color: 'primary',
+        icon: 'info',
+      },
+    });
+  }
+
+  // Переместить в другое подразделение
+  move(soldier: Soldier) {
+    // Здесь можно открыть диалог выбора подразделения
+    // Для простоты сейчас покажем уведомление
+    this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      autoFocus: false,
+      data: {
+        title: 'Переміщення бійця',
+        message: `Функція переміщення бійця "${soldier.fio}" до іншого підрозділу буде реалізована пізніше.`,
+        confirmText: 'OK',
+        cancelText: '',
+        color: 'primary',
+        icon: 'info',
+      },
+    });
+  }
 }

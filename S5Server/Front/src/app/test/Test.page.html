@@ -213,6 +213,22 @@
                       </td>
                     </ng-container>
 
+                    <!-- ArrivedAt Column -->
+                    <ng-container matColumnDef="arrivedAt">
+                      <th mat-header-cell *matHeaderCellDef>Прибув</th>
+                      <td mat-cell *matCellDef="let soldier">
+                        {{ soldier.arrivedAt | date : 'dd.MM.yyyy' }}
+                      </td>
+                    </ng-container>
+
+                    <!-- DepartedAt Column -->
+                    <ng-container matColumnDef="departedAt">
+                      <th mat-header-cell *matHeaderCellDef>Вибув</th>
+                      <td mat-cell *matCellDef="let soldier">
+                        {{ soldier.departedAt ? (soldier.departedAt | date : 'dd.MM.yyyy') : '-' }}
+                      </td>
+                    </ng-container>
+
                     <!-- Comment Column -->
                     <ng-container matColumnDef="comment">
                       <th mat-header-cell *matHeaderCellDef>Коментар</th>

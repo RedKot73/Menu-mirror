@@ -1,95 +1,127 @@
-<soldier-filters [allUnits]="allUnits()"
-                 (searchChanged)="onSearchChange($event)"
-                 (assignedUnitFilterChanged)="onAssignedUnitFilterChange($event)"
-                 (reload)="reload()"
-                 (add)="add()">
+<soldier-filters
+  [allUnits]="allUnits()"
+  (searchChanged)="onSearchChange($event)"
+  (assignedUnitFilterChanged)="onAssignedUnitFilterChange($event)"
+  (reload)="reload()"
+  (add)="add()"
+>
 </soldier-filters>
 
-<table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" style="width:100%; margin-top: 1em;">
-    <!-- Menu Column -->
-    <ng-container matColumnDef="menu">
-        <th mat-header-cell *matHeaderCellDef style="width: 60px;"> Дії </th>
-        <td mat-cell *matCellDef="let soldier">
-            <button mat-icon-button
-                    [matMenuTriggerFor]="soldierMenu"
-                    matTooltip="Дії з бійцем"
-                    (click)="$event.stopPropagation()">
-                <mat-icon>more_vert</mat-icon>
-            </button>
+<table
+  mat-table
+  [dataSource]="dataSource"
+  matSort
+  class="mat-elevation-z8"
+  style="width: 100%; margin-top: 1em"
+>
+  <!-- Menu Column -->
+  <ng-container matColumnDef="menu">
+    <th mat-header-cell *matHeaderCellDef style="width: 60px">Дії</th>
+    <td mat-cell *matCellDef="let soldier">
+      <button
+        mat-icon-button
+        [matMenuTriggerFor]="soldierMenu"
+        matTooltip="Дії з бійцем"
+        (click)="$event.stopPropagation()"
+      >
+        <mat-icon>more_vert</mat-icon>
+      </button>
 
-            <mat-menu #soldierMenu="matMenu">
-                <button mat-menu-item (click)="edit(soldier)">
-                    <mat-icon color="accent">edit</mat-icon>
-                    <span>Редагувати</span>
-                </button>
-                <button mat-menu-item (click)="assign(soldier)">
-                    <mat-icon color="primary">assignment_ind</mat-icon>
-                    <span>Придати до підрозділу</span>
-                </button>
-                <button mat-menu-item (click)="move(soldier)">
-                    <mat-icon color="primary">swap_horiz</mat-icon>
-                    <span>Перемістити до іншого підрозділу</span>
-                </button>
-                <mat-divider></mat-divider>
-                <button mat-menu-item (click)="delete(soldier)" class="delete-action">
-                    <mat-icon>delete</mat-icon>
-                    <span>Видалити</span>
-                </button>
-            </mat-menu>
-        </td>
-    </ng-container>
+      <mat-menu #soldierMenu="matMenu">
+        <button mat-menu-item (click)="edit(soldier)">
+          <mat-icon color="accent">edit</mat-icon>
+          <span>Редагувати</span>
+        </button>
+        <button mat-menu-item (click)="assign(soldier)">
+          <mat-icon color="primary">assignment_ind</mat-icon>
+          <span>Придати до підрозділу</span>
+        </button>
+        <button mat-menu-item (click)="move(soldier)">
+          <mat-icon color="primary">swap_horiz</mat-icon>
+          <span>Перемістити до іншого підрозділу</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="delete(soldier)" class="delete-action">
+          <mat-icon>delete</mat-icon>
+          <span>Видалити</span>
+        </button>
+      </mat-menu>
+    </td>
+  </ng-container>
 
-    <!-- FIO Column -->
-    <ng-container matColumnDef="fio">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> ПІБ </th>
-        <td mat-cell *matCellDef="let soldier">
-            <span class="fio">{{ soldier.fio }}</span>
-        </td>
-    </ng-container>
+  <!-- FIO Column -->
+  <ng-container matColumnDef="fio">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>ПІБ</th>
+    <td mat-cell *matCellDef="let soldier">
+      <span class="fio">{{ soldier.fio }}</span>
+    </td>
+  </ng-container>
 
-    <ng-container matColumnDef="nickName">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Позивний </th>
-        <td mat-cell *matCellDef="let soldier"> {{ soldier.nickName }} </td>
-    </ng-container>
+  <ng-container matColumnDef="nickName">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Позивний</th>
+    <td mat-cell *matCellDef="let soldier">{{ soldier.nickName }}</td>
+  </ng-container>
 
-    <!-- Rank Column -->
-    <ng-container matColumnDef="rankShortValue">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Звання </th>
-        <td mat-cell *matCellDef="let soldier"> {{ soldier.rankShortValue }} </td>
-    </ng-container>
+  <!-- Rank Column -->
+  <ng-container matColumnDef="rankShortValue">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Звання</th>
+    <td mat-cell *matCellDef="let soldier">{{ soldier.rankShortValue }}</td>
+  </ng-container>
 
-    <!-- Position Column -->
-    <ng-container matColumnDef="positionValue">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Посада </th>
-        <td mat-cell *matCellDef="let soldier"> {{ soldier.positionValue }} </td>
-    </ng-container>
+  <!-- Position Column -->
+  <ng-container matColumnDef="positionValue">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Посада</th>
+    <td mat-cell *matCellDef="let soldier">{{ soldier.positionValue }}</td>
+  </ng-container>
 
-    <!-- State Column -->
-    <ng-container matColumnDef="stateValue">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Статус </th>
-        <td mat-cell *matCellDef="let soldier">
-            <span class="state-badge">{{ soldier.stateValue }}</span>
-        </td>
-    </ng-container>
+  <!-- State Column -->
+  <ng-container matColumnDef="stateValue">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Статус</th>
+    <td mat-cell *matCellDef="let soldier">
+      <span class="state-badge">{{ soldier.stateValue }}</span>
+    </td>
+  </ng-container>
 
-    <!-- Assigned Unit Column -->
-    <ng-container matColumnDef="assignedUnitShortName">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Приданий до </th>
-        <td mat-cell *matCellDef="let soldier"> {{ soldier.assignedUnitShortName || '-' }} </td>
-    </ng-container>
+  <!-- Assigned Unit Column -->
+  <ng-container matColumnDef="assignedUnitShortName">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Приданий до</th>
+    <td mat-cell *matCellDef="let soldier">{{ soldier.assignedUnitShortName || '-' }}</td>
+  </ng-container>
 
-    <!-- Comment Column -->
-    <ng-container matColumnDef="comment">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Коментар </th>
-        <td mat-cell *matCellDef="let soldier" class="comment-cell">
-            <span class="comment-text"
-                  [matTooltip]="soldier.comment && soldier.comment.length > 50 ? soldier.comment : ''"
-                  [title]="soldier.comment && soldier.comment.length > 50 ? soldier.comment : ''">
-                {{ soldier.comment ? (soldier.comment.length > 50 ? (soldier.comment | slice:0:50) + '...' : soldier.comment) : '-' }}
-            </span>
-        </td>
-    </ng-container>
+  <!-- ArrivedAt Column -->
+  <ng-container matColumnDef="arrivedAt">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Прибув</th>
+    <td mat-cell *matCellDef="let soldier">{{ soldier.arrivedAt | date : 'dd.MM.yyyy' }}</td>
+  </ng-container>
 
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  <!-- DepartedAt Column -->
+  <ng-container matColumnDef="departedAt">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Вибув</th>
+    <td mat-cell *matCellDef="let soldier">
+      {{ soldier.departedAt ? (soldier.departedAt | date : 'dd.MM.yyyy') : '-' }}
+    </td>
+  </ng-container>
+
+  <!-- Comment Column -->
+  <ng-container matColumnDef="comment">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Коментар</th>
+    <td mat-cell *matCellDef="let soldier" class="comment-cell">
+      <span
+        class="comment-text"
+        [matTooltip]="soldier.comment && soldier.comment.length > 50 ? soldier.comment : ''"
+        [title]="soldier.comment && soldier.comment.length > 50 ? soldier.comment : ''"
+      >
+        {{
+          soldier.comment
+            ? soldier.comment.length > 50
+              ? (soldier.comment | slice : 0 : 50) + '...'
+              : soldier.comment
+            : '-'
+        }}
+      </span>
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 </table>
