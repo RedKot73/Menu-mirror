@@ -34,6 +34,12 @@ import { UnitTreeComponent } from '../Unit/UnitTree.component';
 import { UnitTreeNode } from '../Unit/unit-tree-node.component';
 import { JsonEditorDialogComponent } from '../DocumentTemplates/components/JsonEditorDialog.component';
 import { ErrorHandler } from '../shared/models/ErrorHandler';
+import {
+  isCriticalStatus,
+  isSevereStatus,
+  isProblematicStatus,
+  isRecoveryStatus,
+} from '../Soldier/Soldier.constant';
 
 @Component({
   selector: 'app-test-page',
@@ -58,7 +64,7 @@ import { ErrorHandler } from '../shared/models/ErrorHandler';
   ],
   providers: [provideNativeDateAdapter()],
   templateUrl: './Test.page.html',
-  styleUrl: './Test.page.scss',
+  styleUrls: ['./Test.page.scss', '../Soldier/Soldier.component.scss'],
 })
 export class TestComponent implements AfterViewInit, OnDestroy {
   // --- Injected Dependencies ---
@@ -95,6 +101,12 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     'departedAt',
     'comment',
   ];
+
+  // Методы для проверки статусов (делаем доступными в шаблоне)
+  isCriticalStatus = isCriticalStatus;
+  isSevereStatus = isSevereStatus;
+  isProblematicStatus = isProblematicStatus;
+  isRecoveryStatus = isRecoveryStatus;
 
   // --- Computed Signals ---
   contentPanelWidth = computed(() => {

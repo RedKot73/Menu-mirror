@@ -254,7 +254,14 @@
                     </ng-container>
 
                     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+                    <tr
+                      mat-row
+                      *matRowDef="let row; columns: displayedColumns"
+                      [class.row-critical]="isCriticalStatus(row.stateId)"
+                      [class.row-severe]="isSevereStatus(row.stateId)"
+                      [class.row-problematic]="isProblematicStatus(row.stateId)"
+                      [class.row-recovery]="isRecoveryStatus(row.stateId)"
+                    ></tr>
                   </table>
                   }
                 </div>

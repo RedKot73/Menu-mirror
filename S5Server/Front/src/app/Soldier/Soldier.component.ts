@@ -19,6 +19,12 @@ import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
 import { SoldierService, SoldierDto, SoldierCreateDto } from './services/soldier.service';
 import { UnitService, UnitDto } from '../Unit/services/unit.service';
 import { SoldierFiltersComponent } from './soldier-filters.component';
+import {
+  isCriticalStatus,
+  isSevereStatus,
+  isProblematicStatus,
+  isRecoveryStatus,
+} from './Soldier.constant';
 
 export type Soldier = SoldierDto;
 
@@ -71,6 +77,12 @@ export class SoldiersComponent implements AfterViewInit {
   // Фильтры
   searchText = '';
   selectedAssignedUnitId: string | null = null;
+
+  // Методы для проверки статусов (делаем доступными в шаблоне)
+  isCriticalStatus = isCriticalStatus;
+  isSevereStatus = isSevereStatus;
+  isProblematicStatus = isProblematicStatus;
+  isRecoveryStatus = isRecoveryStatus;
 
   @ViewChild(MatSort) sort!: MatSort;
 

@@ -59,3 +59,68 @@
         display: none;
     }
 }
+
+// Раскраска строк бойца в соответствии со статусом
+.mat-mdc-row {
+    transition: background-color 0.2s ease;
+
+    // Критичний статус (вбитий) - червоний фон
+    &.row-critical {
+        background-color: #ffebee !important;
+
+        &:hover {
+            background-color: #ffcdd2 !important;
+        }
+
+        .state-badge {
+            background-color: #b71c1c;
+            color: white;
+            border-color: #b71c1c;
+        }
+    }
+
+    // Тяжкий статус (поранений, в полоні) - помаранчевий фон
+    &.row-severe {
+        background-color: #fff3e0 !important;
+
+        &:hover {
+            background-color: #ffe0b2 !important;
+        }
+
+        .state-badge {
+            background-color: #ef6c00;
+            color: white;
+            border-color: #ef6c00;
+        }
+    }
+
+    // Проблемний статус (дезертир, капітуляція) - жовтий фон
+    &.row-problematic {
+        background-color: #fffde7 !important;
+
+        &:hover {
+            background-color: #fff9c4 !important;
+        }
+
+        .state-badge {
+            background-color: #f57f17;
+            color: white;
+            border-color: #f57f17;
+        }
+    }
+
+    // Позитивний статус (повернення з полону) - зелений фон
+    &.row-recovery {
+        background-color: #e8f5e9 !important;
+
+        &:hover {
+            background-color: #c8e6c9 !important;
+        }
+
+        .state-badge {
+            background-color: #2e7d32;
+            color: white;
+            border-color: #2e7d32;
+        }
+    }
+}
