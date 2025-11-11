@@ -15,12 +15,15 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
 
 import { UnitService, UnitDto, UnitTreeItemDto } from './services/unit.service';
 import { UnitTreeComponent } from './UnitTree.component';
 import { UnitContentComponent } from './UnitContent.component';
+import { UnitTreeNode } from './unit-tree-node.component';
 
 export type Unit = UnitDto;
 
@@ -32,6 +35,8 @@ export type Unit = UnitDto;
     MatChipsModule,
     MatIconModule,
     MatButtonModule,
+    MatMenuModule,
+    MatDividerModule,
     UnitTreeComponent,
     UnitContentComponent,
   ],
@@ -274,5 +279,26 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
    */
   CreateUnit() {
     this.unitTree?.CreateUnit();
+  }
+
+  /**
+   * Добавляет дочерний подразделение к узлу
+   */
+  addChild(node: UnitTreeNode) {
+    this.unitTree?.addChild(node);
+  }
+
+  /**
+   * Редактирует подразделение
+   */
+  edit(node: UnitTreeNode) {
+    this.unitTree?.edit(node);
+  }
+
+  /**
+   * Удаляет подразделение
+   */
+  delete(node: UnitTreeNode) {
+    this.unitTree?.delete(node);
   }
 }
