@@ -119,7 +119,7 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     const fourteenDaysAgo = new Date(today);
     fourteenDaysAgo.setDate(today.getDate() - 14);
 
-    return arrived <= fourteenDaysAgo;
+    return arrived >= fourteenDaysAgo;
   }
 
   // --- Computed Signals ---
