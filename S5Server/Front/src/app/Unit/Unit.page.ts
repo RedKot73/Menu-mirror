@@ -17,6 +17,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
 
@@ -37,6 +38,7 @@ export type Unit = UnitDto;
     MatButtonModule,
     MatMenuModule,
     MatDividerModule,
+    MatTooltipModule,
     UnitTreeComponent,
     UnitContentComponent,
   ],
@@ -300,5 +302,13 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
    */
   delete(node: UnitTreeNode) {
     this.unitTree?.delete(node);
+  }
+
+  moveUpDown(node: UnitTreeNode, moveUp: boolean) {
+    this.unitTree?.moveUpDown(node, moveUp);
+  }
+
+  importSoldiers(node: UnitTreeNode) {
+    this.unitTree?.importSoldiers(node);
   }
 }

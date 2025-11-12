@@ -27,11 +27,12 @@ namespace S5Server.Controllers
         private readonly TemplateRenderer _renderer;
         private readonly ILogger<DocumentTemplatesController> _logger;
 
-        public DocumentTemplatesController(MainDbContext db, TemplateRenderer renderer, ILogger<DocumentTemplatesController> logger)
+        public DocumentTemplatesController(MainDbContext db,
+            TemplateRenderer renderer,
+            ILogger<DocumentTemplatesController> logger)
         {
             _db = db;
             _set = _db.DocumentTemplates;
-            //_templDataSets = _db.TemplateDataSets;
             _renderer = renderer;
             _logger = logger;
         }

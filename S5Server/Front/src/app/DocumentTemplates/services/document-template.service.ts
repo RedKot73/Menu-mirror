@@ -3,11 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-import { 
-  CreateTemplateDto, 
-  RenderRequest,
-  TemplateDto
-} from '../models/document-template.models';
+import { CreateTemplateDto, RenderRequest, TemplateDto } from '../models/document-template.models';
 /*
 import {
   TemplateDataSetDto,
@@ -17,9 +13,10 @@ import {
 import { HandlebarsTemplateService } from '../DocumentTemplates/services/handlebars-template.service';
 */
 import { DocTemplateUtils, TemplateFormat } from '../models/shared.models';
+import { ErrorHandler } from '../../shared/models/ErrorHandler';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DocumentTemplateService {
   private readonly http = inject(HttpClient);
@@ -29,78 +26,131 @@ export class DocumentTemplateService {
   // === CRUD операции для шаблонов ===
 
   getTemplates(): Observable<TemplateDto[]> {
-    return this.http.get<TemplateDto[]>(this.baseUrl)
-      .pipe(catchError(this.handleError));
+    return this.http.get<TemplateDto[]>(this.baseUrl).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = ErrorHandler.handleHttpError(error, 'Помилка сервера шаблонів');
+        return throwError(() => new Error(message));
+      })
+    );
   }
 
   getTemplate(id: string): Observable<TemplateDto> {
-    return this.http.get<TemplateDto>(`${this.baseUrl}/${id}`)
-      .pipe(catchError(this.handleError));
+    return this.http.get<TemplateDto>(`${this.baseUrl}/${id}`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = ErrorHandler.handleHttpError(error, 'Шаблон не знайдено');
+        return throwError(() => new Error(message));
+      })
+    );
   }
 
   createTemplate(dto: CreateTemplateDto): Observable<TemplateDto> {
     const formData = this.buildFormData(dto);
 
-    return this.http.post<TemplateDto>(this.baseUrl, formData)
-      .pipe(catchError(this.handleError));
+    return this.http.post<TemplateDto>(this.baseUrl, formData).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = ErrorHandler.handleHttpError(error, 'Не вдалося створити шаблон');
+        return throwError(() => new Error(message));
+      })
+    );
   }
 
   updateTemplate(id: string, dto: CreateTemplateDto): Observable<void> {
     const formData = this.buildFormData(dto);
 
-    return this.http.put<void>(`${this.baseUrl}/${id}`, formData)
-      .pipe(catchError(this.handleError));
+    return this.http.put<void>(`${this.baseUrl}/${id}`, formData).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = ErrorHandler.handleHttpError(error, 'Не вдалося оновити шаблон');
+        return throwError(() => new Error(message));
+      })
+    );
   }
 
   deleteTemplate(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`)
-      .pipe(catchError(this.handleError));
+    return this.http.delete<void>(`${this.baseUrl}/${id}`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = ErrorHandler.handleHttpError(error, 'Не вдалося видалити шаблон');
+        return throwError(() => new Error(message));
+      })
+    );
   }
 
   publishTemplate(id: string): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/${id}/publish`, {})
-      .pipe(catchError(this.handleError));
+    return this.http.post<void>(`${this.baseUrl}/${id}/publish`, {}).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = ErrorHandler.handleHttpError(error, 'Не вдалося опублікувати шаблон');
+        return throwError(() => new Error(message));
+      })
+    );
   }
 
   unpublishTemplate(id: string): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/${id}/unpublish`, {})
-      .pipe(catchError(this.handleError));
+    return this.http.post<void>(`${this.baseUrl}/${id}/unpublish`, {}).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = ErrorHandler.handleHttpError(error, 'Не вдалося зняти публікацію шаблону');
+        return throwError(() => new Error(message));
+      })
+    );
   }
 
   // === Работа с файлами ===
 
   downloadFile(id: string): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}/${id}/download`, { 
-      responseType: 'blob' 
-    }).pipe(catchError(this.handleError));
+    return this.http
+      .get(`${this.baseUrl}/${id}/download`, {
+        responseType: 'blob',
+      })
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          const message = ErrorHandler.handleHttpError(
+            error,
+            'Не вдалося завантажити файл шаблону'
+          );
+          return throwError(() => new Error(message));
+        })
+      );
   }
 
   // === Предварительный просмотр ===
 
   previewHtml(id: string, dataJson?: string): Observable<string> {
-    const request: RenderRequest = { 
-      dataJson: dataJson || '{}', 
-      export: 'html' 
+    const request: RenderRequest = {
+      dataJson: dataJson || '{}',
+      export: 'html',
     };
-    
-    return this.http.post(`${this.baseUrl}/${id}/preview/html`, request, {
-      responseType: 'text'
-    }).pipe(catchError(this.handleError));
+
+    return this.http
+      .post(`${this.baseUrl}/${id}/preview/html`, request, {
+        responseType: 'text',
+      })
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          const message = ErrorHandler.handleHttpError(
+            error,
+            'Не вдалося сформувати попередній перегляд'
+          );
+          return throwError(() => new Error(message));
+        })
+      );
   }
 
   // === Экспорт документов ===
 
-  exportDocument(id: string,
-    exportFormat: TemplateFormat,
-    dataJson?: string): Observable<Blob> {
-    const request: RenderRequest = { 
-      dataJson: dataJson || '{}', 
+  exportDocument(id: string, exportFormat: TemplateFormat, dataJson?: string): Observable<Blob> {
+    const request: RenderRequest = {
+      dataJson: dataJson || '{}',
       export: DocTemplateUtils.formatToString(exportFormat),
     };
-    
-    return this.http.post(`${this.baseUrl}/${id}/export`, request, {
-      responseType: 'blob'
-    }).pipe(catchError(this.handleError));
+
+    return this.http
+      .post(`${this.baseUrl}/${id}/export`, request, {
+        responseType: 'blob',
+      })
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          const message = ErrorHandler.handleHttpError(error, 'Не вдалося експортувати документ');
+          return throwError(() => new Error(message));
+        })
+      );
   }
 
   // === Гибридный рендеринг (NEW) ===
@@ -117,20 +167,38 @@ export class DocumentTemplateService {
    * Получает содержимое шаблона для клиентского рендеринга
    */
   getTemplateContent(id: string): Observable<string> {
-    return this.http.get(`${this.baseUrl}/${id}/content`, {
-      responseType: 'text'
-    }).pipe(catchError(this.handleError));
+    return this.http
+      .get(`${this.baseUrl}/${id}/content`, {
+        responseType: 'text',
+      })
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          const message = ErrorHandler.handleHttpError(error, 'Не вдалося отримати вміст шаблону');
+          return throwError(() => new Error(message));
+        })
+      );
   }
 
   /**
    * Сохраняет отредактированное содержимое шаблона
    */
   saveTemplateContent(id: string, content: string): Observable<void> {
-    return this.http.put<void>(`${this.baseUrl}/${id}/content`, { content }, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }).pipe(catchError(this.handleError));
+    return this.http
+      .put<void>(
+        `${this.baseUrl}/${id}/content`,
+        { content },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          const message = ErrorHandler.handleHttpError(error, 'Не вдалося зберегти вміст шаблону');
+          return throwError(() => new Error(message));
+        })
+      );
   }
 
   /**
@@ -162,14 +230,21 @@ export class DocumentTemplateService {
    * Серверный рендеринг (для DOCX/PDF или fallback)
    */
   renderServerSide(id: string, dataJson: string, exportFormat: TemplateFormat): Observable<Blob> {
-    const request: RenderRequest = { 
-      dataJson: dataJson || '{}', 
+    const request: RenderRequest = {
+      dataJson: dataJson || '{}',
       export: DocTemplateUtils.formatToString(exportFormat),
     };
-    
-    return this.http.post(`${this.baseUrl}/${id}/export`, request, {
-      responseType: 'blob'
-    }).pipe(catchError(this.handleError));
+
+    return this.http
+      .post(`${this.baseUrl}/${id}/export`, request, {
+        responseType: 'blob',
+      })
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          const message = ErrorHandler.handleHttpError(error, 'Не вдалося згенерувати документ');
+          return throwError(() => new Error(message));
+        })
+      );
   }
 
   /**
@@ -198,8 +273,8 @@ export class DocumentTemplateService {
    * Скачивает файл из Blob с указанным именем
    */
   /**
-     * Создает FormData для отправки на сервер
-     */
+   * Создает FormData для отправки на сервер
+   */
   private buildFormData(dto: CreateTemplateDto): FormData {
     const formData = new FormData();
 
@@ -258,47 +333,5 @@ export class DocumentTemplateService {
     }
   }
 
-  private handleError(error: HttpErrorResponse): Observable<never> {
-    let errorMessage = 'Произошла неизвестная ошибка';
-    
-    if (error.error instanceof ErrorEvent) {
-      // Клиентская ошибка
-      errorMessage = `Ошибка: ${error.error.message}`;
-    } else {
-      // Серверная ошибка
-      switch (error.status) {
-        case 400:
-          errorMessage = 'Неверные данные запроса';
-          break;
-        case 404:
-          errorMessage = 'Шаблон не найден';
-          break;
-        case 409:
-          errorMessage = 'Конфликт данных (например, дублирование имени)';
-          break;
-        case 499:
-          errorMessage = 'Запрос отменен';
-          break;
-        case 500:
-          errorMessage = 'Внутренняя ошибка сервера';
-          break;
-        case 501:
-          errorMessage = 'Операция не поддерживается';
-          break;
-        default:
-          errorMessage = `Ошибка сервера: ${error.status}`;
-      }
-      
-      // Если есть детали ошибки в ответе
-      if (error.error?.title) {
-        errorMessage = error.error.title;
-        if (error.error.detail) {
-          errorMessage += `: ${error.error.detail}`;
-        }
-      }
-    }
-    
-    console.error('DocumentTemplateService Error:', error);
-    return throwError(() => new Error(errorMessage));
-  }
+  // Приватний метод handleError видалено: використовується загальний ErrorHandler.handleHttpError
 }

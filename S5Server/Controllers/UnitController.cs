@@ -111,7 +111,12 @@ namespace S5Server.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<UnitDto>> Get(string id, CancellationToken ct = default)
         {
-            var e = await Query().FirstOrDefaultAsync(x => x.Id == id, ct);
+            var e = await Query()
+//                .Include(t => t.Parent)
+                .Include(t => t.AssignedUnit)
+                .Include(t => t.ForceType)
+                .Include(t => t.UnitType)
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
             return e is null ? NotFound() : Ok(UnitDto.ToDto(e));
         }
 
@@ -260,7 +265,7 @@ namespace S5Server.Controllers
         }
 
         /// <summary>
-        /// Удалить дочерний дочернее подразделение
+        /// Удалить дочернее подразделение
         /// </summary>
         [HttpPost("{parentId}/remove-child/{childId}")]
         public async Task<IActionResult> RemoveChild(string parentId, string childId, CancellationToken ct = default)
@@ -275,7 +280,7 @@ namespace S5Server.Controllers
         }
 
         /// <summary>
-        /// Добавить приданный подраздел
+        /// Додати приданный підрозділ
         /// </summary>
         [HttpPost("{unitId}/add-assigned/{assignedId}")]
         public async Task<IActionResult> AddAssignedUnit(string unitId, string assignedId, CancellationToken ct = default)
@@ -292,12 +297,15 @@ namespace S5Server.Controllers
         }
 
         /// <summary>
-        /// Удалить приданный подраздел (отвязать)
+        /// Видалити приданный підрозділ (отвязать)
         /// </summary>
         [HttpPost("{unitId}/remove-assigned/{assignedId}")]
-        public async Task<IActionResult> RemoveAssignedUnit(string unitId, string assignedId, CancellationToken ct = default)
+        public async Task<IActionResult> RemoveAssignedUnit(string unitId,
+            string assignedId, CancellationToken ct = default)
         {
-            var assigned = await _set.FirstOrDefaultAsync(x => x.Id == assignedId && x.AssignedUnitId == unitId, ct);
+            var assigned = await _set
+                .FirstOrDefaultAsync(x => x.Id == assignedId &&
+                    x.AssignedUnitId == unitId, ct);
             if (assigned == null) return NotFound("Приданий підрозділ не знайдено.");
 
             assigned.AssignedUnitId = null;
@@ -338,5 +346,39 @@ namespace S5Server.Controllers
             return Ok(UnitDataSetDto.From(unit, soldiers));
         }
 
+        /// <summary>
+        /// Змінити порядковий номер сортування
+        /// </summary>
+        [HttpPost("{unitId}/moveUpDown/{toUp}")]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        public async Task<IActionResult> MoveUpDown(string unitId, bool toUp, CancellationToken ct = default)
+        {
+            var unit = await _set.AsTracking()
+                .FirstOrDefaultAsync(x => x.Id == unitId, ct);
+            if (unit == null) return NotFound("Підрозділ не знайдено.");
+
+            unit.OrderVal = toUp ? unit.OrderVal - 1 : unit.OrderVal + 1;
+            await _db.SaveChangesAsync(ct);
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Імпортувати особовий склад з зовнішнього файлу
+        /// </summary>
+        [Consumes("multipart/form-data")]
+        [RequestSizeLimit(50_000_000)]
+        [HttpPost("{unitId}/importSoldiers")]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status501NotImplemented)]
+        public async Task<IActionResult> ImportSoldiers(string unitId, [FromForm] IFormFile soldiers, CancellationToken ct = default)
+        {
+            var unit = await _set.AsTracking()
+                .FirstOrDefaultAsync(x => x.Id == unitId, ct);
+            if (unit == null) return NotFound("Підрозділ не знайдено.");
+
+            // Пока не реализовано — вернём корректный статус 501 с сообщением для клиента
+            return Problem(statusCode: 501, title: "Не реализовано", detail: "Будет реализовано позже");
+        }
     }
 }

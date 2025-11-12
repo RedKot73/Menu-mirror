@@ -405,4 +405,44 @@ export class UnitTreeComponent implements OnInit {
       }
     });
   }
+
+  moveUpDown(node: UnitTreeNode, moveUp: boolean) {
+    this.unitService.moveUpDown(node.id, moveUp).subscribe(() => {
+      // Локальное обновление дерева
+      // Если узел корневой (нет parentId или он равен NULL_GUID) — перезагружаем корень
+      if (!node.parentId || node.parentId === NULL_GUID) {
+        this.loadRootData();
+        return;
+      }
+
+      // Иначе обновляем детей его родителя
+      this.findAndProcessNodeById(node.parentId, (parentNode) => {
+        parentNode.isLoaded = false; // Сбрасываем флаг загрузки
+        this.loadChildren(parentNode).then(() => {
+          this.expansionModel.select(parentNode.id); // Разворачиваем
+        });
+        return true;
+      });
+    });
+  }
+
+  importSoldiers(node: UnitTreeNode) {
+    // Открываем диалог выбора файла и отправляем его на сервер
+    const input = document.createElement('input');
+    input.type = 'file';
+    // Форматы можно скорректировать под бэкенд: .xlsx,.csv и т.д.
+    input.accept = '.csv,text/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) {
+        return;
+      }
+      this.unitService.importSoldiers(node.id, file).subscribe(() => {
+        // Импорт личного состава не меняет структуру дерева, поэтому дерево не перезагружаем
+        // При необходимости можно уведомить пользователя через snackbar
+        // this.snackBar.open('Особовий склад імпортовано', 'OK', { duration: 3000 });
+      });
+    };
+    input.click();
+  }
 }

@@ -32,23 +32,59 @@
               [matMenuTriggerFor]="nodeMenu"
               matTooltip="Дії з підрозділом"
               (click)="$event.stopPropagation()"
+              #menuTrigger="matMenuTrigger"
             >
+              <!--#menuTrigger="matMenuTrigger" нужен ниже
+            для закрытия меню перед выполнением команды-->
               <mat-icon>more_vert</mat-icon>
             </button>
 
             <mat-menu #nodeMenu="matMenu">
-              <button mat-menu-item (click)="addChild(node); $event.stopPropagation()">
+              <button
+                mat-menu-item
+                matTooltip="Додати дочірній підрозділ"
+                (click)="menuTrigger.closeMenu(); addChild(node)"
+              >
                 <mat-icon color="primary">add</mat-icon>
                 <span>Додати дочірній підрозділ</span>
               </button>
-              <button mat-menu-item (click)="edit(node); $event.stopPropagation()">
+              <button
+                mat-menu-item
+                matTooltip="Редагувати підрозділ"
+                (click)="menuTrigger.closeMenu(); edit(node)"
+              >
                 <mat-icon color="accent">edit</mat-icon>
                 <span>Редагувати</span>
+              </button>
+              <button
+                mat-menu-item
+                matTooltip="Перемістити вище"
+                (click)="menuTrigger.closeMenu(); moveUpDown(node, true)"
+              >
+                <mat-icon color="primary">arrow_upward</mat-icon>
+                <span>Вище</span>
+              </button>
+              <button
+                mat-menu-item
+                matTooltip="Перемістити нижче"
+                (click)="menuTrigger.closeMenu(); moveUpDown(node, false)"
+              >
+                <mat-icon color="primary">arrow_downward</mat-icon>
+                <span>Нижче</span>
+              </button>
+              <button
+                mat-menu-item
+                matTooltip="Імпортувати особовий склад"
+                (click)="menuTrigger.closeMenu(); importSoldiers(node)"
+              >
+                <mat-icon color="primary">upload_file</mat-icon>
+                <span>Імпорт ОС</span>
               </button>
               <mat-divider></mat-divider>
               <button
                 mat-menu-item
-                (click)="delete(node); $event.stopPropagation()"
+                matTooltip="Видалити підрозділ"
+                (click)="menuTrigger.closeMenu(); delete(node)"
                 [disabled]="node.hasChildren"
                 class="delete-action"
               >
