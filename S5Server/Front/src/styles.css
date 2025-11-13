@@ -1,5 +1,11 @@
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+html, body { 
+  height: 100%; 
+}
+body { 
+  margin: 0; 
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  overflow: hidden; /* Вимикаємо глобальний скрол, кожна сторінка керує своїм */
+}
 
 /* ==================== Общие стили для меню действий ==================== */
 /* Стиль для опасных действий (удаление) в меню */

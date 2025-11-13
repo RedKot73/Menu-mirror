@@ -42,11 +42,6 @@
     <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="10.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="10.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.0.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="17.14.28" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.14.28" />

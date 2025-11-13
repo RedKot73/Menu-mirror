@@ -9,11 +9,13 @@ import { MatMenuModule } from '@angular/material/menu';
   template: `
     <mat-toolbar class="sidenav-container">
       <button matButton [matMenuTriggerFor]="dictionaries">Довідники</button>
-      
+
       <button matButton routerLink="/test" routerLinkActive="active-link">Дані документа</button>
-      
-      <button matButton routerLink="/templates" routerLinkActive="active-link">Шаблони документів</button>
-      
+
+      <button matButton routerLink="/templates" routerLinkActive="active-link">
+        Шаблони документів
+      </button>
+
       <button matButton routerLink="/units" routerLinkActive="active-link">Підрозділи</button>
       <button matButton routerLink="/orders" routerLinkActive="active-link">Розпорядження</button>
       <button matButton routerLink="/reports" routerLinkActive="active-link">Донесення</button>
@@ -26,16 +28,34 @@ import { MatMenuModule } from '@angular/material/menu';
       </mat-menu>
 
       <mat-menu #dictDroneForces="matMenu">
-        <button mat-menu-item routerLink="/dictArea" routerLinkActive="active-menu-item">Напрямок ЛБЗ</button>
-        <button mat-menu-item routerLink="/dictTemplateCategories" routerLinkActive="active-menu-item">Категорії шаблонів документів</button>
+        <button mat-menu-item routerLink="/dictArea" routerLinkActive="active-menu-item">
+          Напрямок ЛБЗ
+        </button>
+        <button
+          mat-menu-item
+          routerLink="/dictTemplateCategories"
+          routerLinkActive="active-menu-item"
+        >
+          Категорії шаблонів документів
+        </button>
       </mat-menu>
 
       <mat-menu #dictGeneralInfo="matMenu">
-        <button mat-menu-item routerLink="/dictForcesTypes" routerLinkActive="active-menu-item">Види збройних сил</button>
-        <button mat-menu-item routerLink="/dictPosition" routerLinkActive="active-menu-item">Посади</button>
-        <button mat-menu-item routerLink="/dictSoldierStates" routerLinkActive="active-menu-item">Статуси особового складу</button>
-        <button mat-menu-item routerLink="/dictUnitTypes" routerLinkActive="active-menu-item">Типи підрозділів</button>
-        <button mat-menu-item routerLink="/dictRanks" routerLinkActive="active-menu-item">Військові звання</button>
+        <button mat-menu-item routerLink="/dictForcesTypes" routerLinkActive="active-menu-item">
+          Види збройних сил
+        </button>
+        <button mat-menu-item routerLink="/dictPosition" routerLinkActive="active-menu-item">
+          Посади
+        </button>
+        <button mat-menu-item routerLink="/dictSoldierStates" routerLinkActive="active-menu-item">
+          Статуси особового складу
+        </button>
+        <button mat-menu-item routerLink="/dictUnitTypes" routerLinkActive="active-menu-item">
+          Типи підрозділів
+        </button>
+        <button mat-menu-item routerLink="/dictRanks" routerLinkActive="active-menu-item">
+          Військові звання
+        </button>
       </mat-menu>
     </mat-toolbar>
   `,
@@ -43,6 +63,9 @@ import { MatMenuModule } from '@angular/material/menu';
     .sidenav-container {
       height: auto;/*100%;*/
       background: lightcyan;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
     }
     
     .sidenav {
@@ -90,13 +113,6 @@ import { MatMenuModule } from '@angular/material/menu';
       background-color: #bbdefb !important;
     }
    `,
-  imports: [
-    RouterLink,
-    RouterLinkActive,
-    MatToolbarModule,
-    MatButtonModule,
-    MatMenuModule,
-  ]
+  imports: [RouterLink, RouterLinkActive, MatToolbarModule, MatButtonModule, MatMenuModule],
 })
-export class NavigatorComponent {
-}
+export class NavigatorComponent {}

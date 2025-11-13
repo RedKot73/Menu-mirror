@@ -14,14 +14,14 @@
   justify-content: center;
   height: 100%;
   color: #9e9e9e;
-  
+
   mat-icon {
     font-size: 64px;
     width: 64px;
     height: 64px;
     margin-bottom: 16px;
   }
-  
+
   p {
     font-size: 16px;
     margin: 0;
@@ -41,14 +41,14 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  
+
   h3 {
     margin: 0;
     font-size: 20px;
     font-weight: 500;
     color: #333;
   }
-  
+
   .template-format {
     padding: 4px 12px;
     background-color: #e3f2fd;
@@ -92,7 +92,7 @@
   justify-content: center;
   height: 100%;
   gap: 16px;
-  
+
   p {
     color: #666;
     font-size: 14px;
@@ -107,13 +107,13 @@
   justify-content: center;
   height: 100%;
   gap: 16px;
-  
+
   mat-icon {
     font-size: 48px;
     width: 48px;
     height: 48px;
   }
-  
+
   p {
     color: #f44336;
     font-size: 14px;
@@ -139,7 +139,7 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   overflow: hidden;
-  
+
   &:focus-within {
     border-color: #1976d2;
     box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
@@ -161,7 +161,7 @@
   color: #856404;
   font-size: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  
+
   mat-icon {
     font-size: 16px;
     width: 16px;
@@ -199,12 +199,12 @@
     align-items: flex-start;
     gap: 12px;
   }
-  
+
   .editor-actions {
     width: 100%;
     justify-content: flex-end;
   }
-  
+
   .template-info {
     flex-direction: column;
     align-items: flex-start;
@@ -216,75 +216,38 @@
 .ngx-editor-container {
   flex: 1;
   width: 100%;
-  min-height: 0;
+  max-height: 600px; /* Максимальна висота замість фіксованої */
   display: flex;
   flex-direction: column;
   border: 1px solid #e0e0e0;
   border-radius: 4px;
-  overflow: hidden;
-  
+  overflow: hidden; /* Ховаємо overflow на контейнері */
+
   ::ng-deep {
     ngx-editor-menu {
-      display: block;
+      flex-shrink: 0; /* Меню не стискається */
       background-color: #f5f5f5;
       border-bottom: 1px solid #e0e0e0;
-      flex-shrink: 0;
-      
-      .NgxEditor__MenuBar {
-        padding: 8px;
-      }
     }
-    
+
     ngx-editor {
-      display: block;
       flex: 1;
-      min-height: 0;
-      overflow: hidden;
+      display: block;
+      overflow-y: auto !important; /* Скрол на самому ngx-editor */
+      overflow-x: hidden !important;
     }
-    
+
     .NgxEditor {
-      height: 100%;
-      overflow-y: auto;
-      overflow-x: hidden;
-      
-      .ProseMirror {
-        padding: 12px;
-        font-family: 'Roboto', 'Helvetica Neue', sans-serif;
-        font-size: 14px;
-        line-height: 1.6;
-        min-height: 100%;
-        outline: none;
-        
-        &:focus {
-          outline: none;
-        }
-      }
+      display: block;
+      height: auto !important;
+      overflow: visible !important; /* Прибираємо overflow з NgxEditor */
     }
-    
-    .NgxEditor__MenuItem {
-      background-color: transparent;
-      border: 1px solid transparent;
-      border-radius: 4px;
-      padding: 6px 8px;
-      margin: 2px;
-      cursor: pointer;
-      transition: all 0.2s;
-      
-      &:hover {
-        background-color: #e0e0e0;
-        border-color: #bdbdbd;
-      }
-      
-      &--Active {
-        background-color: #1976d2;
-        color: white;
-      }
-      
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
+
+    .ProseMirror {
+      padding: 12px;
+      height: auto !important;
+      min-height: 400px !important; /* Мінімальна висота для контенту */
+      max-height: none !important; /* Без обмеження максимальної висоти */
     }
   }
 }
-
