@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using DocumentFormat.OpenXml.Packaging; // добавлено для чтения xlsx
 
 using S5Server.Data;
 using S5Server.Models;
@@ -370,15 +371,51 @@ namespace S5Server.Controllers
         [RequestSizeLimit(50_000_000)]
         [HttpPost("{unitId}/importSoldiers")]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status501NotImplemented)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> ImportSoldiers(string unitId, [FromForm] IFormFile soldiers, CancellationToken ct = default)
         {
             var unit = await _set.AsTracking()
                 .FirstOrDefaultAsync(x => x.Id == unitId, ct);
             if (unit == null) return NotFound("Підрозділ не знайдено.");
 
-            // Пока не реализовано — вернём корректный статус 501 с сообщением для клиента
-            return Problem(statusCode: 501, title: "Не реализовано", detail: "Будет реализовано позже");
+            if (soldiers == null || soldiers.Length == 0)
+                return BadRequest("Файл не передан или пуст.");
+
+            var ext = Path.GetExtension(soldiers.FileName);
+            if (!string.Equals(ext, ".xlsx", StringComparison.OrdinalIgnoreCase))
+                return BadRequest("Підтримується тільки формат .xlsx.");
+
+            // Считываем файл в память
+            var sheetNames = new List<string>();
+            try
+            {
+                using var ms = new MemoryStream();
+                await soldiers.CopyToAsync(ms, ct);
+                ms.Position = 0;
+
+                using var doc = SpreadsheetDocument.Open(ms, false);
+                var wbPart = doc.WorkbookPart;
+                var sheets = wbPart?.Workbook?.Sheets;
+                if (sheets != null)
+                {
+                    foreach (var sheet in sheets.OfType<DocumentFormat.OpenXml.Spreadsheet.Sheet>())
+                    {
+                        sheetNames.Add(sheet.Name?.Value?.Trim() ?? string.Empty);
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return Problem(statusCode: 499, title: "Отмена клиентом");
+            }
+            catch (Exception ex)
+            {
+                return Problem(statusCode: 500, title: "Помилка читання файлу xlsx", detail: ex.Message);
+            }
+
+            // Возвращаем список имён листов
+            return Ok(new { unitId, sheets = sheetNames });
         }
     }
 }

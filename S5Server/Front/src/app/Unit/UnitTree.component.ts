@@ -15,6 +15,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { UnitService, UnitTreeItemDto } from './services/unit.service';
 import { UnitDialogComponent } from '../dialogs/UnitDialog';
@@ -39,6 +40,7 @@ import { NULL_GUID } from './unit.constants';
 export class UnitTreeComponent implements OnInit {
   private unitService = inject(UnitService);
   private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
 
   // Content Projection: кастомный шаблон для действий узла
   @ContentChild('nodeActions') nodeActionsTemplate?: TemplateRef<{ $implicit: UnitTreeNode }>;
@@ -426,21 +428,26 @@ export class UnitTreeComponent implements OnInit {
     });
   }
 
+  // interface ImportResult {}
+
   importSoldiers(node: UnitTreeNode) {
     // Открываем диалог выбора файла и отправляем его на сервер
     const input = document.createElement('input');
     input.type = 'file';
     // Форматы можно скорректировать под бэкенд: .xlsx,.csv и т.д.
-    input.accept = '.csv,text/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    input.accept =
+      '.csv,text/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
     input.onchange = () => {
       const file = input.files?.[0];
       if (!file) {
         return;
       }
-      this.unitService.importSoldiers(node.id, file).subscribe(() => {
+      this.unitService.importSoldiers(node.id, file).subscribe((result) => {
         // Импорт личного состава не меняет структуру дерева, поэтому дерево не перезагружаем
-        // При необходимости можно уведомить пользователя через snackbar
-        // this.snackBar.open('Особовий склад імпортовано', 'OK', { duration: 3000 });
+        const sheets = result.sheets.join(', ');
+        this.snackBar.open(`Особовий склад імпортовано. Аркуші: ${sheets}`, 'OK', {
+          duration: 5000,
+        });
       });
     };
     input.click();

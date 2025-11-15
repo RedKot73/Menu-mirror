@@ -39,7 +39,6 @@ export interface UnitCreateDto {
   comment?: string;
 }
 
-// DTO для набора данных підрозділу з особовим складом
 export interface UnitDataSetDto {
   id: string;
   parentId?: string;
@@ -50,6 +49,11 @@ export interface UnitDataSetDto {
   unitType?: string;
   comment?: string;
   soldiers: SoldierDto[];
+}
+
+export interface ImportSoldiersResult {
+  unitId: string;
+  sheets: string[];
 }
 
 export type HttpGetParams = Record<string, string | number | boolean>;
@@ -286,11 +290,11 @@ export class UnitService {
       );
   }
 
-  importSoldiers(id: string, file: File): Observable<void> {
+  importSoldiers(id: string, file: File): Observable<ImportSoldiersResult> {
     // POST /api/Unit/{unitId}/importSoldiers with multipart/form-data (soldiers: IFormFile)
     const form = new FormData();
     form.append('soldiers', file);
-    return this.http.post<void>(`${this.api}/${id}/importSoldiers`, form).pipe(
+    return this.http.post<ImportSoldiersResult>(`${this.api}/${id}/importSoldiers`, form).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = ErrorHandler.handleHttpError(
           error,
