@@ -22,6 +22,7 @@ import { UnitDialogComponent } from '../dialogs/UnitDialog';
 import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
 import { UnitTreeNodeComponent, UnitTreeNode } from './unit-tree-node.component';
 import { NULL_GUID } from './unit.constants';
+import { ErrorHandler } from '../shared/models/ErrorHandler';
 
 @Component({
   selector: 'unit-tree',
@@ -84,6 +85,11 @@ export class UnitTreeComponent implements OnInit {
       }
     } catch (error) {
       console.error('Помилка завантаження кореневих даних:', error);
+      const errorMessage = ErrorHandler.handleHttpError(
+        error,
+        'Помилка завантаження кореневих даних'
+      );
+      this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
     } finally {
       this.loading.set(false);
     }
@@ -134,6 +140,11 @@ export class UnitTreeComponent implements OnInit {
       }
     } catch (error) {
       console.error('Помилка завантаження дочірніх елементів:', error);
+      const errorMessage = ErrorHandler.handleHttpError(
+        error,
+        'Помилка завантаження дочірніх елементів'
+      );
+      this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
     } finally {
       parentNode.isLoading = false;
     }
@@ -282,9 +293,20 @@ export class UnitTreeComponent implements OnInit {
             orderVal: result.orderVal,
             comment: result.comment,
           })
-          .subscribe(() => {
-            // Перезагружаем корневые данные для отображения нового подразделения
-            this.loadRootData();
+          .subscribe({
+            next: () => {
+              // Перезагружаем корневые данные для отображения нового подразделения
+              this.loadRootData();
+              this.snackBar.open('Підрозділ успішно створено', 'Закрити', { duration: 3000 });
+            },
+            error: (error) => {
+              console.error('Помилка створення підрозділу:', error);
+              const errorMessage = ErrorHandler.handleHttpError(
+                error,
+                'Помилка створення підрозділу'
+              );
+              this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+            },
           });
       }
     });
@@ -321,27 +343,40 @@ export class UnitTreeComponent implements OnInit {
             orderVal: result.orderVal,
             comment: result.comment,
           })
-          .subscribe(() => {
-            // Эффективное локальное обновление
-            if (parentNode.hasChildren) {
-              // Если у родителя уже есть загруженные дети, перезагружаем их
-              if (parentNode.isLoaded) {
-                parentNode.isLoaded = false; // Сбрасываем флаг загрузки
-                this.loadChildren(parentNode).then(() => {
-                  this.expansionModel.select(parentNode.id); // Разворачиваем
-                });
+          .subscribe({
+            next: () => {
+              // Эффективное локальное обновление
+              if (parentNode.hasChildren) {
+                // Если у родителя уже есть загруженные дети, перезагружаем их
+                if (parentNode.isLoaded) {
+                  parentNode.isLoaded = false; // Сбрасываем флаг загрузки
+                  this.loadChildren(parentNode).then(() => {
+                    this.expansionModel.select(parentNode.id); // Разворачиваем
+                  });
+                } else {
+                  // Если дети не загружены, просто разворачиваем - loadChildren вызовется автоматически
+                  this.expansionModel.select(parentNode.id);
+                }
               } else {
-                // Если дети не загружены, просто разворачиваем - loadChildren вызовется автоматически
+                // Родитель стал иметь детей, обновляем его статус
+                parentNode.hasChildren = true;
+                parentNode.children = [];
+                parentNode.isLoaded = false;
+                this.forceTreeUpdate();
                 this.expansionModel.select(parentNode.id);
               }
-            } else {
-              // Родитель стал иметь детей, обновляем его статус
-              parentNode.hasChildren = true;
-              parentNode.children = [];
-              parentNode.isLoaded = false;
-              this.forceTreeUpdate();
-              this.expansionModel.select(parentNode.id);
-            }
+              this.snackBar.open('Дочірній підрозділ успішно створено', 'Закрити', {
+                duration: 3000,
+              });
+            },
+            error: (error) => {
+              console.error('Помилка створення дочірнього підрозділу:', error);
+              const errorMessage = ErrorHandler.handleHttpError(
+                error,
+                'Помилка створення дочірнього підрозділу'
+              );
+              this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+            },
           });
       }
     });
@@ -356,13 +391,24 @@ export class UnitTreeComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         const unit = result as UnitTreeItemDto;
-        this.unitService.update(unit.id, unit).subscribe(() => {
-          // Эффективное локальное обновление
-          this.updateNodeById(unit.id, unit);
-          this.forceTreeUpdate();
+        this.unitService.update(unit.id, unit).subscribe({
+          next: () => {
+            // Эффективное локальное обновление
+            this.updateNodeById(unit.id, unit);
+            this.forceTreeUpdate();
 
-          // Уведомляем о том, что подразделение обновлено
-          this.unitUpdated.emit(unit);
+            // Уведомляем о том, что подразделение обновлено
+            this.unitUpdated.emit(unit);
+            this.snackBar.open('Підрозділ успішно оновлено', 'Закрити', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Помилка оновлення підрозділу:', error);
+            const errorMessage = ErrorHandler.handleHttpError(
+              error,
+              'Помилка оновлення підрозділу'
+            );
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          },
         });
       }
     });
@@ -399,32 +445,53 @@ export class UnitTreeComponent implements OnInit {
 
     ref.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
-        this.unitService.delete(node.id).subscribe(() => {
-          // Эффективное локальное удаление
-          this.removeNodeById(node.id, this.dataSource.data);
-          this.forceTreeUpdate();
+        this.unitService.delete(node.id).subscribe({
+          next: () => {
+            // Эффективное локальное удаление
+            this.removeNodeById(node.id, this.dataSource.data);
+            this.forceTreeUpdate();
+            this.snackBar.open('Підрозділ успішно видалено', 'Закрити', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Помилка видалення підрозділу:', error);
+            const errorMessage = ErrorHandler.handleHttpError(
+              error,
+              'Помилка видалення підрозділу'
+            );
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          },
         });
       }
     });
   }
 
   moveUpDown(node: UnitTreeNode, moveUp: boolean) {
-    this.unitService.moveUpDown(node.id, moveUp).subscribe(() => {
-      // Локальное обновление дерева
-      // Если узел корневой (нет parentId или он равен NULL_GUID) — перезагружаем корень
-      if (!node.parentId || node.parentId === NULL_GUID) {
-        this.loadRootData();
-        return;
-      }
+    this.unitService.moveUpDown(node.id, moveUp).subscribe({
+      next: () => {
+        // Локальное обновление дерева
+        // Если узел корневой (нет parentId или он равен NULL_GUID) — перезагружаем корень
+        if (!node.parentId || node.parentId === NULL_GUID) {
+          this.loadRootData();
+          return;
+        }
 
-      // Иначе обновляем детей его родителя
-      this.findAndProcessNodeById(node.parentId, (parentNode) => {
-        parentNode.isLoaded = false; // Сбрасываем флаг загрузки
-        this.loadChildren(parentNode).then(() => {
-          this.expansionModel.select(parentNode.id); // Разворачиваем
+        // Иначе обновляем детей его родителя
+        this.findAndProcessNodeById(node.parentId, (parentNode) => {
+          parentNode.isLoaded = false; // Сбрасываем флаг загрузки
+          this.loadChildren(parentNode).then(() => {
+            this.expansionModel.select(parentNode.id); // Разворачиваем
+          });
+          return true;
         });
-        return true;
-      });
+        this.snackBar.open(`Підрозділ успішно переміщено ${moveUp ? 'вгору' : 'вниз'}`, 'Закрити', {
+          duration: 3000,
+        });
+      },
+      error: (error) => {
+        console.error('Помилка переміщення підрозділу:', error);
+        const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка переміщення підрозділу');
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      },
     });
   }
 
@@ -442,12 +509,22 @@ export class UnitTreeComponent implements OnInit {
       if (!file) {
         return;
       }
-      this.unitService.importSoldiers(node.id, file).subscribe((result) => {
-        // Импорт личного состава не меняет структуру дерева, поэтому дерево не перезагружаем
-        const sheets = result.sheets.join(', ');
-        this.snackBar.open(`Особовий склад імпортовано. Аркуші: ${sheets}`, 'OK', {
-          duration: 5000,
-        });
+      this.unitService.importSoldiers(node.id, file).subscribe({
+        next: (result) => {
+          // Импорт личного состава не меняет структуру дерева, поэтому дерево не перезагружаем
+          const sheets = result.sheets.join(', ');
+          this.snackBar.open(`Особовий склад імпортовано. Аркуші: ${sheets}`, 'OK', {
+            duration: 5000,
+          });
+        },
+        error: (error) => {
+          console.error('Помилка імпорту особового складу:', error);
+          const errorMessage = ErrorHandler.handleHttpError(
+            error,
+            'Помилка імпорту особового складу'
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
       });
     };
     input.click();
