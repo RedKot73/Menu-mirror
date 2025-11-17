@@ -5,6 +5,7 @@ using DocumentFormat.OpenXml.Packaging; // добавлено для чтени�
 using S5Server.Data;
 using S5Server.Models;
 using S5Server.Utils;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace S5Server.Controllers
 {
@@ -380,7 +381,7 @@ namespace S5Server.Controllers
             if (unit == null) return NotFound("Підрозділ не знайдено.");
 
             if (soldiers == null || soldiers.Length == 0)
-                return BadRequest("Файл не передан или пуст.");
+                return BadRequest("Файл відсутній або порожній.");
 
             var ext = Path.GetExtension(soldiers.FileName);
             if (!string.Equals(ext, ".xlsx", StringComparison.OrdinalIgnoreCase))
@@ -390,20 +391,8 @@ namespace S5Server.Controllers
             var sheetNames = new List<string>();
             try
             {
-                using var ms = new MemoryStream();
-                await soldiers.CopyToAsync(ms, ct);
-                ms.Position = 0;
-
-                using var doc = SpreadsheetDocument.Open(ms, false);
-                var wbPart = doc.WorkbookPart;
-                var sheets = wbPart?.Workbook?.Sheets;
-                if (sheets != null)
-                {
-                    foreach (var sheet in sheets.OfType<DocumentFormat.OpenXml.Spreadsheet.Sheet>())
-                    {
-                        sheetNames.Add(sheet.Name?.Value?.Trim() ?? string.Empty);
-                    }
-                }
+                var res = await Services.ImportSoldiers.DoImportSoldiers(unit, soldiers, ct);
+                return Ok(res);
             }
             catch (OperationCanceledException)
             {
@@ -413,9 +402,6 @@ namespace S5Server.Controllers
             {
                 return Problem(statusCode: 500, title: "Помилка читання файлу xlsx", detail: ex.Message);
             }
-
-            // Возвращаем список имён листов
-            return Ok(new { unitId, sheets = sheetNames });
         }
     }
 }
