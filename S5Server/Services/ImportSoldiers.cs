@@ -49,12 +49,6 @@ namespace S5Server.Services
                 if (IsRunning)
                     return (false, null, "Імпорт вже виконується");
 
-                /*using*/ 
-                /*
-                var ms = new MemoryStream();
-                file.CopyTo(ms);
-                ms.Position = 0;
-                */
                 _current = new ImportJob
                 {
                     UnitId = unit.Id,
@@ -67,7 +61,7 @@ namespace S5Server.Services
             }
         }
 
-        private static async Task ExecuteAsync(Unit unit, /*MemoryStream soldiers*/IFormFile soldiers, CancellationToken ct)
+        private static async Task ExecuteAsync(Unit unit, IFormFile soldiers, CancellationToken ct)
         {
             ArgumentNullException.ThrowIfNull(_current, "Внутрішня помилка серверу - завдання не знайдено");
             try
@@ -93,7 +87,7 @@ namespace S5Server.Services
             }
         }
 
-        public static async Task<List<ImportUnit>> DoImportSoldiers(Unit unit, /*MemoryStream soldiers*/IFormFile soldiers, CancellationToken ct = default)
+        public static async Task<List<ImportUnit>> DoImportSoldiers(Unit unit, IFormFile soldiers, CancellationToken ct = default)
         {
             using var ms = new MemoryStream();
             soldiers.CopyTo(ms);
@@ -178,14 +172,14 @@ namespace S5Server.Services
             return res;
         }
 
-        private static Cell? GetCell(Row row, string columnName) => row.Elements<Cell>()
-            .FirstOrDefault(c =>
-            {
-                var r = c.CellReference?.Value;
-                if (string.IsNullOrEmpty(r)) return false;
-                var col = new string(r.Where(char.IsLetter).ToArray());
-                return string.Equals(col, columnName, StringComparison.OrdinalIgnoreCase);
-            });
+        private static Cell? GetCell(Row row, string col)
+        {
+            var idx = row.RowIndex?.Value;
+            if (idx is null) return null;
+            return row.Elements<Cell>()
+                .FirstOrDefault(c => string.Equals(c.CellReference?.Value,
+                $"{col}{idx}", StringComparison.OrdinalIgnoreCase));
+        }
 
         private static string GetCellValue(SpreadsheetDocument doc, Cell? cell)
         {
