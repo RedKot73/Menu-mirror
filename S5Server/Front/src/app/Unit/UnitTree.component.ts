@@ -495,35 +495,65 @@ export class UnitTreeComponent implements OnInit {
     });
   }
 
-  // interface ImportResult {}
-
   importSoldiers(node: UnitTreeNode) {
     // Открываем диалог выбора файла и отправляем его на сервер
     const input = document.createElement('input');
     input.type = 'file';
-    // Форматы можно скорректировать под бэкенд: .xlsx,.csv и т.д.
-    input.accept =
-      '.csv,text/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    input.accept = '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
     input.onchange = () => {
       const file = input.files?.[0];
       if (!file) {
         return;
       }
+
+      // Показываем уведомление о начале импорта
+      const loadingSnackBar = this.snackBar.open('Імпорт розпочато...', undefined, {
+        duration: undefined, // Не закрывается автоматически
+      });
+
       this.unitService.importSoldiers(node.id, file).subscribe({
-        next: (result) => {
-          // Импорт личного состава не меняет структуру дерева, поэтому дерево не перезагружаем
-          const sheets = result.sheets.join(', ');
-          this.snackBar.open(`Особовий склад імпортовано. Аркуші: ${sheets}`, 'OK', {
-            duration: 5000,
-          });
+        next: (response) => {
+          loadingSnackBar.dismiss();
+
+          // Проверяем статус ответа
+          if (response.status === 'Running') {
+            this.snackBar.open(
+              'Імпорт запущено у фоновому режимі. Це може зайняти деякий час.',
+              'OK',
+              { duration: 5000 }
+            );
+          } else if (response.status === 'Succeeded' && response.result) {
+            // Если сервер сразу вернул результат (синхронная обработка)
+            const unitNames = response.result.map((u) => u.unitName).join(', ');
+            this.snackBar.open(`Особовий склад імпортовано. Аркуші: ${unitNames}`, 'OK', {
+              duration: 5000,
+            });
+          } else if (response.status === 'Failed') {
+            this.snackBar.open(
+              `Помилка імпорту: ${response.error || 'Невідома помилка'}`,
+              'Закрити',
+              { duration: 7000 }
+            );
+          }
         },
         error: (error) => {
+          loadingSnackBar.dismiss();
           console.error('Помилка імпорту особового складу:', error);
-          const errorMessage = ErrorHandler.handleHttpError(
-            error,
-            'Помилка імпорту особового складу'
-          );
-          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+
+          // Обработка специального статуса 423 Locked
+          if (error.status === 423) {
+            this.snackBar.open(
+              'Імпорт вже виконується. Зачекайте завершення поточної операції.',
+              'Закрити',
+              { duration: 5000 }
+            );
+          } else {
+            const errorMessage = ErrorHandler.handleHttpError(
+              error,
+              'Помилка імпорту особового складу'
+            );
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          }
         },
       });
     };

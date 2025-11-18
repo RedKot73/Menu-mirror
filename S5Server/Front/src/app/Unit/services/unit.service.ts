@@ -51,9 +51,36 @@ export interface UnitDataSetDto {
   soldiers: SoldierDto[];
 }
 
-export interface ImportSoldiersResult {
-  unitId: string;
-  sheets: string[];
+export interface ImportedSoldier {
+  firstName: string;
+  midleName?: string;
+  lastName?: string;
+  externalId: number;
+  rank: string;
+  birthDate: string;
+  position: string;
+  arrivedAt?: string;
+  departedAt?: string;
+}
+
+export interface ImportUnit {
+  unitName: string;
+  importedSoldiers: ImportedSoldier[];
+}
+
+export enum ImportJobStatus {
+  NotActive = 'NotActive',
+  Running = 'Running',
+  Succeeded = 'Succeeded',
+  Failed = 'Failed',
+}
+
+export interface ImportJobResponse {
+  status: ImportJobStatus;
+  startedAtUtc: string;
+  finishedAtUtc?: string;
+  error?: string;
+  result?: ImportUnit[];
 }
 
 export type HttpGetParams = Record<string, string | number | boolean>;
@@ -290,16 +317,24 @@ export class UnitService {
       );
   }
 
-  importSoldiers(id: string, file: File): Observable<ImportSoldiersResult> {
-    // POST /api/Unit/{unitId}/importSoldiers with multipart/form-data (soldiers: IFormFile)
+  importSoldiers(id: string, file: File): Observable<ImportJobResponse> {
     const form = new FormData();
     form.append('soldiers', file);
-    return this.http.post<ImportSoldiersResult>(`${this.api}/${id}/importSoldiers`, form).pipe(
+    return this.http.post<ImportJobResponse>(`${this.api}/${id}/importSoldiers`, form).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = ErrorHandler.handleHttpError(
           error,
           'Не вдалося імпортувати особовий склад'
         );
+        return throwError(() => new Error(message));
+      })
+    );
+  }
+
+  getImportStatus(): Observable<ImportJobResponse> {
+    return this.http.get<ImportJobResponse>(`${this.api}/imports/`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = ErrorHandler.handleHttpError(error, 'Не вдалося отримати статус імпорту');
         return throwError(() => new Error(message));
       })
     );

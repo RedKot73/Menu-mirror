@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using DocumentFormat.OpenXml.Packaging; // добавлено для чтения xlsx
 
 using S5Server.Data;
 using S5Server.Models;
 using S5Server.Utils;
-using DocumentFormat.OpenXml.Spreadsheet;
+using S5Server.Services;
 
 namespace S5Server.Controllers
 {
@@ -27,7 +26,7 @@ namespace S5Server.Controllers
         /// <summary>
         /// Получить список всех подразделений с возможностью фильтрации по названию и родителю.
         /// </summary>
-        /// <param name="search">Строка поиска по названию или краткому названию подразделения.</param>
+        /// <param name="search">Строка поиска по названию или короткому названию подразделения.</param>
         /// <param name="parentId">Идентификатор родительского подразделения для фильтрации.
         /// if null - подразделения верхнего уровня (без родительского)</param>
         /// if EmptyString - все подразделения, без учета parentId
@@ -373,6 +372,7 @@ namespace S5Server.Controllers
         [HttpPost("{unitId}/importSoldiers")]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status423Locked)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> ImportSoldiers(string unitId, [FromForm] IFormFile soldiers, CancellationToken ct = default)
         {
@@ -387,12 +387,24 @@ namespace S5Server.Controllers
             if (!string.Equals(ext, ".xlsx", StringComparison.OrdinalIgnoreCase))
                 return BadRequest("Підтримується тільки формат .xlsx.");
 
-            // Считываем файл в память
-            var sheetNames = new List<string>();
             try
             {
+                (bool started, ImportJob? job, string? error) = Services.ImportSoldiers.TryStartBackground(unit, soldiers, ct);
+                if (!started) return Problem(statusCode: 423, title: error ?? "Імпорт заблоковано");
+                if (job is null) return BadRequest("Помилка запуску фонової задачі імпорту ОС");
+                return Accepted(new
+                {
+                    job.Status,
+                    job.StartedAtUtc,
+                    job.FinishedAtUtc,
+                    job.Error,
+                    job.Result
+                });
+
+/*
                 var res = await Services.ImportSoldiers.DoImportSoldiers(unit, soldiers, ct);
                 return Ok(res);
+*/
             }
             catch (OperationCanceledException)
             {
@@ -402,6 +414,27 @@ namespace S5Server.Controllers
             {
                 return Problem(statusCode: 500, title: "Помилка читання файлу xlsx", detail: ex.Message);
             }
+        }
+
+        /// <summary>
+        /// <summary>
+        /// Статус фонового импорта
+        /// </summary>
+        [HttpGet("imports/")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GetImportStatus()
+        {
+            var job = Services.ImportSoldiers.Current;
+            if (job is null) return NotFound();
+            return Ok(new
+            {
+                job.Status,
+                job.StartedAtUtc,
+                job.FinishedAtUtc,
+                job.Error,
+                job.Result
+            });
         }
     }
 }
