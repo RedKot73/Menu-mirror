@@ -506,29 +506,71 @@ export class UnitTreeComponent implements OnInit {
         return;
       }
 
-      // Показываем уведомление о начале импорта
-      const loadingSnackBar = this.snackBar.open('Імпорт розпочато...', undefined, {
-        duration: undefined, // Не закрывается автоматически
+      // Підписуємось на SSE для відстеження прогресу
+      const progressSubscription = this.unitService.subscribeToImportProgress().subscribe({
+        next: (progress) => {
+          if (progress.message === 'start') {
+            this.snackBar.open('Імпорт розпочато...', undefined, { duration: undefined });
+          } else if (progress.message === 'sheet-start') {
+            this.snackBar.open(`Обробка аркушу: ${progress.sheet}...`, undefined, {
+              duration: undefined,
+            });
+          } else if (progress.sheet /*&& progress.total > 0*/) {
+            //const percent = Math.round((progress.processed / progress.total) * 100);
+            this.snackBar.open(
+              //`Аркуш "${progress.sheet}": ${progress.processed}/${progress.total} (${percent}%)`,
+              `Аркуш "${progress.sheet}": ${progress.processed}`,
+              undefined,
+              { duration: undefined }
+            );
+          } else if (progress.message === 'done') {
+            this.snackBar.dismiss();
+            // Перевіряємо фінальний результат
+            /*
+            this.unitService.getImportStatus().subscribe({
+              next: (status) => {
+                if (status.result) {
+                  const unitNames = status.result.map((u) => u.unitName).join(', ');
+                  this.snackBar.open(`Особовий склад імпортовано. Аркуші: ${unitNames}`, 'OK', {
+                    duration: 5000,
+                  });
+                }
+              },
+            });
+            */
+            progressSubscription.unsubscribe();
+          } else if (progress.message === 'failed') {
+            this.snackBar.dismiss();
+            this.snackBar.open('Помилка імпорту', 'Закрити', { duration: 5000 });
+            progressSubscription.unsubscribe();
+          }
+        },
+        error: (error) => {
+          console.error('SSE connection error:', error);
+          this.snackBar.dismiss();
+          this.snackBar.open("Втрачено з'єднання з сервером", 'Закрити', { duration: 5000 });
+        },
       });
 
+      // Запускаємо імпорт
       this.unitService.importSoldiers(node.id, file).subscribe({
         next: (response) => {
-          loadingSnackBar.dismiss();
-
-          // Проверяем статус ответа
+          // Якщо SSE не працює, обробляємо відповідь стандартно
           if (response.status === 'Running') {
             this.snackBar.open(
-              'Імпорт запущено у фоновому режимі. Це може зайняти деякий час.',
-              'OK',
-              { duration: 5000 }
+              'Імпорт запущено у фоновому режимі. Відстежуємо прогрес...',
+              undefined,
+              { duration: 3000 }
             );
           } else if (response.status === 'Succeeded' && response.result) {
-            // Если сервер сразу вернул результат (синхронная обработка)
+            // Синхронна обробка (малий файл)
+            progressSubscription.unsubscribe();
             const unitNames = response.result.map((u) => u.unitName).join(', ');
             this.snackBar.open(`Особовий склад імпортовано. Аркуші: ${unitNames}`, 'OK', {
               duration: 5000,
             });
           } else if (response.status === 'Failed') {
+            progressSubscription.unsubscribe();
             this.snackBar.open(
               `Помилка імпорту: ${response.error || 'Невідома помилка'}`,
               'Закрити',
@@ -537,7 +579,8 @@ export class UnitTreeComponent implements OnInit {
           }
         },
         error: (error) => {
-          loadingSnackBar.dismiss();
+          progressSubscription.unsubscribe();
+          this.snackBar.dismiss();
           console.error('Помилка імпорту особового складу:', error);
 
           // Обработка специального статуса 423 Locked

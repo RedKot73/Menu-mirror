@@ -83,6 +83,13 @@ export interface ImportJobResponse {
   result?: ImportUnit[];
 }
 
+export interface ImportProgress {
+  sheet?: string;
+  processed: number;
+  //total: number;
+  message?: string;
+}
+
 export type HttpGetParams = Record<string, string | number | boolean>;
 
 @Injectable({
@@ -332,11 +339,41 @@ export class UnitService {
   }
 
   getImportStatus(): Observable<ImportJobResponse> {
-    return this.http.get<ImportJobResponse>(`${this.api}/imports/`).pipe(
+    return this.http.get<ImportJobResponse>(`${this.api}/imports`).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = ErrorHandler.handleHttpError(error, 'Не вдалося отримати статус імпорту');
         return throwError(() => new Error(message));
       })
     );
+  }
+
+  /**
+   * Підписка на Server-Sent Events для моніторингу прогресу імпорту
+   * @returns Observable з подіями прогресу
+   */
+  subscribeToImportProgress(): Observable<ImportProgress> {
+    return new Observable<ImportProgress>((observer) => {
+      const eventSource = new EventSource(`${this.api}/imports/stream`);
+
+      eventSource.onmessage = (event) => {
+        try {
+          const progress: ImportProgress = JSON.parse(event.data);
+          observer.next(progress);
+        } catch (error) {
+          console.error('Помилка парсингу SSE події:', error);
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        console.error('SSE connection error:', error);
+        eventSource.close();
+        observer.error(error);
+      };
+
+      // Cleanup при відписці
+      return () => {
+        eventSource.close();
+      };
+    });
   }
 }

@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Collections.Generic;
+using System.Globalization;
 
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
@@ -25,22 +26,46 @@ namespace S5Server.Services
     );
 
     public enum ImportJobStatus { NotActive, Running, Succeeded, Failed }
-    public class ImportJob
+    public record ImportJob
     {
-        public string UnitId { get; init; } = string.Empty;
+        public string UnitId { get; set; } = string.Empty;
         public ImportJobStatus Status { get; set; } = ImportJobStatus.NotActive;
         public DateTime StartedAtUtc { get; set; } = DateTime.UtcNow;
         public DateTime? FinishedAtUtc { get; set; }
         public string? Error { get; set; }
-        public List<ImportUnit>? Result { get; set; }
+        //public List<ImportUnit>? Result { get; set; }
     }
 
-    public class ImportSoldiers
+    public record ImportProgress(string? Sheet, int Processed, /*int Total,*/ string? Message);
+
+    public static class ImportSoldiers
     {
         private static readonly Lock _sync = new();
-        private static ImportJob? _current;
-        public static ImportJob? Current => _current;
+        private static readonly ImportJob _current = new();
+        public static ImportJob Current => _current;
         public static bool IsRunning => _current is not null && _current.Status == ImportJobStatus.Running;
+
+        // Потокобезопасное хранение последнего результата
+        private static readonly Lock _resultLock = new();
+        private static readonly List<ImportUnit> _Result = [];
+        public static List<ImportUnit> GetLastResult()
+        {
+            lock (_resultLock)
+            {
+                var v = _Result.Select(t => new ImportUnit(t.UnitName, [.. t.ImportedSoldiers])).ToList();
+                return v;
+            }
+        }
+
+        public static event Action<ImportProgress>? Progress;
+        private static void Report(ImportProgress p)
+        {
+            var eventHandler = Progress;
+            if (eventHandler != null)
+            {
+                try { eventHandler(p); } catch { /* ignore listener errors */ }
+            }
+        }
 
         public static (bool started, ImportJob? job, string? error) TryStartBackground(Unit unit, IFormFile file, CancellationToken ct = default)
         {
@@ -49,14 +74,13 @@ namespace S5Server.Services
                 if (IsRunning)
                     return (false, null, "Імпорт вже виконується");
 
-                _current = new ImportJob
-                {
-                    UnitId = unit.Id,
-                    Status = ImportJobStatus.Running,
-                    StartedAtUtc = DateTime.UtcNow
-                };
-                // Запускаем в фоне простым Task.Run
-                _ = Task.Run(() => ExecuteAsync(unit, /*ms*/file, ct), ct);
+                _current.UnitId = unit.Id;
+                _current.Status = ImportJobStatus.Running;
+                _current.StartedAtUtc = DateTime.UtcNow;
+                _current.FinishedAtUtc = null;
+                _current.Error = string.Empty;
+                Report(new ImportProgress(null, 0, /*0,*/ "start"));
+                _ = Task.Run(() => ExecuteAsync(unit, file, ct), ct);
                 return (true, Current, null);
             }
         }
@@ -66,9 +90,13 @@ namespace S5Server.Services
             ArgumentNullException.ThrowIfNull(_current, "Внутрішня помилка серверу - завдання не знайдено");
             try
             {
-                _current.Result = await DoImportSoldiers(unit, soldiers, ct);
-                _current.Status = ImportJobStatus.Succeeded;
-                _current.FinishedAtUtc = DateTime.UtcNow;
+                await DoImportSoldiers(unit, soldiers, ct);
+                lock (_sync)
+                {
+                    _current.Status = ImportJobStatus.Succeeded;
+                    _current.FinishedAtUtc = DateTime.UtcNow;
+                    Report(new ImportProgress(null, 0, /*0,*/ "done"));
+                }
             }
             catch (Exception ex)
             {
@@ -77,18 +105,21 @@ namespace S5Server.Services
                 _current.Status = ImportJobStatus.Failed;
                 _current.Error = ex.Message;
                 _current.FinishedAtUtc = DateTime.UtcNow;
+                Report(new ImportProgress(null, 0, /*0,*/ "failed"));
             }
             finally
             {
                 lock (_sync)
                 {
-                    _current = null;
+                    _current.Status = ImportJobStatus.NotActive;
                 }
             }
         }
 
-        public static async Task<List<ImportUnit>> DoImportSoldiers(Unit unit, IFormFile soldiers, CancellationToken ct = default)
+        public static async Task/*<List<ImportUnit>>*/ DoImportSoldiers(Unit unit, IFormFile soldiers, CancellationToken ct = default)
         {
+            ArgumentNullException.ThrowIfNull(_current, "Внутрішня помилка серверу - завдання не знайдено");
+
             using var ms = new MemoryStream();
             soldiers.CopyTo(ms);
             ms.Position = 0;
@@ -97,21 +128,30 @@ namespace S5Server.Services
             var wbPart = doc.WorkbookPart;
             var sheets = wbPart?.Workbook?.Sheets;
             if (sheets == null)
-                return [];
+                return;// [];
 
-            var res = new List<ImportUnit>();
+            //var res = new List<ImportUnit>();
             foreach (var sheet in sheets.OfType<Sheet>())
             {
                 if (string.IsNullOrEmpty(sheet.Name)) continue;
 
                 var import = new ImportUnit(sheet.Name!, []);
-                res.Add(import);
+                lock (_resultLock)
+                {
+                    _Result.Add(import);
+                }
 
                 var wsPart = (WorksheetPart)wbPart!.GetPartById(sheet.Id!);
                 var sheetData = wsPart.Worksheet.GetFirstChild<SheetData>();
                 if (sheetData is null) continue;
 
-                foreach (var row in sheetData.Elements<Row>().Skip(1)) // skip header
+                var rows = sheetData.Elements<Row>().Skip(1)
+                    .Where(t => t.ChildElements.Count > 1);//.ToList();
+                //var total = rows.Count;
+                Report(new ImportProgress(sheet.Name, 0, /*total,*/ "sheet-start"));
+                var processed = 0;
+
+                foreach (var row in /*sheetData.Elements<Row>().Skip(1))*/rows)
                 {
                     var ColFio = GetCellValue(doc, GetCell(row, "A")).Trim()
                         .Replace("\n\r", " ").Replace("\n", " ")
@@ -131,7 +171,10 @@ namespace S5Server.Services
                         string.IsNullOrWhiteSpace(ColPosition) &&
                         string.IsNullOrWhiteSpace(ColArrived))
                     {
-                        continue;
+                        processed++;
+                        //Report(new ImportProgress(sheet.Name, processed, total, null));
+                        //continue;
+                        break;//после пустой строки данных нет
                     }
 
                     // Разбиваем ФИО на три поля по пробелам
@@ -166,10 +209,19 @@ namespace S5Server.Services
                         ArrivedAt: arrivedAt,
                         DepartedAt: departedAt
                     );
-                    import.ImportedSoldiers.Add(sldr);
+                    lock (_resultLock)
+                    {
+                        import.ImportedSoldiers.Add(sldr);
+                    }
+
+                    processed++;
+                    Report(new ImportProgress(sheet.Name, processed, /*total,*/ null));
+
+                    Thread.Sleep(100);
                 }
+                Report(new ImportProgress(sheet.Name, processed, /*total,*/ "sheet-done"));
             }
-            return res;
+            //return res;
         }
 
         private static Cell? GetCell(Row row, string col)

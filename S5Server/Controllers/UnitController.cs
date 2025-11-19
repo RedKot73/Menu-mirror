@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Channels; // добавлено для SSE Channel
 
 using S5Server.Data;
 using S5Server.Models;
@@ -14,6 +15,11 @@ namespace S5Server.Controllers
     {
         private readonly MainDbContext _db;
         private readonly DbSet<Unit> _set;
+        private readonly System.Text.Json.JsonSerializerOptions JSONOpt = new()
+        {
+            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+        };
+
 
         public UnitController(MainDbContext db)
         {
@@ -45,17 +51,17 @@ namespace S5Server.Controllers
                 .Include(t => t.ForceType)
                 .Include(t => t.UnitType)
                 .Where(t => t.Id != ControllerFunctions.NullGuid);//Кореневий псевдо-підрозділ не показуємо
-                //as IQueryable<Unit>
-                ;
+                                                                  //as IQueryable<Unit>
+            ;
 
             if (!string.IsNullOrWhiteSpace(search))
             {
                 q = q.Where(x => x.ShortName.Contains(search));
             }
-            
+
             if (!string.IsNullOrWhiteSpace(parentId))
                 q = q.Where(x => x.ParentId == parentId);
-            
+
             var list = await q
                 .OrderBy(x => x.OrderVal)
                 .ThenBy(x => x.ShortName)
@@ -113,7 +119,7 @@ namespace S5Server.Controllers
         public async Task<ActionResult<UnitDto>> Get(string id, CancellationToken ct = default)
         {
             var e = await Query()
-//                .Include(t => t.Parent)
+                //                .Include(t => t.Parent)
                 .Include(t => t.AssignedUnit)
                 .Include(t => t.ForceType)
                 .Include(t => t.UnitType)
@@ -398,13 +404,8 @@ namespace S5Server.Controllers
                     job.StartedAtUtc,
                     job.FinishedAtUtc,
                     job.Error,
-                    job.Result
+                    //job.Result
                 });
-
-/*
-                var res = await Services.ImportSoldiers.DoImportSoldiers(unit, soldiers, ct);
-                return Ok(res);
-*/
             }
             catch (OperationCanceledException)
             {
@@ -418,23 +419,58 @@ namespace S5Server.Controllers
 
         /// <summary>
         /// <summary>
-        /// Статус фонового импорта
+        /// Статус фонового.impорта
         /// </summary>
-        [HttpGet("imports/")]
+        [HttpGet("imports")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult GetImportStatus()
         {
             var job = Services.ImportSoldiers.Current;
-            if (job is null) return NotFound();
+            //if (job is null) return NotFound();
             return Ok(new
             {
                 job.Status,
                 job.StartedAtUtc,
                 job.FinishedAtUtc,
                 job.Error,
-                job.Result
+                Result = Services.ImportSoldiers.GetLastResult()
             });
+        }
+
+        /// <summary>
+        /// Прогресс импорта (SSE)
+        /// </summary>
+        [HttpGet("imports/stream")]
+        public async Task GetImportStream(CancellationToken ct)
+        {
+            Response.Headers.CacheControl = "no-cache";
+            Response.Headers.ContentType = "text/event-stream";
+            Response.Headers["X-Accel-Buffering"] = "no";
+
+            var channel = Channel.CreateUnbounded<string>();
+            void Handler(ImportProgress p)
+            {
+                var json = System.Text.Json.JsonSerializer.Serialize(p, JSONOpt);
+                channel.Writer.TryWrite($"data: {json}\n\n");
+            }
+            Services.ImportSoldiers.Progress += Handler;
+            try
+            {
+                await foreach (var msg in channel.Reader.ReadAllAsync(ct))
+                {
+                    await Response.WriteAsync(msg, ct);
+                    await Response.Body.FlushAsync(ct);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // client disconnected
+            }
+            finally
+            {
+                Services.ImportSoldiers.Progress -= Handler;
+            }
         }
     }
 }
