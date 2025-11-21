@@ -23,6 +23,7 @@ import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
 import { UnitTreeNodeComponent, UnitTreeNode } from './unit-tree-node.component';
 import { NULL_GUID } from './unit.constants';
 import { ErrorHandler } from '../shared/models/ErrorHandler';
+import { ImportProgressDialogComponent } from './ImportProgressDialog.component';
 
 @Component({
   selector: 'unit-tree',
@@ -496,81 +497,27 @@ export class UnitTreeComponent implements OnInit {
   }
 
   importSoldiers(node: UnitTreeNode) {
-    // Открываем диалог выбора файла и отправляем его на сервер
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
     input.onchange = () => {
       const file = input.files?.[0];
       if (!file) {
         return;
       }
 
-      // Підписуємось на SSE для відстеження прогресу
-      const progressSubscription = this.unitService.subscribeToImportProgress().subscribe({
-        next: (progress) => {
-          if (progress.message === 'start') {
-            this.snackBar.open('Імпорт розпочато...', undefined, { duration: undefined });
-          } else if (progress.message === 'sheet-start') {
-            this.snackBar.open(`Обробка аркушу: ${progress.sheet}...`, undefined, {
-              duration: undefined,
-            });
-          } else if (progress.sheet /*&& progress.total > 0*/) {
-            //const percent = Math.round((progress.processed / progress.total) * 100);
-            this.snackBar.open(
-              //`Аркуш "${progress.sheet}": ${progress.processed}/${progress.total} (${percent}%)`,
-              `Аркуш "${progress.sheet}": ${progress.processed}`,
-              undefined,
-              { duration: undefined }
-            );
-          } else if (progress.message === 'done') {
-            this.snackBar.dismiss();
-            // Перевіряємо фінальний результат
-            /*
-            this.unitService.getImportStatus().subscribe({
-              next: (status) => {
-                if (status.result) {
-                  const unitNames = status.result.map((u) => u.unitName).join(', ');
-                  this.snackBar.open(`Особовий склад імпортовано. Аркуші: ${unitNames}`, 'OK', {
-                    duration: 5000,
-                  });
-                }
-              },
-            });
-            */
-            progressSubscription.unsubscribe();
-          } else if (progress.message === 'failed') {
-            this.snackBar.dismiss();
-            this.snackBar.open('Помилка імпорту', 'Закрити', { duration: 5000 });
-            progressSubscription.unsubscribe();
-          }
-        },
-        error: (error) => {
-          console.error('SSE connection error:', error);
-          this.snackBar.dismiss();
-          this.snackBar.open("Втрачено з'єднання з сервером", 'Закрити', { duration: 5000 });
-        },
+      // Відкриваємо діалог з прогресом
+      const dialogRef = this.dialog.open(ImportProgressDialogComponent, {
+        width: '500px',
+        disableClose: true, // Не закривається ESC/клік поза діалогом під час обробки
       });
 
       // Запускаємо імпорт
       this.unitService.importSoldiers(node.id, file).subscribe({
         next: (response) => {
-          // Якщо SSE не працює, обробляємо відповідь стандартно
-          if (response.status === 'Running') {
-            this.snackBar.open(
-              'Імпорт запущено у фоновому режимі. Відстежуємо прогрес...',
-              undefined,
-              { duration: 3000 }
-            );
-          } else if (response.status === 'Succeeded' && response.result) {
-            // Синхронна обробка (малий файл)
-            progressSubscription.unsubscribe();
-            const unitNames = response.result.map((u) => u.unitName).join(', ');
-            this.snackBar.open(`Особовий склад імпортовано. Аркуші: ${unitNames}`, 'OK', {
-              duration: 5000,
-            });
-          } else if (response.status === 'Failed') {
-            progressSubscription.unsubscribe();
+          if (response.status === 'Failed') {
+            dialogRef.close();
             this.snackBar.open(
               `Помилка імпорту: ${response.error || 'Невідома помилка'}`,
               'Закрити',
@@ -579,11 +526,8 @@ export class UnitTreeComponent implements OnInit {
           }
         },
         error: (error) => {
-          progressSubscription.unsubscribe();
-          this.snackBar.dismiss();
-          console.error('Помилка імпорту особового складу:', error);
+          dialogRef.close();
 
-          // Обработка специального статуса 423 Locked
           if (error.status === 423) {
             this.snackBar.open(
               'Імпорт вже виконується. Зачекайте завершення поточної операції.',
@@ -600,6 +544,7 @@ export class UnitTreeComponent implements OnInit {
         },
       });
     };
+
     input.click();
   }
 }

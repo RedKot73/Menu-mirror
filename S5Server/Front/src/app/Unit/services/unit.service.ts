@@ -86,7 +86,7 @@ export interface ImportJobResponse {
 export interface ImportProgress {
   sheet?: string;
   processed: number;
-  //total: number;
+  total: number;
   message?: string;
 }
 

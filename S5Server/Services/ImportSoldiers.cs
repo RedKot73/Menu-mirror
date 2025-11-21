@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Globalization;
+﻿using System.Globalization;
 
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
@@ -36,7 +35,7 @@ namespace S5Server.Services
         //public List<ImportUnit>? Result { get; set; }
     }
 
-    public record ImportProgress(string? Sheet, int Processed, /*int Total,*/ string? Message);
+    public record ImportProgress(string? Sheet, int Processed, int Total, string? Message);
 
     public static class ImportSoldiers
     {
@@ -79,7 +78,7 @@ namespace S5Server.Services
                 _current.StartedAtUtc = DateTime.UtcNow;
                 _current.FinishedAtUtc = null;
                 _current.Error = string.Empty;
-                Report(new ImportProgress(null, 0, /*0,*/ "start"));
+                Report(new ImportProgress(null, 0, 0, "start"));
                 _ = Task.Run(() => ExecuteAsync(unit, file, ct), ct);
                 return (true, Current, null);
             }
@@ -95,7 +94,7 @@ namespace S5Server.Services
                 {
                     _current.Status = ImportJobStatus.Succeeded;
                     _current.FinishedAtUtc = DateTime.UtcNow;
-                    Report(new ImportProgress(null, 0, /*0,*/ "done"));
+                    Report(new ImportProgress(null, 0, 0, "done"));
                 }
             }
             catch (Exception ex)
@@ -105,7 +104,7 @@ namespace S5Server.Services
                 _current.Status = ImportJobStatus.Failed;
                 _current.Error = ex.Message;
                 _current.FinishedAtUtc = DateTime.UtcNow;
-                Report(new ImportProgress(null, 0, /*0,*/ "failed"));
+                Report(new ImportProgress(null, 0, 0, "failed"));
             }
             finally
             {
@@ -146,12 +145,12 @@ namespace S5Server.Services
                 if (sheetData is null) continue;
 
                 var rows = sheetData.Elements<Row>().Skip(1)
-                    .Where(t => t.ChildElements.Count > 1);//.ToList();
-                //var total = rows.Count;
-                Report(new ImportProgress(sheet.Name, 0, /*total,*/ "sheet-start"));
+                    .Where(t => t.ChildElements.Count > 1).ToList();
+                var total = rows.Count;
+                Report(new ImportProgress(sheet.Name, 0, total, "sheet-start"));
                 var processed = 0;
 
-                foreach (var row in /*sheetData.Elements<Row>().Skip(1))*/rows)
+                foreach (var row in rows)
                 {
                     var ColFio = GetCellValue(doc, GetCell(row, "A")).Trim()
                         .Replace("\n\r", " ").Replace("\n", " ")
@@ -215,11 +214,11 @@ namespace S5Server.Services
                     }
 
                     processed++;
-                    Report(new ImportProgress(sheet.Name, processed, /*total,*/ null));
+                    Report(new ImportProgress(sheet.Name, processed, total, null));
 
                     Thread.Sleep(100);
                 }
-                Report(new ImportProgress(sheet.Name, processed, /*total,*/ "sheet-done"));
+                Report(new ImportProgress(sheet.Name, processed, total, "sheet-done"));
             }
             //return res;
         }
