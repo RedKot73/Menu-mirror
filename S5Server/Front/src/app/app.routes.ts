@@ -76,6 +76,12 @@ export const routes: Routes = [
     loadComponent: () => import('../app/Unit/Unit.page').then((m) => m.UnitsComponent),
   },
   {
+    path: 'unit/import',
+    title: 'Імпорт особового складу',
+    loadComponent: () =>
+      import('../app/Unit/ImportProgress.page').then((m) => m.ImportProgressPage),
+  },
+  {
     path: 'templates',
     title: 'Шаблони документів',
     loadComponent: () =>

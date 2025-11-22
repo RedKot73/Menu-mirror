@@ -1,0 +1,143 @@
+<div class="import-progress-page">
+  <!-- Breadcrumbs / Header -->
+  <div class="page-header">
+    <button mat-icon-button (click)="goBack()" matTooltip="Назад до підрозділів">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1>
+      <mat-icon>cloud_upload</mat-icon>
+      Імпорт особового складу
+    </h1>
+  </div>
+
+  <!-- Progress Section -->
+  <mat-card class="progress-card">
+    <mat-card-content>
+      @if (currentSheet()) {
+      <div class="sheet-info"><strong>Поточний аркуш:</strong> {{ currentSheet() }}</div>
+      } @if (totalRows() > 0) {
+      <div class="progress-info">
+        <div class="progress-text">
+          Оброблено: {{ processedRows() }} з {{ totalRows() }} ({{ progressPercent() }}%)
+        </div>
+        <mat-progress-bar mode="determinate" [value]="progressPercent()"></mat-progress-bar>
+      </div>
+      } @else if (!isCompleted()) {
+      <div class="progress-info">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        <div class="progress-text">Підготовка до імпорту...</div>
+      </div>
+      } @if (message()) {
+      <div
+        class="status-message"
+        [class.error]="hasFailed()"
+        [class.success]="isCompleted() && !hasFailed()"
+      >
+        @if (isCompleted() && !hasFailed()) {
+        <mat-icon>check_circle</mat-icon>
+        } @else if (hasFailed()) {
+        <mat-icon>error</mat-icon>
+        } @else {
+        <mat-icon>info</mat-icon>
+        }
+        {{ message() }}
+      </div>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Results Section -->
+  @if (completedSheets().length > 0) {
+  <div class="results-section">
+    <h2>Результати імпорту</h2>
+    <mat-accordion class="sections-accordion">
+      @for (unit of completedSheets(); track unit.unitName) {
+      <mat-expansion-panel class="unit-section-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon color="primary">group</mat-icon>
+            {{ unit.unitName }}
+            <span class="soldier-count">({{ unit.importedSoldiers.length }} осіб)</span>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="section-content">
+          @if (unit.importedSoldiers.length > 0) {
+          <table mat-table [dataSource]="unit.importedSoldiers" class="soldiers-table">
+            <!-- Табельний номер -->
+            <ng-container matColumnDef="externalId">
+              <th mat-header-cell *matHeaderCellDef>№</th>
+              <td mat-cell *matCellDef="let soldier">{{ soldier.externalId }}</td>
+            </ng-container>
+
+            <!-- Звання -->
+            <ng-container matColumnDef="rank">
+              <th mat-header-cell *matHeaderCellDef>Звання</th>
+              <td mat-cell *matCellDef="let soldier">{{ soldier.rank }}</td>
+            </ng-container>
+
+            <!-- ПІБ -->
+            <ng-container matColumnDef="fullName">
+              <th mat-header-cell *matHeaderCellDef>ПІБ</th>
+              <td mat-cell *matCellDef="let soldier">
+                {{ soldier.lastName }} {{ soldier.firstName }} {{ soldier.midleName }}
+              </td>
+            </ng-container>
+
+            <!-- Дата народження -->
+            <ng-container matColumnDef="birthDate">
+              <th mat-header-cell *matHeaderCellDef>Дата народження</th>
+              <td mat-cell *matCellDef="let soldier">{{ soldier.birthDate }}</td>
+            </ng-container>
+
+            <!-- Посада -->
+            <ng-container matColumnDef="position">
+              <th mat-header-cell *matHeaderCellDef>Посада</th>
+              <td mat-cell *matCellDef="let soldier">{{ soldier.position }}</td>
+            </ng-container>
+
+            <!-- Прибуття/Вибуття -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Статус</th>
+              <td mat-cell *matCellDef="let soldier">
+                @if (soldier.arrivedAt) {
+                <span
+                  class="state-badge"
+                  style="background-color: #2e7d32; color: white; border-color: #2e7d32"
+                >
+                  <mat-icon inline>login</mat-icon>
+                  {{ soldier.arrivedAt }}
+                </span>
+                } @if (soldier.departedAt) {
+                <span
+                  class="state-badge"
+                  style="background-color: #c62828; color: white; border-color: #c62828"
+                >
+                  <mat-icon inline>logout</mat-icon>
+                  {{ soldier.departedAt }}
+                </span>
+                }
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+          } @else {
+          <p class="no-soldiers">Немає імпортованих бійців</p>
+          }
+        </div>
+      </mat-expansion-panel>
+      }
+    </mat-accordion>
+  </div>
+  }
+
+  <!-- Footer Actions -->
+  <div class="page-footer">
+    <button mat-raised-button color="primary" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Повернутися до підрозділів
+    </button>
+  </div>
+</div>

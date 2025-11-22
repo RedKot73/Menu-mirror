@@ -16,6 +16,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 
 import { UnitService, UnitTreeItemDto } from './services/unit.service';
 import { UnitDialogComponent } from '../dialogs/UnitDialog';
@@ -23,7 +24,6 @@ import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
 import { UnitTreeNodeComponent, UnitTreeNode } from './unit-tree-node.component';
 import { NULL_GUID } from './unit.constants';
 import { ErrorHandler } from '../shared/models/ErrorHandler';
-import { ImportProgressDialogComponent } from './ImportProgressDialog.component';
 
 @Component({
   selector: 'unit-tree',
@@ -43,6 +43,7 @@ export class UnitTreeComponent implements OnInit {
   private unitService = inject(UnitService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
 
   // Content Projection: кастомный шаблон для действий узла
   @ContentChild('nodeActions') nodeActionsTemplate?: TemplateRef<{ $implicit: UnitTreeNode }>;
@@ -507,27 +508,21 @@ export class UnitTreeComponent implements OnInit {
         return;
       }
 
-      // Відкриваємо діалог з прогресом
-      const dialogRef = this.dialog.open(ImportProgressDialogComponent, {
-        width: '500px',
-        disableClose: true, // Не закривається ESC/клік поза діалогом під час обробки
-      });
-
       // Запускаємо імпорт
       this.unitService.importSoldiers(node.id, file).subscribe({
         next: (response) => {
           if (response.status === 'Failed') {
-            dialogRef.close();
             this.snackBar.open(
               `Помилка імпорту: ${response.error || 'Невідома помилка'}`,
               'Закрити',
               { duration: 7000 }
             );
+          } else {
+            // Переходимо на сторінку прогресу імпорту
+            this.router.navigate(['/unit/import']);
           }
         },
         error: (error) => {
-          dialogRef.close();
-
           if (error.status === 423) {
             this.snackBar.open(
               'Імпорт вже виконується. Зачекайте завершення поточної операції.',

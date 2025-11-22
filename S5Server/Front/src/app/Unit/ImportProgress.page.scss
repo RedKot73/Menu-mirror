@@ -1,0 +1,166 @@
+.import-progress-page {
+  padding: 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+
+    h1 {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0;
+      font-size: 28px;
+      font-weight: 500;
+
+      mat-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+      }
+    }
+  }
+
+  .progress-card {
+    margin-bottom: 24px;
+
+    .sheet-info {
+      font-size: 16px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background-color: #f5f5f5;
+      border-radius: 4px;
+
+      strong {
+        color: #1976d2;
+      }
+    }
+
+    .progress-info {
+      margin-bottom: 16px;
+
+      .progress-text {
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #666;
+      }
+
+      mat-progress-bar {
+        height: 8px;
+        border-radius: 4px;
+      }
+    }
+
+    .status-message {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      background-color: #e3f2fd;
+      color: #1976d2;
+
+      &.success {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+
+        mat-icon {
+          color: #2e7d32;
+        }
+      }
+
+      &.error {
+        background-color: #ffebee;
+        color: #c62828;
+
+        mat-icon {
+          color: #c62828;
+        }
+      }
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+
+  .results-section {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 16px;
+
+    h2 {
+      font-size: 20px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      color: #333;
+    }
+
+    .sections-accordion {
+      .unit-section-panel {
+        margin-bottom: 8px;
+
+        mat-panel-title {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+
+          mat-icon {
+            font-size: 24px;
+            width: 24px;
+            height: 24px;
+          }
+
+          .soldier-count {
+            margin-left: auto;
+            font-size: 14px;
+            color: #666;
+            font-weight: normal;
+          }
+        }
+      }
+    }
+
+    .section-content {
+      padding: 16px 0;
+
+      .soldiers-table {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      .no-soldiers {
+        text-align: center;
+        color: #999;
+        font-style: italic;
+        padding: 16px;
+      }
+    }
+  }
+
+  .page-footer {
+    flex-shrink: 0;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: center;
+
+    button {
+      mat-icon {
+        margin-right: 8px;
+      }
+    }
+  }
+}

@@ -66,30 +66,42 @@ namespace S5Server.Services
             }
         }
 
+        // Буферизация файла до запуска фоновой задачи, чтобы избежать ObjectDisposedException
         public static (bool started, ImportJob? job, string? error) TryStartBackground(Unit unit, IFormFile file, CancellationToken ct = default)
         {
             lock (_sync)
             {
                 if (IsRunning)
                     return (false, null, "Імпорт вже виконується");
+            }
 
+            // Считываем данные файла в память пока запрос активен
+            byte[] payload;
+            using (var ms = new MemoryStream())
+            {
+                file.CopyTo(ms);
+                payload = ms.ToArray();
+            }
+
+            lock (_sync)
+            {
                 _current.UnitId = unit.Id;
                 _current.Status = ImportJobStatus.Running;
                 _current.StartedAtUtc = DateTime.UtcNow;
                 _current.FinishedAtUtc = null;
                 _current.Error = string.Empty;
                 Report(new ImportProgress(null, 0, 0, "start"));
-                _ = Task.Run(() => ExecuteAsync(unit, file, ct), ct);
+                _ = Task.Run(() => ExecuteAsync(unit, payload, ct), ct);
                 return (true, Current, null);
             }
         }
 
-        private static async Task ExecuteAsync(Unit unit, IFormFile soldiers, CancellationToken ct)
+        private static async Task ExecuteAsync(Unit unit, byte[] soldiersData, CancellationToken ct)
         {
             ArgumentNullException.ThrowIfNull(_current, "Внутрішня помилка серверу - завдання не знайдено");
             try
             {
-                await DoImportSoldiers(unit, soldiers, ct);
+                await DoImportSoldiers(unit, soldiersData, ct);
                 lock (_sync)
                 {
                     _current.Status = ImportJobStatus.Succeeded;
@@ -115,12 +127,11 @@ namespace S5Server.Services
             }
         }
 
-        public static async Task/*<List<ImportUnit>>*/ DoImportSoldiers(Unit unit, IFormFile soldiers, CancellationToken ct = default)
+        public static async Task DoImportSoldiers(Unit unit, byte[] soldiersData, CancellationToken ct = default)
         {
             ArgumentNullException.ThrowIfNull(_current, "Внутрішня помилка серверу - завдання не знайдено");
 
-            using var ms = new MemoryStream();
-            soldiers.CopyTo(ms);
+            using var ms = new MemoryStream(soldiersData, writable: false);
             ms.Position = 0;
 
             using var doc = SpreadsheetDocument.Open(ms, false);
@@ -129,7 +140,10 @@ namespace S5Server.Services
             if (sheets == null)
                 return;// [];
 
-            //var res = new List<ImportUnit>();
+            lock (_resultLock)
+            {
+                _Result.Clear();
+            }
             foreach (var sheet in sheets.OfType<Sheet>())
             {
                 if (string.IsNullOrEmpty(sheet.Name)) continue;
@@ -171,8 +185,6 @@ namespace S5Server.Services
                         string.IsNullOrWhiteSpace(ColArrived))
                     {
                         processed++;
-                        //Report(new ImportProgress(sheet.Name, processed, total, null));
-                        //continue;
                         break;//после пустой строки данных нет
                     }
 
@@ -220,7 +232,6 @@ namespace S5Server.Services
                 }
                 Report(new ImportProgress(sheet.Name, processed, total, "sheet-done"));
             }
-            //return res;
         }
 
         private static Cell? GetCell(Row row, string col)
