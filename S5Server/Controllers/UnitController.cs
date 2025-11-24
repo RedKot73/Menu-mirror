@@ -340,6 +340,7 @@ namespace S5Server.Controllers
                 .AsNoTracking()
                 .Include(s => s.Unit)
                 .Include(s => s.AssignedUnit)
+                .Include(s => s.OperationalUnit)
                 .Include(s => s.Rank)
                 .Include(s => s.Position)
                 .Include(s => s.State)
@@ -347,7 +348,7 @@ namespace S5Server.Controllers
                 .OrderBy(s => s.Rank.OrderVal)
                 .ThenBy(s => s.LastName)
                 .ThenBy(s => s.FirstName)
-                .Select(s => SoldierDataSetDto.ToDto(s))
+                .Select(s => SoldierDto.ToDto(s))
                 .ToListAsync(ct);
 
             return Ok(UnitDataSetDto.From(unit, soldiers));
@@ -404,7 +405,6 @@ namespace S5Server.Controllers
                     job.StartedAtUtc,
                     job.FinishedAtUtc,
                     job.Error,
-                    //job.Result
                 });
             }
             catch (OperationCanceledException)
@@ -419,7 +419,7 @@ namespace S5Server.Controllers
 
         /// <summary>
         /// <summary>
-        /// Статус фонового.impорта
+        /// Статус фонового імпорту
         /// </summary>
         [HttpGet("imports")]
         [ProducesResponseType(StatusCodes.Status200OK)]

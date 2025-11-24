@@ -116,10 +116,10 @@ namespace S5Server.Models
         string? UnitTypeId,
         string? UnitType,
         string? Comment,
-        SoldierDataSetDto[] Soldiers
+        SoldierDto[] Soldiers
     )
     {
-        public static UnitDataSetDto From(Unit u, IEnumerable<SoldierDataSetDto> soldiers) => new(
+        public static UnitDataSetDto From(Unit u, IEnumerable<SoldierDto> soldiers) => new(
             u.Id,
             u.ParentId,
             u.Parent?.ShortName,
@@ -128,7 +128,7 @@ namespace S5Server.Models
             u.UnitTypeId,
             u.UnitType?.ShortValue,
             u.Comment,
-            soldiers.ToArray()
+            [.. soldiers]
         );
     }
 
@@ -207,6 +207,10 @@ namespace S5Server.Models
         [ValidateNever]
         public DictUnitType? UnitType { get; set; } = default!;
         public int OrderVal { get; set; } = 1;
+        /// <summary>
+        /// True - Оперативний/Тимчасовий підрозділ
+        /// </summary>
+        public bool IsOperational { get; set; } = false;
 
         public string? Comment { get; set; }
 
@@ -239,5 +243,11 @@ namespace S5Server.Models
         /// </summary>
         [NotMapped]
         public List<Soldier> AssignedSoldiers { get; set; } = default!;
+
+        /// <summary>
+        /// Особовий склад оперативного підрозділу
+        /// </summary>
+        [NotMapped]
+        public List<Soldier> OperationalSoldiers { get; set; } = default!;
     }
 }

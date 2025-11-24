@@ -18,7 +18,6 @@ import { SoldierDialogComponent } from '../dialogs/SoldierDialog';
 import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
 import { SoldierService, SoldierDto, SoldierCreateDto } from './services/soldier.service';
 import { UnitService, UnitDto } from '../Unit/services/unit.service';
-import { SoldierFiltersComponent } from './soldier-filters.component';
 import {
   isCriticalStatus,
   isSevereStatus,
@@ -45,7 +44,6 @@ export type Soldier = SoldierDto;
     FormsModule,
     SlicePipe,
     DatePipe,
-    SoldierFiltersComponent,
   ],
   templateUrl: './Soldier.component.html',
   styleUrl: './Soldier.component.scss',
@@ -58,7 +56,7 @@ export class SoldiersComponent implements AfterViewInit {
   filterByUnitId = input<string | null>(null);
 
   items = this.soldierService.createItemsSignal();
-  allUnits = signal<UnitDto[]>([]);
+  //allUnits = signal<UnitDto[]>([]);
   dataSource = new MatTableDataSource<Soldier>([]);
   displayedColumns = [
     'menu',
@@ -75,8 +73,8 @@ export class SoldiersComponent implements AfterViewInit {
   dialog = inject(MatDialog);
 
   // Фильтры
-  searchText = '';
-  selectedAssignedUnitId: string | null = null;
+  //searchText = '';
+  //selectedAssignedUnitId: string | null = null;
 
   // Методы для проверки статусов (делаем доступными в шаблоне)
   isCriticalStatus = isCriticalStatus;
@@ -102,12 +100,12 @@ export class SoldiersComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     this.dataSource.sort = this.sort;
-
+    /*
     // Загружаем все подразделения для фильтров
     this.unitService.getAll().subscribe((units) => {
       this.allUnits.set(units);
     });
-
+*/
     // Загружаем начальные данные
     this.reload();
   }
@@ -115,18 +113,22 @@ export class SoldiersComponent implements AfterViewInit {
   reload() {
     // Определяем параметры для сервера
     const unitId = this.filterByUnitId() === '' ? undefined : this.filterByUnitId() || undefined;
+    /*
     const assignedUnitId =
       this.selectedAssignedUnitId === ''
         ? undefined
         : this.selectedAssignedUnitId === 'null'
         ? 'null'
         : this.selectedAssignedUnitId || undefined;
+        */
 
-    this.soldierService.getAll(this.searchText, unitId, assignedUnitId).subscribe((items) => {
+    //this.soldierService.getAll(this.searchText, unitId, assignedUnitId).subscribe((items) => {
+    this.soldierService.getAll(undefined, unitId, undefined).subscribe((items) => {
       this.items.set(items);
     });
   }
 
+  /*
   onSearchChange(searchText: string) {
     this.searchText = searchText;
     this.reload();
@@ -136,7 +138,7 @@ export class SoldiersComponent implements AfterViewInit {
     this.selectedAssignedUnitId = assignedUnitId;
     this.reload();
   }
-
+*/
   // CREATE
   add() {
     const openDialog = () => {

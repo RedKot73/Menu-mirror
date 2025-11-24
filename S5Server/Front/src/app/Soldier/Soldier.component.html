@@ -1,11 +1,15 @@
-<soldier-filters
-  [allUnits]="allUnits()"
-  (searchChanged)="onSearchChange($event)"
-  (assignedUnitFilterChanged)="onAssignedUnitFilterChange($event)"
-  (reload)="reload()"
-  (add)="add()"
->
-</soldier-filters>
+<div class="action-container">
+  <div class="action-buttons">
+    <button mat-raised-button color="primary" (click)="reload()">
+      <mat-icon>refresh</mat-icon>
+      Оновити
+    </button>
+    <button mat-raised-button color="accent" (click)="add()">
+      <mat-icon>person_add</mat-icon>
+      Додати бійця
+    </button>
+  </div>
+</div>
 
 <table
   mat-table

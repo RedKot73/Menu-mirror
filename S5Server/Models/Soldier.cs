@@ -21,6 +21,8 @@ namespace S5Server.Models
         DateTime? DepartedAt,
         string? AssignedUnitId,
         string? AssignedUnitShortName,
+        string? OperationalUnitId,
+        string? OperationalUnitShortName,
         string RankId,
         string RankShortValue,
         string PositionId,
@@ -44,6 +46,8 @@ namespace S5Server.Models
                 e.DepartedAt,
                 e.AssignedUnitId,
                 e.AssignedUnit?.ShortName ?? e.AssignedUnit?.Name,
+                e.OperationalUnitId,
+                e.OperationalUnit?.ShortName ?? e.OperationalUnit?.Name,
                 e.RankId,
                 e.Rank?.ShortValue ?? e.Rank?.Value ?? string.Empty,
                 e.PositionId,
@@ -63,6 +67,7 @@ namespace S5Server.Models
             e.ArrivedAt = dto.ArrivedAt == default ? DateTime.UtcNow.Date : dto.ArrivedAt;
             e.DepartedAt = dto.DepartedAt;
             e.AssignedUnitId = dto.AssignedUnitId;
+            e.OperationalUnitId = dto.OperationalUnitId;
             e.RankId = dto.RankId;
             e.PositionId = dto.PositionId;
             e.StateId = dto.StateId;
@@ -80,6 +85,7 @@ namespace S5Server.Models
         string? NickName,
         string UnitId,
         string? AssignedUnitId,
+        string? OperationalUnitId,
         DateTime ArrivedAt,
         DateTime? DepartedAt,
         string RankId,
@@ -98,57 +104,12 @@ namespace S5Server.Models
             ArrivedAt = ArrivedAt == default ? DateTime.UtcNow.Date : ArrivedAt,
             DepartedAt = DepartedAt,
             AssignedUnitId = AssignedUnitId,
+            OperationalUnitId = OperationalUnitId,
             RankId = RankId,
             PositionId = PositionId,
             StateId = StateId,
             Comment = string.IsNullOrWhiteSpace(Comment) ? null : Comment?.Trim()
         };
-    }
-
-    public record SoldierDataSetDto(
-        string Id,
-        string FirstName,
-        string? MidleName,
-        string? LastName,
-        string Fio,
-        string? NickName,
-        string UnitId,
-        string UnitShortName,
-        DateTime ArrivedAt,
-        DateTime? DepartedAt,
-        string? AssignedUnitId,
-        string? AssignedUnitShortName,
-        string RankId,
-        string RankShortValue,
-        string PositionId,
-        string PositionValue,
-        string StateId,
-        string StateValue,
-        string? Comment
-    )
-    {
-        public static SoldierDataSetDto ToDto(Soldier e) =>
-            new(
-                e.Id,
-                e.FirstName,
-                e.MidleName,
-                e.LastName,
-                e.FIO,
-                e.NickName,
-                e.UnitId,
-                e.Unit?.ShortName ?? e.Unit?.Name ?? string.Empty,
-                e.ArrivedAt,
-                e.DepartedAt,
-                e.AssignedUnitId,
-                e.AssignedUnit?.ShortName ?? e.AssignedUnit?.Name,
-                e.RankId,
-                e.Rank?.ShortValue ?? e.Rank?.Value ?? string.Empty,
-                e.PositionId,
-                e.Position?.Value ?? string.Empty,
-                e.StateId,
-                e.State?.Value ?? string.Empty,
-                e.Comment
-            );
     }
 
     /// <summary>
@@ -198,8 +159,6 @@ namespace S5Server.Models
             Required(ErrorMessage = UIConstant.RequiredMsg)]
         public Unit Unit { get; set; } = default!;
 
-
-
         /// <summary>
         /// Приданий до підрозділу
         /// </summary>
@@ -210,6 +169,15 @@ namespace S5Server.Models
         /// </summary>
         [ValidateNever]
         public Unit? AssignedUnit { get; set; }
+
+        /// <summary>
+        /// Оперативний підрозділ
+        /// </summary>
+        public string? OperationalUnitId { get; set; }
+        /// <summary>
+        /// Оперативний підрозділ
+        /// </summary>
+        public Unit? OperationalUnit { get; set; }
 
         /// <summary>
         /// Звання

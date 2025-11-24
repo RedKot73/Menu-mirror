@@ -116,6 +116,7 @@ namespace S5Server.Data
                 entity.Property(e => e.ShortName).HasColumnType("TEXT(100)");
                 entity.Property(e => e.MilitaryNumber).HasColumnType("TEXT(100)");
                 entity.Property(e => e.OrderVal).HasColumnType("INTEGER");
+                entity.Property(e => e.IsOperational).HasColumnType("INTEGER").HasDefaultValue(0);
                 entity.Property(e => e.Comment).HasColumnType("TEXT");
 
                 // Керівний підрозділ
@@ -156,6 +157,7 @@ namespace S5Server.Data
                 entity.Property(e => e.NickName).HasColumnType("TEXT(50)");
                 entity.Property(e => e.UnitId).IsRequired().HasColumnType("TEXT(36)");
                 entity.Property(e => e.AssignedUnitId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.OperationalUnitId).HasColumnType("TEXT(36)");
                 entity.Property(e => e.RankId).IsRequired().HasColumnType("TEXT(36)");
                 entity.Property(e => e.PositionId).IsRequired().HasColumnType("TEXT(36)");
                 entity.Property(e => e.StateId).IsRequired().HasColumnType("TEXT(36)");
@@ -175,6 +177,11 @@ namespace S5Server.Data
                 entity.HasOne(s => s.AssignedUnit)
                       .WithMany(u => u.AssignedSoldiers)
                       .HasForeignKey(s => s.AssignedUnitId)
+                      .OnDelete(DeleteBehavior.SetNull);
+                // Включені до оперативного підрозділу
+                entity.HasOne(s => s.OperationalUnit)
+                      .WithMany(u => u.OperationalSoldiers)
+                      .HasForeignKey(s => s.OperationalUnitId)
                       .OnDelete(DeleteBehavior.SetNull);
 
                 // Звання
