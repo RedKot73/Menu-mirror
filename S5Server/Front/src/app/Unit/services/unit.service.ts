@@ -21,6 +21,10 @@ export interface UnitDto {
   unitType?: string;
   orderVal: number;
   comment?: string;
+  /**
+   * Оперативний/Тимчасовий підрозділ - Команда
+   */
+  isOperational?: boolean;
 }
 
 export interface UnitTreeItemDto extends UnitDto {
@@ -37,6 +41,10 @@ export interface UnitCreateDto {
   unitTypeId?: string;
   orderVal: number;
   comment?: string;
+  /**
+   * Оперативний/Тимчасовий підрозділ - Команда
+   */
+  isOperational?: boolean;
 }
 
 export interface UnitDataSetDto {
