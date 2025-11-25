@@ -24,6 +24,7 @@ namespace S5Server.Controllers
             .AsNoTracking()
             .Include(s => s.Unit)
             .Include(s => s.AssignedUnit)
+            .Include(s => s.OperationalUnit)
             .Include(s => s.Rank)
             .Include(s => s.Position)
             .Include(s => s.State);
@@ -147,12 +148,12 @@ namespace S5Server.Controllers
 
             // Снимок только полей, которые реально обновляем
             var original = (e.FirstName, e.MidleName, e.LastName, e.NickName,
-                            e.UnitId, e.AssignedUnitId, e.RankId, e.PositionId, e.StateId, e.Comment);
+                            e.UnitId, e.AssignedUnitId, e.OperationalUnitId, e.RankId, e.PositionId, e.StateId, e.Comment);
 
             SoldierDto.ApplyDto(e, dto);
 
             var changed = (e.FirstName, e.MidleName, e.LastName, e.NickName,
-                           e.UnitId, e.AssignedUnitId, e.RankId, e.PositionId, e.StateId, e.Comment);
+                           e.UnitId, e.AssignedUnitId, e.OperationalUnitId, e.RankId, e.PositionId, e.StateId, e.Comment);
 
             if (original == changed)
                 return NoContent();

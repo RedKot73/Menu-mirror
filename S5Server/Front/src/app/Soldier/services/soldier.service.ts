@@ -16,6 +16,8 @@ export interface SoldierDto {
     departedAt?: Date;
     assignedUnitId?: string;
     assignedUnitShortName?: string;
+    operationalUnitId?: string;
+    operationalUnitShortName?: string;
     rankId: string;
     rankShortValue: string;
     positionId: string;
@@ -34,6 +36,7 @@ export interface SoldierCreateDto {
     arrivedAt: Date;
     departedAt?: Date;
     assignedUnitId?: string;
+    operationalUnitId?: string;
     rankId: string;
     positionId: string;
     stateId: string;
@@ -53,10 +56,10 @@ export class SoldierService {
 
     // CRUD операции
     getAll(search?: string, unitId?: string, assignedUnitId?: string): Observable<SoldierDto[]> {
-        const params: any = {};
-        if (search) {params.search = search;}
-        if (unitId) {params.unitId = unitId;}
-        if (assignedUnitId) {params.assignedUnitId = assignedUnitId;}
+        const params: Record<string, string> = {};
+        if (search) {params['search'] = search;}
+        if (unitId) {params['unitId'] = unitId;}
+        if (assignedUnitId) {params['assignedUnitId'] = assignedUnitId;}
         
         return this.http.get<SoldierDto[]>(this.api, { params });
     }

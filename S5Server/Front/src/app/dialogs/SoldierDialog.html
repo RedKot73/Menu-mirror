@@ -67,6 +67,29 @@
   </mat-form-field>
 
   <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Оперативний підрозділ</mat-label>
+    <input
+      type="text"
+      matInput
+      [formControl]="operationalUnitSearchControl"
+      [matAutocomplete]="operationalUnitAuto"
+      placeholder="Оперативний підрозділ"
+    />
+    <mat-autocomplete
+      #operationalUnitAuto="matAutocomplete"
+      [displayWith]="displayOperationalUnitFn"
+      (optionSelected)="onOperationalUnitSelected($event)"
+    >
+      <mat-option [value]="null">Не призначено</mat-option>
+      @if (isLoadingOperationalUnits) {
+      <mat-option disabled>Завантаження...</mat-option>
+      } @for (unit of filteredOperationalUnits | async; track unit.id) {
+      <mat-option [value]="unit">{{ unit.value }}</mat-option>
+      }
+    </mat-autocomplete>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
     <mat-label>Прибув до підрозділу</mat-label>
     <input
       matInput

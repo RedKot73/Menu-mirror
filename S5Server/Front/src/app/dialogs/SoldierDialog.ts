@@ -70,6 +70,12 @@ export class SoldierDialogComponent implements OnInit {
   isLoadingAssignedUnits = false;
   selectedAssignedUnit: LookupDto | null = null;
 
+  // Для автокомплита оперативного подразделения
+  operationalUnitSearchControl = new FormControl<LookupDto | string | null>(null);
+  filteredOperationalUnits: Observable<LookupDto[]>;
+  isLoadingOperationalUnits = false;
+  selectedOperationalUnit: LookupDto | null = null;
+
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: SoldierDto,
     private ref: MatDialogRef<SoldierDialogComponent>
@@ -117,6 +123,28 @@ export class SoldierDialogComponent implements OnInit {
         return of([]);
       })
     );
+
+    // Настраиваем автокомплит для оперативного подразделения
+    this.filteredOperationalUnits = this.operationalUnitSearchControl.valueChanges.pipe(
+      startWith(''),
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap((value) => {
+        const searchTerm =
+          typeof value === 'string'
+            ? value
+            : value && typeof value === 'object' && 'value' in value
+            ? value.value
+            : '';
+        if (searchTerm && searchTerm.length >= 2) {
+          this.isLoadingOperationalUnits = true;
+          return this.unitService
+            .lookup(searchTerm, 10)
+            .pipe(finalize(() => (this.isLoadingOperationalUnits = false)));
+        }
+        return of([]);
+      })
+    );
   }
 
   ngOnInit() {
@@ -138,6 +166,17 @@ export class SoldierDialogComponent implements OnInit {
           value: assignedUnit.shortName || assignedUnit.name,
         };
         this.assignedUnitSearchControl.setValue(this.selectedAssignedUnit);
+      });
+    }
+
+    // Если уже есть operationalUnitId, найдем и установим соответствующий объект
+    if (this.data.operationalUnitId) {
+      this.unitService.getById(this.data.operationalUnitId).subscribe((operationalUnit) => {
+        this.selectedOperationalUnit = {
+          id: operationalUnit.id,
+          value: operationalUnit.shortName || operationalUnit.name,
+        };
+        this.operationalUnitSearchControl.setValue(this.selectedOperationalUnit);
       });
     }
   }
@@ -178,6 +217,17 @@ export class SoldierDialogComponent implements OnInit {
     const selectedUnit = event.option.value;
     this.selectedAssignedUnit = selectedUnit;
     this.data.assignedUnitId = selectedUnit ? selectedUnit.id : undefined;
+  }
+
+  // Методы для автокомплита оперативного подразделения
+  displayOperationalUnitFn = (operationalUnit: LookupDto | null): string => {
+    return operationalUnit ? operationalUnit.value : '';
+  };
+
+  onOperationalUnitSelected(event: { option: { value: LookupDto | null } }) {
+    const selectedUnit = event.option.value;
+    this.selectedOperationalUnit = selectedUnit;
+    this.data.operationalUnitId = selectedUnit ? selectedUnit.id : undefined;
   }
 
   onArrivedAtChange(event: MatDatepickerInputEvent<Date>) {
