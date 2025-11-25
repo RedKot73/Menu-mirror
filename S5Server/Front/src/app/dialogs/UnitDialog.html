@@ -1,0 +1,104 @@
+<h2 mat-dialog-title>{{ data.id ? 'Редагувати підрозділ' : 'Створити новий підрозділ' }}</h2>
+<div mat-dialog-content class="content">
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Назва підрозділу</mat-label>
+    <input matInput [(ngModel)]="data.name" required />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Скорочена назва</mat-label>
+    <input matInput [(ngModel)]="data.shortName" required />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Номер військової частини (В/Ч)</mat-label>
+    <input matInput [(ngModel)]="data.militaryNumber" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Основний підрозділ</mat-label>
+    <input
+      type="text"
+      matInput
+      [formControl]="parentSearchControl"
+      [matAutocomplete]="parentAuto"
+      placeholder="Батьківський підрозділ"
+    />
+    <mat-autocomplete
+      #parentAuto="matAutocomplete"
+      [displayWith]="displayParentFn"
+      (optionSelected)="onParentSelected($event)"
+    >
+      <mat-option [value]="null">Без підпорядкування</mat-option>
+      @if (isLoadingParents) {
+      <mat-option disabled>Завантаження...</mat-option>
+      } @for (unit of filteredParentUnits | async; track unit.id) {
+      <mat-option [value]="unit">{{ unit.value }}</mat-option>
+      }
+    </mat-autocomplete>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Приданий до підрозділу</mat-label>
+    <input
+      type="text"
+      matInput
+      [formControl]="assignedSearchControl"
+      [matAutocomplete]="assignedAuto"
+      placeholder="Приданий до підрозділу"
+    />
+    <mat-autocomplete
+      #assignedAuto="matAutocomplete"
+      [displayWith]="displayAssignedFn"
+      (optionSelected)="onAssignedSelected($event)"
+    >
+      <mat-option [value]="null">Не приданий</mat-option>
+      @if (isLoadingAssigned) {
+      <mat-option disabled>Завантаження...</mat-option>
+      } @for (unit of filteredAssignedUnits | async; track unit.id) {
+      <mat-option [value]="unit">{{ unit.value }}</mat-option>
+      }
+    </mat-autocomplete>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Вид збройних сил</mat-label>
+    <mat-select [(ngModel)]="data.forceTypeId">
+      <mat-option [value]="null">Відсутній</mat-option>
+      @for (force of dictForcesTypes; track force.id) {
+      <mat-option [value]="force.id">{{ force.value }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Тип підрозділу</mat-label>
+    <mat-select [(ngModel)]="data.unitTypeId">
+      <mat-option [value]="null">Відсутній</mat-option>
+      @for (unitType of dictUnitTypes; track unitType.id) {
+      <mat-option [value]="unitType.id">{{ unitType.value }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Порядок сортування</mat-label>
+    <input matInput [(ngModel)]="data.orderVal" type="number" required />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Коментар</mat-label>
+    <textarea matInput [(ngModel)]="data.comment" rows="3"></textarea>
+  </mat-form-field>
+</div>
+<div mat-dialog-actions align="end" class="actions">
+  <button mat-button (click)="onCancel()">Відміна</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onSave()"
+    [disabled]="!data.name.trim() || !data.shortName?.trim()"
+  >
+    Зберегти
+  </button>
+</div>

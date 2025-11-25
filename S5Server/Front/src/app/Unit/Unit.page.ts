@@ -291,9 +291,20 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
+   * Додає оперативний підрозділ до вузла
+   */
+  addOperationalChild(node: UnitTreeNode) {
+    this.unitTree?.addOperationalChild(node);
+  }
+
+  /**
    * Редактирует подразделение
    */
   edit(node: UnitTreeNode) {
+    if(node.isOperational) {
+      this.unitTree?.editOperationalChild(node);
+      return;
+    }
     this.unitTree?.edit(node);
   }
 

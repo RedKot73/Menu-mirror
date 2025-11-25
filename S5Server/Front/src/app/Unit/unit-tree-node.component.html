@@ -1,17 +1,17 @@
+@if (node(); as tmpNode) {
 <div
   class="node-content"
-  [class.leaf-node]="!node().hasChildren"
-  [style.padding-left.px]="node().level * 20"
+  [class.leaf-node]="!tmpNode.hasChildren"
+  [style.padding-left.px]="tmpNode.level * 20"
 >
-  <!-- Кнопка разворачивания только для узлов с детьми -->
-  @if (node().hasChildren) {
+  @if (tmpNode.hasChildren) {
   <button
     mat-icon-button
-    [attr.aria-label]="'Розгорнути/згорнути ' + node().name"
+    [attr.aria-label]="'Розгорнути/згорнути ' + tmpNode.name"
     class="toggle-button"
     (click)="onToggle()"
   >
-    @if (node().isLoading) {
+    @if (tmpNode.isLoading) {
     <mat-spinner diameter="20"></mat-spinner>
     } @else {
     <mat-icon class="mat-icon-rtl-mirror">
@@ -20,37 +20,35 @@
     }
   </button>
   } @else {
-  <!-- Отступ для листовых узлов теперь через padding-left -->
   <div class="leaf-spacer"></div>
   }
 
-  <!-- Информация о подразделении -->
   <div class="unit-info">
     <button
       class="unit-main"
       type="button"
       (click)="onSelect(); $event.stopPropagation()"
-      [attr.aria-label]="'Вибрати підрозділ ' + node().shortName"
+      [attr.aria-label]="'Вибрати підрозділ ' + tmpNode.shortName"
     >
-      <span class="unit-name">{{ node().shortName }}</span>
+      <span class="unit-name">{{ tmpNode.shortName }}</span>
     </button>
     <div class="unit-details">
-      @if (node().forceType) {
-      <span class="force-type">{{ node().forceType }}</span>
-      } @if (node().unitType) {
-      <span class="unit-type">{{ node().unitType }}</span>
-      } @if (node().assignedUnitId) {
+      @if (tmpNode.isOperational) {
+      <mat-icon class="operational-icon" matTooltip="Оперативний підрозділ">groups</mat-icon>
+      } @if (tmpNode.unitType) {
+      <span class="unit-type">{{ tmpNode.unitType }}</span>
+      } @if (tmpNode.assignedUnitId) {
       <mat-icon class="assigned-icon" matTooltip="Приданий підрозділ">assignment_ind</mat-icon>
       }
     </div>
   </div>
 
-  <!-- Меню действий с узлом (показываем только если передан шаблон) -->
   @if (nodeActionsTemplate()) {
   <div class="node-actions">
     <ng-container
-      *ngTemplateOutlet="nodeActionsTemplate(); context: { $implicit: node() }"
+      *ngTemplateOutlet="nodeActionsTemplate(); context: { $implicit: tmpNode }"
     ></ng-container>
   </div>
   }
 </div>
+}

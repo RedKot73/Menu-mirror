@@ -3,15 +3,31 @@
   <!-- Детальная информация о подразделении -->
   <mat-card class="unit-details-card">
     <mat-card-header>
-      <mat-card-title>{{ unit.shortName }}</mat-card-title>
+      <mat-card-title class="info-item inline">
+        {{ unit.shortName }}
+        @if(unit.isOperational) {
+        <mat-icon>groups</mat-icon>
+        <span>Оперативний підрозділ</span>
+        }
+      </mat-card-title>
     </mat-card-header>
 
     <mat-card-content>
       <div class="unit-info-grid">
+        @if (unit.parentShortName) {
         <div class="info-item inline">
-          <strong>Військова частина:</strong>
-          <span>{{ unit.militaryNumber || 'Не вказано' }}</span>
+          <strong>Батьківський:</strong>
+          <span>{{ unit.parentShortName }}</span>
         </div>
+        }
+
+        @if(!unit.isOperational) {
+          @if(unit.militaryNumber){
+          <div class="info-item inline">
+            <strong>Військова частина:</strong>
+            <span>{{ unit.militaryNumber }}</span>
+          </div>
+          }
 
         <div class="info-item inline">
           <strong>Тип сил:</strong>
@@ -23,22 +39,19 @@
           <span>{{ unit.unitType || 'Не вказано' }}</span>
         </div>
 
+        @if (unit.assignedShortName) {
+        <div class="info-item inline">
+          <strong>Приданий до:</strong>
+          <span>{{ unit.assignedShortName }}</span>
+        </div>
+        } }
+        
         <div class="info-item inline">
           <strong>Порядок:</strong>
           <span>{{ unit.orderVal }}</span>
         </div>
 
-        @if (unit.parentShortName) {
-        <div class="info-item inline">
-          <strong>Батьківський підрозділ:</strong>
-          <span>{{ unit.parentShortName }}</span>
-        </div>
-        } @if (unit.assignedShortName) {
-        <div class="info-item inline">
-          <strong>Приданий до:</strong>
-          <span>{{ unit.assignedShortName }}</span>
-        </div>
-        } @if (unit.comment) {
+        @if (unit.comment) {
         <div class="info-item full-width comment">
           <strong>Коментар:</strong>
           <span>{{ unit.comment }}</span>

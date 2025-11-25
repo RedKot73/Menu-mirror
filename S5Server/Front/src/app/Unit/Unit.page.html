@@ -50,6 +50,15 @@
               </button>
               <button
                 mat-menu-item
+                matTooltip="Додати оперативний підрозділ"
+                (click)="menuTrigger.closeMenu(); addOperationalChild(node)"
+                [disabled]="node.isOperational"
+              >
+                <mat-icon>groups</mat-icon>
+                <span>Додати оперативний підрозділ</span>
+              </button>
+              <button
+                mat-menu-item
                 matTooltip="Редагувати підрозділ"
                 (click)="menuTrigger.closeMenu(); edit(node)"
               >

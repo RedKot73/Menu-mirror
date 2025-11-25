@@ -6,3 +6,6 @@
 // ID для записи БД представляющую отсутствующее значение
 // Соответствует C# ControllerFunctions.NullGuid
 export const NULL_GUID = '00000000-0000-0000-0000-000000000001';
+// ID для записи БД представляющую "Екіпаж"
+// Соответствует C# ControllerFunctions.CrewGuid
+export const Crew_GUID = '00000000-0000-0000-0000-000000000002';

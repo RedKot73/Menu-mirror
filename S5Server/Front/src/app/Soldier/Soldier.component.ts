@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild, AfterViewInit, effect, signal, input } from '@angular/core';
+import { Component, inject, ViewChild, AfterViewInit, effect, /*signal,*/ input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -17,7 +17,7 @@ import { SlicePipe, DatePipe } from '@angular/common';
 import { SoldierDialogComponent } from '../dialogs/SoldierDialog';
 import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
 import { SoldierService, SoldierDto, SoldierCreateDto } from './services/soldier.service';
-import { UnitService, UnitDto } from '../Unit/services/unit.service';
+import { UnitService/*, UnitDto*/ } from '../Unit/services/unit.service';
 import {
   isCriticalStatus,
   isSevereStatus,

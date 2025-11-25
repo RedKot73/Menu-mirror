@@ -20,9 +20,10 @@ import { Router } from '@angular/router';
 
 import { UnitService, UnitTreeItemDto } from './services/unit.service';
 import { UnitDialogComponent } from '../dialogs/UnitDialog';
+import { OperationalUnitDialogComponent } from '../dialogs/OperationalUnitDialog';
 import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
 import { UnitTreeNodeComponent, UnitTreeNode } from './unit-tree-node.component';
-import { NULL_GUID } from './unit.constants';
+import { NULL_GUID, Crew_GUID } from './unit.constants';
 import { ErrorHandler } from '../shared/models/ErrorHandler';
 
 @Component({
@@ -384,8 +385,111 @@ export class UnitTreeComponent implements OnInit {
     });
   }
 
+  addOperationalChild(parentNode: UnitTreeNode) {
+    const dialogRef = this.dialog.open(OperationalUnitDialogComponent, {
+      width: '600px',
+      data: {
+        id: '',
+        name: '',
+        shortName: '',
+        militaryNumber: '',
+        forceTypeId: parentNode.forceTypeId,
+        unitTypeId: Crew_GUID,
+        parentId: parentNode.id,
+        assignedUnitId: undefined,
+        orderVal: 1,
+        comment: '',
+        isOperational: true,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.unitService
+          .create({
+            name: result.shortName, // name = shortName
+            shortName: result.shortName,
+            militaryNumber: '',
+            forceTypeId: parentNode.forceTypeId,
+            unitTypeId: Crew_GUID,
+            parentId: parentNode.id,
+            assignedUnitId: undefined,
+            orderVal: result.orderVal,
+            comment: result.comment,
+            isOperational: true,
+          })
+          .subscribe({
+            next: () => {
+              // Ефективне локальне оновлення
+              if (parentNode.hasChildren) {
+                // Якщо у батька вже є завантажені діти, перезавантажуємо їх
+                if (parentNode.isLoaded) {
+                  parentNode.isLoaded = false;
+                  this.loadChildren(parentNode).then(() => {
+                    this.expansionModel.select(parentNode.id);
+                  });
+                } else {
+                  this.expansionModel.select(parentNode.id);
+                }
+              } else {
+                // Батько став мати дітей, оновлюємо його статус
+                parentNode.hasChildren = true;
+                parentNode.children = [];
+                parentNode.isLoaded = false;
+                this.forceTreeUpdate();
+                this.expansionModel.select(parentNode.id);
+              }
+              this.snackBar.open('Оперативний підрозділ успішно створено', 'Закрити', {
+                duration: 3000,
+              });
+            },
+            error: (error) => {
+              console.error('Помилка створення оперативного підрозділу:', error);
+              const errorMessage = ErrorHandler.handleHttpError(
+                error,
+                'Помилка створення оперативного підрозділу'
+              );
+              this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+            },
+          });
+      }
+    });
+  }
+
   edit(node: UnitTreeNode) {
     const dialogRef = this.dialog.open(UnitDialogComponent, {
+      width: '600px',
+      data: { ...node },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        const unit = result as UnitTreeItemDto;
+        this.unitService.update(unit.id, unit).subscribe({
+          next: () => {
+            // Эффективное локальное обновление
+            this.updateNodeById(unit.id, unit);
+            this.forceTreeUpdate();
+
+            // Уведомляем о том, что подразделение обновлено
+            this.unitUpdated.emit(unit);
+            this.snackBar.open('Підрозділ успішно оновлено', 'Закрити', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Помилка оновлення підрозділу:', error);
+            const errorMessage = ErrorHandler.handleHttpError(
+              error,
+              'Помилка оновлення підрозділу'
+            );
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          },
+        });
+      }
+    });
+  }
+
+  editOperationalChild(node: UnitTreeNode) {
+    const dialogRef = this.dialog.open(OperationalUnitDialogComponent, {
       width: '600px',
       data: { ...node },
     });

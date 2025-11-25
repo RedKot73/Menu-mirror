@@ -19,6 +19,7 @@ namespace S5Server.Models
         string? ForceType,
         string? UnitTypeId,
         string? UnitType,
+        bool IsOperational,
         int OrderVal,
         string? Comment
     )
@@ -37,6 +38,7 @@ namespace S5Server.Models
                 e.ForceType?.ShortValue,
                 e.UnitTypeId,
                 e.UnitType?.ShortValue,
+                e.IsOperational,
                 e.OrderVal,
                 e.Comment
             );
@@ -50,6 +52,7 @@ namespace S5Server.Models
             e.MilitaryNumber = dto.MilitaryNumber?.Trim();
             e.ForceTypeId = dto.ForceTypeId;
             e.UnitTypeId = dto.UnitTypeId;
+            e.IsOperational = dto.IsOperational;
             e.OrderVal = dto.OrderVal;
             e.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
         }
@@ -71,6 +74,7 @@ namespace S5Server.Models
         string? ForceType,
         string? UnitTypeId,
         string? UnitType,
+        bool IsOperational,
         int OrderVal,
         string? Comment,
         bool HasChildren = false
@@ -87,6 +91,7 @@ namespace S5Server.Models
         ForceType,
         UnitTypeId,
         UnitType,
+        IsOperational,
         OrderVal,
         Comment
     );
@@ -99,6 +104,7 @@ namespace S5Server.Models
         string? MilitaryNumber,
         string? ForceTypeId,
         string? UnitTypeId,
+        bool IsOperational,
         int OrderVal,
         string? Comment
     );
@@ -115,6 +121,7 @@ namespace S5Server.Models
         string ShortName,
         string? UnitTypeId,
         string? UnitType,
+        bool IsOperational,
         string? Comment,
         SoldierDto[] Soldiers
     )
@@ -127,6 +134,7 @@ namespace S5Server.Models
             u.ShortName,
             u.UnitTypeId,
             u.UnitType?.ShortValue,
+            u.IsOperational,
             u.Comment,
             [.. soldiers]
         );
@@ -144,6 +152,13 @@ namespace S5Server.Models
     [Table("units")]
     public class Unit
     {
+        /// <summary>
+        /// ID для записи БД представляющую "Екіпаж"
+        /// Represents the unique identifier (GUID)
+        /// for the database record corresponding to a crew entity.
+        /// </summary>
+        public const string Crew_GUID = "00000000-0000-0000-0000-000000000002";
+
         [Key]
         [StringLength(36)]
         public string Id { get; set; } = Guid.NewGuid().ToString("D");

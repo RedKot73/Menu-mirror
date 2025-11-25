@@ -79,6 +79,7 @@ namespace S5Server.Controllers
                     u.ForceType != null ? u.ForceType.ShortValue : null,
                     u.UnitTypeId,
                     u.UnitType != null ? u.UnitType.ShortValue : null,
+                    u.IsOperational,
                     u.OrderVal,
                     u.Comment,
                     _set.Any(c => c.ParentId == u.Id)//поле HasChildren
@@ -119,7 +120,7 @@ namespace S5Server.Controllers
         public async Task<ActionResult<UnitDto>> Get(string id, CancellationToken ct = default)
         {
             var e = await Query()
-                //                .Include(t => t.Parent)
+                .Include(t => t.Parent)
                 .Include(t => t.AssignedUnit)
                 .Include(t => t.ForceType)
                 .Include(t => t.UnitType)
@@ -146,6 +147,7 @@ namespace S5Server.Controllers
                 UnitTypeId = dto.UnitTypeId,
                 ParentId = dto.ParentId,
                 AssignedUnitId = dto.AssignedUnitId,
+                IsOperational = dto.IsOperational,
                 OrderVal = dto.OrderVal == 0 ? 1 : dto.OrderVal
             };
 
