@@ -69,7 +69,7 @@
       </mat-expansion-panel-header>
 
       <div class="section-content">
-        <app-page-soldiers [filterByUnitId]="unit.id"></app-page-soldiers>
+        <app-page-soldiers [unitId]="unit.id" [currentUnitTab]="unitTag.UnitId"></app-page-soldiers>
       </div>
     </mat-expansion-panel>
 
@@ -82,7 +82,10 @@
       </mat-expansion-panel-header>
 
       <div class="section-content">
-        <app-page-soldiers [filterByAssignedUnitId]="unit.id"></app-page-soldiers>
+        <app-page-soldiers
+          [unitId]="unit.id"
+          [currentUnitTab]="unitTag.AssignedId"
+        ></app-page-soldiers>
       </div>
     </mat-expansion-panel>
 
@@ -95,7 +98,10 @@
       </mat-expansion-panel-header>
 
       <div class="section-content">
-        <app-page-soldiers [filterByOperationalUnitId]="unit.id"></app-page-soldiers>
+        <app-page-soldiers
+          [unitId]="unit.id"
+          [currentUnitTab]="unitTag.OperationalId"
+        ></app-page-soldiers>
       </div>
     </mat-expansion-panel>
 

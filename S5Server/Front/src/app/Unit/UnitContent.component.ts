@@ -5,7 +5,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { UnitDto } from './services/unit.service';
-import { SoldiersComponent } from '../Soldier/Soldier.component';
+import { SoldiersComponent, UnitTag } from '../Soldier/Soldier.component';
 
 @Component({
   selector: 'unit-content',
@@ -28,4 +28,5 @@ export class UnitContentComponent {
 
   // Выходные события
   showSidenav = output<void>();
+  unitTag = UnitTag;
 }

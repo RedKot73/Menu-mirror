@@ -40,6 +40,11 @@ import {
 } from './Soldier.constant';
 
 export type Soldier = SoldierDto;
+export const UnitTag = {
+  UnitId: 1, // Смотрим на вкладку Штатний ОС
+  AssignedId: 2, // Смотрим на вкладку Приданий ОС
+  OperationalId: 3, // Смотрим на вкладку Оперативний ОС
+} as const;
 
 @Component({
   selector: 'app-page-soldiers',
@@ -69,12 +74,10 @@ export class SoldiersComponent implements AfterViewInit {
   soldierService = inject(SoldierService);
   unitService = inject(UnitService);
 
-  // Input для фильтрации по подразделению
-  filterByUnitId = input<string | null>(null);
-  // Input для фильтрации по приданному подразделению
-  filterByAssignedUnitId = input<string | null>(null);
-  // Input для фильтрации по оперативному подразделению
-  filterByOperationalUnitId = input<string | null>(null);
+  //Поточна вкладка підрозділу
+  currentUnitTab = input<number>(UnitTag.UnitId);
+  // Input для ID подразделения (единый для всех вкладок)
+  unitId = input<string | null>(null);
 
   items = this.soldierService.createItemsSignal();
   //allUnits = signal<UnitDto[]>([]);
@@ -131,13 +134,13 @@ export class SoldiersComponent implements AfterViewInit {
       this.dataSource.data = this.items();
     });
 
-    // Автоматически перезагружаем данные при изменении любого из фильтров
+    // Автоматически перезагружаем данные при изменении unitId или currentUnitTab
     effect(() => {
-      const unitFilter = this.filterByUnitId();
-      const assignedFilter = this.filterByAssignedUnitId();
-      const operationalFilter = this.filterByOperationalUnitId();
+      const currentUnitId = this.unitId();
+      // Следим за изменением вкладки для перезагрузки данных
+      this.currentUnitTab();
 
-      if (unitFilter !== null || assignedFilter !== null || operationalFilter !== null) {
+      if (currentUnitId !== null) {
         this.reload();
       }
     });
@@ -156,28 +159,35 @@ export class SoldiersComponent implements AfterViewInit {
   }
 
   reload() {
-    // Определяем какой тип фильтрации использовать
-    const unitId = this.filterByUnitId() === '' ? undefined : this.filterByUnitId() || undefined;
-    const assignedUnitId =
-      this.filterByAssignedUnitId() === '' ? undefined : this.filterByAssignedUnitId() || undefined;
-    const operationalUnitId =
-      this.filterByOperationalUnitId() === ''
-        ? undefined
-        : this.filterByOperationalUnitId() || undefined;
+    const currentUnitId = this.unitId() === '' ? undefined : this.unitId() || undefined;
+    const currentTab = this.currentUnitTab();
 
-    // Определяем приоритет: operationalUnit > assignedUnit > unit
-    if (operationalUnitId) {
-      this.soldierService.getByOperational(operationalUnitId).subscribe((items) => {
+    if (!currentUnitId) {
+      // Если нет unitId, загружаем все записи
+      this.soldierService.getAll().subscribe((items) => {
         this.items.set(items);
       });
-    } else if (assignedUnitId) {
-      this.soldierService.getByAssigned(assignedUnitId).subscribe((items) => {
-        this.items.set(items);
-      });
-    } else {
-      this.soldierService.getAll(undefined, unitId).subscribe((items) => {
-        this.items.set(items);
-      });
+      return;
+    }
+
+    // Определяем какой метод API использовать на основе currentUnitTab
+    switch (currentTab) {
+      case UnitTag.OperationalId:
+        this.soldierService.getByOperational(currentUnitId).subscribe((items) => {
+          this.items.set(items);
+        });
+        break;
+      case UnitTag.AssignedId:
+        this.soldierService.getByAssigned(currentUnitId).subscribe((items) => {
+          this.items.set(items);
+        });
+        break;
+      case UnitTag.UnitId:
+      default:
+        this.soldierService.getAll(undefined, currentUnitId).subscribe((items) => {
+          this.items.set(items);
+        });
+        break;
     }
   }
 
@@ -204,7 +214,7 @@ export class SoldiersComponent implements AfterViewInit {
           lastName: '',
           fio: '',
           nickName: '',
-          unitId: this.filterByUnitId() || '',
+          unitId: this.unitId() || '',
           unitShortName: '',
           arrivedAt: new Date(),
           departedAt: undefined,
