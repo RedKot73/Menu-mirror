@@ -19,15 +19,12 @@
           <strong>Батьківський:</strong>
           <span>{{ unit.parentShortName }}</span>
         </div>
+        } @if(!unit.isOperational) { @if(unit.militaryNumber){
+        <div class="info-item inline">
+          <strong>Військова частина:</strong>
+          <span>{{ unit.militaryNumber }}</span>
+        </div>
         }
-
-        @if(!unit.isOperational) {
-          @if(unit.militaryNumber){
-          <div class="info-item inline">
-            <strong>Військова частина:</strong>
-            <span>{{ unit.militaryNumber }}</span>
-          </div>
-          }
 
         <div class="info-item inline">
           <strong>Тип сил:</strong>
@@ -45,7 +42,7 @@
           <span>{{ unit.assignedShortName }}</span>
         </div>
         } }
-        
+
         <div class="info-item inline">
           <strong>Порядок:</strong>
           <span>{{ unit.orderVal }}</span>
@@ -73,6 +70,32 @@
 
       <div class="section-content">
         <app-page-soldiers [filterByUnitId]="unit.id"></app-page-soldiers>
+      </div>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel class="unit-section-panel">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon color="accent">assignment_ind</mat-icon>
+          Придані військовослужбовці
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+
+      <div class="section-content">
+        <app-page-soldiers [filterByAssignedUnitId]="unit.id"></app-page-soldiers>
+      </div>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel class="unit-section-panel">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon color="accent">groups</mat-icon>
+          Оперативні військовослужбовці
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+
+      <div class="section-content">
+        <app-page-soldiers [filterByOperationalUnitId]="unit.id"></app-page-soldiers>
       </div>
     </mat-expansion-panel>
 

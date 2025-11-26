@@ -42,7 +42,7 @@ namespace S5Server.Controllers
         public async Task<ActionResult<IEnumerable<SoldierDto>>> GetAll(
             [FromQuery] string? search,
             [FromQuery] string? unitId,
-            [FromQuery] string? assignedUnitId,
+            [FromQuery] int? limit,
             CancellationToken ct = default)
         {
             var q = Query();
@@ -55,12 +55,77 @@ namespace S5Server.Controllers
 
             if (!string.IsNullOrWhiteSpace(unitId))
                 q = q.Where(s => s.UnitId == unitId);
-
-            if (!string.IsNullOrWhiteSpace(assignedUnitId))
-                q = q.Where(s => s.AssignedUnitId == assignedUnitId);
+            if (limit is > 0 and <= 100)
+                q = q.Take(limit.Value);
 
             var list = await q
-                .AsNoTracking()
+                .OrderBy(s => s.FirstName)
+                .ThenBy(s => s.MidleName)
+                .ThenBy(s => s.LastName)
+                .Select(s => SoldierDto.ToDto(s))
+                .ToListAsync(ct);
+
+            return Ok(list);
+        }
+
+        /// <summary>
+        /// Список військовослужбовців за приданим підрозділом.
+        /// </summary>
+        [HttpGet("by-assigned")]
+        public async Task<ActionResult<IEnumerable<SoldierDto>>> GetByAssigned(
+            [FromQuery] string assignedUnitId,
+            [FromQuery] string? search,
+            [FromQuery] int? limit,
+            CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(assignedUnitId))
+                return BadRequest("assignedUnitId обязателен.");
+
+            var q = Query().Where(s => s.AssignedUnitId == assignedUnitId);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim();
+                q = q.Where(s => s.FirstName.Contains(search));
+            }
+            if (limit is > 0 and <= 100)
+                q = q.Take(limit.Value);
+
+            var list = await q
+                .OrderBy(s => s.FirstName)
+                .ThenBy(s => s.MidleName)
+                .ThenBy(s => s.LastName)
+                .Select(s => SoldierDto.ToDto(s))
+                .ToListAsync(ct);
+
+            return Ok(list);
+        }
+
+        /// <summary>
+        /// Список військовослужбовців за оперативним підрозділом.
+        /// </summary>
+        [HttpGet("by-operational")]
+        public async Task<ActionResult<IEnumerable<SoldierDto>>> GetByOperational(
+            [FromQuery] string operationalUnitId,
+            [FromQuery] string? search,
+            [FromQuery] int? limit,
+            CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(operationalUnitId))
+                return BadRequest("operationalUnitId обязателен.");
+
+            var q = Query().Where(s => s.OperationalUnitId == operationalUnitId);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim();
+                q = q.Where(s => s.FirstName.Contains(search));
+            }
+
+            if (limit is > 0 and <= 100)
+                q = q.Take(limit.Value);
+
+            var list = await q
                 .OrderBy(s => s.FirstName)
                 .ThenBy(s => s.MidleName)
                 .ThenBy(s => s.LastName)
@@ -86,7 +151,6 @@ namespace S5Server.Controllers
             term = term.Trim();
 
             var data = await Query()
-                .AsNoTracking()
                 .Where(s => s.FirstName.Contains(term))
                 .OrderBy(s => s.FirstName)
                 .ThenBy(s => s.MidleName)
@@ -101,13 +165,15 @@ namespace S5Server.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<SoldierDto>> Get(string id, CancellationToken ct = default)
         {
+            if (string.IsNullOrWhiteSpace(id))
+                return BadRequest("id обязателен.");
+
             var e = await Query().FirstOrDefaultAsync(s => s.Id == id, ct);
             return e is null ? NotFound() : Ok(SoldierDto.ToDto(e));
         }
 
         [HttpPost]
-        public async Task<ActionResult<SoldierDto>> Create([FromBody] SoldierCreateDto dto,
-            CancellationToken ct = default)
+        public async Task<ActionResult<SoldierDto>> Create([FromBody] SoldierCreateDto dto, CancellationToken ct = default)
         {
             if (dto is null) return BadRequest("Пустое тело.");
             if (string.IsNullOrWhiteSpace(dto.FirstName)) return BadRequest("FirstName не может быть пустым.");
@@ -115,7 +181,6 @@ namespace S5Server.Controllers
             if (string.IsNullOrWhiteSpace(dto.RankId)) return BadRequest("RankId обязателен.");
             if (string.IsNullOrWhiteSpace(dto.PositionId)) return BadRequest("PositionId обязателен.");
             if (string.IsNullOrWhiteSpace(dto.StateId)) return BadRequest("StateId обязателен.");
-
 
             var entity = dto.ToEntity();
 
@@ -129,24 +194,19 @@ namespace S5Server.Controllers
                 return Conflict("Запись с такими данными уже существует.");
             }
 
-            // Подгружаем навигации для корректного DTO
             entity = await Query().FirstAsync(s => s.Id == entity.Id, ct);
             return CreatedAtAction(nameof(Get), new { id = entity.Id }, SoldierDto.ToDto(entity));
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(string id,
-            [FromBody] SoldierDto dto,
-            CancellationToken ct = default)
+        public async Task<IActionResult> Update(string id, [FromBody] SoldierDto dto, CancellationToken ct = default)
         {
             if (dto is null) return BadRequest("Пустое тело.");
             if (string.IsNullOrWhiteSpace(dto.FirstName)) return BadRequest("FirstName не может быть пустым.");
 
-            var e = await _set.AsTracking()
-                .FirstOrDefaultAsync(x => x.Id == id, ct);
+            var e = await _set.AsTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
             if (e is null) return NotFound();
 
-            // Снимок только полей, которые реально обновляем
             var original = (e.FirstName, e.MidleName, e.LastName, e.NickName,
                             e.UnitId, e.AssignedUnitId, e.OperationalUnitId, e.RankId, e.PositionId, e.StateId, e.Comment);
 

@@ -71,6 +71,10 @@ export class SoldiersComponent implements AfterViewInit {
 
   // Input для фильтрации по подразделению
   filterByUnitId = input<string | null>(null);
+  // Input для фильтрации по приданному подразделению
+  filterByAssignedUnitId = input<string | null>(null);
+  // Input для фильтрации по оперативному подразделению
+  filterByOperationalUnitId = input<string | null>(null);
 
   items = this.soldierService.createItemsSignal();
   //allUnits = signal<UnitDto[]>([]);
@@ -127,10 +131,13 @@ export class SoldiersComponent implements AfterViewInit {
       this.dataSource.data = this.items();
     });
 
-    // Автоматически перезагружаем данные при изменении фильтра подразделения
+    // Автоматически перезагружаем данные при изменении любого из фильтров
     effect(() => {
       const unitFilter = this.filterByUnitId();
-      if (unitFilter !== null) {
+      const assignedFilter = this.filterByAssignedUnitId();
+      const operationalFilter = this.filterByOperationalUnitId();
+
+      if (unitFilter !== null || assignedFilter !== null || operationalFilter !== null) {
         this.reload();
       }
     });
@@ -149,21 +156,29 @@ export class SoldiersComponent implements AfterViewInit {
   }
 
   reload() {
-    // Определяем параметры для сервера
+    // Определяем какой тип фильтрации использовать
     const unitId = this.filterByUnitId() === '' ? undefined : this.filterByUnitId() || undefined;
-    /*
     const assignedUnitId =
-      this.selectedAssignedUnitId === ''
+      this.filterByAssignedUnitId() === '' ? undefined : this.filterByAssignedUnitId() || undefined;
+    const operationalUnitId =
+      this.filterByOperationalUnitId() === ''
         ? undefined
-        : this.selectedAssignedUnitId === 'null'
-        ? 'null'
-        : this.selectedAssignedUnitId || undefined;
-        */
+        : this.filterByOperationalUnitId() || undefined;
 
-    //this.soldierService.getAll(this.searchText, unitId, assignedUnitId).subscribe((items) => {
-    this.soldierService.getAll(undefined, unitId, undefined).subscribe((items) => {
-      this.items.set(items);
-    });
+    // Определяем приоритет: operationalUnit > assignedUnit > unit
+    if (operationalUnitId) {
+      this.soldierService.getByOperational(operationalUnitId).subscribe((items) => {
+        this.items.set(items);
+      });
+    } else if (assignedUnitId) {
+      this.soldierService.getByAssigned(assignedUnitId).subscribe((items) => {
+        this.items.set(items);
+      });
+    } else {
+      this.soldierService.getAll(undefined, unitId).subscribe((items) => {
+        this.items.set(items);
+      });
+    }
   }
 
   /*

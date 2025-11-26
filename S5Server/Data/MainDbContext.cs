@@ -150,7 +150,8 @@ namespace S5Server.Data
                 entity.ToTable("soldiers");
                 entity.HasKey(e => e.Id);
 
-                entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+                entity.Property(e => e.Id).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.ExternId).HasColumnType("INTEGER");
                 entity.Property(e => e.FirstName).IsRequired().HasColumnType("TEXT(50)");
                 entity.Property(e => e.MidleName).HasColumnType("TEXT(50)");
                 entity.Property(e => e.LastName).HasColumnType("TEXT(50)");
