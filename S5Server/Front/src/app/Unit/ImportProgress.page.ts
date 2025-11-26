@@ -33,14 +33,7 @@ export class ImportProgressPage implements OnInit, OnDestroy {
   private router = inject(Router);
   private unitService = inject(UnitService);
 
-  displayedColumns: string[] = [
-    'externalId',
-    'rank',
-    'fullName',
-    'birthDate',
-    'position',
-    'status',
-  ];
+  displayedColumns: string[] = ['externId', 'rank', 'fullName', 'birthDate', 'position', 'status'];
 
   currentSheet = signal<string | null>(null);
   processedRows = signal(0);

@@ -8,6 +8,7 @@ using S5Server.Models;
 namespace S5Server.Services
 {
     public record ImportedSoldier(
+        int ExternId,
         string FirstName,
         string? MidleName,
         string? LastName,
@@ -32,7 +33,6 @@ namespace S5Server.Services
         public DateTime StartedAtUtc { get; set; } = DateTime.UtcNow;
         public DateTime? FinishedAtUtc { get; set; }
         public string? Error { get; set; }
-        //public List<ImportUnit>? Result { get; set; }
     }
 
     public record ImportProgress(string? Sheet, int Processed, int Total, string? Message);
@@ -42,7 +42,7 @@ namespace S5Server.Services
         private static readonly Lock _sync = new();
         private static readonly ImportJob _current = new();
         public static ImportJob Current => _current;
-        public static bool IsRunning => _current is not null && _current.Status == ImportJobStatus.Running;
+        public static bool IsRunning => _current.Status == ImportJobStatus.Running;
 
         // Потокобезопасное хранение последнего результата
         private static readonly Lock _resultLock = new();
@@ -138,14 +138,18 @@ namespace S5Server.Services
             var wbPart = doc.WorkbookPart;
             var sheets = wbPart?.Workbook?.Sheets;
             if (sheets == null)
-                return;// [];
+                return;
 
             lock (_resultLock)
             {
                 _Result.Clear();
             }
+
             foreach (var sheet in sheets.OfType<Sheet>())
             {
+                // Проверка отмены перед началом обработки листа
+                ct.ThrowIfCancellationRequested();
+
                 if (string.IsNullOrEmpty(sheet.Name)) continue;
 
                 var import = new ImportUnit(sheet.Name!, []);
@@ -166,6 +170,9 @@ namespace S5Server.Services
 
                 foreach (var row in rows)
                 {
+                    // Проверка отмены перед обработкой строки
+                    ct.ThrowIfCancellationRequested();
+
                     var ColFio = GetCellValue(doc, GetCell(row, "A")).Trim()
                         .Replace("\n\r", " ").Replace("\n", " ")
                         .Replace("\r", " ").Replace("\u00A0", " ");
@@ -188,7 +195,6 @@ namespace S5Server.Services
                         break;//после пустой строки данных нет
                     }
 
-                    // Разбиваем ФИО на три поля по пробелам
                     var fioParts = ColFio.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                     var firstName = fioParts.ElementAtOrDefault(0) ?? string.Empty;
                     string? midleName = fioParts.Length > 1 ? fioParts[1] : null;
@@ -210,6 +216,7 @@ namespace S5Server.Services
                     else if (ColArrived == "вибув") departedAt = DateOnly.FromDateTime(DateTime.Now);
 
                     var sldr = new ImportedSoldier(
+                        ExternId: externalId,
                         FirstName: firstName,
                         MidleName: midleName,
                         LastName: lastName,
@@ -228,7 +235,8 @@ namespace S5Server.Services
                     processed++;
                     Report(new ImportProgress(sheet.Name, processed, total, null));
 
-                    Thread.Sleep(100);
+                    // Заменяем блокирующую паузу на асинхронную с поддержкой отмены
+                    await Task.Delay(100, ct);
                 }
                 Report(new ImportProgress(sheet.Name, processed, total, "sheet-done"));
             }

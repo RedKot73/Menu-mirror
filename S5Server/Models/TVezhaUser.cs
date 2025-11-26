@@ -17,13 +17,12 @@ public class TVezhaUser<TKey> : IdentityUser<TKey> where TKey : IEquatable<TKey>
     /// <summary>
     /// Солдат
     /// </summary>
-    [ForeignKey(nameof(Soldier)), Display(Name = Soldier.Caption)]
+    [ForeignKey(nameof(Soldier))]
     public string SoldierId { get; set; } = string.Empty;
 
     /// <summary>
     /// Солдат
     /// </summary>
-    [Display(Name = Soldier.Caption)]
     public Soldier Soldier { get; set; } = default!;
     /*
     [ValidateNever, Display(Name = "Підрозділи, до яких є доступ")]

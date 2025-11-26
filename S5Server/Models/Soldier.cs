@@ -115,14 +115,16 @@ namespace S5Server.Models
     /// <summary>
     /// Боєць
     /// </summary>
-    [Table("soldiers"), Display(Name = Caption)]
+    [Table("soldiers")]
     public class Soldier
     {
-        public const string Caption = "Боєць";
-        public readonly string cnstCaption = Caption;
-
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public string Id { get; set; } = Guid.NewGuid().ToString();
+        /// <summary>
+        /// Из Ипульса, Армия- и тд.
+        /// Gets or sets the external identifier associated with the entity.
+        /// </summary>
+        public int? ExternId { get; set; }
 
         [StringLength(50), Display(Name = "Прізвище"), Required(ErrorMessage = UIConstant.RequiredMsg)]
         public string FirstName { get; set; } = string.Empty;

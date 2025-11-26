@@ -60,6 +60,7 @@ export interface UnitDataSetDto {
 }
 
 export interface ImportedSoldier {
+  externId?: number;
   firstName: string;
   midleName?: string;
   lastName?: string;
