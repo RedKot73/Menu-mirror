@@ -242,10 +242,10 @@ namespace S5Server.Controllers
         }
 
         /// <summary>
-        /// Призначити (придати) бійця до підрозділу.
+        /// Пидати бійця до підрозділу.
         /// </summary>
-        [HttpPost("{id}/assign/{unitId}")]
-        public async Task<IActionResult> Assign(string id, string unitId, CancellationToken ct = default)
+        [HttpPost("{id}/assign-assigned/{unitId}")]
+        public async Task<IActionResult> AssignAssigned(string id, string unitId, CancellationToken ct = default)
         {
             var e = await _set.AsTracking().FirstOrDefaultAsync(s => s.Id == id, ct);
             if (e is null) return NotFound("Боєць не знайдений.");
@@ -257,12 +257,40 @@ namespace S5Server.Controllers
         /// <summary>
         /// Відмінити придання (unassign).
         /// </summary>
-        [HttpPost("{id}/unassign")]
-        public async Task<IActionResult> Unassign(string id, CancellationToken ct = default)
+        [HttpPost("{id}/unassign-assigned")]
+        public async Task<IActionResult> UnassignAssigned(string id, CancellationToken ct = default)
         {
             var e = await _set.AsTracking().FirstOrDefaultAsync(s => s.Id == id, ct);
             if (e is null) return NotFound("Боєць не знайдений.");
             e.AssignedUnitId = null;
+            await _db.SaveChangesAsync(ct);
+            return NoContent();
+        }
+
+        
+            
+        /// <summary>
+        /// Пидати бійця до Оперативного підрозділу.
+        /// </summary>
+        [HttpPost("{id}/assign-operational/{unitId}")]
+        public async Task<IActionResult> AssignOperational(string id, string unitId, CancellationToken ct = default)
+        {
+            var e = await _set.AsTracking().FirstOrDefaultAsync(s => s.Id == id, ct);
+            if (e is null) return NotFound("Боєць не знайдений.");
+            e.OperationalUnitId = unitId;
+            await _db.SaveChangesAsync(ct);
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Відмінити придання до Оперативного підрозділу.
+        /// </summary>
+        [HttpPost("{id}/unassign-operational")]
+        public async Task<IActionResult> UnassignOperational(string id, CancellationToken ct = default)
+        {
+            var e = await _set.AsTracking().FirstOrDefaultAsync(s => s.Id == id, ct);
+            if (e is null) return NotFound("Боєць не знайдений.");
+            e.OperationalUnitId = null;
             await _db.SaveChangesAsync(ct);
             return NoContent();
         }

@@ -120,12 +120,41 @@ export class SoldierService {
   }
 
   // Методы для управления назначениями
-  assign(id: string, unitId: string): Observable<void> {
-    return this.http.post<void>(`${this.api}/${id}/assign/${unitId}`, {});
+  /**
+   * Назначает бойцу подразделение Приданий до...
+   * @param id Soldier.id
+   * @param unitId Unit.id
+   * @returns void
+   */
+  assignAssigned(id: string, unitId: string): Observable<void> {
+    return this.http.post<void>(`${this.api}/${id}/assign-assigned/${unitId}`, {});
+  }
+  /**
+   * Снимает назначение подразделения Приданий с бойца
+   * @param id Soldier.id
+   * @returns void
+   */
+  unassignAssigned(id: string): Observable<void> {
+    return this.http.post<void>(`${this.api}/${id}/unassign-assigned`, {});
   }
 
-  unassign(id: string): Observable<void> {
-    return this.http.post<void>(`${this.api}/${id}/unassign`, {});
+  /**
+   * Назначает бойцу Оперативний підрозділ
+   * @param id Soldier.id
+   * @param unitId Unit.id
+   * @returns void
+   */
+  assignOperational(id: string, unitId: string): Observable<void> {
+    return this.http.post<void>(`${this.api}/${id}/assign-operational/${unitId}`, {});
+  }
+
+  /**
+   * Снимает назначение Оперативний підрозділ с бойца
+   * @param id Soldier.id
+   * @returns void
+   */
+  unassignOperational(id: string): Observable<void> {
+    return this.http.post<void>(`${this.api}/${id}/unassign-operational`, {});
   }
 
   move(id: string, newUnitId: string): Observable<void> {
