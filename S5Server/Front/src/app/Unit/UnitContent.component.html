@@ -58,8 +58,9 @@
     </mat-card-content>
   </mat-card>
 
-  <!-- Дополнительные секции с expansion panels -->
   <mat-accordion class="sections-accordion">
+    @if(!unit.isOperational){
+    <!-- Особовий склад -->
     <mat-expansion-panel class="unit-section-panel">
       <mat-expansion-panel-header>
         <mat-panel-title>
@@ -73,6 +74,7 @@
       </div>
     </mat-expansion-panel>
 
+    <!-- Придані військовослужбовці -->
     <mat-expansion-panel class="unit-section-panel">
       <mat-expansion-panel-header>
         <mat-panel-title>
@@ -88,7 +90,9 @@
         ></app-page-soldiers>
       </div>
     </mat-expansion-panel>
+    }
 
+    <!-- Оперативні військовослужбовці -->
     <mat-expansion-panel class="unit-section-panel">
       <mat-expansion-panel-header>
         <mat-panel-title>
@@ -105,6 +109,7 @@
       </div>
     </mat-expansion-panel>
 
+    <!-- Дополнительные секции с expansion panels -->
     <mat-expansion-panel class="unit-section-panel">
       <mat-expansion-panel-header>
         <mat-panel-title>

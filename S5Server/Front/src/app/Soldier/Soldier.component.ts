@@ -74,6 +74,9 @@ export class SoldiersComponent implements AfterViewInit {
   soldierService = inject(SoldierService);
   unitService = inject(UnitService);
 
+  // Делаем UnitTag доступным в шаблоне
+  readonly UnitTag = UnitTag;
+
   //Поточна вкладка підрозділу
   currentUnitTab = input<number>(UnitTag.UnitId);
   // Input для ID подразделения (единый для всех вкладок)
@@ -160,7 +163,6 @@ export class SoldiersComponent implements AfterViewInit {
 
   reload() {
     const currentUnitId = this.unitId() === '' ? undefined : this.unitId() || undefined;
-    const currentTab = this.currentUnitTab();
 
     if (!currentUnitId) {
       // Если нет unitId, загружаем все записи
@@ -171,7 +173,7 @@ export class SoldiersComponent implements AfterViewInit {
     }
 
     // Определяем какой метод API использовать на основе currentUnitTab
-    switch (currentTab) {
+    switch (this.currentUnitTab()) {
       case UnitTag.OperationalId:
         this.soldierService.getByOperational(currentUnitId).subscribe((items) => {
           this.items.set(items);
@@ -298,6 +300,65 @@ export class SoldiersComponent implements AfterViewInit {
     ref.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
         this.soldierService.delete(soldier.id).subscribe(() => this.reload());
+      }
+    });
+  }
+
+  unassign(soldier: Soldier) {
+    if (this.currentUnitTab() === UnitTag.AssignedId) {
+      this.unassignAssigned(soldier);
+    } else {
+      this.unassignOperational(soldier);
+    }
+  }
+
+  /**
+   *
+   * @param soldier
+   */
+  unassignAssigned(soldier: Soldier) {
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '360px',
+      maxWidth: '95vw',
+      autoFocus: false,
+      data: {
+        title: 'Вилучення бійця',
+        message: `Ви впевнені, що хочете вилучити бійця "${soldier.fio}" з переліку?`,
+        confirmText: 'Вилучити',
+        cancelText: 'Відмінити',
+        color: 'warn',
+        icon: 'warning',
+      },
+    });
+
+    ref.afterClosed().subscribe((confirmed) => {
+      if (confirmed) {
+        this.soldierService.unassignAssigned(soldier.id).subscribe(() => this.reload());
+      }
+    });
+  }
+
+  /**
+   * Вилучити призначення оперативного підрозділу
+   */
+  unassignOperational(soldier: Soldier) {
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '360px',
+      maxWidth: '95vw',
+      autoFocus: false,
+      data: {
+        title: 'Вилучення бійця',
+        message: `Ви впевнені, що хочете вилучити бійця "${soldier.fio}" з переліку?`,
+        confirmText: 'Вилучити',
+        cancelText: 'Відмінити',
+        color: 'warn',
+        icon: 'warning',
+      },
+    });
+
+    ref.afterClosed().subscribe((confirmed) => {
+      if (confirmed) {
+        this.soldierService.unassignOperational(soldier.id).subscribe(() => this.reload());
       }
     });
   }
