@@ -131,14 +131,12 @@
         <h3>{{ selectedUnitTitle() }}</h3>
       </div>
     </div>
-    <div class="panel-content">
       <!-- Основное содержимое -->
-      <unit-content
+      <unit-content class="panel-content"
         [selectedUnit]="selectedUnit()"
         [sidenavOpen]="!isNavPanelCollapsed()"
         (showSidenav)="toggleNavPanel()"
       >
       </unit-content>
-    </div>
   </div>
 </div>
