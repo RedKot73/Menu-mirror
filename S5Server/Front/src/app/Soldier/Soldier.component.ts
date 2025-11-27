@@ -438,22 +438,14 @@ export class SoldiersComponent implements AfterViewInit {
     this.isLoadingAssignedMap.set(soldier.id, false);
     const selectedUnit: LookupDto | null = event.option.value;
 
-    // Обновляем assignedUnitId
-    const updatedSoldier: SoldierDto = {
-      ...soldier,
-      assignedUnitId: selectedUnit?.id || undefined,
-      assignedUnitShortName: selectedUnit?.value || undefined,
-    };
+    // Используем специализированные методы API
+    const operation = selectedUnit
+      ? this.soldierService.assignAssigned(soldier.id, selectedUnit.id)
+      : this.soldierService.unassignAssigned(soldier.id);
 
-    // Отправляем на сервер
-    this.soldierService.update(soldier.id, updatedSoldier).subscribe(() => {
-      // Обновляем данные в таблице
-      const index = this.items().findIndex((s) => s.id === soldier.id);
-      if (index !== -1) {
-        const updated = [...this.items()];
-        updated[index] = updatedSoldier;
-        this.items.set(updated);
-      }
+    operation.subscribe(() => {
+      // Перезагружаем данные
+      this.reload();
       // Выходим из режима редактирования
       this.editingAssignedUnit.set(soldier.id, false);
     });
@@ -536,22 +528,10 @@ export class SoldiersComponent implements AfterViewInit {
       return;
     }
 
-    // Обновляем unitId
-    const updatedSoldier: SoldierDto = {
-      ...soldier,
-      unitId: selectedUnit.id,
-      unitShortName: selectedUnit.value,
-    };
-
-    // Отправляем на сервер
-    this.soldierService.update(soldier.id, updatedSoldier).subscribe(() => {
-      // Обновляем данные в таблице
-      const index = this.items().findIndex((s) => s.id === soldier.id);
-      if (index !== -1) {
-        const updated = [...this.items()];
-        updated[index] = updatedSoldier;
-        this.items.set(updated);
-      }
+    // Используем метод move для перемещения в другое подразделение
+    this.soldierService.move(soldier.id, selectedUnit.id).subscribe(() => {
+      // Перезагружаем данные
+      this.reload();
       // Выходим из режима редактирования
       this.editingUnit.set(soldier.id, false);
     });
@@ -630,22 +610,14 @@ export class SoldiersComponent implements AfterViewInit {
     this.isLoadingOperationalMap.set(soldier.id, false);
     const selectedUnit: LookupDto | null = event.option.value;
 
-    // Обновляем operationalUnitId
-    const updatedSoldier: SoldierDto = {
-      ...soldier,
-      operationalUnitId: selectedUnit?.id || undefined,
-      operationalUnitShortName: selectedUnit?.value || undefined,
-    };
+    // Используем специализированные методы API
+    const operation = selectedUnit
+      ? this.soldierService.assignOperational(soldier.id, selectedUnit.id)
+      : this.soldierService.unassignOperational(soldier.id);
 
-    // Отправляем на сервер
-    this.soldierService.update(soldier.id, updatedSoldier).subscribe(() => {
-      // Обновляем данные в таблице
-      const index = this.items().findIndex((s) => s.id === soldier.id);
-      if (index !== -1) {
-        const updated = [...this.items()];
-        updated[index] = updatedSoldier;
-        this.items.set(updated);
-      }
+    operation.subscribe(() => {
+      // Перезагружаем данные
+      this.reload();
       // Выходим из режима редактирования
       this.editingOperationalUnit.set(soldier.id, false);
     });
