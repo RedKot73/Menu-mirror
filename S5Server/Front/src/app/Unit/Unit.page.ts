@@ -15,6 +15,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -23,6 +24,7 @@ import { CommonModule } from '@angular/common';
 
 import { UnitService, UnitDto, UnitTreeItemDto } from './services/unit.service';
 import { UnitTreeComponent } from './UnitTree.component';
+import { UnitTableComponent } from './UnitTable.component';
 import { UnitContentComponent } from './UnitContent.component';
 import { UnitTreeNode } from './unit-tree-node.component';
 
@@ -36,10 +38,12 @@ export type Unit = UnitDto;
     MatChipsModule,
     MatIconModule,
     MatButtonModule,
+    MatButtonToggleModule,
     MatMenuModule,
     MatDividerModule,
     MatTooltipModule,
     UnitTreeComponent,
+    UnitTableComponent,
     UnitContentComponent,
   ],
   templateUrl: './Unit.page.html',
@@ -56,6 +60,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
 
   // State signals
   selectedUnit = signal<UnitDto | null>(null);
+  viewMode = signal<'tree' | 'table'>(this.getSavedViewMode());
 
   // Panel signals (replacing sidenav signals)
   navPanelWidth = signal(this.getSavedNavPanelWidth());
@@ -208,6 +213,20 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
     localStorage.setItem('unitNavPanelWidth', width.toString());
   }
 
+  private getSavedViewMode(): 'tree' | 'table' {
+    const saved = localStorage.getItem('unitViewMode');
+    return (saved === 'table' ? 'table' : 'tree') as 'tree' | 'table';
+  }
+
+  private saveViewMode(mode: 'tree' | 'table'): void {
+    localStorage.setItem('unitViewMode', mode);
+  }
+
+  onViewModeChange(mode: 'tree' | 'table'): void {
+    this.viewMode.set(mode);
+    this.saveViewMode(mode);
+  }
+
   /** Переключает состояние навигационной панели (свернута/развернута) */
   toggleNavPanel(): void {
     if (this.isNavPanelCollapsed()) {
@@ -246,7 +265,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  onUnitSelected(unit: UnitTreeItemDto) {
+  onUnitSelected(unit: UnitTreeItemDto | UnitDto) {
     // Получаем полную информацию о подразделении
     this.unitService.getById(unit.id).subscribe((fullUnit) => {
       this.selectedUnit.set(fullUnit);
@@ -258,10 +277,10 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  onUnitUpdated(unit: UnitTreeItemDto) {
+  onUnitUpdated(unit?: UnitTreeItemDto) {
     // Если обновленное подразделение - это текущее выбранное, обновляем его
     const currentSelected = this.selectedUnit();
-    if (currentSelected && currentSelected.id === unit.id) {
+    if (unit && currentSelected && currentSelected.id === unit.id) {
       // Получаем полную обновленную информацию
       this.unitService.getById(unit.id).subscribe((fullUnit) => {
         this.selectedUnit.set(fullUnit);

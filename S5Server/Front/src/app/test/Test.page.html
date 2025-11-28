@@ -14,19 +14,19 @@
       </div>
     </div>
     <div class="panel-content" [class.hidden]="isNavPanelCollapsed()">
+      <!-- Кастомный шаблон действий узла -->
+      <ng-template #nodeActions let-node>
+        <button
+          mat-icon-button
+          matTooltip="Додати до списку вибору"
+          (click)="addUnitToSelection(node); $event.stopPropagation()"
+        >
+          <mat-icon color="primary">add_circle</mat-icon>
+        </button>
+      </ng-template>
+
       <!-- Дерево подразделений с кастомными действиями -->
-      <unit-tree class="unit-tree">
-        <!-- Кастомный шаблон действий узла -->
-        <ng-template #nodeActions let-node>
-          <button
-            mat-icon-button
-            matTooltip="Додати до списку вибору"
-            (click)="addUnitToSelection(node); $event.stopPropagation()"
-          >
-            <mat-icon color="primary">add_circle</mat-icon>
-          </button>
-        </ng-template>
-      </unit-tree>
+      <unit-tree class="unit-tree" [nodeActionsTemplate]="nodeActions"></unit-tree>
     </div>
   </div>
 

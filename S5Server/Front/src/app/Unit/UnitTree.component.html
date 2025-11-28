@@ -15,7 +15,7 @@
     <unit-tree-node
       [node]="node"
       [isExpanded]="expansionModel.isSelected(node.id)"
-      [nodeActionsTemplate]="nodeActionsTemplate"
+      [nodeActionsTemplate]="nodeActionsTemplate()"
       (toggleNode)="toggleNode($event)"
       (selectNode)="selectUnit($event)"
       (addChild)="addChild($event)"

@@ -7,6 +7,18 @@
     <div class="panel-header" [class.hidden]="isNavPanelCollapsed()">
       <h3>Дерево підрозділів</h3>
       <div class="header-actions">
+        <mat-button-toggle-group
+          [value]="viewMode()"
+          (change)="onViewModeChange($event.value)"
+          class="view-toggle"
+        >
+          <mat-button-toggle value="tree" matTooltip="Деревоподібне представлення">
+            <mat-icon>account_tree</mat-icon>
+          </mat-button-toggle>
+          <mat-button-toggle value="table" matTooltip="Табличне представлення">
+            <mat-icon>view_list</mat-icon>
+          </mat-button-toggle>
+        </mat-button-toggle-group>
         <button mat-raised-button color="primary" (click)="refresh()" [disabled]="loading()">
           <mat-icon>refresh</mat-icon>
           Оновити
@@ -18,92 +30,102 @@
       </div>
     </div>
     <div class="panel-content" [class.hidden]="isNavPanelCollapsed()">
+      <!-- Меню действий с узлом - общее для обоих представлений -->
+      <ng-template #nodeActions let-node>
+        <div class="node-actions">
+          <button
+            mat-icon-button
+            [matMenuTriggerFor]="nodeMenu"
+            matTooltip="Дії з підрозділом"
+            (click)="$event.stopPropagation()"
+            #menuTrigger="matMenuTrigger"
+          >
+            <mat-icon>more_vert</mat-icon>
+          </button>
+
+          <mat-menu #nodeMenu="matMenu">
+            <button
+              mat-menu-item
+              matTooltip="Додати дочірній підрозділ"
+              (click)="menuTrigger.closeMenu(); addChild(node)"
+            >
+              <mat-icon color="primary">add</mat-icon>
+              <span>Додати дочірній підрозділ</span>
+            </button>
+            <button
+              mat-menu-item
+              matTooltip="Додати оперативний підрозділ"
+              (click)="menuTrigger.closeMenu(); addOperationalChild(node)"
+              [disabled]="node.isOperational"
+            >
+              <mat-icon>groups</mat-icon>
+              <span>Додати оперативний підрозділ</span>
+            </button>
+            <button
+              mat-menu-item
+              matTooltip="Редагувати підрозділ"
+              (click)="menuTrigger.closeMenu(); edit(node)"
+            >
+              <mat-icon color="accent">edit</mat-icon>
+              <span>Редагувати</span>
+            </button>
+            <button
+              mat-menu-item
+              matTooltip="Перемістити вище"
+              (click)="menuTrigger.closeMenu(); moveUpDown(node, true)"
+            >
+              <mat-icon color="primary">arrow_upward</mat-icon>
+              <span>Вище</span>
+            </button>
+            <button
+              mat-menu-item
+              matTooltip="Перемістити нижче"
+              (click)="menuTrigger.closeMenu(); moveUpDown(node, false)"
+            >
+              <mat-icon color="primary">arrow_downward</mat-icon>
+              <span>Нижче</span>
+            </button>
+            <button
+              mat-menu-item
+              matTooltip="Імпортувати особовий склад"
+              (click)="menuTrigger.closeMenu(); importSoldiers(node)"
+            >
+              <mat-icon color="primary">upload_file</mat-icon>
+              <span>Імпорт ОС</span>
+            </button>
+            <mat-divider></mat-divider>
+            <button
+              mat-menu-item
+              matTooltip="Видалити підрозділ"
+              (click)="menuTrigger.closeMenu(); delete(node)"
+              [disabled]="node.hasChildren"
+              class="delete-action"
+            >
+              <mat-icon>delete</mat-icon>
+              <span>Видалити</span>
+            </button>
+          </mat-menu>
+        </div>
+      </ng-template>
+
+      @if (viewMode() === 'tree') {
       <!-- Дерево подразделений -->
       <unit-tree
         (unitSelected)="onUnitSelected($event)"
         (unitUpdated)="onUnitUpdated($event)"
+        [nodeActionsTemplate]="nodeActions"
         class="unit-tree"
       >
-        <!-- Меню действий с узлом -->
-        <ng-template #nodeActions let-node>
-          <div class="node-actions">
-            <button
-              mat-icon-button
-              [matMenuTriggerFor]="nodeMenu"
-              matTooltip="Дії з підрозділом"
-              (click)="$event.stopPropagation()"
-              #menuTrigger="matMenuTrigger"
-            >
-              <!--#menuTrigger="matMenuTrigger" нужен ниже
-            для закрытия меню перед выполнением команды-->
-              <mat-icon>more_vert</mat-icon>
-            </button>
-
-            <mat-menu #nodeMenu="matMenu">
-              <button
-                mat-menu-item
-                matTooltip="Додати дочірній підрозділ"
-                (click)="menuTrigger.closeMenu(); addChild(node)"
-              >
-                <mat-icon color="primary">add</mat-icon>
-                <span>Додати дочірній підрозділ</span>
-              </button>
-              <button
-                mat-menu-item
-                matTooltip="Додати оперативний підрозділ"
-                (click)="menuTrigger.closeMenu(); addOperationalChild(node)"
-                [disabled]="node.isOperational"
-              >
-                <mat-icon>groups</mat-icon>
-                <span>Додати оперативний підрозділ</span>
-              </button>
-              <button
-                mat-menu-item
-                matTooltip="Редагувати підрозділ"
-                (click)="menuTrigger.closeMenu(); edit(node)"
-              >
-                <mat-icon color="accent">edit</mat-icon>
-                <span>Редагувати</span>
-              </button>
-              <button
-                mat-menu-item
-                matTooltip="Перемістити вище"
-                (click)="menuTrigger.closeMenu(); moveUpDown(node, true)"
-              >
-                <mat-icon color="primary">arrow_upward</mat-icon>
-                <span>Вище</span>
-              </button>
-              <button
-                mat-menu-item
-                matTooltip="Перемістити нижче"
-                (click)="menuTrigger.closeMenu(); moveUpDown(node, false)"
-              >
-                <mat-icon color="primary">arrow_downward</mat-icon>
-                <span>Нижче</span>
-              </button>
-              <button
-                mat-menu-item
-                matTooltip="Імпортувати особовий склад"
-                (click)="menuTrigger.closeMenu(); importSoldiers(node)"
-              >
-                <mat-icon color="primary">upload_file</mat-icon>
-                <span>Імпорт ОС</span>
-              </button>
-              <mat-divider></mat-divider>
-              <button
-                mat-menu-item
-                matTooltip="Видалити підрозділ"
-                (click)="menuTrigger.closeMenu(); delete(node)"
-                [disabled]="node.hasChildren"
-                class="delete-action"
-              >
-                <mat-icon>delete</mat-icon>
-                <span>Видалити</span>
-              </button>
-            </mat-menu>
-          </div>
-        </ng-template>
       </unit-tree>
+      } @else {
+      <!-- Табличне представлення -->
+      <unit-table
+        (unitSelected)="onUnitSelected($event)"
+        (unitUpdated)="onUnitUpdated()"
+        [nodeActionsTemplate]="nodeActions"
+        class="unit-table"
+      ></unit-table>
+      }
     </div>
   </div>
 

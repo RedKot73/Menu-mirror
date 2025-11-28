@@ -40,11 +40,18 @@ import { MatSnackBar } from "@angular/material/snack-bar";
     MatMenuModule,
     MatChipsModule,
     MatProgressSpinnerModule,
-    MatDividerModule
-  ]
+    MatDividerModule,
+  ],
 })
 export class DataSetTableComponent implements AfterViewInit {
-  @ViewChild(MatSort, { static: false }) sort!: MatSort;
+  private _sort: MatSort | null = null;
+
+  @ViewChild(MatSort) set matSort(sort: MatSort) {
+    this._sort = sort;
+    if (sort) {
+      this.dataSource.sort = sort;
+    }
+  }
 
   private templateDataSetService = inject(TemplateDataSetService);
   private dialog = inject(MatDialog);
@@ -52,7 +59,7 @@ export class DataSetTableComponent implements AfterViewInit {
 
   // Input від родительського компонента
   selectedTemplate = input<TemplateDto | null>(null);
-  
+
   // Output для передачі вибраного набору даних
   dataSetSelected = output<TemplateDataSetListItem | null>();
 
@@ -81,16 +88,10 @@ export class DataSetTableComponent implements AfterViewInit {
     // Обновляем dataSource при изменении данных
     effect(() => {
       this.dataSource.data = this.dataSets();
-      if (this.sort) {
-        this.dataSource.sort = this.sort;
-      }
     });
   }
 
   ngAfterViewInit(): void {
-    if (this.sort) {
-      this.dataSource.sort = this.sort;
-    }
   }
 
   /**
@@ -101,6 +102,7 @@ export class DataSetTableComponent implements AfterViewInit {
     this.templateDataSetService.getDataSets(templateId).subscribe({
       next: (datasets) => {
         this.dataSets.set(datasets);
+        this.dataSource.sort = this._sort;
         this.isLoading.set(false);
       },
       error: (error) => {
@@ -108,7 +110,7 @@ export class DataSetTableComponent implements AfterViewInit {
         this.dataSets.set([]);
         this.snackBar.open('Помилка завантаження наборів даних', 'Закрити', { duration: 5000 });
         this.isLoading.set(false);
-      }
+      },
     });
   }
 
@@ -125,21 +127,22 @@ export class DataSetTableComponent implements AfterViewInit {
    */
   createDataSet(): void {
     const template = this.selectedTemplate();
-    if (!template) {return;}
-    
+    if (!template) {
+      return;
+    }
+
     const dialogRef = this.dialog.open(CreateDataSetDialogComponent, {
       width: '700px',
       maxWidth: '90vw',
       disableClose: true,
       data: {
         templateId: template.id,
-        templateName: template.name
-      }
+        templateName: template.name,
+      },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        console.log('Dataset created successfully:', result);
         this.refreshDataSets();
       }
     });
@@ -150,14 +153,16 @@ export class DataSetTableComponent implements AfterViewInit {
    */
   editDataSet(dataSet: TemplateDataSetListItem): void {
     const template = this.selectedTemplate();
-    if (!template) {return;}
-    
+    if (!template) {
+      return;
+    }
+
     // Сначала загружаем полные данные набора
     this.isLoading.set(true);
     this.templateDataSetService.getDataSet(dataSet.id).subscribe({
       next: (fullDataSet) => {
         this.isLoading.set(false);
-        
+
         const dialogRef = this.dialog.open(CreateDataSetDialogComponent, {
           width: '700px',
           maxWidth: '90vw',
@@ -165,13 +170,12 @@ export class DataSetTableComponent implements AfterViewInit {
           data: {
             templateId: template.id,
             templateName: template.name,
-            dataSet: fullDataSet  // Передаем полные данные для редактирования
-          }
+            dataSet: fullDataSet, // Передаем полные данные для редактирования
+          },
         });
 
-        dialogRef.afterClosed().subscribe(result => {
+        dialogRef.afterClosed().subscribe((result) => {
           if (result) {
-            console.log('Dataset updated successfully:', result);
             this.refreshDataSets();
           }
         });
@@ -180,7 +184,7 @@ export class DataSetTableComponent implements AfterViewInit {
         this.isLoading.set(false);
         console.error('Error loading dataset for edit:', error);
         this.snackBar.open('Помилка завантаження наборів даних', 'Закрити', { duration: 5000 });
-      }
+      },
     });
   }
 
@@ -190,17 +194,16 @@ export class DataSetTableComponent implements AfterViewInit {
   cloneDataSet(dataSet: TemplateDataSetListItem): void {
     const newName = `${dataSet.name} (копія)`;
     this.isLoading.set(true);
-    
+
     this.templateDataSetService.cloneDataSet(dataSet.id, newName).subscribe({
-      next: (clonedDataSet) => {
-        console.log('Dataset cloned successfully:', clonedDataSet);
+      next: () => {
         this.refreshDataSets();
       },
       error: (error) => {
         console.error('Error cloning dataset:', error);
         this.snackBar.open('Помилка клонування набору даних', 'Закрити', { duration: 5000 });
         this.isLoading.set(false);
-      }
+      },
     });
   }
 
@@ -208,39 +211,38 @@ export class DataSetTableComponent implements AfterViewInit {
    * Удаляет набор данных
    */
   deleteDataSet(dataSet: TemplateDataSetListItem): void {
-        const ref = this.dialog.open(ConfirmDialogComponent, {
-            width: '400px',
-            maxWidth: '95vw',
-            autoFocus: false,
-            data: {
-                title: 'Видалення даних',
-                message: `Ви впевнені, що хочете видалити дані "${dataSet.name}"?`,
-                confirmText: 'Видалити',
-                cancelText: 'Відмінити',
-                color: 'warn',
-                icon: 'warning'
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      maxWidth: '95vw',
+      autoFocus: false,
+      data: {
+        title: 'Видалення даних',
+        message: `Ви впевнені, що хочете видалити дані "${dataSet.name}"?`,
+        confirmText: 'Видалити',
+        cancelText: 'Відмінити',
+        color: 'warn',
+        icon: 'warning',
+      },
+    });
+
+    ref.afterClosed().subscribe((confirmed) => {
+      if (confirmed) {
+        this.isLoading.set(true);
+        this.templateDataSetService.deleteDataSet(dataSet.id).subscribe({
+          next: () => {
+            if (this.selectedDataSet()?.id === dataSet.id) {
+              this.selectedDataSet.set(null);
             }
+            this.refreshDataSets();
+          },
+          error: (error) => {
+            console.error('Error deleting dataset:', error);
+            this.snackBar.open('Помилка видалення набору даних', 'Закрити', { duration: 5000 });
+            this.isLoading.set(false);
+          },
         });
-        
-        ref.afterClosed().subscribe(confirmed => {
-            if (confirmed) {
-              this.isLoading.set(true);
-              this.templateDataSetService.deleteDataSet(dataSet.id).subscribe({
-                next: () => {
-                  console.log('Dataset deleted successfully');
-                  if (this.selectedDataSet()?.id === dataSet.id) {
-                    this.selectedDataSet.set(null);
-                  }
-                  this.refreshDataSets();
-                },
-                error: (error) => {
-                  console.error('Error deleting dataset:', error);
-                  this.snackBar.open('Помилка видалення набору даних', 'Закрити', { duration: 5000 });
-                  this.isLoading.set(false);
-                }
-              });
-            }
-        });
+      }
+    });
   }
 
   /**
@@ -261,8 +263,8 @@ export class DataSetTableComponent implements AfterViewInit {
   }
 
   /**
-     * Получает читаемое название статуса публикации
-     */
+   * Получает читаемое название статуса публикации
+   */
   getStatusLabel(isPublished: boolean): string {
     return DocTemplateUtils.getStatusLabel(isPublished);
   }

@@ -1,12 +1,4 @@
-import {
-  Component,
-  inject,
-  OnInit,
-  signal,
-  output,
-  ContentChild,
-  TemplateRef,
-} from '@angular/core';
+import { Component, inject, OnInit, signal, output, input, TemplateRef } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
@@ -46,8 +38,8 @@ export class UnitTreeComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
 
-  // Content Projection: кастомный шаблон для действий узла
-  @ContentChild('nodeActions') nodeActionsTemplate?: TemplateRef<{ $implicit: UnitTreeNode }>;
+  // Input: кастомный шаблон для действий узла
+  nodeActionsTemplate = input<TemplateRef<{ $implicit: UnitTreeNode }> | undefined>(undefined);
 
   // Output для выбора подразделения
   unitSelected = output<UnitTreeItemDto>();

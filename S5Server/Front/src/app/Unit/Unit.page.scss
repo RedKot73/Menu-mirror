@@ -48,6 +48,16 @@
     align-items: center;
     gap: 8px;
     flex-shrink: 0; // Кнопки не сжимаются
+
+    .view-toggle {
+      height: 36px;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
   }
 
   .unit-toolbar {
@@ -81,6 +91,36 @@
   .unit-tree {
     height: 100%;
     padding: 8px;
+  }
+
+  .unit-table {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .unit-table-container {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+
+    .placeholder-text {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      color: #757575;
+      font-size: 16px;
+
+      mat-icon {
+        font-size: 64px;
+        width: 64px;
+        height: 64px;
+        color: #bdbdbd;
+      }
+    }
   }
 }
 
