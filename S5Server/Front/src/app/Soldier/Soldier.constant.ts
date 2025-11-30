@@ -7,6 +7,13 @@ export const SoldierStatusIds = {
   RELEASED_FROM_CAPTIVITY: '00000000-0000-0000-0000-000000001000', // 1000 Звільнено з полону
 } as const;
 
+export const UnitTag = {
+  UnitId: 1, // Смотрим на вкладку Штатний ОС
+  AssignedId: 2, // Смотрим на вкладку Приданий ОС
+  OperationalId: 4, // Смотрим на вкладку Оперативний ОС
+  AllId: 7//UnitTag.UnitId | UnitTag.AssignedId | UnitTag.OperationalId,
+} as const;
+
 /**
  * Перевіряє чи статус є критичним (загиблий)
  */

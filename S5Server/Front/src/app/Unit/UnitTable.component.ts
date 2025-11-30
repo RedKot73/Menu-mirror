@@ -19,6 +19,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 import { UnitService, UnitDto } from './services/unit.service';
 
@@ -36,6 +37,7 @@ import { UnitService, UnitDto } from './services/unit.service';
     MatDividerModule,
     MatFormFieldModule,
     MatInputModule,
+    MatButtonToggleModule,
   ],
   templateUrl: './UnitTable.component.html',
   styleUrl: './UnitTable.component.scss',
@@ -49,6 +51,7 @@ export class UnitTableComponent implements AfterViewInit {
 
   // Inputs
   nodeActionsTemplate = input<TemplateRef<{ $implicit: UnitDto }> | undefined>(undefined);
+  filterMode = signal<'all' | 'regular' | 'operational'>('all');
 
   // State
   units = signal<UnitDto[]>([]);
@@ -69,12 +72,31 @@ export class UnitTableComponent implements AfterViewInit {
 
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor() {
-    effect(() => {
-      this.dataSource.data = this.units();
-    });
+  /**
+   * Применяет фильтр по типу подразделения
+   */
+  private applyFilter(units: UnitDto[]): UnitDto[] {
+    const mode = this.filterMode();
 
+    switch (mode) {
+      case 'regular':
+        return units.filter((u) => !u.isOperational);
+      case 'operational':
+        return units.filter((u) => u.isOperational);
+      case 'all':
+      default:
+        return units;
+    }
+  }
+
+  constructor() {
+    // Объединенный effect для фильтрации по типу и поиску
     effect(() => {
+      // Сначала фильтруем по типу (all/regular/operational)
+      const filteredUnits = this.applyFilter(this.units());
+      this.dataSource.data = filteredUnits;
+
+      // Затем применяем текстовый поиск
       const search = this.searchText().toLowerCase();
       this.dataSource.filter = search;
     });

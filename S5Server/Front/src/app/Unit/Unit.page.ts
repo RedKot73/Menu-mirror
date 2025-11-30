@@ -27,6 +27,13 @@ import { UnitTreeComponent } from './UnitTree.component';
 import { UnitTableComponent } from './UnitTable.component';
 import { UnitContentComponent } from './UnitContent.component';
 import { UnitTreeNode } from './unit-tree-node.component';
+import { UnitDialogComponent } from '../dialogs/UnitDialog';
+import { OperationalUnitDialogComponent } from '../dialogs/OperationalUnitDialog';
+import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
+import { ErrorHandler } from '../shared/models/ErrorHandler';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
+import { Crew_GUID, NULL_GUID } from './unit.constants';
 
 export type Unit = UnitDto;
 
@@ -53,6 +60,8 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
   unitService = inject(UnitService);
   dialog = inject(MatDialog);
   breakpointObserver = inject(BreakpointObserver);
+  private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
 
   // ViewChild references
   @ViewChild('containerRef') containerRef!: ElementRef<HTMLElement>;
@@ -296,49 +305,376 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
-   * Открывает диалог создания нового подразделения
+   * Открывает диалог создания нового корневого подразделения
    */
   CreateUnit() {
-    this.unitTree?.CreateUnit();
+    const dialogRef = this.dialog.open(UnitDialogComponent, {
+      width: '600px',
+      data: {
+        id: '',
+        name: '',
+        shortName: '',
+        militaryNumber: '',
+        forceTypeId: undefined,
+        unitTypeId: undefined,
+        parentId: NULL_GUID,
+        assignedUnitId: undefined,
+        orderVal: 1,
+        comment: '',
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.unitService
+          .create({
+            name: result.name,
+            shortName: result.shortName,
+            militaryNumber: result.militaryNumber,
+            forceTypeId: result.forceTypeId,
+            unitTypeId: result.unitTypeId,
+            parentId: result.parentId,
+            assignedUnitId: result.assignedUnitId,
+            orderVal: result.orderVal,
+            comment: result.comment,
+          })
+          .subscribe({
+            next: () => {
+              if (this.unitTree) {
+                this.unitTree.refresh();
+              }
+              this.onUnitUpdated();
+              this.snackBar.open('Підрозділ успішно створено', 'Закрити', { duration: 3000 });
+            },
+            error: (error) => {
+              console.error('Помилка створення підрозділу:', error);
+              const errorMessage = ErrorHandler.handleHttpError(
+                error,
+                'Помилка створення підрозділу'
+              );
+              this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+            },
+          });
+      }
+    });
   }
 
   /**
    * Добавляет дочерний подразделение к узлу
    */
-  addChild(node: UnitTreeNode) {
-    this.unitTree?.addChild(node);
+  addChild(node: UnitTreeNode | UnitDto) {
+    const dialogRef = this.dialog.open(UnitDialogComponent, {
+      width: '600px',
+      data: {
+        id: '',
+        name: '',
+        shortName: '',
+        militaryNumber: '',
+        forceTypeId: node.forceTypeId,
+        unitTypeId: undefined,
+        parentId: node.id,
+        assignedUnitId: undefined,
+        orderVal: 1,
+        comment: '',
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.unitService
+          .create({
+            name: result.name,
+            shortName: result.shortName,
+            militaryNumber: result.militaryNumber,
+            forceTypeId: result.forceTypeId,
+            unitTypeId: result.unitTypeId,
+            parentId: result.parentId,
+            assignedUnitId: result.assignedUnitId,
+            orderVal: result.orderVal,
+            comment: result.comment,
+          })
+          .subscribe({
+            next: () => {
+              if (this.unitTree) {
+                this.unitTree.refresh();
+              }
+              this.onUnitUpdated();
+              this.snackBar.open('Дочірній підрозділ успішно створено', 'Закрити', {
+                duration: 3000,
+              });
+            },
+            error: (error) => {
+              console.error('Помилка створення дочірнього підрозділу:', error);
+              const errorMessage = ErrorHandler.handleHttpError(
+                error,
+                'Помилка створення дочірнього підрозділу'
+              );
+              this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+            },
+          });
+      }
+    });
   }
 
   /**
    * Додає оперативний підрозділ до вузла
    */
-  addOperationalChild(node: UnitTreeNode) {
-    this.unitTree?.addOperationalChild(node);
+  addOperationalChild(node: UnitTreeNode | UnitDto) {
+    const dialogRef = this.dialog.open(OperationalUnitDialogComponent, {
+      width: '600px',
+      data: {
+        id: '',
+        name: '',
+        shortName: '',
+        militaryNumber: '',
+        forceTypeId: node.forceTypeId,
+        unitTypeId: Crew_GUID,
+        parentId: node.id,
+        assignedUnitId: undefined,
+        orderVal: 1,
+        comment: '',
+        isOperational: true,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.unitService
+          .create({
+            name: result.shortName,
+            shortName: result.shortName,
+            militaryNumber: '',
+            forceTypeId: node.forceTypeId,
+            unitTypeId: Crew_GUID,
+            parentId: node.id,
+            assignedUnitId: undefined,
+            orderVal: result.orderVal,
+            comment: result.comment,
+            isOperational: true,
+          })
+          .subscribe({
+            next: () => {
+              if (this.unitTree) {
+                this.unitTree.refresh();
+              }
+              this.onUnitUpdated();
+              this.snackBar.open('Оперативний підрозділ успішно створено', 'Закрити', {
+                duration: 3000,
+              });
+            },
+            error: (error) => {
+              console.error('Помилка створення оперативного підрозділу:', error);
+              const errorMessage = ErrorHandler.handleHttpError(
+                error,
+                'Помилка створення оперативного підрозділу'
+              );
+              this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+            },
+          });
+      }
+    });
   }
 
   /**
    * Редактирует подразделение
    */
-  edit(node: UnitTreeNode) {
-    if(node.isOperational) {
-      this.unitTree?.editOperationalChild(node);
+  edit(node: UnitTreeNode | UnitDto) {
+    if (node.isOperational) {
+      this.editOperationalUnit(node);
       return;
     }
-    this.unitTree?.edit(node);
+    this.editRegularUnit(node);
+  }
+
+  /**
+   * Редактирует обычное подразделение
+   */
+  private editRegularUnit(node: UnitTreeNode | UnitDto) {
+    const dialogRef = this.dialog.open(UnitDialogComponent, {
+      width: '600px',
+      data: { ...node },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        const unit = result as UnitDto; //UnitTreeItemDto;
+        this.unitService.update(unit.id, unit).subscribe({
+          next: () => {
+            // Обновляем дерево если оно доступно
+            if (this.unitTree) {
+              this.unitTree.refresh();
+            }
+
+            // Уведомляем о том, что подразделение обновлено
+            this.onUnitUpdated();
+            this.snackBar.open('Підрозділ успішно оновлено', 'Закрити', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Помилка оновлення підрозділу:', error);
+            const errorMessage = ErrorHandler.handleHttpError(
+              error,
+              'Помилка оновлення підрозділу'
+            );
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          },
+        });
+      }
+    });
+  }
+
+  /**
+   * Редактирует оперативное подразделение
+   */
+  private editOperationalUnit(node: UnitTreeNode | UnitDto) {
+    const dialogRef = this.dialog.open(OperationalUnitDialogComponent, {
+      width: '600px',
+      data: { ...node },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        const unit = result as UnitDto; //UnitTreeItemDto;
+        this.unitService.update(unit.id, unit).subscribe({
+          next: () => {
+            // Обновляем дерево если оно доступно
+            if (this.unitTree) {
+              this.unitTree.refresh();
+            }
+
+            // Уведомляем о том, что подразделение обновлено
+            this.onUnitUpdated();
+            this.snackBar.open('Підрозділ успішно оновлено', 'Закрити', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Помилка оновлення підрозділу:', error);
+            const errorMessage = ErrorHandler.handleHttpError(
+              error,
+              'Помилка оновлення підрозділу'
+            );
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          },
+        });
+      }
+    });
   }
 
   /**
    * Удаляет подразделение
    */
-  delete(node: UnitTreeNode) {
-    this.unitTree?.delete(node);
+  delete(node: UnitTreeNode | UnitDto) {
+    const hasChildren = (node as UnitTreeNode).hasChildren || false;
+
+    if (hasChildren) {
+      this.dialog.open(ConfirmDialogComponent, {
+        width: '360px',
+        data: {
+          title: 'Неможливо видалити',
+          message: `Підрозділ "${node.name}" має дочірні підрозділи. Спочатку видаліть або перемістіть дочірні підрозділи.`,
+          confirmText: 'OK',
+          cancelText: '',
+          color: 'primary',
+          icon: 'warning',
+        },
+      });
+      return;
+    }
+
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '360px',
+      autoFocus: false,
+      data: {
+        title: 'Видалення підрозділу',
+        message: `Ви впевнені, що хочете видалити підрозділ "${node.name}"?`,
+        confirmText: 'Видалити',
+        cancelText: 'Відмінити',
+        color: 'warn',
+        icon: 'warning',
+      },
+    });
+
+    ref.afterClosed().subscribe((confirmed) => {
+      if (confirmed) {
+        this.unitService.delete(node.id).subscribe({
+          next: () => {
+            if (this.unitTree) {
+              this.unitTree.refresh();
+            }
+            this.onUnitUpdated();
+            this.snackBar.open('Підрозділ успішно видалено', 'Закрити', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Помилка видалення підрозділу:', error);
+            const errorMessage = ErrorHandler.handleHttpError(
+              error,
+              'Помилка видалення підрозділу'
+            );
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          },
+        });
+      }
+    });
   }
 
-  moveUpDown(node: UnitTreeNode, moveUp: boolean) {
-    this.unitTree?.moveUpDown(node, moveUp);
+  moveUpDown(node: UnitTreeNode | UnitDto, moveUp: boolean) {
+    this.unitService.moveUpDown(node.id, moveUp).subscribe({
+      next: () => {
+        if (this.unitTree) {
+          this.unitTree.refresh();
+        }
+        this.onUnitUpdated();
+        this.snackBar.open(`Підрозділ успішно переміщено ${moveUp ? 'вгору' : 'вниз'}`, 'Закрити', {
+          duration: 3000,
+        });
+      },
+      error: (error) => {
+        console.error('Помилка переміщення підрозділу:', error);
+        const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка переміщення підрозділу');
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      },
+    });
   }
 
-  importSoldiers(node: UnitTreeNode) {
-    this.unitTree?.importSoldiers(node);
+  importSoldiers(node: UnitTreeNode | UnitDto) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) {
+        return;
+      }
+
+      this.unitService.importSoldiers(node.id, file).subscribe({
+        next: (response) => {
+          if (response.status === 'Failed') {
+            this.snackBar.open(
+              `Помилка імпорту: ${response.error || 'Невідома помилка'}`,
+              'Закрити',
+              { duration: 7000 }
+            );
+          } else {
+            this.router.navigate(['/unit/import']);
+          }
+        },
+        error: (error) => {
+          if (error.status === 423) {
+            this.snackBar.open(
+              'Імпорт вже виконується. Зачекайте завершення поточної операції.',
+              'Закрити',
+              { duration: 5000 }
+            );
+          } else {
+            const errorMessage = ErrorHandler.handleHttpError(
+              error,
+              'Помилка імпорту особового складу'
+            );
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          }
+        },
+      });
+    };
+
+    input.click();
   }
 }

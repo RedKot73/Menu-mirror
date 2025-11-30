@@ -1,11 +1,21 @@
 <div class="table-header">
+  <mat-button-toggle-group
+    [value]="filterMode()"
+    (change)="filterMode.set($event.value)"
+    class="filter-toggle"
+  >
+    <mat-button-toggle value="all" matTooltip="Всі підрозділи"> Всі </mat-button-toggle>
+    <mat-button-toggle value="regular" matTooltip="Штатні підрозділи"> Штатні </mat-button-toggle>
+    <mat-button-toggle value="operational" matTooltip="Оперативні підрозділи">
+      Оперативні
+    </mat-button-toggle>
+  </mat-button-toggle-group>
   <mat-form-field appearance="outline" class="search-field">
-    <mat-label>Пошук підрозділів</mat-label>
     <input
       matInput
       [value]="searchText()"
       (input)="onSearchChange($any($event.target).value)"
-      placeholder="Назва, Батьківський підрозділ"
+      placeholder="Пошук підрозділів"
     />
     <mat-icon matPrefix>search</mat-icon>
     @if (searchText()) {

@@ -1,11 +1,4 @@
-import {
-  Component,
-  inject,
-  ViewChild,
-  AfterViewInit,
-  effect,
-  /*signal,*/ input,
-} from '@angular/core';
+import { Component, inject, ViewChild, AfterViewInit, effect, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -37,14 +30,13 @@ import {
   isSevereStatus,
   isProblematicStatus,
   isRecoveryStatus,
+  UnitTag,
 } from './Soldier.constant';
 
+// Re-export для использования в других компонентах
+export { UnitTag };
+
 export type Soldier = SoldierDto;
-export const UnitTag = {
-  UnitId: 1, // Смотрим на вкладку Штатний ОС
-  AssignedId: 2, // Смотрим на вкладку Приданий ОС
-  OperationalId: 3, // Смотрим на вкладку Оперативний ОС
-} as const;
 
 @Component({
   selector: 'app-page-soldiers',

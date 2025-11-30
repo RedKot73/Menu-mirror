@@ -5,7 +5,6 @@
     [class.collapsed]="isNavPanelCollapsed()"
   >
     <div class="panel-header" [class.hidden]="isNavPanelCollapsed()">
-      <h3>Дерево підрозділів</h3>
       <div class="header-actions">
         <mat-button-toggle-group
           [value]="viewMode()"
@@ -44,6 +43,7 @@
           </button>
 
           <mat-menu #nodeMenu="matMenu">
+            @if(!node.isOperational){
             <button
               mat-menu-item
               matTooltip="Додати дочірній підрозділ"
@@ -61,6 +61,15 @@
               <mat-icon>groups</mat-icon>
               <span>Додати оперативний підрозділ</span>
             </button>
+            <button
+              mat-menu-item
+              matTooltip="Імпортувати особовий склад"
+              (click)="menuTrigger.closeMenu(); importSoldiers(node)"
+            >
+              <mat-icon color="primary">upload_file</mat-icon>
+              <span>Імпорт ОС</span>
+            </button>
+            }
             <button
               mat-menu-item
               matTooltip="Редагувати підрозділ"
@@ -84,14 +93,6 @@
             >
               <mat-icon color="primary">arrow_downward</mat-icon>
               <span>Нижче</span>
-            </button>
-            <button
-              mat-menu-item
-              matTooltip="Імпортувати особовий склад"
-              (click)="menuTrigger.closeMenu(); importSoldiers(node)"
-            >
-              <mat-icon color="primary">upload_file</mat-icon>
-              <span>Імпорт ОС</span>
             </button>
             <mat-divider></mat-divider>
             <button
@@ -153,12 +154,13 @@
         <h3>{{ selectedUnitTitle() }}</h3>
       </div>
     </div>
-      <!-- Основное содержимое -->
-      <unit-content class="panel-content"
-        [selectedUnit]="selectedUnit()"
-        [sidenavOpen]="!isNavPanelCollapsed()"
-        (showSidenav)="toggleNavPanel()"
-      >
-      </unit-content>
+    <!-- Основное содержимое -->
+    <unit-content
+      class="panel-content"
+      [selectedUnit]="selectedUnit()"
+      [sidenavOpen]="!isNavPanelCollapsed()"
+      (showSidenav)="toggleNavPanel()"
+    >
+    </unit-content>
   </div>
 </div>
