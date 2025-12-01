@@ -25,6 +25,8 @@ import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
 import { SoldierService, SoldierDto, SoldierCreateDto } from './services/soldier.service';
 import { UnitService /*, UnitDto*/ } from '../Unit/services/unit.service';
 import { LookupDto } from '../shared/models/lookup.models';
+import { ErrorHandler } from '../shared/models/ErrorHandler';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import {
   isCriticalStatus,
   isSevereStatus,
@@ -65,6 +67,7 @@ export type Soldier = SoldierDto;
 export class SoldiersComponent implements AfterViewInit {
   soldierService = inject(SoldierService);
   unitService = inject(UnitService);
+  private snackBar = inject(MatSnackBar);
 
   // Делаем UnitTag доступным в шаблоне
   readonly UnitTag = UnitTag;
@@ -143,12 +146,6 @@ export class SoldiersComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     this.dataSource.sort = this.sort;
-    /*
-    // Загружаем все подразделения для фильтров
-    this.unitService.getAll().subscribe((units) => {
-      this.allUnits.set(units);
-    });
-*/
     // Загружаем начальные данные
     this.reload();
   }
@@ -188,11 +185,6 @@ export class SoldiersComponent implements AfterViewInit {
   /*
   onSearchChange(searchText: string) {
     this.searchText = searchText;
-    this.reload();
-  }
-
-  onAssignedUnitFilterChange(assignedUnitId: string | null) {
-    this.selectedAssignedUnitId = assignedUnitId;
     this.reload();
   }
 */
@@ -244,13 +236,21 @@ export class SoldiersComponent implements AfterViewInit {
             comment: result.data.comment,
           };
 
-          this.soldierService.create(createDto).subscribe(() => {
-            this.reload();
+          this.soldierService.create(createDto).subscribe({
+            next: () => {
+              this.reload();
+              this.snackBar.open('Бійця успішно створено', 'Закрити', { duration: 3000 });
 
-            // Если нужно продолжить, открываем диалог снова
-            if (result.continue) {
-              setTimeout(() => openDialog(), 100);
-            }
+              // Если нужно продолжить, открываем диалог снова
+              if (result.continue) {
+                setTimeout(() => openDialog(), 100);
+              }
+            },
+            error: (error) => {
+              console.error('Помилка створення бійця:', error);
+              const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка створення бійця');
+              this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+            },
           });
         }
       });
@@ -268,7 +268,17 @@ export class SoldiersComponent implements AfterViewInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result && result.data) {
-        this.soldierService.update(result.data.id, result.data).subscribe(() => this.reload());
+        this.soldierService.update(result.data.id, result.data).subscribe({
+          next: () => {
+            this.reload();
+            this.snackBar.open('Бійця успішно оновлено', 'Закрити', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Помилка оновлення бійця:', error);
+            const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка оновлення бійця');
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          },
+        });
       }
     });
   }
@@ -291,7 +301,17 @@ export class SoldiersComponent implements AfterViewInit {
 
     ref.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
-        this.soldierService.delete(soldier.id).subscribe(() => this.reload());
+        this.soldierService.delete(soldier.id).subscribe({
+          next: () => {
+            this.reload();
+            this.snackBar.open('Бійця успішно видалено', 'Закрити', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Помилка видалення бійця:', error);
+            const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка видалення бійця');
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          },
+        });
       }
     });
   }
@@ -325,7 +345,17 @@ export class SoldiersComponent implements AfterViewInit {
 
     ref.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
-        this.soldierService.unassignAssigned(soldier.id).subscribe(() => this.reload());
+        this.soldierService.unassignAssigned(soldier.id).subscribe({
+          next: () => {
+            this.reload();
+            this.snackBar.open('Бійця вилучено з переліку приданих', 'Закрити', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Помилка вилучення бійця:', error);
+            const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка вилучення бійця');
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          },
+        });
       }
     });
   }
@@ -350,7 +380,19 @@ export class SoldiersComponent implements AfterViewInit {
 
     ref.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
-        this.soldierService.unassignOperational(soldier.id).subscribe(() => this.reload());
+        this.soldierService.unassignOperational(soldier.id).subscribe({
+          next: () => {
+            this.reload();
+            this.snackBar.open('Бійця вилучено з оперативного підрозділу', 'Закрити', {
+              duration: 3000,
+            });
+          },
+          error: (error) => {
+            console.error('Помилка вилучення бійця:', error);
+            const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка вилучення бійця');
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          },
+        });
       }
     });
   }
@@ -435,11 +477,19 @@ export class SoldiersComponent implements AfterViewInit {
       ? this.soldierService.assignAssigned(soldier.id, selectedUnit.id)
       : this.soldierService.unassignAssigned(soldier.id);
 
-    operation.subscribe(() => {
-      // Перезагружаем данные
-      this.reload();
-      // Выходим из режима редактирования
-      this.editingAssignedUnit.set(soldier.id, false);
+    operation.subscribe({
+      next: () => {
+        // Перезагружаем данные
+        this.reload();
+        // Выходим из режима редактирования
+        this.editingAssignedUnit.set(soldier.id, false);
+        this.snackBar.open('Придання оновлено', 'Закрити', { duration: 2000 });
+      },
+      error: (error) => {
+        console.error('Помилка оновлення придання:', error);
+        const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка оновлення придання');
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      },
     });
   }
 
@@ -521,11 +571,19 @@ export class SoldiersComponent implements AfterViewInit {
     }
 
     // Используем метод move для перемещения в другое подразделение
-    this.soldierService.move(soldier.id, selectedUnit.id).subscribe(() => {
-      // Перезагружаем данные
-      this.reload();
-      // Выходим из режима редактирования
-      this.editingUnit.set(soldier.id, false);
+    this.soldierService.move(soldier.id, selectedUnit.id).subscribe({
+      next: () => {
+        // Перезагружаем данные
+        this.reload();
+        // Выходим из режима редактирования
+        this.editingUnit.set(soldier.id, false);
+        this.snackBar.open('Підрозділ оновлено', 'Закрити', { duration: 2000 });
+      },
+      error: (error) => {
+        console.error('Помилка переміщення бійця:', error);
+        const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка переміщення бійця');
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      },
     });
   }
 
@@ -607,11 +665,22 @@ export class SoldiersComponent implements AfterViewInit {
       ? this.soldierService.assignOperational(soldier.id, selectedUnit.id)
       : this.soldierService.unassignOperational(soldier.id);
 
-    operation.subscribe(() => {
-      // Перезагружаем данные
-      this.reload();
-      // Выходим из режима редактирования
-      this.editingOperationalUnit.set(soldier.id, false);
+    operation.subscribe({
+      next: () => {
+        // Перезагружаем данные
+        this.reload();
+        // Выходим из режима редактирования
+        this.editingOperationalUnit.set(soldier.id, false);
+        this.snackBar.open('Оперативний підрозділ оновлено', 'Закрити', { duration: 2000 });
+      },
+      error: (error) => {
+        console.error('Помилка оновлення оперативного підрозділу:', error);
+        const errorMessage = ErrorHandler.handleHttpError(
+          error,
+          'Помилка оновлення оперативного підрозділу'
+        );
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      },
     });
   }
 }

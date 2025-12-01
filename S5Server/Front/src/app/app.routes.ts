@@ -82,6 +82,11 @@ export const routes: Routes = [
       import('../app/Unit/ImportProgress.page').then((m) => m.ImportProgressPage),
   },
   {
+    path: 'personnel',
+    title: 'Особовий склад',
+    loadComponent: () => import('../app/Personnel/Personnel.page').then((m) => m.PersonnelPage),
+  },
+  {
     path: 'templates',
     title: 'Шаблони документів',
     loadComponent: () =>

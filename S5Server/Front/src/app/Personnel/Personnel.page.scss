@@ -1,0 +1,8 @@
+@import '../Soldier/Soldier.component.scss';
+
+.table-container {
+  margin-top: 1em;
+  height: calc(100vh - 150px);
+  overflow: auto;
+  position: relative;
+}
