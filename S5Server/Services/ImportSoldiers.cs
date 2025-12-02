@@ -3,6 +3,9 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 
+using Microsoft.EntityFrameworkCore;
+
+using S5Server.Data;
 using S5Server.Models;
 
 namespace S5Server.Services
@@ -43,6 +46,10 @@ namespace S5Server.Services
         private static readonly ImportJob _current = new();
         public static ImportJob Current => _current;
         public static bool IsRunning => _current.Status == ImportJobStatus.Running;
+        // Фабрика контекста для фоновых операций импорта
+        private static IDbContextFactory<MainDbContext>? _dbFactory;
+        public static void ConfigureDbFactory(IDbContextFactory<MainDbContext> dbFactory) => _dbFactory = dbFactory;
+
 
         // Потокобезопасное хранение последнего результата
         private static readonly Lock _resultLock = new();
@@ -129,7 +136,12 @@ namespace S5Server.Services
 
         public static async Task DoImportSoldiers(Unit unit, byte[] soldiersData, CancellationToken ct = default)
         {
-            ArgumentNullException.ThrowIfNull(_current, "Внутрішня помилка серверу - завдання не знайдено");
+            ArgumentNullException.ThrowIfNull(_current,
+                "Внутрішня помилка серверу - завдання не знайдено");
+            ArgumentNullException.ThrowIfNull(_dbFactory,
+                "IDbContextFactory<MainDbContext> не сконфигурован. Вызовите ImportSoldiers.ConfigureDbFactory(...) при старте приложения.");
+
+            await using var db = await _dbFactory.CreateDbContextAsync(ct);
 
             using var ms = new MemoryStream(soldiersData, writable: false);
             ms.Position = 0;
@@ -151,6 +163,11 @@ namespace S5Server.Services
                 ct.ThrowIfCancellationRequested();
 
                 if (string.IsNullOrEmpty(sheet.Name)) continue;
+                var curUnitId = await db.Units
+                    .AsNoTracking()
+                    .Where(t => t.ShortName == sheet.Name)
+                    .Select(t => t.Id)
+                    .FirstOrDefaultAsync(ct);
 
                 var import = new ImportUnit(sheet.Name!, []);
                 lock (_resultLock)
