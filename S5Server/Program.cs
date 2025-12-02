@@ -29,8 +29,21 @@ var sqliteBuilder = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
 };
 string connectionString = sqliteBuilder.ConnectionString;
 
-builder.Services.AddDbContext<MainDbContext>(options =>
-    options.UseSqlite(connectionString));
+// Используем pooled factory вместо обычного AddDbContext
+builder.Services.AddPooledDbContextFactory<MainDbContext>(options =>
+{
+    options.UseSqlite(connectionString);
+    options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+// options.EnableSensitiveDataLogging();
+// options.LogTo(Console.WriteLine, LogLevel.Information);
+});
+// Регистрируем scoped-контекст для injection в контроллерах через фабрику
+builder.Services.AddScoped<MainDbContext>(sp =>
+{
+    var factory = sp.GetRequiredService<IDbContextFactory<MainDbContext>>();
+    return factory.CreateDbContext();
+});
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentity<TVezhaUser<string>, IdentityRole>(options =>
@@ -79,6 +92,10 @@ builder.Services.AddCors(p =>
 builder.Services.AddScoped<TemplateRenderer>();
 
 var app = builder.Build();
+
+// Конфигурация сервиса импорта с фабрикой контекста
+var dbFactory = app.Services.GetRequiredService<IDbContextFactory<MainDbContext>>();
+ImportSoldiers.ConfigureDbFactory(dbFactory);
 
 // Configure the HTTP request pipeline.
 //app.UseHttpsRedirection();

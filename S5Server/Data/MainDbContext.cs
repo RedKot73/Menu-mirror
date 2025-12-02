@@ -15,15 +15,17 @@ namespace S5Server.Data
             : base(options)
         {
         }
+        /*
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-            /*
-            optionsBuilder.EnableSensitiveDataLogging() // Показывает значения параметров
-                .LogTo(Console.WriteLine, LogLevel.Information); // Выводит SQL в консоль
-            */
+            
+            //optionsBuilder.EnableSensitiveDataLogging() // Показывает значения параметров
+            //    .LogTo(Console.WriteLine, LogLevel.Information); // Выводит SQL в консоль
+            
             base.OnConfiguring(optionsBuilder);
         }
+        */
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
