@@ -79,7 +79,7 @@ export const routes: Routes = [
     path: 'unit/import',
     title: 'Імпорт особового складу',
     loadComponent: () =>
-      import('../app/Unit/ImportProgress.page').then((m) => m.ImportProgressPage),
+      import('./Unit/Import/ImportProgress.page').then((m) => m.ImportProgressPage),
   },
   {
     path: 'personnel',
