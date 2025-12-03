@@ -95,7 +95,8 @@ var app = builder.Build();
 
 // Конфигурация сервиса импорта с фабрикой контекста
 var dbFactory = app.Services.GetRequiredService<IDbContextFactory<MainDbContext>>();
-ImportSoldiers.ConfigureDbFactory(dbFactory);
+var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("ImportSoldiers");
+ImportSoldiers.Configure(dbFactory, logger); 
 
 // Configure the HTTP request pipeline.
 //app.UseHttpsRedirection();

@@ -635,46 +635,9 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
   }
 
   importSoldiers(node: UnitTreeNode | UnitDto) {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-
-    input.onchange = () => {
-      const file = input.files?.[0];
-      if (!file) {
-        return;
-      }
-
-      this.unitService.importSoldiers(node.id, file).subscribe({
-        next: (response) => {
-          if (response.status === 'Failed') {
-            this.snackBar.open(
-              `Помилка імпорту: ${response.error || 'Невідома помилка'}`,
-              'Закрити',
-              { duration: 7000 }
-            );
-          } else {
-            this.router.navigate(['/unit/import']);
-          }
-        },
-        error: (error) => {
-          if (error.status === 423) {
-            this.snackBar.open(
-              'Імпорт вже виконується. Зачекайте завершення поточної операції.',
-              'Закрити',
-              { duration: 5000 }
-            );
-          } else {
-            const errorMessage = ErrorHandler.handleHttpError(
-              error,
-              'Помилка імпорту особового складу'
-            );
-            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-          }
-        },
-      });
-    };
-
-    input.click();
+    // Навігація на сторінку імпорту з передачею unitId як query параметра
+    this.router.navigate(['/unit/import'], {
+      queryParams: { unitId: node.id },
+    });
   }
 }

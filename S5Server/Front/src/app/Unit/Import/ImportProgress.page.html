@@ -1,4 +1,13 @@
 <div class="import-progress-page">
+  <!-- Прихований input для вибору файлу -->
+  <input
+    #fileInput
+    type="file"
+    accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    style="display: none;"
+    (change)="onFileSelected($event)"
+  />
+
   <!-- Breadcrumbs / Header -->
   <div class="page-header">
     <button mat-icon-button (click)="goBack()" matTooltip="Назад до підрозділів">

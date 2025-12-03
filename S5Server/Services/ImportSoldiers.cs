@@ -38,7 +38,8 @@ namespace S5Server.Services
         public string? Error { get; set; }
     }
 
-    public record ImportProgress(string? Sheet, int Processed, int Total, string? Message);
+    public enum ImportProgressStatus { Start, Done, Failed, SheetStart, SheetDone, RecordDone, UnitNotFound }
+    public record ImportProgress(string? Sheet, ImportProgressStatus Status, int Processed, int Total, string? Message);
 
     public static class ImportSoldiers
     {
@@ -48,7 +49,13 @@ namespace S5Server.Services
         public static bool IsRunning => _current.Status == ImportJobStatus.Running;
         // Фабрика контекста для фоновых операций импорта
         private static IDbContextFactory<MainDbContext>? _dbFactory;
-        public static void ConfigureDbFactory(IDbContextFactory<MainDbContext> dbFactory) => _dbFactory = dbFactory;
+        private static ILogger? _logger;
+        public static void Configure(IDbContextFactory<MainDbContext> dbFactory,
+            ILogger logger)
+        {
+            _dbFactory = dbFactory;
+            _logger = logger;
+        }
 
 
         // Потокобезопасное хранение последнего результата
@@ -69,7 +76,12 @@ namespace S5Server.Services
             var eventHandler = Progress;
             if (eventHandler != null)
             {
-                try { eventHandler(p); } catch { /* ignore listener errors */ }
+                try 
+                { 
+                    eventHandler(p);
+                    _logger?.LogDebug("Report");
+                }
+                catch { /* ignore listener errors */ }
             }
         }
 
@@ -97,7 +109,7 @@ namespace S5Server.Services
                 _current.StartedAtUtc = DateTime.UtcNow;
                 _current.FinishedAtUtc = null;
                 _current.Error = string.Empty;
-                Report(new ImportProgress(null, 0, 0, "start"));
+                Report(new ImportProgress(null, ImportProgressStatus.Start, 0, 0, "start"));
                 _ = Task.Run(() => ExecuteAsync(unit, payload, ct), ct);
                 return (true, Current, null);
             }
@@ -113,7 +125,7 @@ namespace S5Server.Services
                 {
                     _current.Status = ImportJobStatus.Succeeded;
                     _current.FinishedAtUtc = DateTime.UtcNow;
-                    Report(new ImportProgress(null, 0, 0, "done"));
+                    Report(new ImportProgress(null, ImportProgressStatus.Done, 0, 0, "done"));
                 }
             }
             catch (Exception ex)
@@ -123,7 +135,7 @@ namespace S5Server.Services
                 _current.Status = ImportJobStatus.Failed;
                 _current.Error = ex.Message;
                 _current.FinishedAtUtc = DateTime.UtcNow;
-                Report(new ImportProgress(null, 0, 0, "failed"));
+                Report(new ImportProgress(null, ImportProgressStatus.Failed, 0, 0, "failed"));
             }
             finally
             {
@@ -168,6 +180,12 @@ namespace S5Server.Services
                     .Where(t => t.ShortName == sheet.Name)
                     .Select(t => t.Id)
                     .FirstOrDefaultAsync(ct);
+                if (curUnitId == null) 
+                {
+                    Report(new ImportProgress(sheet.Name, ImportProgressStatus.UnitNotFound, 0, 0, sheet.Name));
+                    //await Task.Delay(1000, ct);
+                    continue;//return;
+                }
 
                 var import = new ImportUnit(sheet.Name!, []);
                 lock (_resultLock)
@@ -182,7 +200,7 @@ namespace S5Server.Services
                 var rows = sheetData.Elements<Row>().Skip(1)
                     .Where(t => t.ChildElements.Count > 1).ToList();
                 var total = rows.Count;
-                Report(new ImportProgress(sheet.Name, 0, total, "sheet-start"));
+                Report(new ImportProgress(sheet.Name, ImportProgressStatus.SheetStart, 0, total, "sheet-start"));
                 var processed = 0;
 
                 foreach (var row in rows)
@@ -250,12 +268,12 @@ namespace S5Server.Services
                     }
 
                     processed++;
-                    Report(new ImportProgress(sheet.Name, processed, total, null));
+                    Report(new ImportProgress(sheet.Name, ImportProgressStatus.RecordDone, processed, total, null));
 
                     // Заменяем блокирующую паузу на асинхронную с поддержкой отмены
                     await Task.Delay(100, ct);
                 }
-                Report(new ImportProgress(sheet.Name, processed, total, "sheet-done"));
+                Report(new ImportProgress(sheet.Name, ImportProgressStatus.SheetDone, processed, total, "sheet-done"));
             }
         }
 

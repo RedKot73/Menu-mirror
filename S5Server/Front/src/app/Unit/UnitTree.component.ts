@@ -4,11 +4,11 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialog } from '@angular/material/dialog';
+//import { MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Router } from '@angular/router';
+//import { Router } from '@angular/router';
 
 import { UnitService, UnitTreeItemDto } from './services/unit.service';
 import { UnitTreeNodeComponent, UnitTreeNode } from './unit-tree-node.component';
@@ -31,9 +31,9 @@ import { ErrorHandler } from '../shared/models/ErrorHandler';
 })
 export class UnitTreeComponent implements OnInit {
   private unitService = inject(UnitService);
-  private dialog = inject(MatDialog);
+  //private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
-  private router = inject(Router);
+  //private router = inject(Router);
 
   // Input: кастомный шаблон для действий узла
   nodeActionsTemplate = input<TemplateRef<{ $implicit: UnitTreeNode }> | undefined>(undefined);

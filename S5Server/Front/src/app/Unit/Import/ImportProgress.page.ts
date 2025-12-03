@@ -1,6 +1,6 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,8 +8,10 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { signal } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 import {
   UnitService,
@@ -17,6 +19,7 @@ import {
   ImportProgressStatus,
   ImportUnit,
 } from '../services/unit.service';
+import { ErrorHandler } from '../../shared/models/ErrorHandler';
 
 @Component({
   selector: 'app-import-progress-page',
@@ -36,9 +39,15 @@ import {
 })
 export class ImportProgressPage implements OnInit, OnDestroy {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private unitService = inject(UnitService);
+  private snackBar = inject(MatSnackBar);
+
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   displayedColumns: string[] = ['externId', 'rank', 'fullName', 'birthDate', 'position', 'status'];
+
+  private unitId: string | null = null;
 
   currentSheet = signal<string | null>(null);
   processedRows = signal(0);
@@ -57,7 +66,7 @@ export class ImportProgressPage implements OnInit, OnDestroy {
   private progressSubscription?: Subscription;
 
   ngOnInit() {
-    // Підключаємося до SSE
+    // Спочатку підключаємося до SSE
     this.progressSubscription = this.unitService.subscribeToImportProgress().subscribe({
       next: (progress: ImportProgress) => {
         this.handleProgress(progress);
@@ -68,6 +77,22 @@ export class ImportProgressPage implements OnInit, OnDestroy {
         this.hasFailed.set(true);
       },
     });
+
+    // Після підписки на SSE, отримуємо unitId та запускаємо імпорт
+    // Невеликий таймаут гарантує, що SSE з'єднання встановлено
+    setTimeout(() => {
+      this.route.queryParams.pipe(take(1)).subscribe((params) => {
+        this.unitId = params['unitId'] || null;
+        if (!this.unitId) {
+          // Якщо немає unitId, показуємо помилку та повертаємось
+          this.snackBar.open('Не вказано підрозділ для імпорту', 'Закрити', { duration: 5000 });
+          this.goBack();
+          return;
+        }
+        // Якщо є unitId, викликаємо вибір файлу
+        this.openFileDialog();
+      });
+    }, 100);
   }
 
   ngOnDestroy() {
@@ -75,6 +100,63 @@ export class ImportProgressPage implements OnInit, OnDestroy {
     if (this.progressSubscription) {
       this.progressSubscription.unsubscribe();
     }
+  }
+
+  /**
+   * Відкриває діалог вибору файлу
+   */
+  openFileDialog() {
+    if (this.fileInput) {
+      this.fileInput.nativeElement.click();
+    }
+  }
+
+  /**
+   * Обробка вибору файлу
+   */
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) {
+      // Якщо файл не вибрано, повертаємось назад
+      this.goBack();
+      return;
+    }
+
+    // unitId перевірено при відкритті форми, тут він гарантовано є
+    this.unitService.importSoldiers(this.unitId!, file).subscribe({
+      next: (response) => {
+        if (response.status === 'Failed') {
+          this.snackBar.open(
+            `Помилка імпорту: ${response.error || 'Невідома помилка'}`,
+            'Закрити',
+            { duration: 7000 }
+          );
+          this.hasFailed.set(true);
+        }
+        // Якщо успішно, SSE подія оновить UI
+      },
+      error: (error) => {
+        if (error.status === 423) {
+          this.snackBar.open(
+            'Імпорт вже виконується. Зачекайте завершення поточної операції.',
+            'Закрити',
+            { duration: 5000 }
+          );
+        } else {
+          const errorMessage = ErrorHandler.handleHttpError(
+            error,
+            'Помилка імпорту особового складу'
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        }
+        this.hasFailed.set(true);
+      },
+    });
+
+    // Очищаємо input для можливості повторного вибору того ж файлу
+    input.value = '';
   }
 
   private handleProgress(progress: ImportProgress) {

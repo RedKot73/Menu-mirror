@@ -92,8 +92,19 @@ export interface ImportJobResponse {
   result?: ImportUnit[];
 }
 
+export enum ImportProgressStatus {
+  Start = 0,
+  Done = 1,
+  Failed = 2,
+  SheetStart = 3,
+  SheetDone = 4,
+  RecordDone = 5,
+  UnitNotFound = 6
+}
+
 export interface ImportProgress {
   sheet?: string;
+  status: ImportProgressStatus;
   processed: number;
   total: number;
   message?: string;
