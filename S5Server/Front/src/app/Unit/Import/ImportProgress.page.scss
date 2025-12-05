@@ -128,6 +128,25 @@
             color: #666;
             font-weight: normal;
           }
+
+          .unit-not-found-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 12px;
+            padding: 4px 12px;
+            background-color: #fff3e0;
+            color: #e65100;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+
+            mat-icon {
+              font-size: 18px;
+              width: 18px;
+              height: 18px;
+            }
+          }
         }
       }
     }

@@ -11,15 +11,17 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { signal } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { take, finalize } from 'rxjs/operators';
 
 import {
-  UnitService,
   ImportProgress,
   ImportProgressStatus,
   ImportUnit,
-} from '../services/unit.service';
+  ImportUnitService,
+} from '../Import/import.service';
+
 import { ErrorHandler } from '../../shared/models/ErrorHandler';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-import-progress-page',
@@ -40,7 +42,7 @@ import { ErrorHandler } from '../../shared/models/ErrorHandler';
 export class ImportProgressPage implements OnInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  private unitService = inject(UnitService);
+  private importUnitService = inject(ImportUnitService);
   private snackBar = inject(MatSnackBar);
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
@@ -48,6 +50,7 @@ export class ImportProgressPage implements OnInit, OnDestroy {
   displayedColumns: string[] = ['externId', 'rank', 'fullName', 'birthDate', 'position', 'status'];
 
   private unitId: string | null = null;
+  private isLoadingUnits = false;
 
   currentSheet = signal<string | null>(null);
   processedRows = signal(0);
@@ -56,6 +59,9 @@ export class ImportProgressPage implements OnInit, OnDestroy {
   completedSheets = signal<ImportUnit[]>([]);
   isCompleted = signal(false);
   hasFailed = signal(false);
+
+  // Експортуємо enum для використання в шаблоні
+  ImportProgressStatus = ImportProgressStatus;
 
   progressPercent = () => {
     const total = this.totalRows();
@@ -66,32 +72,31 @@ export class ImportProgressPage implements OnInit, OnDestroy {
   private progressSubscription?: Subscription;
 
   ngOnInit() {
+    this.route.queryParams.pipe(take(1)).subscribe((params) => {
+      this.unitId = params['unitId'] || null;
+      if (!this.unitId) {
+        // Якщо немає unitId, показуємо помилку та повертаємось
+        this.snackBar.open('Відсутній підрозділ для імпорту', 'Закрити', { duration: 5000 });
+        this.goBack();
+        return;
+      }
+    });
     // Спочатку підключаємося до SSE
-    this.progressSubscription = this.unitService.subscribeToImportProgress().subscribe({
+    this.progressSubscription = this.importUnitService.subscribeToImportProgress().subscribe({
       next: (progress: ImportProgress) => {
         this.handleProgress(progress);
       },
-      error: (error) => {
+      error: (error: Event) => {
         console.error('SSE connection error:', error);
         this.message.set("Втрачено з'єднання з сервером");
         this.hasFailed.set(true);
       },
     });
 
-    // Після підписки на SSE, отримуємо unitId та запускаємо імпорт
+    // Після підписки на SSE, обираємо файл та запускаємо його імпорт
     // Невеликий таймаут гарантує, що SSE з'єднання встановлено
     setTimeout(() => {
-      this.route.queryParams.pipe(take(1)).subscribe((params) => {
-        this.unitId = params['unitId'] || null;
-        if (!this.unitId) {
-          // Якщо немає unitId, показуємо помилку та повертаємось
-          this.snackBar.open('Не вказано підрозділ для імпорту', 'Закрити', { duration: 5000 });
-          this.goBack();
-          return;
-        }
-        // Якщо є unitId, викликаємо вибір файлу
-        this.openFileDialog();
-      });
+      this.openFileDialog();
     }, 100);
   }
 
@@ -99,6 +104,100 @@ export class ImportProgressPage implements OnInit, OnDestroy {
     // Відключаємося від SSE при виході зі сторінки
     if (this.progressSubscription) {
       this.progressSubscription.unsubscribe();
+    }
+  }
+
+  /**
+   * Обробка прогресу імпорту
+   * @param progress
+   */
+  private handleProgress(progress: ImportProgress) {
+    switch (progress.status) {
+      case ImportProgressStatus.Start:
+        this.message.set('Імпорт розпочато...');
+        this.isCompleted.set(false);
+        this.hasFailed.set(false);
+        this.completedSheets.set([]);
+        this.currentSheet.set(null);
+        this.processedRows.set(0);
+        this.totalRows.set(0);
+        break;
+
+      case ImportProgressStatus.UnitStart:
+        this.currentSheet.set(progress.sheet || null);
+        this.processedRows.set(0);
+        this.totalRows.set(progress.total);
+        this.message.set(`Обробка аркушу: ${progress.sheet}`);
+        break;
+
+      case ImportProgressStatus.RecordDone:
+        // Оновлення прогресу обробки записів
+        this.currentSheet.set(progress.sheet || null);
+        this.processedRows.set(progress.processed);
+        this.totalRows.set(progress.total);
+        break;
+
+      case ImportProgressStatus.UnitDone:
+      case ImportProgressStatus.UnitNotFound:
+        if (progress.sheet && !this.isLoadingUnits) {
+          this.isLoadingUnits = true;
+
+          this.importUnitService
+            .getLastUnits()
+            .pipe(
+              finalize(() => {
+                // Завжди скидаємо флаг, незалежно від результату
+                this.isLoadingUnits = false;
+              })
+            )
+            .subscribe({
+              next: (units: string[]) => {
+                // Отримуємо список вже завантажених підрозділів
+                const loadedUnitNames = this.completedSheets().map((sheet) => sheet.name);
+
+                // Знаходимо різницю - підрозділи, які оброблені сервером, але ще не отримані клієнтом
+                const newUnits = units.filter((unitName) => !loadedUnitNames.includes(unitName));
+                if (newUnits.length > 0) {
+                  // Завантажуємо відсутні підрозділи через API
+                  this.importUnitService.getUnits(newUnits).subscribe({
+                    next: (newLoadedUnits: ImportUnit[]) => {
+                      // Об'єднуємо нові підрозділи з уже завантаженими
+                      const currentSheets = this.completedSheets();
+                      this.completedSheets.set([...currentSheets, ...newLoadedUnits]);
+                    },
+                    error: (error) => {
+                      console.error('Помилка завантаження підрозділів:', error);
+                      this.snackBar.open('Помилка завантаження деяких підрозділів', 'Закрити', {
+                        duration: 3000,
+                      });
+                    },
+                  });
+                }
+              },
+              error: (error) => {
+                console.error('Помилка отримання списку підрозділів:', error);
+                this.snackBar.open('Помилка отримання списку підрозділів', 'Закрити', {
+                  duration: 3000,
+                });
+              },
+            });
+        }
+        break;
+
+      case ImportProgressStatus.Done:
+        this.message.set('Імпорт завершено успішно!');
+        this.isCompleted.set(true);
+        break;
+
+      case ImportProgressStatus.Failed:
+        this.message.set(progress.message || 'Помилка імпорту');
+        this.hasFailed.set(true);
+        this.isCompleted.set(true);
+        break;
+
+      default:
+        console.warn('Невідомий статус прогресу:', progress.status);
+        break;
     }
   }
 
@@ -125,7 +224,7 @@ export class ImportProgressPage implements OnInit, OnDestroy {
     }
 
     // unitId перевірено при відкритті форми, тут він гарантовано є
-    this.unitService.importSoldiers(this.unitId!, file).subscribe({
+    this.importUnitService.importSoldiers(this.unitId!, file).subscribe({
       next: (response) => {
         if (response.status === 'Failed') {
           this.snackBar.open(
@@ -137,7 +236,7 @@ export class ImportProgressPage implements OnInit, OnDestroy {
         }
         // Якщо успішно, SSE подія оновить UI
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         if (error.status === 423) {
           this.snackBar.open(
             'Імпорт вже виконується. Зачекайте завершення поточної операції.',
@@ -157,73 +256,6 @@ export class ImportProgressPage implements OnInit, OnDestroy {
 
     // Очищаємо input для можливості повторного вибору того ж файлу
     input.value = '';
-  }
-
-  private handleProgress(progress: ImportProgress) {
-    switch (progress.status) {
-      case ImportProgressStatus.Start:
-        this.message.set('Імпорт розпочато...');
-        this.isCompleted.set(false);
-        this.hasFailed.set(false);
-        this.completedSheets.set([]);
-        this.currentSheet.set(null);
-        this.processedRows.set(0);
-        this.totalRows.set(0);
-        break;
-
-      case ImportProgressStatus.SheetStart:
-        this.currentSheet.set(progress.sheet || null);
-        this.processedRows.set(0);
-        this.totalRows.set(progress.total);
-        this.message.set(`Обробка аркушу: ${progress.sheet}`);
-        break;
-
-      case ImportProgressStatus.RecordDone:
-        // Оновлення прогресу обробки записів
-        this.currentSheet.set(progress.sheet || null);
-        this.processedRows.set(progress.processed);
-        this.totalRows.set(progress.total);
-        break;
-
-      case ImportProgressStatus.SheetDone:
-        if (progress.sheet) {
-          // Отримуємо повну інформацію про імпорт
-          this.unitService.getImportStatus().subscribe({
-            next: (importStatus) => {
-              if (importStatus.result) {
-                this.completedSheets.set(importStatus.result);
-              }
-            },
-            error: (error) => {
-              console.error('Помилка отримання статусу імпорту:', error);
-              this.message.set('Помилка отримання статусу імпорту: ' + error.message);
-            },
-          });
-        }
-        break;
-
-      case ImportProgressStatus.Done:
-        this.message.set('Імпорт завершено успішно!');
-        this.isCompleted.set(true);
-        break;
-
-      case ImportProgressStatus.Failed:
-        this.message.set(progress.message || 'Помилка імпорту');
-        this.hasFailed.set(true);
-        this.isCompleted.set(true);
-        break;
-
-      case ImportProgressStatus.UnitNotFound:
-        // Обробка випадку, коли підрозділ не знайдено
-        this.message.set(`Підрозділ "${progress.sheet}" не знайдено в базі даних`);
-        //this.hasFailed.set(true);
-        //this.isCompleted.set(true);
-        break;
-
-      default:
-        console.warn('Невідомий статус прогресу:', progress.status);
-        break;
-    }
   }
 
   goBack() {

@@ -4,7 +4,7 @@
     #fileInput
     type="file"
     accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    style="display: none;"
+    style="display: none"
     (change)="onFileSelected($event)"
   />
 
@@ -60,18 +60,27 @@
   <div class="results-section">
     <h2>Результати імпорту</h2>
     <mat-accordion class="sections-accordion">
-      @for (unit of completedSheets(); track unit.unitName) {
+      @for (unit of completedSheets(); track unit.name) {
       <mat-expansion-panel class="unit-section-panel">
         <mat-expansion-panel-header>
           <mat-panel-title>
+            <!--
             <mat-icon color="primary">group</mat-icon>
-            {{ unit.unitName }}
+          -->
+            {{ unit.name }}
+            @if(unit.importedSoldiers){
             <span class="soldier-count">({{ unit.importedSoldiers.length }} осіб)</span>
+            } @if(unit.status === ImportProgressStatus.UnitNotFound){
+            <span class="unit-not-found-badge">
+              <mat-icon inline color="warn">error</mat-icon>
+              Підрозділ не знайдено
+            </span>
+            }
           </mat-panel-title>
         </mat-expansion-panel-header>
 
         <div class="section-content">
-          @if (unit.importedSoldiers.length > 0) {
+          @if (unit.importedSoldiers && unit.importedSoldiers.length > 0) {
           <table mat-table [dataSource]="unit.importedSoldiers" class="soldiers-table">
             <!-- Табельний номер -->
             <ng-container matColumnDef="externId">

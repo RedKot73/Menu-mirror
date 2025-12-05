@@ -207,12 +207,12 @@ namespace S5Server.Controllers
             var e = await _set.AsTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
             if (e is null) return NotFound();
 
-            var original = (e.FirstName, e.MidleName, e.LastName, e.NickName,
+            var original = (e.FirstName, e.MidleName, e.LastName, e.BirthDate, e.NickName,
                             e.UnitId, e.AssignedUnitId, e.OperationalUnitId, e.RankId, e.PositionId, e.StateId, e.Comment);
 
             SoldierDto.ApplyDto(e, dto);
 
-            var changed = (e.FirstName, e.MidleName, e.LastName, e.NickName,
+            var changed = (e.FirstName, e.MidleName, e.LastName, e.BirthDate, e.NickName,
                            e.UnitId, e.AssignedUnitId, e.OperationalUnitId, e.RankId, e.PositionId, e.StateId, e.Comment);
 
             if (original == changed)

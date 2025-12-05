@@ -157,6 +157,7 @@ namespace S5Server.Data
                 entity.Property(e => e.FirstName).IsRequired().HasColumnType("TEXT(50)");
                 entity.Property(e => e.MidleName).HasColumnType("TEXT(50)");
                 entity.Property(e => e.LastName).HasColumnType("TEXT(50)");
+                entity.Property(e => e.BirthDate).HasColumnType("TEXT");
                 entity.Property(e => e.NickName).HasColumnType("TEXT(50)");
                 entity.Property(e => e.UnitId).IsRequired().HasColumnType("TEXT(36)");
                 entity.Property(e => e.AssignedUnitId).HasColumnType("TEXT(36)");

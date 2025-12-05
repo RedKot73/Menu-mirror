@@ -1,0 +1,136 @@
+import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { LookupDto } from '../../shared/models/lookup.models';
+import { SoldierDto } from '../../Soldier/services/soldier.service';
+import { ErrorHandler } from '../../shared/models/ErrorHandler';
+
+export interface ImportedSoldier {
+  externId?: number;
+  firstName: string;
+  midleName?: string;
+  lastName?: string;
+  externalId: number;
+  rank: string;
+  birthDate: string;
+  position: string;
+  arrivedAt?: string;
+  departedAt?: string;
+}
+
+export enum ImportProgressStatus {
+  Start = 0,
+  Done = 1,
+  Failed = 2,
+  UnitStart = 3,
+  UnitDone = 4,
+  UnitNotFound = 5,
+  RecordDone = 6,
+}
+
+export interface ImportUnit {
+  name: string;
+  status: ImportProgressStatus;
+  importedSoldiers: ImportedSoldier[];
+}
+
+export enum ImportJobStatus {
+  NotActive = 'NotActive',
+  Running = 'Running',
+  Succeeded = 'Succeeded',
+  Failed = 'Failed',
+}
+
+export interface ImportJobResponse {
+  status: ImportJobStatus;
+  startedAtUtc: string;
+  finishedAtUtc?: string;
+  error?: string;
+  result?: ImportUnit[];
+}
+
+export interface ImportProgress {
+  sheet?: string;
+  status: ImportProgressStatus;
+  processed: number;
+  total: number;
+  message?: string;
+}
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ImportUnitService {
+  readonly api = '/api/Unit';
+  private http = inject(HttpClient);
+
+  importSoldiers(id: string, file: File): Observable<ImportJobResponse> {
+    const form = new FormData();
+    form.append('soldiers', file);
+    return this.http.post<ImportJobResponse>(`${this.api}/${id}/importSoldiers`, form).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося імпортувати особовий склад'
+        );
+        return throwError(() => new Error(message));
+      })
+    );
+  }
+
+  getLastUnits(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.api}/get-last-units`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося отримати останні підрозділи'
+        );
+        return throwError(() => new Error(message));
+      })
+    );
+  }
+
+  getUnits(units: string[]): Observable<ImportUnit[]> {
+    // POST запит з масивом у body
+    return this.http.post<ImportUnit[]>(`${this.api}/get-units`, units).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося отримати перелік підрозділів'
+        );
+        return throwError(() => new Error(message));
+      })
+    );
+  }
+
+  /**
+   * Підписка на Server-Sent Events для моніторингу прогресу імпорту
+   * @returns Observable з подіями прогресу
+   */
+  subscribeToImportProgress(): Observable<ImportProgress> {
+    return new Observable<ImportProgress>((observer) => {
+      const eventSource = new EventSource(`${this.api}/imports/stream`);
+
+      eventSource.onmessage = (event) => {
+        try {
+          const progress: ImportProgress = JSON.parse(event.data);
+          observer.next(progress);
+        } catch (error) {
+          console.error('Помилка парсингу SSE події:', error);
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        console.error('SSE connection error:', error);
+        eventSource.close();
+        observer.error(error);
+      };
+
+      // Cleanup при відписці
+      return () => {
+        eventSource.close();
+      };
+    });
+  }
+}
