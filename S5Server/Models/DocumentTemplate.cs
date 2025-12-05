@@ -55,6 +55,22 @@ namespace S5Server.Models
         }
     }
 
+    /// <summary>
+    /// Represents detailed information about a template, including its identity, metadata, publication status, and
+    /// associated category and dataset information.
+    /// </summary>
+    /// <param name="Id">The unique identifier of the template.</param>
+    /// <param name="Name">The display name of the template.</param>
+    /// <param name="Description">An optional description providing additional details about the template, or null if not specified.</param>
+    /// <param name="Format">The format or type of the template, such as the file type or content structure.</param>
+    /// <param name="TemplateCategoryId">The unique identifier of the category to which the template belongs.</param>
+    /// <param name="TemplateCategoryName">The display name of the template's category, or null if not specified.</param>
+    /// <param name="IsPublished">A value indicating whether the template has been published.</param>
+    /// <param name="PublishedAtUtc">The UTC date and time when the template was published, or null if the template is not published.</param>
+    /// <param name="DefaultDataSetId">The unique identifier of the default dataset associated with the template, or null if not set.</param>
+    /// <param name="DefaultDataSetName">The display name of the default dataset, or null if not set.</param>
+    /// <param name="CreatedAtUtc">The UTC date and time when the template was created.</param>
+    /// <param name="UpdatedAtUtc">The UTC date and time when the template was last updated.</param>
     public record TemplateDetailsDto(
         string Id,
         string Name,
@@ -80,6 +96,14 @@ namespace S5Server.Models
     public record SetCategoryDto(string? TemplateCategoryId);
     public record SetDefaultDataSetDto(string? DefaultDataSetId);
 
+    /// <summary>
+    /// Represents a document template, including its content, format, metadata, and associated data sets.
+    /// </summary>
+    /// <remarks>A document template defines the structure and content for generated documents in various
+    /// formats, such as HTML, plain text, DOCX, or PDF. Each template includes metadata, publication status, and can be
+    /// associated with a category and one or more data sets. The template's content is stored as a byte array, and the
+    /// format determines how the content is interpreted and delivered. Use the provided static methods to convert
+    /// between format values and their string or MIME type representations.</remarks>
     [Table("document_templates")]
     public class DocumentTemplate
     {

@@ -14,11 +14,12 @@ namespace S5Server.Models
         string? MidleName,
         string? LastName,
         string Fio,
+        DateOnly? BirthDate,
         string? NickName,
         string UnitId,
         string UnitShortName,
-        DateTime ArrivedAt,
-        DateTime? DepartedAt,
+        DateOnly? ArrivedAt,
+        DateOnly? DepartedAt,
         string? AssignedUnitId,
         string? AssignedUnitShortName,
         string? OperationalUnitId,
@@ -39,10 +40,11 @@ namespace S5Server.Models
                 e.MidleName,
                 e.LastName,
                 e.FIO,
+                e.BirthDate,
                 e.NickName,
                 e.UnitId,
                 e.Unit?.ShortName ?? e.Unit?.Name ?? string.Empty,
-                e.ArrivedAt == default ? DateTime.UtcNow.Date : e.ArrivedAt,
+                e.ArrivedAt,
                 e.DepartedAt,
                 e.AssignedUnitId,
                 e.AssignedUnit?.ShortName ?? e.AssignedUnit?.Name,
@@ -59,19 +61,20 @@ namespace S5Server.Models
 
         public static void ApplyDto(Soldier e, SoldierDto dto)
         {
-            e.FirstName = dto.FirstName.Trim();
-            e.MidleName = string.IsNullOrWhiteSpace(dto.MidleName) ? null : dto.MidleName.Trim();
-            e.LastName = string.IsNullOrWhiteSpace(dto.LastName) ? null : dto.LastName.Trim();
-            e.NickName = string.IsNullOrWhiteSpace(dto.NickName) ? null : dto.NickName.Trim();
+            e.FirstName = dto.FirstName;
+            e.MidleName = string.IsNullOrWhiteSpace(dto.MidleName) ? null : dto.MidleName;
+            e.LastName = string.IsNullOrWhiteSpace(dto.LastName) ? null : dto.LastName;
+            e.BirthDate = dto.BirthDate;
+            e.NickName = string.IsNullOrWhiteSpace(dto.NickName) ? null : dto.NickName;
             e.UnitId = dto.UnitId;
-            e.ArrivedAt = dto.ArrivedAt == default ? DateTime.UtcNow.Date : dto.ArrivedAt;
+            e.ArrivedAt = dto.ArrivedAt;
             e.DepartedAt = dto.DepartedAt;
             e.AssignedUnitId = dto.AssignedUnitId;
             e.OperationalUnitId = dto.OperationalUnitId;
             e.RankId = dto.RankId;
             e.PositionId = dto.PositionId;
             e.StateId = dto.StateId;
-            e.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
+            e.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment;
         }
     }
 
@@ -82,12 +85,13 @@ namespace S5Server.Models
         string FirstName,
         string? MidleName,
         string? LastName,
+        DateOnly? BirthDate,
         string? NickName,
         string UnitId,
         string? AssignedUnitId,
         string? OperationalUnitId,
-        DateTime ArrivedAt,
-        DateTime? DepartedAt,
+        DateOnly ArrivedAt,
+        DateOnly? DepartedAt,
         string RankId,
         string PositionId,
         string StateId,
@@ -99,9 +103,10 @@ namespace S5Server.Models
             FirstName = FirstName.Trim(),
             MidleName = string.IsNullOrWhiteSpace(MidleName) ? null : MidleName.Trim(),
             LastName = string.IsNullOrWhiteSpace(LastName) ? null : LastName.Trim(),
+            BirthDate = BirthDate,
             NickName = string.IsNullOrWhiteSpace(NickName) ? null : NickName.Trim(),
             UnitId = UnitId,
-            ArrivedAt = ArrivedAt == default ? DateTime.UtcNow.Date : ArrivedAt,
+            ArrivedAt = ArrivedAt,
             DepartedAt = DepartedAt,
             AssignedUnitId = AssignedUnitId,
             OperationalUnitId = OperationalUnitId,
@@ -140,6 +145,8 @@ namespace S5Server.Models
 
         [Display(Name = "ПІБ")]
         public string FIO => string.IsNullOrEmpty(MidleName + LastName) ? FirstName : $"{FirstName} {MName}.{LName}.";
+
+        public DateOnly? BirthDate { get; set; }
 
         /// <summary>
         /// Позивний
@@ -236,12 +243,12 @@ namespace S5Server.Models
         /// Прибув до підрозділу
         /// </summary>
         [Display(Name = "Прибув до підрозділу")]
-        public DateTime ArrivedAt { get; set; } = DateTime.UtcNow.Date;
+        public DateOnly? ArrivedAt { get; set; }
 
         /// <summary>
         /// Вибув з підрозділу
         /// </summary>
         [Display(Name = "Вибув з підрозділу")]
-        public DateTime? DepartedAt { get; set; }
+        public DateOnly? DepartedAt { get; set; }
     }
 }

@@ -221,6 +221,83 @@ namespace S5Server.Data
                 */
             });
 
+            modelBuilder.Entity<SoldierHist>(entity =>
+            {
+                entity.ToTable("soldiers_hist");
+                entity.HasKey(e => e.Id);
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.ExternId).HasColumnType("INTEGER");
+                entity.Property(e => e.FirstName).IsRequired().HasColumnType("TEXT(50)");
+                entity.Property(e => e.MidleName).HasColumnType("TEXT(50)");
+                entity.Property(e => e.LastName).HasColumnType("TEXT(50)");
+                entity.Property(e => e.BirthDate).HasColumnType("TEXT");
+                entity.Property(e => e.NickName).HasColumnType("TEXT(50)");
+                entity.Property(e => e.UnitId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.AssignedUnitId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.OperationalUnitId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.RankId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.PositionId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.StateId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.Comment).HasColumnType("TEXT");
+                entity.Property(e => e.ArrivedAt)
+                      .HasColumnType("TEXT");
+                entity.Property(e => e.DepartedAt)
+                      .HasColumnType("TEXT");
+                /*
+                // Основний підрозділ (обов'язковий)
+                entity.HasOne(s => s.Unit)
+                      .WithMany(u => u.Soldiers)
+                      .HasForeignKey(s => s.UnitId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Приданий до підрозділу (опціонально)
+                entity.HasOne(s => s.AssignedUnit)
+                      .WithMany(u => u.AssignedSoldiers)
+                      .HasForeignKey(s => s.AssignedUnitId)
+                      .OnDelete(DeleteBehavior.SetNull);
+                // Включені до оперативного підрозділу
+                entity.HasOne(s => s.OperationalUnit)
+                      .WithMany(u => u.OperationalSoldiers)
+                      .HasForeignKey(s => s.OperationalUnitId)
+                      .OnDelete(DeleteBehavior.SetNull);
+                */
+                // Звання
+                entity.HasOne(s => s.Rank)
+                      .WithMany()
+                      .HasForeignKey(s => s.RankId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Посада
+                entity.HasOne(s => s.Position)
+                      .WithMany()
+                      .HasForeignKey(s => s.PositionId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Статус
+                entity.HasOne(s => s.State)
+                      .WithMany()
+                      .HasForeignKey(s => s.StateId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Мережевий акаунт (може бути відсутній)
+                /*
+                entity.HasOne(s => s.VezhaUser)
+                      .WithOne(s => s.Soldier)
+                      //.HasForeignKey(s => s.VezhaUserId)
+                      .OnDelete(DeleteBehavior.SetNull);
+                */
+                entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+                entity.Property(e => e.SoldierId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.ValidFrom).IsRequired().HasColumnType("TEXT");
+                entity.Property(e => e.ValidTo).HasColumnType("TEXT");
+
+                // Индексы для быстрого поиска истории
+                entity.HasIndex(e => e.SoldierId);
+                entity.HasIndex(e => new { e.SoldierId, e.ValidFrom });
+            });
+
             // Новые сущности: шаблоны и наборы данных
             modelBuilder.Entity<DocumentTemplate>(entity =>
             {
@@ -326,9 +403,18 @@ namespace S5Server.Data
         /// Військовослужбовці (бійці)
         /// </summary>
         public DbSet<Soldier> Soldiers { get; set; }
+        /// <summary>
+        /// Историческая таблица изменений солдат
+        /// </summary>
+        public DbSet<SoldierHist> SoldierHistories { get; set; }
 
-        // Новые таблицы
+        /// <summary>
+        /// Gets or sets the collection of document templates in the database context.
+        /// </summary>
         public DbSet<DocumentTemplate> DocumentTemplates { get; set; }
+        /// <summary>
+        /// Gets or sets the collection of template data sets in the database context.
+        /// </summary>
         public DbSet<TemplateDataSet> TemplateDataSets { get; set; }
     }
 }
