@@ -225,77 +225,51 @@ namespace S5Server.Data
             {
                 entity.ToTable("soldiers_hist");
                 entity.HasKey(e => e.Id);
-                entity.HasKey(e => e.Id);
 
+                // Базовые поля
                 entity.Property(e => e.Id).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.SoldierId).IsRequired().HasColumnType("TEXT(36)");
                 entity.Property(e => e.ExternId).HasColumnType("INTEGER");
                 entity.Property(e => e.FirstName).IsRequired().HasColumnType("TEXT(50)");
                 entity.Property(e => e.MidleName).HasColumnType("TEXT(50)");
                 entity.Property(e => e.LastName).HasColumnType("TEXT(50)");
                 entity.Property(e => e.BirthDate).HasColumnType("TEXT");
                 entity.Property(e => e.NickName).HasColumnType("TEXT(50)");
+
+                // Гибридные поля: Id + денормализованные значения (БЕЗ FK constraints)
                 entity.Property(e => e.UnitId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.UnitShortName).IsRequired().HasColumnType("TEXT(100)");
+
                 entity.Property(e => e.AssignedUnitId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.AssignedUnitShortName).HasColumnType("TEXT(100)");
+
                 entity.Property(e => e.OperationalUnitId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.OperationalUnitShortName).HasColumnType("TEXT(100)");
+
                 entity.Property(e => e.RankId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.RankShortValue).IsRequired().HasColumnType("TEXT(50)");
+
                 entity.Property(e => e.PositionId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.PositionValue).IsRequired().HasColumnType("TEXT(100)");
+
                 entity.Property(e => e.StateId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.StateValue).IsRequired().HasColumnType("TEXT(50)");
+
                 entity.Property(e => e.Comment).HasColumnType("TEXT");
-                entity.Property(e => e.ArrivedAt)
-                      .HasColumnType("TEXT");
-                entity.Property(e => e.DepartedAt)
-                      .HasColumnType("TEXT");
-                /*
-                // Основний підрозділ (обов'язковий)
-                entity.HasOne(s => s.Unit)
-                      .WithMany(u => u.Soldiers)
-                      .HasForeignKey(s => s.UnitId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                entity.Property(e => e.ArrivedAt).HasColumnType("TEXT");
+                entity.Property(e => e.DepartedAt).HasColumnType("TEXT");
 
-                // Приданий до підрозділу (опціонально)
-                entity.HasOne(s => s.AssignedUnit)
-                      .WithMany(u => u.AssignedSoldiers)
-                      .HasForeignKey(s => s.AssignedUnitId)
-                      .OnDelete(DeleteBehavior.SetNull);
-                // Включені до оперативного підрозділу
-                entity.HasOne(s => s.OperationalUnit)
-                      .WithMany(u => u.OperationalSoldiers)
-                      .HasForeignKey(s => s.OperationalUnitId)
-                      .OnDelete(DeleteBehavior.SetNull);
-                */
-                // Звання
-                entity.HasOne(s => s.Rank)
-                      .WithMany()
-                      .HasForeignKey(s => s.RankId)
-                      .OnDelete(DeleteBehavior.Restrict);
-
-                // Посада
-                entity.HasOne(s => s.Position)
-                      .WithMany()
-                      .HasForeignKey(s => s.PositionId)
-                      .OnDelete(DeleteBehavior.Restrict);
-
-                // Статус
-                entity.HasOne(s => s.State)
-                      .WithMany()
-                      .HasForeignKey(s => s.StateId)
-                      .OnDelete(DeleteBehavior.Restrict);
-
-                // Мережевий акаунт (може бути відсутній)
-                /*
-                entity.HasOne(s => s.VezhaUser)
-                      .WithOne(s => s.Soldier)
-                      //.HasForeignKey(s => s.VezhaUserId)
-                      .OnDelete(DeleteBehavior.SetNull);
-                */
-                entity.Property(e => e.Id).HasColumnType("TEXT(36)");
-                entity.Property(e => e.SoldierId).IsRequired().HasColumnType("TEXT(36)");
+                // Метаданные аудита
+                entity.Property(e => e.ChangedBy).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.Operation).IsRequired().HasColumnType("TEXT(10)");
                 entity.Property(e => e.ValidFrom).IsRequired().HasColumnType("TEXT");
                 entity.Property(e => e.ValidTo).HasColumnType("TEXT");
 
-                // Индексы для быстрого поиска истории
+                // Индексы для аудита и аналитики
                 entity.HasIndex(e => e.SoldierId);
                 entity.HasIndex(e => new { e.SoldierId, e.ValidFrom });
+                entity.HasIndex(e => e.UnitId); // Для аналитики по подразделению
+                entity.HasIndex(e => e.Operation); // Для фильтрации по типу операции
             });
 
             // Новые сущности: шаблоны и наборы данных
