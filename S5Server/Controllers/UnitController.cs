@@ -398,9 +398,9 @@ namespace S5Server.Controllers
 
             try
             {
-                (bool started, ImportJob? job, string? error) = Services.ImportSoldiers.TryStartBackground(unit, soldiers, ct);
+                (bool started, ImportJob job, string? error) = Services.ImportSoldiers.TryStartBackground(unit, soldiers, ct);
                 if (!started) return Problem(statusCode: 423, title: error ?? "Імпорт заблоковано");
-                if (job is null) return BadRequest("Помилка запуску фонової задачі імпорту ОС");
+                //if (job is null) return BadRequest("Помилка запуску фонової задачі імпорту ОС");
                 return Accepted(new
                 {
                     job.Status,
@@ -420,24 +420,25 @@ namespace S5Server.Controllers
         }
 
         /// <summary>
-        /// <summary>
-        /// Статус фонового імпорту
+        /// Вже оброблені підрозділи
         /// </summary>
-        [HttpGet("imports")]
+        [HttpGet("get-last-units")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GetImportStatus()
+        public ActionResult GetLastUnits()
         {
-            var job = Services.ImportSoldiers.Current;
-            //if (job is null) return NotFound();
-            return Ok(new
-            {
-                job.Status,
-                job.StartedAtUtc,
-                job.FinishedAtUtc,
-                job.Error,
-                Result = Services.ImportSoldiers.GetLastResult()
-            });
+            var result = Services.ImportSoldiers.GetLastUnits();
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Вже оброблені підрозділи
+        /// </summary>
+        [HttpPost("get-units")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public ActionResult GetUnits(string[] units)
+        {
+            var result = Services.ImportSoldiers.GetUnits(units);
+            return Ok(result);
         }
 
         /// <summary>
