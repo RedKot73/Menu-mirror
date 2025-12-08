@@ -7,26 +7,97 @@ using Microsoft.EntityFrameworkCore;
 
 using S5Server.Data;
 using S5Server.Models;
+using S5Server.Utils;
 
 namespace S5Server.Services
 {
     public record ImportedSoldier(
-        int ExternId,
         string FirstName,
         string? MidleName,
         string? LastName,
-        int ExternalId,      // B
+        int ExternId,        // B
         string Rank,         // C
         DateOnly BirthDate,  // D
         string Position,     // E
         DateOnly? ArrivedAt,  //Прибув
-        DateOnly? DepartedAt  //Вибув
-    );
+        DateOnly? DepartedAt,  //Вибув
+        //---------------------------
+        string UnitId,
+        string RankId,
+        string PositionId
+    )
+    {
+        public static Soldier ToEntity(ImportedSoldier soldier) => new()
+        {
+            ExternId = soldier.ExternId,
+            FirstName = soldier.FirstName.Trim(),
+            MidleName = string.IsNullOrWhiteSpace(soldier.MidleName) ? null : soldier.MidleName.Trim(),
+            LastName = string.IsNullOrWhiteSpace(soldier.LastName) ? null : soldier.LastName.Trim(),
+            BirthDate = soldier.BirthDate,
+            NickName = string.Empty,
+            UnitId = soldier.UnitId,
+            ArrivedAt = soldier.ArrivedAt,
+            DepartedAt = soldier.DepartedAt,
+            //AssignedUnitId = AssignedUnitId,
+            //OperationalUnitId = OperationalUnitId,
+            RankId = soldier.RankId,
+            PositionId = soldier.PositionId,
+            StateId = ControllerFunctions.NullGuid,
+            //Comment = string.IsNullOrWhiteSpace(Comment) ? null : Comment?.Trim()
+        };
+        public Soldier Update(Soldier soldier)
+        {
+            soldier.FirstName = FirstName;
+            soldier.MidleName = MidleName;
+            soldier.LastName = LastName;
+            soldier.BirthDate = BirthDate;
+            soldier.ArrivedAt = ArrivedAt;
+            soldier.DepartedAt = DepartedAt;
+            soldier.RankId = RankId;
+            soldier.PositionId = PositionId;
+            return soldier;
+        }
+        public bool Chnaged(Soldier soldier)
+        {
+            var res = soldier.FirstName != FirstName ||
+                soldier.MidleName != MidleName ||
+                soldier.LastName != LastName ||
+                soldier.BirthDate != BirthDate ||
+                soldier.ArrivedAt != ArrivedAt ||
+                soldier.DepartedAt != DepartedAt ||
+                soldier.RankId != RankId ||
+                soldier.PositionId != PositionId;
+            return res;
+        }
+    }
 
-    public record ImportUnit(
-        string UnitName,
-        List<ImportedSoldier> ImportedSoldiers
-    );
+    public enum ImportSoldierStatus { Inserted, Updated, Deleted }
+    public record ImportedSoldierResult(
+        SoldierDto Soldier,
+        ImportSoldierStatus Status
+    )
+    {
+        public static ImportedSoldierResult ToDto(Soldier e, ImportSoldierStatus status)
+        {
+            var sldr = SoldierDto.ToDto(e);
+            var res = new ImportedSoldierResult(sldr, status);
+            return res;
+        }
+    }
+
+    public enum ImportProgressStatus { Start, Done, Failed, UnitStart, UnitDone, UnitNotFound, RecordDone }
+    public class ImportUnit {
+        public string Name { get; set; }
+        public ImportProgressStatus Status { get; set; } = ImportProgressStatus.UnitStart;
+        public List<ImportedSoldierResult> ImportedSoldiers { get; init; } = [];
+        //public ImportUnit(string name) => Name = name;
+        public ImportUnit(string name, ImportProgressStatus status, List<ImportedSoldierResult> imports) 
+        { 
+            Name = name;
+            Status = status;
+            ImportedSoldiers = imports; 
+        }
+    }
 
     public enum ImportJobStatus { NotActive, Running, Succeeded, Failed }
     public record ImportJob
@@ -38,7 +109,6 @@ namespace S5Server.Services
         public string? Error { get; set; }
     }
 
-    public enum ImportProgressStatus { Start, Done, Failed, SheetStart, SheetDone, RecordDone, UnitNotFound }
     public record ImportProgress(string? Sheet, ImportProgressStatus Status, int Processed, int Total, string? Message);
 
     public static class ImportSoldiers
@@ -61,11 +131,29 @@ namespace S5Server.Services
         // Потокобезопасное хранение последнего результата
         private static readonly Lock _resultLock = new();
         private static readonly List<ImportUnit> _Result = [];
-        public static List<ImportUnit> GetLastResult()
+        public static string[] GetLastUnits()
         {
             lock (_resultLock)
             {
-                var v = _Result.Select(t => new ImportUnit(t.UnitName, [.. t.ImportedSoldiers])).ToList();
+                var v = _Result.Select(t => t.Name).ToArray();
+                return v;
+            }
+        }
+
+        public static List<ImportUnit> GetUnits(string[] units)
+        {
+            lock (_resultLock)
+            {
+                var query = _Result.Where(t => 
+                    t.Status == ImportProgressStatus.UnitDone || 
+                    t.Status == ImportProgressStatus.UnitNotFound
+                );
+
+                if (units.Length > 0)
+                {
+                    query = query.Where(t => units.Contains(t.Name));
+                }
+                var v = query.Select(t => new ImportUnit(t.Name, t.Status, [.. t.ImportedSoldiers])).ToList();
                 return v;
             }
         }
@@ -79,19 +167,19 @@ namespace S5Server.Services
                 try 
                 { 
                     eventHandler(p);
-                    _logger?.LogDebug("Report");
+                    //_logger?.LogDebug("Report");
                 }
                 catch { /* ignore listener errors */ }
             }
         }
 
         // Буферизация файла до запуска фоновой задачи, чтобы избежать ObjectDisposedException
-        public static (bool started, ImportJob? job, string? error) TryStartBackground(Unit unit, IFormFile file, CancellationToken ct = default)
+        public static (bool started, ImportJob job, string? error) TryStartBackground(Unit unit, IFormFile file, CancellationToken ct = default)
         {
             lock (_sync)
             {
                 if (IsRunning)
-                    return (false, null, "Імпорт вже виконується");
+                    return (false, Current, "Імпорт вже виконується");
             }
 
             // Считываем данные файла в память пока запрос активен
@@ -110,39 +198,8 @@ namespace S5Server.Services
                 _current.FinishedAtUtc = null;
                 _current.Error = string.Empty;
                 Report(new ImportProgress(null, ImportProgressStatus.Start, 0, 0, "start"));
-                _ = Task.Run(() => ExecuteAsync(unit, payload, ct), ct);
+                _ = Task.Run(() => DoImportSoldiers(unit, payload, ct), ct);
                 return (true, Current, null);
-            }
-        }
-
-        private static async Task ExecuteAsync(Unit unit, byte[] soldiersData, CancellationToken ct)
-        {
-            ArgumentNullException.ThrowIfNull(_current, "Внутрішня помилка серверу - завдання не знайдено");
-            try
-            {
-                await DoImportSoldiers(unit, soldiersData, ct);
-                lock (_sync)
-                {
-                    _current.Status = ImportJobStatus.Succeeded;
-                    _current.FinishedAtUtc = DateTime.UtcNow;
-                    Report(new ImportProgress(null, ImportProgressStatus.Done, 0, 0, "done"));
-                }
-            }
-            catch (Exception ex)
-            {
-                if (_current is null)
-                    throw;
-                _current.Status = ImportJobStatus.Failed;
-                _current.Error = ex.Message;
-                _current.FinishedAtUtc = DateTime.UtcNow;
-                Report(new ImportProgress(null, ImportProgressStatus.Failed, 0, 0, "failed"));
-            }
-            finally
-            {
-                lock (_sync)
-                {
-                    _current.Status = ImportJobStatus.NotActive;
-                }
             }
         }
 
@@ -152,128 +209,266 @@ namespace S5Server.Services
                 "Внутрішня помилка серверу - завдання не знайдено");
             ArgumentNullException.ThrowIfNull(_dbFactory,
                 "IDbContextFactory<MainDbContext> не сконфигурован. Вызовите ImportSoldiers.ConfigureDbFactory(...) при старте приложения.");
-
-            await using var db = await _dbFactory.CreateDbContextAsync(ct);
-
-            using var ms = new MemoryStream(soldiersData, writable: false);
-            ms.Position = 0;
-
-            using var doc = SpreadsheetDocument.Open(ms, false);
-            var wbPart = doc.WorkbookPart;
-            var sheets = wbPart?.Workbook?.Sheets;
-            if (sheets == null)
-                return;
-
-            lock (_resultLock)
+            try
             {
-                _Result.Clear();
-            }
-
-            foreach (var sheet in sheets.OfType<Sheet>())
-            {
-                // Проверка отмены перед началом обработки листа
-                ct.ThrowIfCancellationRequested();
-
-                if (string.IsNullOrEmpty(sheet.Name)) continue;
-                var curUnitId = await db.Units
+                await using var db = await _dbFactory.CreateDbContextAsync(ct);
+                // Кэшируем справочники в память для всех листов
+                var ranksByValue = await db.DictRanks
                     .AsNoTracking()
-                    .Where(t => t.ShortName == sheet.Name)
-                    .Select(t => t.Id)
-                    .FirstOrDefaultAsync(ct);
-                if (curUnitId == null) 
-                {
-                    Report(new ImportProgress(sheet.Name, ImportProgressStatus.UnitNotFound, 0, 0, sheet.Name));
-                    //await Task.Delay(1000, ct);
-                    continue;//return;
-                }
+                    .ToDictionaryAsync(
+                        r => r.Value,
+                        r => r.Id,
+                        StringComparer.OrdinalIgnoreCase, // Case-insensitive
+                        ct
+                    );
+                var ranksByShortValue = await db.DictRanks
+                    .AsNoTracking()
+                    .ToDictionaryAsync(
+                        r => r.ShortValue,
+                        r => r.Id,
+                        StringComparer.OrdinalIgnoreCase,
+                        ct
+                    );
+                var positionsByValue = await db.DictPositions
+                    .AsNoTracking()
+                    .ToDictionaryAsync(
+                        p => p.Value,
+                        p => p.Id,
+                        StringComparer.OrdinalIgnoreCase,
+                        ct
+                    );
+                /*
+                var ranksById = await db.DictRanks
+                    .AsNoTracking()
+                    .ToDictionaryAsync(r => r.Id, r => r, ct);
+                var positionsById = await db.DictPositions
+                    .AsNoTracking()
+                    .ToDictionaryAsync(p => p.Id, p => p, ct);
+                */
 
-                var import = new ImportUnit(sheet.Name!, []);
+                using var ms = new MemoryStream(soldiersData, writable: false);
+                ms.Position = 0;
+
+                using var doc = SpreadsheetDocument.Open(ms, false);
+                var wbPart = doc.WorkbookPart;
+                var sheets = wbPart?.Workbook?.Sheets;
+                if (sheets == null)
+                    return;
+
                 lock (_resultLock)
                 {
-                    _Result.Add(import);
+                    _Result.Clear();
                 }
 
-                var wsPart = (WorksheetPart)wbPart!.GetPartById(sheet.Id!);
-                var sheetData = wsPart.Worksheet.GetFirstChild<SheetData>();
-                if (sheetData is null) continue;
-
-                var rows = sheetData.Elements<Row>().Skip(1)
-                    .Where(t => t.ChildElements.Count > 1).ToList();
-                var total = rows.Count;
-                Report(new ImportProgress(sheet.Name, ImportProgressStatus.SheetStart, 0, total, "sheet-start"));
-                var processed = 0;
-
-                foreach (var row in rows)
+                foreach (var sheet in sheets.OfType<Sheet>())
                 {
-                    // Проверка отмены перед обработкой строки
+                    // Проверка отмены перед началом обработки листа
                     ct.ThrowIfCancellationRequested();
 
-                    var ColFio = GetCellValue(doc, GetCell(row, "A")).Trim()
-                        .Replace("\n\r", " ").Replace("\n", " ")
-                        .Replace("\r", " ").Replace("\u00A0", " ");
-                    var ColExternalId = GetCellValue(doc, GetCell(row, "B")).Trim();
-                    var ColRank = GetCellValue(doc, GetCell(row, "C")).Trim();
-                    var ColBirthDate = GetCellValue(doc, GetCell(row, "D")).Trim();
-                    var ColPosition = GetCellValue(doc, GetCell(row, "E")).Trim()
-                        .Replace("\n\r", " ").Replace("\n", " ")
-                        .Replace("\r", " ").Replace("\u00A0", " ");
-                    var ColArrived = GetCellValue(doc, GetCell(row, "F")).Trim();
+                    if (string.IsNullOrEmpty(sheet.Name)) continue;
 
-                    if (string.IsNullOrWhiteSpace(ColFio) &&
-                        string.IsNullOrWhiteSpace(ColExternalId) &&
-                        string.IsNullOrWhiteSpace(ColRank) &&
-                        string.IsNullOrWhiteSpace(ColBirthDate) &&
-                        string.IsNullOrWhiteSpace(ColPosition) &&
-                        string.IsNullOrWhiteSpace(ColArrived))
+                    var curUnitId = await db.Units
+                        .AsNoTracking()
+                        .Where(t => t.ParentId == unit.Id && t.ShortName == sheet.Name)
+                        .Select(t => t.Id)
+                        .FirstOrDefaultAsync(ct);
+                    if (curUnitId == null)
                     {
-                        processed++;
-                        break;//после пустой строки данных нет
+                        Report(new ImportProgress(sheet.Name, ImportProgressStatus.UnitNotFound, 0, 0, string.Empty));
+                        lock (_resultLock)
+                        {
+                            _Result.Add(new ImportUnit(sheet.Name!, ImportProgressStatus.UnitNotFound, []));
+                        }
+                        //await Task.Delay(1000, ct);
+                        continue;//return;
                     }
 
-                    var fioParts = ColFio.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                    var firstName = fioParts.ElementAtOrDefault(0) ?? string.Empty;
-                    string? midleName = fioParts.Length > 1 ? fioParts[1] : null;
-                    string? lastName = fioParts.Length > 2 ? string.Join(" ", fioParts.Skip(2)) : null;
-
-                    int externalId = 0;
-                    if (int.TryParse(ColExternalId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var iv))
-                        externalId = iv;
-                    else if (double.TryParse(ColExternalId, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var dv))
-                        externalId = (int)Math.Truncate(dv);
-                    else if (double.TryParse(ColExternalId, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.CurrentCulture, out dv))
-                        externalId = (int)Math.Truncate(dv);
-
-                    var birthDate = TryParseExcelDate(ColBirthDate, out var dd) ? dd : default;
-
-                    DateOnly? arrivedAt = null;
-                    DateOnly? departedAt = null;
-                    if (ColArrived == "прибув") arrivedAt = DateOnly.FromDateTime(DateTime.Now);
-                    else if (ColArrived == "вибув") departedAt = DateOnly.FromDateTime(DateTime.Now);
-
-                    var sldr = new ImportedSoldier(
-                        ExternId: externalId,
-                        FirstName: firstName,
-                        MidleName: midleName,
-                        LastName: lastName,
-                        ExternalId: externalId,
-                        Rank: ColRank,
-                        BirthDate: birthDate,
-                        Position: ColPosition.Trim(),
-                        ArrivedAt: arrivedAt,
-                        DepartedAt: departedAt
-                    );
+                    var import = new ImportUnit(sheet.Name!, ImportProgressStatus.UnitStart, []);
                     lock (_resultLock)
                     {
-                        import.ImportedSoldiers.Add(sldr);
+                        _Result.Add(import);
                     }
 
-                    processed++;
-                    Report(new ImportProgress(sheet.Name, ImportProgressStatus.RecordDone, processed, total, null));
+                    var wsPart = (WorksheetPart)wbPart!.GetPartById(sheet.Id!);
+                    var sheetData = wsPart.Worksheet.GetFirstChild<SheetData>();
+                    if (sheetData is null) continue;
 
-                    // Заменяем блокирующую паузу на асинхронную с поддержкой отмены
-                    await Task.Delay(100, ct);
+                    var rows = sheetData.Elements<Row>().Skip(1)
+                        .Where(t => t.ChildElements.Count > 1).ToList();
+                    var total = rows.Count;
+                    Report(new ImportProgress(sheet.Name, ImportProgressStatus.UnitStart, 0, total, "sheet-start"));
+                    var processed = 0;
+
+                    foreach (var row in rows)
+                    {
+                        // Проверка отмены перед обработкой строки
+                        ct.ThrowIfCancellationRequested();
+
+                        var ColFio = GetCellValue(doc, GetCell(row, "A")).Trim()
+                            .Replace("\n\r", " ").Replace("\n", " ")
+                            .Replace("\r", " ").Replace("\u00A0", " ");
+                        var ColExternalId = GetCellValue(doc, GetCell(row, "B")).Trim();
+                        var ColRank = GetCellValue(doc, GetCell(row, "C")).Trim();
+                        var ColBirthDate = GetCellValue(doc, GetCell(row, "D")).Trim();
+                        var ColPosition = GetCellValue(doc, GetCell(row, "E")).Trim()
+                            .Replace("\n\r", " ").Replace("\n", " ")
+                            .Replace("\r", " ").Replace("\u00A0", " ");
+                        var ColArrived = GetCellValue(doc, GetCell(row, "F")).Trim();
+
+                        if (string.IsNullOrWhiteSpace(ColFio) &&
+                            string.IsNullOrWhiteSpace(ColExternalId) &&
+                            string.IsNullOrWhiteSpace(ColRank) &&
+                            string.IsNullOrWhiteSpace(ColBirthDate) &&
+                            string.IsNullOrWhiteSpace(ColPosition) &&
+                            string.IsNullOrWhiteSpace(ColArrived))
+                        {
+                            processed++;
+                            break;//после пустой строки данных нет
+                        }
+
+                        var fioParts = ColFio.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                        var firstName = fioParts.ElementAtOrDefault(0) ?? string.Empty;
+                        string? midleName = fioParts.Length > 1 ? fioParts[1] : null;
+                        string? lastName = fioParts.Length > 2 ? string.Join(" ", fioParts.Skip(2)) : null;
+
+                        int externalId = 0;
+                        if (int.TryParse(ColExternalId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var iv))
+                            externalId = iv;
+                        else if (double.TryParse(ColExternalId, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var dv))
+                            externalId = (int)Math.Truncate(dv);
+                        else if (double.TryParse(ColExternalId, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.CurrentCulture, out dv))
+                            externalId = (int)Math.Truncate(dv);
+
+                        var birthDate = TryParseExcelDate(ColBirthDate, out var dd) ? dd : default;
+
+                        DateOnly? arrivedAt = null;
+                        DateOnly? departedAt = null;
+                        if (ColArrived == "прибув") arrivedAt = DateOnly.FromDateTime(DateTime.Now);
+                        else if (ColArrived == "вибув") departedAt = DateOnly.FromDateTime(DateTime.Now);
+
+                        // Поиск RankId из кэша (сначала по ShortValue, потом по Value)
+                        string? rankId = null;
+                        if (!string.IsNullOrWhiteSpace(ColRank))
+                        {
+                            ranksByShortValue.TryGetValue(ColRank, out rankId);
+                            rankId ??= ranksByValue.GetValueOrDefault(ColRank);
+                        }
+                        // Поиск PositionId из кэша
+                        string? positionId = !string.IsNullOrWhiteSpace(ColPosition)
+                            ? positionsByValue.GetValueOrDefault(ColPosition)
+                            : ControllerFunctions.NullGuid;
+
+                        var sldr = new ImportedSoldier(
+                            FirstName: firstName,
+                            MidleName: midleName,
+                            LastName: lastName,
+                            ExternId: externalId,
+                            Rank: ColRank,
+                            BirthDate: birthDate,
+                            Position: ColPosition.Trim(),
+                            ArrivedAt: arrivedAt,
+                            DepartedAt: departedAt,
+                            //-----------------
+                            UnitId: curUnitId,
+                            RankId: !string.IsNullOrWhiteSpace(rankId) ?
+                                rankId : ControllerFunctions.NullGuid,
+                            PositionId: !string.IsNullOrWhiteSpace(positionId) ?
+                                positionId : positionId = ControllerFunctions.NullGuid
+                        );
+
+                        ImportSoldierStatus? importSoldierStatus = null;
+                        var soldier = await db.Soldiers
+                            .AsNoTracking()
+                            .Where(t => t.ExternId == sldr.ExternId)
+                            .FirstOrDefaultAsync(ct);
+                        if(soldier == null)
+                        {
+                            soldier = await db.Soldiers
+                                .AsNoTracking()
+                                .Where(t => t.FirstName == sldr.FirstName &&
+                                t.MidleName == sldr.MidleName &&
+                                t.LastName == sldr.LastName &&
+                                t.BirthDate == sldr.BirthDate)
+                                .FirstOrDefaultAsync(ct);
+                            if (soldier == null)
+                            {
+                                soldier = ImportedSoldier.ToEntity(sldr);
+                                soldier.ValidFrom = DateTime.Now;
+                                soldier.ChangedBy = "ImportSoldiers";
+
+                                db.Soldiers.Add(soldier);
+                                importSoldierStatus = ImportSoldierStatus.Inserted;
+                            }
+                            else
+                            if (sldr.Chnaged(soldier))
+                            {
+                                soldier.ValidFrom = DateTime.Now;
+                                soldier.ChangedBy = "ImportSoldiers";
+                                db.Soldiers.Update(soldier);
+                                sldr.Update(soldier);
+                                importSoldierStatus = ImportSoldierStatus.Updated;
+                            }
+                        }
+                        else
+                        if(sldr.Chnaged(soldier))
+                        {
+                            soldier.ValidFrom = DateTime.Now;
+                            soldier.ChangedBy = "ImportSoldiers";
+                            db.Soldiers.Update(soldier);
+                            sldr.Update(soldier);
+                            importSoldierStatus = ImportSoldierStatus.Updated;
+                        }
+
+                        if (importSoldierStatus != null)//Запис відрізняється від запису в БД
+                        {
+                            await db.SaveChangesAsync(ct);
+
+                            soldier = await db.Soldiers
+                                .AsNoTracking()
+                                .Include(t => t.Rank)
+                                .Include(t => t.Position)
+                                .Where(t => t.ExternId == sldr.ExternId)
+                                .FirstOrDefaultAsync(ct) ??
+                                throw new InvalidOperationException($"Soldier {sldr.ExternId} not found");
+                            var soldierResult = ImportedSoldierResult.ToDto(soldier, (ImportSoldierStatus)importSoldierStatus);
+
+                            lock (_resultLock)
+                            {
+                                import.ImportedSoldiers.Add(soldierResult);
+                            }
+                        }
+
+                        processed++;
+                        Report(new ImportProgress(sheet.Name, ImportProgressStatus.RecordDone, processed, total, null));
+
+                        // Заменяем блокирующую паузу на асинхронную с поддержкой отмены
+                        //await Task.Delay(100, ct);
+                    }
+                    import.Status = ImportProgressStatus.UnitDone;
+                    Report(new ImportProgress(sheet.Name, ImportProgressStatus.UnitDone, processed, total, "sheet-done"));
                 }
-                Report(new ImportProgress(sheet.Name, ImportProgressStatus.SheetDone, processed, total, "sheet-done"));
+            }
+            catch (Exception ex)
+            {
+                lock (_sync)
+                {
+                    _current.Status = ImportJobStatus.Failed;
+                    _current.Error = ex.Message;
+                    _current.FinishedAtUtc = DateTime.UtcNow;
+                    Report(new ImportProgress(null, ImportProgressStatus.Failed, 0, 0, "failed"));
+                }
+            }
+            finally
+            {
+                lock (_sync)
+                {
+                    if (_current.Status == ImportJobStatus.Running)
+                    {
+                        _current.Status = ImportJobStatus.Succeeded;
+                    }
+                    _current.FinishedAtUtc = DateTime.UtcNow;
+                    Report(new ImportProgress(null, ImportProgressStatus.Done, 0, 0, "done"));
+                }
             }
         }
 

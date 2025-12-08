@@ -30,7 +30,15 @@ namespace S5Server.Models
         string PositionValue,
         string StateId,
         string StateValue,
-        string? Comment
+        string? Comment,
+        /// <summary>
+        /// Кто внёс изменение (UserId или "ImportSystem")
+        /// </summary>
+        string ChangedBy,
+        /// <summary>
+        /// Дата начала действия записи
+        /// </summary>
+        DateTime ValidFrom
     )
     {
         public static SoldierDto ToDto(Soldier e) =>
@@ -56,7 +64,9 @@ namespace S5Server.Models
                 e.Position?.Value ?? string.Empty,
                 e.StateId,
                 e.State?.Value ?? string.Empty,
-                e.Comment
+                e.Comment,
+                e.ChangedBy,
+                e.ValidFrom
             );
 
         public static void ApplyDto(Soldier e, SoldierDto dto)
@@ -250,5 +260,17 @@ namespace S5Server.Models
         /// </summary>
         [Display(Name = "Вибув з підрозділу")]
         public DateOnly? DepartedAt { get; set; }
+
+        /// <summary>
+        /// Кто внёс изменение (UserId или "ImportSystem")
+        /// </summary>
+        [StringLength(100), Required]
+        public string ChangedBy { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Дата начала действия записи
+        /// </summary>
+        [Required]
+        public DateTime ValidFrom { get; set; } = DateTime.Now;
     }
 }

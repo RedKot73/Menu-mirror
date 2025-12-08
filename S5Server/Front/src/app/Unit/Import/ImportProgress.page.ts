@@ -18,6 +18,7 @@ import {
   ImportProgressStatus,
   ImportUnit,
   ImportUnitService,
+  ImportSoldierStatus,
 } from '../Import/import.service';
 
 import { ErrorHandler } from '../../shared/models/ErrorHandler';
@@ -47,7 +48,7 @@ export class ImportProgressPage implements OnInit, OnDestroy {
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
-  displayedColumns: string[] = ['externId', 'rank', 'fullName', 'birthDate', 'position', 'status'];
+  displayedColumns: string[] = ['operation', 'fullName', 'birthDate', 'rank', 'position', 'status'];
 
   private unitId: string | null = null;
   private isLoadingUnits = false;
@@ -62,6 +63,7 @@ export class ImportProgressPage implements OnInit, OnDestroy {
 
   // Експортуємо enum для використання в шаблоні
   ImportProgressStatus = ImportProgressStatus;
+  ImportSoldierStatus = ImportSoldierStatus;
 
   progressPercent = () => {
     const total = this.totalRows();

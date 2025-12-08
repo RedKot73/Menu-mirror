@@ -82,57 +82,74 @@
         <div class="section-content">
           @if (unit.importedSoldiers && unit.importedSoldiers.length > 0) {
           <table mat-table [dataSource]="unit.importedSoldiers" class="soldiers-table">
-            <!-- Табельний номер -->
-            <ng-container matColumnDef="externId">
-              <th mat-header-cell *matHeaderCellDef>№</th>
-              <td mat-cell *matCellDef="let soldier">{{ soldier.externId }}</td>
-            </ng-container>
-
-            <!-- Звання -->
-            <ng-container matColumnDef="rank">
-              <th mat-header-cell *matHeaderCellDef>Звання</th>
-              <td mat-cell *matCellDef="let soldier">{{ soldier.rank }}</td>
+            <!-- Операція -->
+            <ng-container matColumnDef="operation">
+              <th mat-header-cell *matHeaderCellDef>Операція</th>
+              <td mat-cell *matCellDef="let item">
+                @if (item.status === ImportSoldierStatus.Inserted) {
+                <span class="operation-badge inserted">
+                  <mat-icon inline>add_circle</mat-icon>
+                  Додано
+                </span>
+                } @else if (item.status === ImportSoldierStatus.Updated) {
+                <span class="operation-badge updated">
+                  <mat-icon inline>update</mat-icon>
+                  Оновлено
+                </span>
+                } @else if (item.status === ImportSoldierStatus.Deleted) {
+                <span class="operation-badge deleted">
+                  <mat-icon inline>delete</mat-icon>
+                  Видалено
+                </span>
+                }
+              </td>
             </ng-container>
 
             <!-- ПІБ -->
             <ng-container matColumnDef="fullName">
               <th mat-header-cell *matHeaderCellDef>ПІБ</th>
-              <td mat-cell *matCellDef="let soldier">
-                {{ soldier.lastName }} {{ soldier.firstName }} {{ soldier.midleName }}
+              <td mat-cell *matCellDef="let item">
+                {{ item.soldier.lastName }} {{ item.soldier.firstName }} {{ item.soldier.midleName }}
               </td>
             </ng-container>
 
             <!-- Дата народження -->
             <ng-container matColumnDef="birthDate">
               <th mat-header-cell *matHeaderCellDef>Дата народження</th>
-              <td mat-cell *matCellDef="let soldier">{{ soldier.birthDate }}</td>
+              <td mat-cell *matCellDef="let item">{{ item.soldier.birthDate }}</td>
+            </ng-container>
+
+            <!-- Звання -->
+            <ng-container matColumnDef="rank">
+              <th mat-header-cell *matHeaderCellDef>Звання</th>
+              <td mat-cell *matCellDef="let item">{{ item.soldier.rankShortValue }}</td>
             </ng-container>
 
             <!-- Посада -->
             <ng-container matColumnDef="position">
               <th mat-header-cell *matHeaderCellDef>Посада</th>
-              <td mat-cell *matCellDef="let soldier">{{ soldier.position }}</td>
+              <td mat-cell *matCellDef="let item">{{ item.soldier.positionValue }}</td>
             </ng-container>
 
             <!-- Прибуття/Вибуття -->
             <ng-container matColumnDef="status">
               <th mat-header-cell *matHeaderCellDef>Статус</th>
-              <td mat-cell *matCellDef="let soldier">
-                @if (soldier.arrivedAt) {
+              <td mat-cell *matCellDef="let item">
+                @if (item.soldier.arrivedAt) {
                 <span
                   class="state-badge"
                   style="background-color: #2e7d32; color: white; border-color: #2e7d32"
                 >
                   <mat-icon inline>login</mat-icon>
-                  {{ soldier.arrivedAt }}
+                  {{ item.soldier.arrivedAt }}
                 </span>
-                } @if (soldier.departedAt) {
+                } @if (item.soldier.departedAt) {
                 <span
                   class="state-badge"
                   style="background-color: #c62828; color: white; border-color: #c62828"
                 >
                   <mat-icon inline>logout</mat-icon>
-                  {{ soldier.departedAt }}
+                  {{ item.soldier.departedAt }}
                 </span>
                 }
               </td>

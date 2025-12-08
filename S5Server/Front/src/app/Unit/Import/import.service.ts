@@ -1,22 +1,19 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { LookupDto } from '../../shared/models/lookup.models';
 import { SoldierDto } from '../../Soldier/services/soldier.service';
 import { ErrorHandler } from '../../shared/models/ErrorHandler';
 
-export interface ImportedSoldier {
-  externId?: number;
-  firstName: string;
-  midleName?: string;
-  lastName?: string;
-  externalId: number;
-  rank: string;
-  birthDate: string;
-  position: string;
-  arrivedAt?: string;
-  departedAt?: string;
+export enum ImportSoldierStatus {
+  Inserted = 0,
+  Updated = 1,
+  Deleted = 2
+}
+
+export interface ImportedSoldierResult {
+  soldier: SoldierDto;
+  status: ImportSoldierStatus;
 }
 
 export enum ImportProgressStatus {
@@ -32,7 +29,7 @@ export enum ImportProgressStatus {
 export interface ImportUnit {
   name: string;
   status: ImportProgressStatus;
-  importedSoldiers: ImportedSoldier[];
+  importedSoldiers: ImportedSoldierResult[];
 }
 
 export enum ImportJobStatus {

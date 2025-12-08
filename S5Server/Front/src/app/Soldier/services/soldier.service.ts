@@ -9,10 +9,11 @@ export interface SoldierDto {
   midleName?: string;
   lastName?: string;
   fio: string;
+  birthDate?: Date;
   nickName?: string;
   unitId: string;
   unitShortName: string;
-  arrivedAt: Date;
+  arrivedAt?: Date;
   departedAt?: Date;
   assignedUnitId?: string;
   assignedUnitShortName?: string;
@@ -25,12 +26,15 @@ export interface SoldierDto {
   stateId: string;
   stateValue: string;
   comment?: string;
+  changedBy: string;
+  changedAt: Date;
 }
 
 export interface SoldierCreateDto {
   firstName: string;
   midleName?: string;
   lastName?: string;
+  birthDate?: Date;
   nickName?: string;
   unitId: string;
   arrivedAt: Date;
