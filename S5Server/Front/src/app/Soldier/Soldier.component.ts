@@ -17,8 +17,7 @@ import {
 } from '@angular/material/autocomplete';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { SlicePipe, DatePipe, AsyncPipe } from '@angular/common';
-import { debounceTime, switchMap, startWith } from 'rxjs/operators';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import { SoldierDialogComponent } from '../dialogs/SoldierDialog';
 import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
@@ -34,6 +33,7 @@ import {
   isRecoveryStatus,
   UnitTag,
 } from './Soldier.constant';
+import { InlineEditManager, EditMode } from './InlineEditManager.class';
 
 // Re-export для использования в других компонентах
 export { UnitTag };
@@ -96,6 +96,12 @@ export class SoldiersComponent implements AfterViewInit {
   ];
   dialog = inject(MatDialog);
 
+  inlineEdit = new InlineEditManager((mode: EditMode, term: string) =>
+    this.unitService.lookup(term, 20)
+  );
+
+  displayLookupFn = (unit: LookupDto | null): string => (unit ? unit.value : '');
+
   // Фильтры
   //searchText = '';
   //selectedAssignedUnitId: string | null = null;
@@ -107,25 +113,6 @@ export class SoldiersComponent implements AfterViewInit {
   isRecoveryStatus = isRecoveryStatus;
 
   @ViewChild(MatSort) sort!: MatSort;
-
-  // Autocomplete для inline редактирования assignedUnit
-  assignedUnitControls = new Map<string, FormControl>();
-  filteredAssignedUnits = new Map<string, Observable<LookupDto[]>>();
-  isLoadingAssignedMap = new Map<string, boolean>();
-  // Отслеживание режима редактирования для каждого солдата
-  editingAssignedUnit = new Map<string, boolean>();
-
-  // Autocomplete для inline редактирования unit (основний підрозділ)
-  unitControls = new Map<string, FormControl>();
-  filteredUnits = new Map<string, Observable<LookupDto[]>>();
-  isLoadingUnitMap = new Map<string, boolean>();
-  editingUnit = new Map<string, boolean>();
-
-  // Autocomplete для inline редактирования operationalUnit (оперативний підрозділ)
-  operationalUnitControls = new Map<string, FormControl>();
-  filteredOperationalUnits = new Map<string, Observable<LookupDto[]>>();
-  isLoadingOperationalMap = new Map<string, boolean>();
-  editingOperationalUnit = new Map<string, boolean>();
 
   constructor() {
     effect(() => {
@@ -397,290 +384,87 @@ export class SoldiersComponent implements AfterViewInit {
     });
   }
 
-  // Проверить, находится ли поле assignedUnit в режиме редактирования
-  isEditingAssignedUnit(soldierId: string): boolean {
-    return this.editingAssignedUnit.get(soldierId) || false;
+  // === Inline edit helpers (single-mode per row) ===
+  isEditing(soldierId: string, mode: EditMode): boolean {
+    return this.inlineEdit.isMode(soldierId, mode);
   }
 
-  // Начать редактирование assignedUnit
-  startEditingAssignedUnit(soldier: Soldier) {
-    this.editingAssignedUnit.set(soldier.id, true);
-    // Инициализируем control если еще не создан
-    this.getAssignedUnitControl(soldier);
+  startEditing(soldier: Soldier, mode: EditMode) {
+    this.inlineEdit.clearOthers(soldier.id);
+    this.inlineEdit.ensure(soldier.id, mode, this.getInitialValue(soldier, mode));
   }
 
-  // Отменить редактирование assignedUnit
-  cancelEditingAssignedUnit(soldier: Soldier) {
-    this.editingAssignedUnit.set(soldier.id, false);
-    // Восстанавливаем оригинальное значение
-    const control = this.assignedUnitControls.get(soldier.id);
-    if (control) {
-      control.setValue(soldier.assignedUnitShortName || '');
-    }
+  cancelEditing(soldier: Soldier) {
+    this.inlineEdit.clear(soldier.id);
   }
 
-  // Получить FormControl для assignedUnit (создать если не существует)
-  getAssignedUnitControl(soldier: Soldier): FormControl {
-    if (!this.assignedUnitControls.has(soldier.id)) {
-      const control = new FormControl(soldier.assignedUnitShortName || '');
-      this.assignedUnitControls.set(soldier.id, control);
-
-      // Настраиваем фильтрацию
-      const filtered$ = control.valueChanges.pipe(
-        startWith(''),
-        debounceTime(300),
-        switchMap((value: string | LookupDto | null) => {
-          let searchTerm = '';
-          if (typeof value === 'string') {
-            searchTerm = value;
-          } else if (value && typeof value === 'object' && 'value' in value) {
-            searchTerm = value.value;
-          }
-
-          if (searchTerm.length < 2) {
-            return of([]);
-          }
-          this.isLoadingAssignedMap.set(soldier.id, true);
-          return this.unitService.lookup(searchTerm, 20);
-        })
-      );
-
-      // Сохраняем Observable для использования в шаблоне
-      this.filteredAssignedUnits.set(soldier.id, filtered$);
-    }
-
-    return this.assignedUnitControls.get(soldier.id)!;
+  getControl(soldier: Soldier, mode: EditMode): FormControl<string | LookupDto | null> {
+    return this.inlineEdit.ensure(soldier.id, mode, this.getInitialValue(soldier, mode)).control;
   }
 
-  // Получить отфильтрованные подразделения
-  getFilteredAssignedUnits(soldierId: string): Observable<LookupDto[]> {
-    return this.filteredAssignedUnits.get(soldierId) || of([]);
+  getOptions(soldierId: string): Observable<LookupDto[]> {
+    return this.inlineEdit.options(soldierId);
   }
 
-  // Проверить состояние загрузки
-  isLoadingAssigned(soldierId: string): boolean {
-    return this.isLoadingAssignedMap.get(soldierId) || false;
+  isLoading(soldierId: string): boolean {
+    return this.inlineEdit.loading(soldierId);
   }
 
-  // Отобразить значение в autocomplete
-  displayAssignedFn = (unit: LookupDto | null): string => {
-    return unit ? unit.value : '';
-  };
-
-  // Обработка выбора подразделения
-  onAssignedUnitSelected(soldier: Soldier, event: MatAutocompleteSelectedEvent) {
-    this.isLoadingAssignedMap.set(soldier.id, false);
+  onSelect(soldier: Soldier, mode: EditMode, event: MatAutocompleteSelectedEvent) {
     const selectedUnit: LookupDto | null = event.option.value;
+    let successMessage = '';
+    let operation: Observable<unknown> | null = null;
 
-    // Используем специализированные методы API
-    const operation = selectedUnit
-      ? this.soldierService.assignAssigned(soldier.id, selectedUnit.id)
-      : this.soldierService.unassignAssigned(soldier.id);
-
-    operation.subscribe({
-      next: () => {
-        // Перезагружаем данные
-        this.reload();
-        // Выходим из режима редактирования
-        this.editingAssignedUnit.set(soldier.id, false);
-        this.snackBar.open('Придання оновлено', 'Закрити', { duration: 2000 });
-      },
-      error: (error) => {
-        console.error('Помилка оновлення придання:', error);
-        const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка оновлення придання');
-        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-      },
-    });
-  }
-
-  // ============= Методы для редактирования основного подразделения (unitShortName) =============
-
-  // Проверить, находится ли поле unit в режиме редактирования
-  isEditingUnit(soldierId: string): boolean {
-    return this.editingUnit.get(soldierId) || false;
-  }
-
-  // Начать редактирование unit
-  startEditingUnit(soldier: Soldier) {
-    this.editingUnit.set(soldier.id, true);
-    this.getUnitControl(soldier);
-  }
-
-  // Отменить редактирование unit
-  cancelEditingUnit(soldier: Soldier) {
-    this.editingUnit.set(soldier.id, false);
-    const control = this.unitControls.get(soldier.id);
-    if (control) {
-      control.setValue(soldier.unitShortName || '');
-    }
-  }
-
-  // Получить FormControl для unit
-  getUnitControl(soldier: Soldier): FormControl {
-    if (!this.unitControls.has(soldier.id)) {
-      const control = new FormControl(soldier.unitShortName || '');
-      this.unitControls.set(soldier.id, control);
-
-      const filtered$ = control.valueChanges.pipe(
-        startWith(''),
-        debounceTime(300),
-        switchMap((value: string | LookupDto | null) => {
-          let searchTerm = '';
-          if (typeof value === 'string') {
-            searchTerm = value;
-          } else if (value && typeof value === 'object' && 'value' in value) {
-            searchTerm = value.value;
-          }
-
-          if (searchTerm.length < 2) {
-            return of([]);
-          }
-          this.isLoadingUnitMap.set(soldier.id, true);
-          return this.unitService.lookup(searchTerm, 20);
-        })
-      );
-
-      this.filteredUnits.set(soldier.id, filtered$);
+    switch (mode) {
+      case UnitTag.UnitId:
+        if (!selectedUnit) {
+          return;
+        }
+        successMessage = 'Підрозділ оновлено';
+        operation = this.soldierService.move(soldier.id, selectedUnit.id);
+        break;
+      case UnitTag.AssignedId:
+        successMessage = 'Придання оновлено';
+        operation = selectedUnit
+          ? this.soldierService.assignAssigned(soldier.id, selectedUnit.id)
+          : this.soldierService.unassignAssigned(soldier.id);
+        break;
+      case UnitTag.OperationalId:
+        successMessage = 'Оперативний підрозділ оновлено';
+        operation = selectedUnit
+          ? this.soldierService.assignOperational(soldier.id, selectedUnit.id)
+          : this.soldierService.unassignOperational(soldier.id);
+        break;
     }
 
-    return this.unitControls.get(soldier.id)!;
-  }
-
-  // Получить отфильтрованные подразделения
-  getFilteredUnits(soldierId: string): Observable<LookupDto[]> {
-    return this.filteredUnits.get(soldierId) || of([]);
-  }
-
-  // Проверить состояние загрузки
-  isLoadingUnit(soldierId: string): boolean {
-    return this.isLoadingUnitMap.get(soldierId) || false;
-  }
-
-  // Отобразить значение в autocomplete
-  displayUnitFn = (unit: LookupDto | null): string => {
-    return unit ? unit.value : '';
-  };
-
-  // Обработка выбора основного подразделения
-  onUnitSelected(soldier: Soldier, event: MatAutocompleteSelectedEvent) {
-    this.isLoadingUnitMap.set(soldier.id, false);
-    const selectedUnit: LookupDto | null = event.option.value;
-
-    if (!selectedUnit) {
+    if (!operation) {
       return;
     }
 
-    // Используем метод move для перемещения в другое подразделение
-    this.soldierService.move(soldier.id, selectedUnit.id).subscribe({
-      next: () => {
-        // Перезагружаем данные
-        this.reload();
-        // Выходим из режима редактирования
-        this.editingUnit.set(soldier.id, false);
-        this.snackBar.open('Підрозділ оновлено', 'Закрити', { duration: 2000 });
-      },
-      error: (error) => {
-        console.error('Помилка переміщення бійця:', error);
-        const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка переміщення бійця');
-        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-      },
-    });
-  }
-
-  // ============= Методы для редактирования оперативного подразделения (operationalUnitShortName) =============
-
-  // Проверить, находится ли поле operationalUnit в режиме редактирования
-  isEditingOperationalUnit(soldierId: string): boolean {
-    return this.editingOperationalUnit.get(soldierId) || false;
-  }
-
-  // Начать редактирование operationalUnit
-  startEditingOperationalUnit(soldier: Soldier) {
-    this.editingOperationalUnit.set(soldier.id, true);
-    this.getOperationalUnitControl(soldier);
-  }
-
-  // Отменить редактирование operationalUnit
-  cancelEditingOperationalUnit(soldier: Soldier) {
-    this.editingOperationalUnit.set(soldier.id, false);
-    const control = this.operationalUnitControls.get(soldier.id);
-    if (control) {
-      control.setValue(soldier.operationalUnitShortName || '');
-    }
-  }
-
-  // Получить FormControl для operationalUnit
-  getOperationalUnitControl(soldier: Soldier): FormControl {
-    if (!this.operationalUnitControls.has(soldier.id)) {
-      const control = new FormControl(soldier.operationalUnitShortName || '');
-      this.operationalUnitControls.set(soldier.id, control);
-
-      const filtered$ = control.valueChanges.pipe(
-        startWith(''),
-        debounceTime(300),
-        switchMap((value: string | LookupDto | null) => {
-          let searchTerm = '';
-          if (typeof value === 'string') {
-            searchTerm = value;
-          } else if (value && typeof value === 'object' && 'value' in value) {
-            searchTerm = value.value;
-          }
-
-          if (searchTerm.length < 2) {
-            return of([]);
-          }
-          this.isLoadingOperationalMap.set(soldier.id, true);
-          return this.unitService.lookup(searchTerm, 20);
-        })
-      );
-
-      this.filteredOperationalUnits.set(soldier.id, filtered$);
-    }
-
-    return this.operationalUnitControls.get(soldier.id)!;
-  }
-
-  // Получить отфильтрованные оперативные подразделения
-  getFilteredOperationalUnits(soldierId: string): Observable<LookupDto[]> {
-    return this.filteredOperationalUnits.get(soldierId) || of([]);
-  }
-
-  // Проверить состояние загрузки
-  isLoadingOperational(soldierId: string): boolean {
-    return this.isLoadingOperationalMap.get(soldierId) || false;
-  }
-
-  // Отобразить значение в autocomplete
-  displayOperationalFn = (unit: LookupDto | null): string => {
-    return unit ? unit.value : '';
-  };
-
-  // Обработка выбора оперативного подразделения
-  onOperationalUnitSelected(soldier: Soldier, event: MatAutocompleteSelectedEvent) {
-    this.isLoadingOperationalMap.set(soldier.id, false);
-    const selectedUnit: LookupDto | null = event.option.value;
-
-    // Используем специализированные методы API
-    const operation = selectedUnit
-      ? this.soldierService.assignOperational(soldier.id, selectedUnit.id)
-      : this.soldierService.unassignOperational(soldier.id);
-
     operation.subscribe({
       next: () => {
-        // Перезагружаем данные
         this.reload();
-        // Выходим из режима редактирования
-        this.editingOperationalUnit.set(soldier.id, false);
-        this.snackBar.open('Оперативний підрозділ оновлено', 'Закрити', { duration: 2000 });
+        this.inlineEdit.clear(soldier.id);
+        this.snackBar.open(successMessage, 'Закрити', { duration: 2000 });
       },
       error: (error) => {
-        console.error('Помилка оновлення оперативного підрозділу:', error);
-        const errorMessage = ErrorHandler.handleHttpError(
-          error,
-          'Помилка оновлення оперативного підрозділу'
-        );
+        console.error('Помилка оновлення підрозділу:', error);
+        const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка оновлення підрозділу');
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
     });
+  }
+
+  private getInitialValue(soldier: Soldier, mode: EditMode): string | null {
+    switch (mode) {
+      case UnitTag.UnitId:
+        return soldier.unitShortName || '';
+      case UnitTag.AssignedId:
+        return soldier.assignedUnitShortName || '';
+      case UnitTag.OperationalId:
+        return soldier.operationalUnitShortName || '';
+      default:
+        return '';
+    }
   }
 }
