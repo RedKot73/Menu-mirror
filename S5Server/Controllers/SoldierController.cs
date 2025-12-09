@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 using S5Server.Data;
 using S5Server.Models;
+using S5Server.Services;
 using S5Server.Utils;
 
 namespace S5Server.Controllers
@@ -20,7 +21,9 @@ namespace S5Server.Controllers
             _set = db.Soldiers;
         }
 
-        private IQueryable<Soldier> Query() => _set
+        private IQueryable<Soldier> Query() => SoldierService.GetQuery(_set);
+        /*
+            _set
             .AsNoTracking()
             .Include(s => s.Unit)
             .Include(s => s.AssignedUnit)
@@ -28,6 +31,7 @@ namespace S5Server.Controllers
             .Include(s => s.Rank)
             .Include(s => s.Position)
             .Include(s => s.State);
+        */
 
         /// <summary>
         /// Список військовослужбовців з фільтрацією.

@@ -8,10 +8,16 @@ export const SoldierStatusIds = {
 } as const;
 
 export const UnitTag = {
-  UnitId: 1, // Смотрим на вкладку Штатний ОС
-  AssignedId: 2, // Смотрим на вкладку Приданий ОС
-  OperationalId: 4, // Смотрим на вкладку Оперативний ОС
-  AllId: 7//UnitTag.UnitId | UnitTag.AssignedId | UnitTag.OperationalId,
+  /** Смотрим на вкладку Штатний ОС */
+  UnitId: 1,
+  /** Смотрим на вкладку Приданий ОС */
+  AssignedId: 2,
+  /** Смотрим на вкладку Оперативний ОС */
+  OperationalId: 4,
+  /** Смотрим на вкладку Все ОС
+   * UnitTag.UnitId | UnitTag.AssignedId | UnitTag.OperationalId
+   */
+  AllId: 7,
 } as const;
 
 /**

@@ -48,7 +48,21 @@ export class ImportProgressPage implements OnInit, OnDestroy {
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
-  displayedColumns: string[] = ['operation', 'fullName', 'birthDate', 'rank', 'position', 'status'];
+  displayedColumns = [
+    'operation',
+    'fio',
+    'nickName',
+    'rankShortValue',
+    'positionValue',
+    'stateValue',
+    //'unitShortName',
+    //'assignedUnitShortName',
+    //'operationalUnitShortName',
+    'arrivedAt',
+    'departedAt',
+    'birthDate',
+    'comment',
+  ];
 
   private unitId: string | null = null;
   private isLoadingUnits = false;

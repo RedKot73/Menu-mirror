@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Collections.Generic;
+using System.Globalization;
 
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
@@ -423,10 +424,17 @@ namespace S5Server.Services
                         {
                             await db.SaveChangesAsync(ct);
 
-                            soldier = await db.Soldiers
+                            soldier = await SoldierService.GetQuery(db.Soldiers)
+                                /*
+                                db.Soldiers
                                 .AsNoTracking()
-                                .Include(t => t.Rank)
-                                .Include(t => t.Position)
+                                .Include(s => s.Unit)
+                                .Include(s => s.AssignedUnit)
+                                .Include(s => s.OperationalUnit)
+                                .Include(s => s.Rank)
+                                .Include(s => s.Position)
+                                .Include(s => s.State)
+                                */
                                 .Where(t => t.ExternId == sldr.ExternId)
                                 .FirstOrDefaultAsync(ct) ??
                                 throw new InvalidOperationException($"Soldier {sldr.ExternId} not found");
