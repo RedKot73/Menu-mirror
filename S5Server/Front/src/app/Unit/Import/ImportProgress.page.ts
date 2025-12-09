@@ -8,9 +8,16 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import {
+  MatAutocompleteModule,
+  MatAutocompleteSelectedEvent,
+} from '@angular/material/autocomplete';
+import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { signal } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { take, finalize } from 'rxjs/operators';
 
 import {
@@ -20,6 +27,12 @@ import {
   ImportUnitService,
   ImportSoldierStatus,
 } from '../Import/import.service';
+
+import { SoldierService } from '../../Soldier/services/soldier.service';
+import { UnitService } from '../services/unit.service';
+import { LookupDto } from '../../shared/models/lookup.models';
+import { InlineEditManager, EditMode } from '../../Soldier/InlineEditManager.class';
+import { UnitTag } from '../../Soldier/Soldier.constant';
 
 import { ErrorHandler } from '../../shared/models/ErrorHandler';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -36,6 +49,10 @@ import { HttpErrorResponse } from '@angular/common/http';
     MatTableModule,
     MatCardModule,
     MatTooltipModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatAutocompleteModule,
+    ReactiveFormsModule,
   ],
   templateUrl: './ImportProgress.page.html',
   styleUrls: ['./ImportProgress.page.scss', '../../Soldier/Soldier.component.scss'],
@@ -45,6 +62,8 @@ export class ImportProgressPage implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private importUnitService = inject(ImportUnitService);
   private snackBar = inject(MatSnackBar);
+  private soldierService = inject(SoldierService);
+  private unitService = inject(UnitService);
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
@@ -55,9 +74,9 @@ export class ImportProgressPage implements OnInit, OnDestroy {
     'rankShortValue',
     'positionValue',
     'stateValue',
-    //'unitShortName',
-    //'assignedUnitShortName',
-    //'operationalUnitShortName',
+    'unitShortName',
+    'assignedUnitShortName',
+    'operationalUnitShortName',
     'arrivedAt',
     'departedAt',
     'birthDate',
@@ -74,6 +93,14 @@ export class ImportProgressPage implements OnInit, OnDestroy {
   completedSheets = signal<ImportUnit[]>([]);
   isCompleted = signal(false);
   hasFailed = signal(false);
+
+  readonly UnitTag = UnitTag;
+
+  inlineEdit = new InlineEditManager((mode: EditMode, term: string) =>
+    this.unitService.lookup(term, 20)
+  );
+
+  displayLookupFn = (unit: LookupDto | null): string => (unit ? unit.value : '');
 
   // Експортуємо enum для використання в шаблоні
   ImportProgressStatus = ImportProgressStatus;
@@ -276,5 +303,100 @@ export class ImportProgressPage implements OnInit, OnDestroy {
 
   goBack() {
     this.router.navigate(['/units']);
+  }
+
+  // === Inline edit helpers (одна колонка / рядок за раз) ===
+  isEditing(soldierId: string, mode: EditMode): boolean {
+    return this.inlineEdit.isMode(soldierId, mode);
+  }
+
+  startEditing(soldierId: string, mode: EditMode, initialValue: string | null) {
+    this.inlineEdit.clearOthers(soldierId);
+    this.inlineEdit.ensure(soldierId, mode, initialValue);
+  }
+
+  cancelEditing(soldierId: string) {
+    this.inlineEdit.clear(soldierId);
+  }
+
+  getControl(soldierId: string, mode: EditMode, initialValue: string | null): FormControl {
+    return this.inlineEdit.ensure(soldierId, mode, initialValue).control;
+  }
+
+  getOptions(soldierId: string): Observable<LookupDto[]> {
+    return this.inlineEdit.options(soldierId);
+  }
+
+  isLoading(soldierId: string): boolean {
+    return this.inlineEdit.loading(soldierId);
+  }
+
+  onSelect(
+    soldierId: string,
+    mode: EditMode,
+    event: MatAutocompleteSelectedEvent,
+    soldier: { id: string }
+  ) {
+    const selectedUnit: LookupDto | null = event.option.value;
+    let successMessage = '';
+    let operation: Observable<unknown> | null = null;
+
+    switch (mode) {
+      case UnitTag.UnitId:
+        if (!selectedUnit) {
+          return;
+        }
+        successMessage = 'Підрозділ оновлено';
+        operation = this.soldierService.move(soldier.id, selectedUnit.id);
+        break;
+      case UnitTag.AssignedId:
+        successMessage = 'Придання оновлено';
+        operation = selectedUnit
+          ? this.soldierService.assignAssigned(soldier.id, selectedUnit.id)
+          : this.soldierService.unassignAssigned(soldier.id);
+        break;
+      case UnitTag.OperationalId:
+        successMessage = 'Оперативний підрозділ оновлено';
+        operation = selectedUnit
+          ? this.soldierService.assignOperational(soldier.id, selectedUnit.id)
+          : this.soldierService.unassignOperational(soldier.id);
+        break;
+    }
+
+    if (!operation) {
+      return;
+    }
+
+    operation.subscribe({
+      next: () => {
+        this.inlineEdit.clear(soldierId);
+        this.snackBar.open(successMessage, 'Закрити', { duration: 2000 });
+      },
+      error: (error) => {
+        console.error('Помилка оновлення підрозділу:', error);
+        const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка оновлення підрозділу');
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      },
+    });
+  }
+
+  getInitialValue(
+    soldier: {
+      unitShortName?: string;
+      assignedUnitShortName?: string;
+      operationalUnitShortName?: string;
+    },
+    mode: EditMode
+  ): string {
+    switch (mode) {
+      case UnitTag.UnitId:
+        return soldier.unitShortName || '';
+      case UnitTag.AssignedId:
+        return soldier.assignedUnitShortName || '';
+      case UnitTag.OperationalId:
+        return soldier.operationalUnitShortName || '';
+      default:
+        return '';
+    }
   }
 }
