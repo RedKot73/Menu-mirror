@@ -237,7 +237,7 @@ export class PersonnelPage implements AfterViewInit {
   onSelect(soldier: Soldier, mode: EditMode, event: MatAutocompleteSelectedEvent) {
     const selectedUnit: LookupDto | null = event.option.value;
     let successMessage = '';
-    let operation: Observable<unknown> | null = null;
+    let operation: Observable<SoldierDto> | null = null;
 
     switch (mode) {
       case UnitTag.UnitId:
@@ -262,8 +262,8 @@ export class PersonnelPage implements AfterViewInit {
     }
 
     operation.subscribe({
-      next: () => {
-        this.reload();
+      next: (updated) => {
+        this.applyRow(updated);
         this.inlineEdit.clear(soldier.id);
         this.snackBar.open(successMessage, 'Закрити', { duration: 2000 });
       },
@@ -273,6 +273,12 @@ export class PersonnelPage implements AfterViewInit {
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
     });
+  }
+
+  private applyRow(updated: SoldierDto) {
+    const next = this.items().map((s) => (s.id === updated.id ? updated : s));
+    this.items.set(next);
+    this.dataSource.data = next;
   }
 
   private getInitialValue(soldier: Soldier, mode: EditMode): string | null {

@@ -130,9 +130,9 @@ export class SoldierService {
    * @param unitId Unit.id
    * @returns void
    */
-  assignAssigned(id: string, unitId: string | null): Observable<void> {
+  assignAssigned(id: string, unitId: string | null): Observable<SoldierDto> {
     const targetId = unitId ?? '';
-    return this.http.post<void>(`${this.api}/${id}/assign-assigned/${targetId}`, {});
+    return this.http.post<SoldierDto>(`${this.api}/${id}/assign-assigned/${targetId}`, {});
   }
   /**
    * Снимает назначение подразделения Приданий с бойца
@@ -150,9 +150,9 @@ export class SoldierService {
    * @param unitId Unit.id
    * @returns void
    */
-  assignOperational(id: string, unitId: string | null): Observable<void> {
+  assignOperational(id: string, unitId: string | null): Observable<SoldierDto> {
     const targetId = unitId ?? '';
-    return this.http.post<void>(`${this.api}/${id}/assign-operational/${targetId}`, {});
+    return this.http.post<SoldierDto>(`${this.api}/${id}/assign-operational/${targetId}`, {});
   }
 
   /**
@@ -165,7 +165,7 @@ export class SoldierService {
     return this.http.post<void>(`${this.api}/${id}/unassign-operational`, {});
   }
   */
-  move(id: string, newUnitId: string): Observable<void> {
-    return this.http.post<void>(`${this.api}/${id}/move/${newUnitId}`, {});
+  move(id: string, newUnitId: string): Observable<SoldierDto> {
+    return this.http.post<SoldierDto>(`${this.api}/${id}/move/${newUnitId}`, {});
   }
 }

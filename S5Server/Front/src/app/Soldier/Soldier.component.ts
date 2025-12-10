@@ -330,8 +330,8 @@ export class SoldiersComponent implements AfterViewInit {
           : this.soldierService.assignOperational(soldier.id, null);
 
         operation.subscribe({
-          next: () => {
-            this.reload();
+          next: (updated) => {
+            this.updateRow(updated);
             const success = isAssignedTab
               ? 'Бійця вилучено з переліку приданих'
               : 'Бійця вилучено з оперативного підрозділу';
@@ -376,7 +376,7 @@ export class SoldiersComponent implements AfterViewInit {
   onSelect(soldier: Soldier, mode: EditMode, event: MatAutocompleteSelectedEvent) {
     const selectedUnit: LookupDto | null = event.option.value;
     let successMessage = '';
-    let operation: Observable<unknown> | null = null;
+    let operation: Observable<SoldierDto> | null = null;
 
     switch (mode) {
       case UnitTag.UnitId:
@@ -401,8 +401,8 @@ export class SoldiersComponent implements AfterViewInit {
     }
 
     operation.subscribe({
-      next: () => {
-        this.reload();
+      next: (updated) => {
+        this.updateRow(updated);
         this.inlineEdit.clear(soldier.id);
         this.snackBar.open(successMessage, 'Закрити', { duration: 2000 });
       },
@@ -412,6 +412,11 @@ export class SoldiersComponent implements AfterViewInit {
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
     });
+  }
+
+  private updateRow(updated: SoldierDto) {
+    const next = this.items().map((s) => (s.id === updated.id ? updated : s));
+    this.items.set(next);
   }
 
   private getInitialValue(soldier: Soldier, mode: EditMode): string | null {

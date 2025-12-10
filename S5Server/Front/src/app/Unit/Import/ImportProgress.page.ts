@@ -28,7 +28,7 @@ import {
   ImportSoldierStatus,
 } from '../Import/import.service';
 
-import { SoldierService } from '../../Soldier/services/soldier.service';
+import { SoldierService, SoldierDto } from '../../Soldier/services/soldier.service';
 import { UnitService } from '../services/unit.service';
 import { LookupDto } from '../../shared/models/lookup.models';
 import { InlineEditManager, EditMode } from '../../Soldier/InlineEditManager.class';
@@ -339,7 +339,7 @@ export class ImportProgressPage implements OnInit, OnDestroy {
   ) {
     const selectedUnit: LookupDto | null = event.option.value;
     let successMessage = '';
-    let operation: Observable<unknown> | null = null;
+    let operation: Observable<SoldierDto> | null = null;
 
     switch (mode) {
       case UnitTag.UnitId:
@@ -351,15 +351,11 @@ export class ImportProgressPage implements OnInit, OnDestroy {
         break;
       case UnitTag.AssignedId:
         successMessage = 'Придання оновлено';
-        operation = selectedUnit
-          ? this.soldierService.assignAssigned(soldier.id, selectedUnit.id)
-          : this.soldierService.unassignAssigned(soldier.id);
+        operation = this.soldierService.assignAssigned(soldier.id, selectedUnit?.id || null);
         break;
       case UnitTag.OperationalId:
         successMessage = 'Оперативний підрозділ оновлено';
-        operation = selectedUnit
-          ? this.soldierService.assignOperational(soldier.id, selectedUnit.id)
-          : this.soldierService.unassignOperational(soldier.id);
+        operation = this.soldierService.assignOperational(soldier.id, selectedUnit?.id || null);
         break;
     }
 
@@ -368,8 +364,9 @@ export class ImportProgressPage implements OnInit, OnDestroy {
     }
 
     operation.subscribe({
-      next: () => {
+      next: (updated) => {
         this.inlineEdit.clear(soldierId);
+        this.patchSoldier(updated);
         this.snackBar.open(successMessage, 'Закрити', { duration: 2000 });
       },
       error: (error) => {
@@ -398,5 +395,16 @@ export class ImportProgressPage implements OnInit, OnDestroy {
       default:
         return '';
     }
+  }
+
+  private patchSoldier(updated: SoldierDto) {
+    const next = this.completedSheets().map((unit) => ({
+      ...unit,
+      importedSoldiers: unit.importedSoldiers.map((entry) =>
+        entry.soldier.id === updated.id ? { ...entry, soldier: updated } : entry
+      ),
+    }));
+
+    this.completedSheets.set(next);
   }
 }
