@@ -22,16 +22,6 @@ namespace S5Server.Controllers
         }
 
         private IQueryable<Soldier> Query() => SoldierService.GetQuery(_set);
-        /*
-            _set
-            .AsNoTracking()
-            .Include(s => s.Unit)
-            .Include(s => s.AssignedUnit)
-            .Include(s => s.OperationalUnit)
-            .Include(s => s.Rank)
-            .Include(s => s.Position)
-            .Include(s => s.State);
-        */
 
         /// <summary>
         /// Список військовослужбовців з фільтрацією.
@@ -245,71 +235,79 @@ namespace S5Server.Controllers
             return NoContent();
         }
 
-        /// <summary>
-        /// Пидати бійця до підрозділу.
-        /// </summary>
-        [HttpPost("{id}/assign-assigned/{unitId}")]
-        public async Task<IActionResult> AssignAssigned(string id, string unitId, CancellationToken ct = default)
+        enum UnitKind 
         {
+            UnitId, 
+            AssignedUnitId, 
+            OperationalUnitId
+        }
+
+        private async Task<ActionResult<SoldierDto>> SetUnit(
+            string id,
+            string? unitId, 
+            UnitKind unitKind, 
+            CancellationToken ct = default)
+        {
+            // UnitId не может быть пустым (обязательное поле)
+            if (string.IsNullOrWhiteSpace(unitId) && unitKind == UnitKind.UnitId)
+                return BadRequest("UnitId обов'язковий для переведення бійця.");
+
             var e = await _set.AsTracking().FirstOrDefaultAsync(s => s.Id == id, ct);
             if (e is null) return NotFound("Боєць не знайдений.");
-            e.AssignedUnitId = unitId;
+
+            // Нормализация: пустая строка -> null
+            var newUnitId = string.IsNullOrWhiteSpace(unitId) ? null : unitId;
+            switch (unitKind)
+            {
+                case UnitKind.UnitId:
+                    e.UnitId = newUnitId!; // ! т.к. проверили выше
+                    break;
+                case UnitKind.AssignedUnitId:
+                    e.AssignedUnitId = newUnitId;
+                    break;
+                case UnitKind.OperationalUnitId:
+                    e.OperationalUnitId = newUnitId;
+                    break;
+            }
+
             await _db.SaveChangesAsync(ct);
-            return NoContent();
+
+            // Перезагружаем с навигационными свойствами
+            var updated = await Query().FirstOrDefaultAsync(s => s.Id == id, ct);
+            if (updated is null)
+                return NotFound("Боєць не знайдений після збереження.");
+
+            return Ok(SoldierDto.ToDto(updated));
         }
 
         /// <summary>
-        /// Відмінити придання (unassign).
+        /// Придати бійця до підрозділу (або відмінити придання якщо unitId не вказано).
         /// </summary>
-        [HttpPost("{id}/unassign-assigned")]
-        public async Task<IActionResult> UnassignAssigned(string id, CancellationToken ct = default)
-        {
-            var e = await _set.AsTracking().FirstOrDefaultAsync(s => s.Id == id, ct);
-            if (e is null) return NotFound("Боєць не знайдений.");
-            e.AssignedUnitId = null;
-            await _db.SaveChangesAsync(ct);
-            return NoContent();
-        }
-
-        
-            
-        /// <summary>
-        /// Пидати бійця до Оперативного підрозділу.
-        /// </summary>
-        [HttpPost("{id}/assign-operational/{unitId}")]
-        public async Task<IActionResult> AssignOperational(string id, string unitId, CancellationToken ct = default)
-        {
-            var e = await _set.AsTracking().FirstOrDefaultAsync(s => s.Id == id, ct);
-            if (e is null) return NotFound("Боєць не знайдений.");
-            e.OperationalUnitId = unitId;
-            await _db.SaveChangesAsync(ct);
-            return NoContent();
-        }
+        [HttpPost("{id}/assign-assigned/{unitId?}")]
+        public Task<ActionResult<SoldierDto>> AssignAssigned(
+            string id, 
+            string? unitId, 
+            CancellationToken ct = default)
+            => SetUnit(id, unitId, UnitKind.AssignedUnitId, ct);
 
         /// <summary>
-        /// Відмінити придання до Оперативного підрозділу.
+        /// Придати бійця до Оперативного підрозділу.
         /// </summary>
-        [HttpPost("{id}/unassign-operational")]
-        public async Task<IActionResult> UnassignOperational(string id, CancellationToken ct = default)
-        {
-            var e = await _set.AsTracking().FirstOrDefaultAsync(s => s.Id == id, ct);
-            if (e is null) return NotFound("Боєць не знайдений.");
-            e.OperationalUnitId = null;
-            await _db.SaveChangesAsync(ct);
-            return NoContent();
-        }
+        [HttpPost("{id}/assign-operational/{unitId?}")]
+        public Task<ActionResult<SoldierDto>> AssignOperational(
+            string id, 
+            string? unitId, 
+            CancellationToken ct = default)
+            => SetUnit(id, unitId, UnitKind.OperationalUnitId, ct);
 
         /// <summary>
         /// Перевести бійця до іншого основного підрозділу.
         /// </summary>
         [HttpPost("{id}/move/{newUnitId}")]
-        public async Task<IActionResult> Move(string id, string newUnitId, CancellationToken ct = default)
-        {
-            var e = await _set.AsTracking().FirstOrDefaultAsync(s => s.Id == id, ct);
-            if (e is null) return NotFound("Боєць не знайдений.");
-            e.UnitId = newUnitId;
-            await _db.SaveChangesAsync(ct);
-            return NoContent();
-        }
+        public Task<ActionResult<SoldierDto>> Move(
+            string id, 
+            string newUnitId, 
+            CancellationToken ct = default)
+            => SetUnit(id, newUnitId, UnitKind.UnitId, ct);
     }
 }

@@ -425,16 +425,6 @@ namespace S5Server.Services
                             await db.SaveChangesAsync(ct);
 
                             soldier = await SoldierService.GetQuery(db.Soldiers)
-                                /*
-                                db.Soldiers
-                                .AsNoTracking()
-                                .Include(s => s.Unit)
-                                .Include(s => s.AssignedUnit)
-                                .Include(s => s.OperationalUnit)
-                                .Include(s => s.Rank)
-                                .Include(s => s.Position)
-                                .Include(s => s.State)
-                                */
                                 .Where(t => t.ExternId == sldr.ExternId)
                                 .FirstOrDefaultAsync(ct) ??
                                 throw new InvalidOperationException($"Soldier {sldr.ExternId} not found");

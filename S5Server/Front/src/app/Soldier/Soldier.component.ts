@@ -304,25 +304,18 @@ export class SoldiersComponent implements AfterViewInit {
   }
 
   unassign(soldier: Soldier) {
-    if (this.currentUnitTab() === UnitTag.AssignedId) {
-      this.unassignAssigned(soldier);
-    } else {
-      this.unassignOperational(soldier);
-    }
-  }
+    // Clear assignment based on current tab
+    const isAssignedTab = this.currentUnitTab() === UnitTag.AssignedId;
+    const title = 'Вилучення бійця';
+    const message = `Ви впевнені, що хочете вилучити бійця "${soldier.fio}" з переліку?`;
 
-  /**
-   *
-   * @param soldier
-   */
-  unassignAssigned(soldier: Soldier) {
     const ref = this.dialog.open(ConfirmDialogComponent, {
       width: '360px',
       maxWidth: '95vw',
       autoFocus: false,
       data: {
-        title: 'Вилучення бійця',
-        message: `Ви впевнені, що хочете вилучити бійця "${soldier.fio}" з переліку?`,
+        title,
+        message,
         confirmText: 'Вилучити',
         cancelText: 'Відмінити',
         color: 'warn',
@@ -332,47 +325,17 @@ export class SoldiersComponent implements AfterViewInit {
 
     ref.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
-        this.soldierService.unassignAssigned(soldier.id).subscribe({
+        const operation = isAssignedTab
+          ? this.soldierService.assignAssigned(soldier.id, null)
+          : this.soldierService.assignOperational(soldier.id, null);
+
+        operation.subscribe({
           next: () => {
             this.reload();
-            this.snackBar.open('Бійця вилучено з переліку приданих', 'Закрити', { duration: 3000 });
-          },
-          error: (error) => {
-            console.error('Помилка вилучення бійця:', error);
-            const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка вилучення бійця');
-            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-          },
-        });
-      }
-    });
-  }
-
-  /**
-   * Вилучити призначення оперативного підрозділу
-   */
-  unassignOperational(soldier: Soldier) {
-    const ref = this.dialog.open(ConfirmDialogComponent, {
-      width: '360px',
-      maxWidth: '95vw',
-      autoFocus: false,
-      data: {
-        title: 'Вилучення бійця',
-        message: `Ви впевнені, що хочете вилучити бійця "${soldier.fio}" з переліку?`,
-        confirmText: 'Вилучити',
-        cancelText: 'Відмінити',
-        color: 'warn',
-        icon: 'warning',
-      },
-    });
-
-    ref.afterClosed().subscribe((confirmed) => {
-      if (confirmed) {
-        this.soldierService.unassignOperational(soldier.id).subscribe({
-          next: () => {
-            this.reload();
-            this.snackBar.open('Бійця вилучено з оперативного підрозділу', 'Закрити', {
-              duration: 3000,
-            });
+            const success = isAssignedTab
+              ? 'Бійця вилучено з переліку приданих'
+              : 'Бійця вилучено з оперативного підрозділу';
+            this.snackBar.open(success, 'Закрити', { duration: 3000 });
           },
           error: (error) => {
             console.error('Помилка вилучення бійця:', error);
@@ -425,15 +388,11 @@ export class SoldiersComponent implements AfterViewInit {
         break;
       case UnitTag.AssignedId:
         successMessage = 'Придання оновлено';
-        operation = selectedUnit
-          ? this.soldierService.assignAssigned(soldier.id, selectedUnit.id)
-          : this.soldierService.unassignAssigned(soldier.id);
+        operation = this.soldierService.assignAssigned(soldier.id, selectedUnit?.id || null);
         break;
       case UnitTag.OperationalId:
         successMessage = 'Оперативний підрозділ оновлено';
-        operation = selectedUnit
-          ? this.soldierService.assignOperational(soldier.id, selectedUnit.id)
-          : this.soldierService.unassignOperational(soldier.id);
+        operation = this.soldierService.assignOperational(soldier.id, selectedUnit?.id || null);
         break;
     }
 

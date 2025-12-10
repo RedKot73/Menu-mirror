@@ -249,15 +249,11 @@ export class PersonnelPage implements AfterViewInit {
         break;
       case UnitTag.AssignedId:
         successMessage = 'Придання оновлено';
-        operation = selectedUnit
-          ? this.soldierService.assignAssigned(soldier.id, selectedUnit.id)
-          : this.soldierService.unassignAssigned(soldier.id);
+        operation = this.soldierService.assignAssigned(soldier.id, selectedUnit?.id || null);
         break;
       case UnitTag.OperationalId:
         successMessage = 'Оперативний підрозділ оновлено';
-        operation = selectedUnit
-          ? this.soldierService.assignOperational(soldier.id, selectedUnit.id)
-          : this.soldierService.unassignOperational(soldier.id);
+        operation = this.soldierService.assignOperational(soldier.id, selectedUnit?.id || null);
         break;
     }
 
