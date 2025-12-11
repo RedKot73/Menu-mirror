@@ -27,8 +27,10 @@ export class InlineEditManager {
     private lookupFn: (mode: EditMode, term: string, soldierId: string) => Observable<LookupDto[]>
   ) {}
 
+  /** Стан інлайн-редагування для кожного рядка, ключ - soldierId */
   private state = new Map<string, RowEditState>();
 
+  /** */
   ensure(soldierId: string, mode: EditMode, initialValue: string | null): RowEditState {
     const existing = this.state.get(soldierId);
     if (existing && existing.mode === mode) {
