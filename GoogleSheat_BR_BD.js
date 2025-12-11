@@ -1907,9 +1907,12 @@ function getRangeOfIndicesInDict(nameFrom, nameTo, columnIndices) {
   return Array.from({ length: idxTo - idxFrom + 1 }, (_, i) => idxFrom + i);
 }
 
-function getMainUnitName(brbdSprdsht) {
+function getMainUnitName(brbdSprdsht) {//brbdSprdsht - сама таблица со всеми вкладками
   // find curUnitShortName (brbd)
-  const mainUnitId = brbdSprdsht.getSheetByName(CONFIG_BRBD_SHEETS.comInfo.name).getRange(CONFIG_BRBD_SHEETS.comInfo.cells.mainUnitId).getValue();
+  const mainUnitId = brbdSprdsht
+	.getSheetByName(CONFIG_BRBD_SHEETS.comInfo.name)//CONFIG_BRBD_SHEETS.comInfo.name = "cominfo"
+	.getRange(CONFIG_BRBD_SHEETS.comInfo.cells.mainUnitId)
+	.getValue();
   const dUnitSheet = brbdSprdsht.getSheetByName(CONFIG_BRBD_SHEETS.dUnit.name);
   const dUnitSheetData = dUnitSheet.getDataRange().getValues();
   const dUnitDictData = convertToArrayOfDictionaries(dUnitSheetData);
