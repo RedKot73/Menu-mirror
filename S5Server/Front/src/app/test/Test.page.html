@@ -117,20 +117,6 @@
                 <span>{{ unit.unitType || 'Не вказано' }}</span>
               </div>
 
-              <div class="info-item inline">
-                <strong>Завдання:</strong>
-                <mat-form-field appearance="outline" class="task-select">
-                  <mat-select placeholder="Оберіть завдання">
-                    <mat-option value="reserve">Резерв (30)</mat-option>
-                    <mat-option value="combat">Бойовий виліт (100)</mat-option>
-                    <mat-option value="recon">Реко (100)</mat-option>
-                    <mat-option value="engineer">Інженери (100)</mat-option>
-                    <mat-option value="guard">Охорона (100)</mat-option>
-                    <mat-option value="notUsed">Не застосовувався (Х)</mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </div>
-
               @if (unit.parentShortName) {
               <div class="info-item inline">
                 <strong>Батьківський підрозділ:</strong>
@@ -147,6 +133,48 @@
                 <span>{{ unit.comment }}</span>
               </div>
               }
+            </div>
+
+            <div class="task-assignments">
+              <div class="task-item">
+                <strong>Завдання:</strong>
+                <mat-form-field appearance="outline" class="task-select">
+                  <mat-select placeholder="Оберіть завдання">
+                    <mat-option value="reserve">Резерв (30)</mat-option>
+                    <mat-option value="combat">Бойовий виліт (100)</mat-option>
+                    <mat-option value="recon">Реко (100)</mat-option>
+                    <mat-option value="engineer">Інженери (100)</mat-option>
+                    <mat-option value="guard">Охорона (100)</mat-option>
+                    <mat-option value="notUsed">Не застосовувався (Х)</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="task-item">
+                <strong>РСП для екіпажів:</strong>
+                <mat-form-field appearance="outline" class="task-select">
+                  <mat-select placeholder="Оберіть РСП">
+                    <mat-option value="reserve">півд.-сх. ГУЛЯЙПОЛЕ - 102 обр ТрО</mat-option>
+                    <mat-option value="combat">півд. ГУЛЯЙПОЛЕ - 102 обр ТрО</mat-option>
+                    <mat-option value="recon">ГУЛЯЙПОЛЕ - 102 обр ТрО</mat-option>
+                    <mat-option value="engineer">сх. ГУЛЯЙПОЛЕ - 102 обр ТрО</mat-option>
+                    <mat-option value="guard">ВИСОКЕ - 102 обр ТрО</mat-option>
+                    <mat-option value="notUsed">зах. МАЛИНІВКА - 102 обр ТрО</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="task-item">
+                <strong>Засіб:</strong>
+                <mat-form-field appearance="outline" class="task-select">
+                  <mat-select placeholder="Оберіть Засіб">
+                    <mat-option value="reserve">“Лелека”</mat-option>
+                    <mat-option value="combat">“Сич”</mat-option>
+                    <mat-option value="recon">“Фурія”</mat-option>
+                    <mat-option value="engineer">“Чаклун”</mat-option>
+                    <mat-option value="guard">“Avenger”</mat-option>
+                    <mat-option value="notUsed">“Flirt Cetus”</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
             </div>
 
             <mat-accordion class="sections-accordion">

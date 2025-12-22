@@ -58,3 +58,4 @@ S5Server-*.zip
 S5Server-*.tar.gz
 /Publish/S5Server
 /S5Server/bin
+S5Server/logs/

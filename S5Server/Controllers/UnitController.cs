@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using System.Threading.Channels; // добавлено для SSE Channel
 
 using S5Server.Data;
@@ -15,16 +16,18 @@ namespace S5Server.Controllers
     {
         private readonly MainDbContext _db;
         private readonly DbSet<Unit> _set;
+        protected readonly ILogger _logger;
         private readonly System.Text.Json.JsonSerializerOptions JSONOpt = new()
         {
             PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
         };
 
 
-        public UnitController(MainDbContext db)
+        public UnitController(MainDbContext db, ILogger<UnitController> logger)
         {
             _db = db;
             _set = db.Units;
+            _logger = logger;
         }
 
         private IQueryable<Unit> Query() => _set.AsNoTracking();
@@ -85,9 +88,13 @@ namespace S5Server.Controllers
                     _set.Any(c => c.ParentId == u.Id)//поле HasChildren
                 ))
                 .ToListAsync(ct);
-
+            /*
+            _logger.LogInformation("Завантажено {Count} підрозділів для ParentId={ParentId}, Search={Search}",
+                list.Count, parentId ?? "всі", search ?? "без фільтру");
+            */
             return Ok(list);
         }
+
         // Укороченный список для автокомплита
         [HttpGet("lookup")]
         public async Task<ActionResult<IEnumerable<LookupDto>>> Lookup(
