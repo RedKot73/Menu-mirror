@@ -17,7 +17,9 @@ import { MatMenuModule } from '@angular/material/menu';
       </button>
 
       <button matButton routerLink="/units" routerLinkActive="active-link">Підрозділи</button>
-      <button matButton routerLink="/personnel" routerLinkActive="active-link">Особовий склад</button>
+      <button matButton routerLink="/personnel" routerLinkActive="active-link">
+        Особовий склад
+      </button>
       <button matButton routerLink="/orders" routerLinkActive="active-link">Розпорядження</button>
       <button matButton routerLink="/reports" routerLinkActive="active-link">Донесення</button>
       <button matButton routerLink="/users" routerLinkActive="active-link">Користувачі</button>
@@ -31,6 +33,12 @@ import { MatMenuModule } from '@angular/material/menu';
       <mat-menu #dictDroneForces="matMenu">
         <button mat-menu-item routerLink="/dictArea" routerLinkActive="active-menu-item">
           Напрямок ЛБЗ
+        </button>
+        <button mat-menu-item routerLink="/dictDroneTypes" routerLinkActive="active-menu-item">
+          Типи БПЛА
+        </button>
+        <button mat-menu-item routerLink="/dictDroneModels" routerLinkActive="active-menu-item">
+          Моделі БПЛА
         </button>
         <button
           mat-menu-item

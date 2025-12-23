@@ -34,6 +34,18 @@ export const routes: Routes = [
     title: 'Напрямок ЛБЗ',
   },
   {
+    path: 'dictDroneTypes',
+    loadComponent: () =>
+      import('../dictionaries/dictDroneType.component').then((m) => m.DictDroneTypeComponent),
+    title: 'Типи БПЛА',
+  },
+  {
+    path: 'dictDroneModels',
+    loadComponent: () =>
+      import('../dictionaries/dictDroneModel.component').then((m) => m.DictDroneModelComponent),
+    title: 'Моделі БПЛА',
+  },
+  {
     path: 'dictForcesTypes',
     loadComponent: () =>
       import('../dictionaries/dictForcesType.component').then((m) => m.DictForcesTypeComponent),

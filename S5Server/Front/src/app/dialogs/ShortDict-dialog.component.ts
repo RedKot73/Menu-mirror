@@ -35,18 +35,7 @@ import { ShortDictDto } from '../../ServerService/shortDict.service';
         Зберегти
       </button>
     </div>`,
-    styles: [`
-        .title { text-align: center; margin: 0; }
-        .content {
-            display: grid;
-            gap: 12px;
-            min-width: 280px;
-            max-width: 520px;
-            padding-top: 10px !important; /* убирает перекрытие заголовка и контента */
-        }
-        .content .mat-mdc-form-field { width: 100%; }
-        .actions { gap: 8px; }
-    `],
+    styleUrls: ['./DialogShared.scss'],
 })
 export class ShortDictDialogComponent {
     constructor(

@@ -103,6 +103,29 @@ namespace S5Server.Data
                 entity.Property(e => e.Comment).HasColumnType("TEXT");
                 entity.HasIndex(e => e.Value).IsUnique();
             });
+            modelBuilder.Entity<DictDroneType>(entity =>
+            {
+                entity.ToTable("dict_drone_type");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+                entity.Property(e => e.Value).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.ShortValue).IsRequired().HasColumnType("TEXT(50)");
+                entity.Property(e => e.Comment).HasColumnType("TEXT");
+                entity.HasIndex(e => e.Value).IsUnique();
+            });
+            modelBuilder.Entity<DictDroneModel>(entity =>
+            {
+                entity.ToTable("dict_drone_model");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+                entity.Property(e => e.Value).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.Comment).HasColumnType("TEXT");
+                entity.HasIndex(e => e.Value).IsUnique();
+                entity.HasOne(e => e.DroneType)
+                    .WithMany(e => e.DroneModels)
+                    .HasForeignKey(e => e.DroneTypeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
 
             modelBuilder.Entity<Unit>(entity =>
             {
@@ -360,6 +383,12 @@ namespace S5Server.Data
         /// Довідник Військове звання
         /// </summary>
         public DbSet<DictRank> DictRanks { get; set; }
+        /// <summary>
+        /// Типи БПЛА
+        /// </summary>
+        public DbSet<DictDroneType> DictDroneTypes { get; set; }
+        public DbSet<DictDroneModel> DictDroneModels { get; set; }
+
         /// <summary>
         /// Категория шаблона документа
         /// Gets or sets the collection of template category entities in the database.

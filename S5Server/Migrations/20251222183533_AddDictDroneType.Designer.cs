@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using S5Server.Data;
 
@@ -10,9 +11,11 @@ using S5Server.Data;
 namespace S5Server.Migrations
 {
     [DbContext(typeof(MainDbContext))]
-    partial class MainDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251222183533_AddDictDroneType")]
+    partial class AddDictDroneType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.1");
@@ -230,35 +233,6 @@ namespace S5Server.Migrations
                         .IsUnique();
 
                     b.ToTable("dict_area", (string)null);
-                });
-
-            modelBuilder.Entity("S5Server.Models.DictDroneModel", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
-
-                    b.Property<string>("Comment")
-                        .HasMaxLength(250)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("DroneTypeId")
-                        .IsRequired()
-                        .HasColumnType("TEXT(36)");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DroneTypeId");
-
-                    b.HasIndex("Value")
-                        .IsUnique();
-
-                    b.ToTable("dict_drone_model", (string)null);
                 });
 
             modelBuilder.Entity("S5Server.Models.DictDroneType", b =>
@@ -943,17 +917,6 @@ namespace S5Server.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("S5Server.Models.DictDroneModel", b =>
-                {
-                    b.HasOne("S5Server.Models.DictDroneType", "DroneType")
-                        .WithMany("DroneModels")
-                        .HasForeignKey("DroneTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DroneType");
-                });
-
             modelBuilder.Entity("S5Server.Models.DocumentTemplate", b =>
                 {
                     b.HasOne("S5Server.Models.TemplateDataSet", "DefaultDataSet")
@@ -1072,11 +1035,6 @@ namespace S5Server.Migrations
                     b.Navigation("Parent");
 
                     b.Navigation("UnitType");
-                });
-
-            modelBuilder.Entity("S5Server.Models.DictDroneType", b =>
-                {
-                    b.Navigation("DroneModels");
                 });
 
             modelBuilder.Entity("S5Server.Models.DocumentTemplate", b =>

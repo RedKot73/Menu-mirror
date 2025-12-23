@@ -28,18 +28,7 @@ import { SimpleDictDto } from '../../ServerService/simpleDict.service';
       <button mat-button (click)="onCancel()">Відміна</button>
       <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!data.value.trim()">Зберегти</button>
     </div>`,
-    styles: [`
-        .title { text-align: center; margin: 0; }
-        .content {
-            display: grid;
-            gap: 12px;
-            min-width: 280px;
-            max-width: 520px;
-            padding-top: 10px !important; /* убирает перекрытие заголовка и контента */
-        }
-        .content .mat-mdc-form-field { width: 100%; }
-        .actions { gap: 8px; }
-  `],
+    styleUrls: ['./DialogShared.scss'],
 })
 export class SimpleDictDialogComponent {
     constructor(

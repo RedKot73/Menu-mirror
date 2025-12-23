@@ -25,7 +25,7 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         _logger = logger;
     }
 
-    protected IQueryable<TEntity> Query() => _set.AsNoTracking();
+    protected virtual IQueryable<TEntity> Query() => _set.AsNoTracking();
 
     /// <summary>Полный список (опционально фильтр по подстроке)</summary>
     [HttpGet]
@@ -52,7 +52,8 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при получении списка {Entity}", typeof(TEntity).Name);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Ошибка при получении списка {Entity}", typeof(TEntity).Name);
             return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
         }
     }
@@ -75,7 +76,8 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при получении {Entity} Id={Id}", typeof(TEntity).Name, id);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Ошибка при получении {Entity} Id={Id}", typeof(TEntity).Name, id);
             return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
         }
     }
@@ -109,7 +111,8 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         }
         catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
-            _logger.LogInformation(ex, "Конфликт уникальности Value={Value} для {Entity}", entity.Value, typeof(TEntity).Name);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation(ex, "Конфликт уникальности Value={Value} для {Entity}", entity.Value, typeof(TEntity).Name);
             return Problem(
                 statusCode: 409,
                 title: "Конфликт уникальности",
@@ -118,12 +121,14 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            _logger.LogWarning(ex, "Конкурентный конфликт при создании {Entity}", typeof(TEntity).Name);
+            if (_logger.IsEnabled(LogLevel.Warning))
+                _logger.LogWarning(ex, "Конкурентный конфликт при создании {Entity}", typeof(TEntity).Name);
             return Problem(statusCode: 409, title: "Конкурентный конфликт");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Неизвестная ошибка при создании {Entity}", typeof(TEntity).Name);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Неизвестная ошибка при создании {Entity}", typeof(TEntity).Name);
             return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
         }
     }
@@ -161,7 +166,8 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         }
         catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
-            _logger.LogInformation(ex, "Конфликт уникальности при обновлении {Entity} Id={Id} Value={Value}",
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation(ex, "Конфликт уникальности при обновлении {Entity} Id={Id} Value={Value}",
                 typeof(TEntity).Name, id, e.Value);
             return Problem(
                 statusCode: 409,
@@ -171,12 +177,14 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            _logger.LogWarning(ex, "Конкурентный конфликт при обновлении {Entity} Id={Id}", typeof(TEntity).Name, id);
+            if (_logger.IsEnabled(LogLevel.Warning))
+                _logger.LogWarning(ex, "Конкурентный конфликт при обновлении {Entity} Id={Id}", typeof(TEntity).Name, id);
             return Problem(statusCode: 409, title: "Конкурентный конфликт");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при обновлении {Entity} Id={Id}", typeof(TEntity).Name, id);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Ошибка при обновлении {Entity} Id={Id}", typeof(TEntity).Name, id);
             return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
         }
     }
@@ -202,7 +210,8 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при удалении {Entity} Id={Id}", typeof(TEntity).Name, id);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Ошибка при удалении {Entity} Id={Id}", typeof(TEntity).Name, id);
             return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
         }
     }
@@ -235,7 +244,8 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка в lookup {Entity}", typeof(TEntity).Name);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Ошибка в lookup {Entity}", typeof(TEntity).Name);
             return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
         }
     }
@@ -259,7 +269,8 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при получении sel_list {Entity}", typeof(TEntity).Name);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Ошибка при получении sel_list {Entity}", typeof(TEntity).Name);
             return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
         }
     }

@@ -6,7 +6,17 @@ namespace S5Server.Models
     public record SimpleDictDto(
         [Required, StringLength(40)] string Id,
         [Required, StringLength(100)] string Value,
-        string? Comment);
+        string? Comment)
+    {
+        public static SimpleDictDto ToDto(SimpleDictBase simpleDictBase)
+        {
+            return new SimpleDictDto(
+                simpleDictBase.Id,
+                simpleDictBase.Value,
+                simpleDictBase.Comment
+            );
+        }
+    }
 
     public record SimpleDictCreateDto(
         [Required, StringLength(100)] string Value,

@@ -56,7 +56,8 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка GetAll {Entity}", typeof(TEntity).Name);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Ошибка GetAll {Entity}", typeof(TEntity).Name);
             return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
         }
     }
@@ -79,7 +80,8 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка Get {Entity} Id={Id}", typeof(TEntity).Name, id);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Ошибка Get {Entity} Id={Id}", typeof(TEntity).Name, id);
             return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
         }
     }
@@ -117,7 +119,8 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         }
         catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
-            _logger.LogInformation(ex, "Конфликт уникальности Value={Value} ShortValue={ShortValue} {Entity}",
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation(ex, "Конфликт уникальности Value={Value} ShortValue={ShortValue} {Entity}",
                 entity.Value, entity.ShortValue, typeof(TEntity).Name);
             return Problem(
                 statusCode: 409,
@@ -131,12 +134,14 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            _logger.LogWarning(ex, "Конкурентный конфликт Create {Entity}", typeof(TEntity).Name);
+            if (_logger.IsEnabled(LogLevel.Warning))
+                _logger.LogWarning(ex, "Конкурентный конфликт Create {Entity}", typeof(TEntity).Name);
             return Problem(statusCode: 409, title: "Конкурентный конфликт");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Неизвестная ошибка Create {Entity}", typeof(TEntity).Name);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Неизвестная ошибка Create {Entity}", typeof(TEntity).Name);
             return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
         }
     }
@@ -177,7 +182,8 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         }
         catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
-            _logger.LogInformation(ex, "Конфликт уникальности Update {Entity} Id={Id} Value={Value}",
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation(ex, "Конфликт уникальности Update {Entity} Id={Id} Value={Value}",
                 typeof(TEntity).Name, id, e.Value);
             return Problem(
                 statusCode: 409,
@@ -192,12 +198,14 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            _logger.LogWarning(ex, "Конкурентный конфликт Update {Entity} Id={Id}", typeof(TEntity).Name, id);
+            if (_logger.IsEnabled(LogLevel.Warning))
+                _logger.LogWarning(ex, "Конкурентный конфликт Update {Entity} Id={Id}", typeof(TEntity).Name, id);
             return Problem(statusCode: 409, title: "Конкурентный конфликт");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка Update {Entity} Id={Id}", typeof(TEntity).Name, id);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Ошибка Update {Entity} Id={Id}", typeof(TEntity).Name, id);
             return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
         }
     }
@@ -223,7 +231,8 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка Delete {Entity} Id={Id}", typeof(TEntity).Name, id);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Ошибка Delete {Entity} Id={Id}", typeof(TEntity).Name, id);
             return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
         }
     }
@@ -257,7 +266,8 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка Lookup {Entity}", typeof(TEntity).Name);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Ошибка Lookup {Entity}", typeof(TEntity).Name);
             return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
         }
     }
@@ -281,7 +291,8 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при получении sel_list {Entity}", typeof(TEntity).Name);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Ошибка при получении sel_list {Entity}", typeof(TEntity).Name);
             return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
         }
     }
