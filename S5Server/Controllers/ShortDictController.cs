@@ -252,8 +252,9 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         try
         {
             var data = await Query()
-                .Where(t => t.Value.Contains(term))
-                .OrderBy(t => t.Value)
+                //.Where(t => t.Value.Contains(term))
+                .Where(t => t.ShortValue.Contains(term))
+                .OrderBy(t => t.ShortValue)
                 .Take(limit)
                 .Select(t => new LookupDto(t.Id, t.ShortValue))
                 .ToListAsync(ct);

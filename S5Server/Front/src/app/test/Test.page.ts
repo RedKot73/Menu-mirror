@@ -11,7 +11,8 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { CommonModule, SlicePipe, DatePipe } from '@angular/common';
+import { CommonModule, SlicePipe, DatePipe, AsyncPipe } from '@angular/common';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -28,12 +29,20 @@ import { MatSortModule } from '@angular/material/sort';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatDialog } from '@angular/material/dialog';
+import {
+  MatAutocompleteModule,
+  MatAutocompleteSelectedEvent,
+} from '@angular/material/autocomplete';
+import { Observable, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, startWith, finalize } from 'rxjs/operators';
 
 import { UnitService, UnitDataSetDto } from '../Unit/services/unit.service';
 import { UnitTreeComponent } from '../Unit/UnitTree.component';
 import { UnitTreeNode } from '../Unit/unit-tree-node.component';
 import { JsonEditorDialogComponent } from '../DocumentTemplates/components/JsonEditorDialog.component';
 import { ErrorHandler } from '../shared/models/ErrorHandler';
+import { DictDroneModelService } from '../../ServerService/dictDroneModel.service';
+import { LookupDto } from '../shared/models/lookup.models';
 import {
   isCriticalStatus,
   isSevereStatus,
@@ -47,6 +56,8 @@ import {
     CommonModule,
     SlicePipe,
     DatePipe,
+    AsyncPipe,
+    ReactiveFormsModule,
     MatTooltipModule,
     MatIconModule,
     MatButtonModule,
@@ -60,6 +71,7 @@ import {
     MatSortModule,
     MatMenuModule,
     MatDividerModule,
+    MatAutocompleteModule,
     UnitTreeComponent,
   ],
   providers: [provideNativeDateAdapter()],
@@ -71,6 +83,7 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   private unitService = inject(UnitService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private dictDroneModelService = inject(DictDroneModelService);
   breakpointObserver = inject(BreakpointObserver);
 
   // --- ViewChild References ---
@@ -88,6 +101,12 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   // --- Document Info ---
   documentDate = signal<Date>(new Date());
   documentNumber = signal<string>('');
+
+  // --- Drone Model Autocomplete ---
+  droneModelSearchControls = new Map<string, FormControl<LookupDto | string | null>>();
+  filteredDroneModels = new Map<string, Observable<LookupDto[]>>();
+  isLoadingDroneModels = new Map<string, boolean>();
+  selectedDroneModels = new Map<string, LookupDto | null>();
 
   // --- Table Configuration ---
   displayedColumns = [
@@ -434,5 +453,79 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   onDocumentNumberChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.documentNumber.set(input.value);
+  }
+
+  /**
+   * Ініціалізує автокомпліт для моделі БПЛА для конкретного підрозділу
+   */
+  initDroneModelAutocomplete(unitId: string): void {
+    if (!this.droneModelSearchControls.has(unitId)) {
+      const control = new FormControl<LookupDto | string | null>(null);
+      this.droneModelSearchControls.set(unitId, control);
+      this.isLoadingDroneModels.set(unitId, false);
+      this.selectedDroneModels.set(unitId, null);
+
+      const filtered = control.valueChanges.pipe(
+        startWith(''),
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((value) => {
+          const searchTerm =
+            typeof value === 'string'
+              ? value
+              : value && typeof value === 'object' && 'value' in value
+              ? value.value
+              : '';
+          if (searchTerm && searchTerm.length >= 2) {
+            this.isLoadingDroneModels.set(unitId, true);
+            return this.dictDroneModelService
+              .lookup(searchTerm, 10)
+              .pipe(finalize(() => this.isLoadingDroneModels.set(unitId, false)));
+          }
+          return of([]);
+        })
+      );
+      this.filteredDroneModels.set(unitId, filtered);
+    }
+  }
+
+  /**
+   * Отримує FormControl для пошуку моделі БПЛА
+   */
+  getDroneModelControl(unitId: string): FormControl<LookupDto | string | null> {
+    this.initDroneModelAutocomplete(unitId);
+    return this.droneModelSearchControls.get(unitId)!;
+  }
+
+  /**
+   * Отримує Observable для фільтрованих моделей БПЛА
+   */
+  getFilteredDroneModels(unitId: string): Observable<LookupDto[]> {
+    this.initDroneModelAutocomplete(unitId);
+    return this.filteredDroneModels.get(unitId)!;
+  }
+
+  /**
+   * Перевіряє, чи завантажуються моделі БПЛА
+   */
+  isLoadingDroneModel(unitId: string): boolean {
+    return this.isLoadingDroneModels.get(unitId) || false;
+  }
+
+  /**
+   * Відображення назви моделі БПЛА в автокомпліті
+   */
+  displayDroneModelFn = (droneModel: LookupDto | null): string => {
+    return droneModel ? droneModel.value : '';
+  };
+
+  /**
+   * Обробник вибору моделі БПЛА
+   */
+  onDroneModelSelected(unitId: string, event: MatAutocompleteSelectedEvent): void {
+    const selectedDroneModel = event.option.value as LookupDto | null;
+    this.selectedDroneModels.set(unitId, selectedDroneModel);
+    // TODO: Зберегти вибрану модель в дані підрозділу
+    console.log(`Selected drone model for unit ${unitId}:`, selectedDroneModel);
   }
 }

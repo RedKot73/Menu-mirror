@@ -73,12 +73,25 @@
 
   <mat-form-field appearance="outline" floatLabel="always">
     <mat-label>Тип підрозділу</mat-label>
-    <mat-select [(ngModel)]="data.unitTypeId">
+    <input
+      type="text"
+      matInput
+      [formControl]="unitTypeSearchControl"
+      [matAutocomplete]="unitTypeAuto"
+      placeholder="Тип підрозділу"
+    />
+    <mat-autocomplete
+      #unitTypeAuto="matAutocomplete"
+      [displayWith]="displayUnitTypeFn"
+      (optionSelected)="onUnitTypeSelected($event)"
+    >
       <mat-option [value]="null">Відсутній</mat-option>
-      @for (unitType of dictUnitTypes; track unitType.id) {
-      <mat-option [value]="unitType.id">{{ unitType.value }}</mat-option>
+      @if (isLoadingUnitTypes) {
+      <mat-option disabled>Завантаження...</mat-option>
+      } @for (unitType of filteredUnitTypes | async; track unitType.id) {
+      <mat-option [value]="unitType">{{ unitType.value }}</mat-option>
       }
-    </mat-select>
+    </mat-autocomplete>
   </mat-form-field>
 
   <mat-form-field appearance="outline" floatLabel="always">

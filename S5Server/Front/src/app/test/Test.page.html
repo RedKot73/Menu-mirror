@@ -165,14 +165,25 @@
               <div class="task-item">
                 <strong>Засіб:</strong>
                 <mat-form-field appearance="outline" class="task-select">
-                  <mat-select placeholder="Оберіть Засіб">
-                    <mat-option value="reserve">“Лелека”</mat-option>
-                    <mat-option value="combat">“Сич”</mat-option>
-                    <mat-option value="recon">“Фурія”</mat-option>
-                    <mat-option value="engineer">“Чаклун”</mat-option>
-                    <mat-option value="guard">“Avenger”</mat-option>
-                    <mat-option value="notUsed">“Flirt Cetus”</mat-option>
-                  </mat-select>
+                  <input
+                    type="text"
+                    matInput
+                    [formControl]="getDroneModelControl(unit.id)"
+                    [matAutocomplete]="droneModelAuto"
+                    placeholder="Оберіть модель БПЛА"
+                  />
+                  <mat-autocomplete
+                    #droneModelAuto="matAutocomplete"
+                    [displayWith]="displayDroneModelFn"
+                    (optionSelected)="onDroneModelSelected(unit.id, $event)"
+                  >
+                    <mat-option [value]="null">Не вибрано</mat-option>
+                    @if (isLoadingDroneModel(unit.id)) {
+                    <mat-option disabled>Завантаження...</mat-option>
+                    } @for (model of getFilteredDroneModels(unit.id) | async; track model.id) {
+                    <mat-option [value]="model">{{ model.value }}</mat-option>
+                    }
+                  </mat-autocomplete>
                 </mat-form-field>
               </div>
             </div>

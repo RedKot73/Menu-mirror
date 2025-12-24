@@ -17,11 +17,13 @@ import {
   MatAutocompleteModule,
   MatAutocompleteSelectedEvent,
 } from '@angular/material/autocomplete';
-import { forkJoin, Observable, of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, startWith, finalize } from 'rxjs/operators';
 import { AsyncPipe } from '@angular/common';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { DictForcesTypeService, DictForcesType } from '../../ServerService/dictForcesType.service';
+import { ErrorHandler } from '../shared/models/ErrorHandler';
 import { UnitDto, UnitService } from '../Unit/services/unit.service';
 import { DictUnitTypeService, DictUnitType } from '../../ServerService/dictUnitType.service';
 import { LookupDto } from '../shared/models/lookup.models';
@@ -49,9 +51,9 @@ export class UnitDialogComponent implements OnInit {
   private dictForcesTypeService = inject(DictForcesTypeService);
   private dictUnitTypeService = inject(DictUnitTypeService);
   private cdr = inject(ChangeDetectorRef);
+  private snackBar = inject(MatSnackBar);
 
   dictForcesTypes: DictForcesType[] = [];
-  dictUnitTypes: DictUnitType[] = [];
 
   // Для автокомплита родительского подразделения
   parentSearchControl = new FormControl<LookupDto | string | null>(null);
@@ -64,6 +66,12 @@ export class UnitDialogComponent implements OnInit {
   filteredAssignedUnits: Observable<LookupDto[]>;
   isLoadingAssigned = false;
   selectedAssigned: LookupDto | null = null;
+
+  // Для автокомплита типа подразделения
+  unitTypeSearchControl = new FormControl<LookupDto | string | null>(null);
+  filteredUnitTypes: Observable<LookupDto[]>;
+  isLoadingUnitTypes = false;
+  selectedUnitType: LookupDto | null = null;
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: UnitDto,
@@ -117,6 +125,28 @@ export class UnitDialogComponent implements OnInit {
         return of([]);
       })
     );
+
+    // Настраиваем автокомплит для типа подразделения
+    this.filteredUnitTypes = this.unitTypeSearchControl.valueChanges.pipe(
+      startWith(''),
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap((value) => {
+        const searchTerm =
+          typeof value === 'string'
+            ? value
+            : value && typeof value === 'object' && 'value' in value
+            ? value.value
+            : '';
+        if (searchTerm && searchTerm.length >= 2) {
+          this.isLoadingUnitTypes = true;
+          return this.dictUnitTypeService
+            .lookup(searchTerm, 10)
+            .pipe(finalize(() => (this.isLoadingUnitTypes = false)));
+        }
+        return of([]);
+      })
+    );
   }
 
   ngOnInit() {
@@ -125,32 +155,69 @@ export class UnitDialogComponent implements OnInit {
 
     // Если уже есть parentId, найдем и установим соответствующий объект
     if (this.data.parentId) {
-      this.unitService.getById(this.data.parentId).subscribe((parent) => {
-        this.selectedParent = { id: parent.id, value: parent.shortName || parent.name };
-        this.parentSearchControl.setValue(this.selectedParent);
+      this.unitService.getById(this.data.parentId).subscribe({
+        next: (parent) => {
+          this.selectedParent = { id: parent.id, value: parent.shortName || parent.name };
+          this.parentSearchControl.setValue(this.selectedParent);
+        },
+        error: (error) => {
+          const errorMessage = ErrorHandler.handleHttpError(
+            error,
+            'Не вдалося завантажити основний підрозділ'
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
       });
     }
 
     // Если уже есть assignedUnitId, найдем и установим соответствующий объект
     if (this.data.assignedUnitId) {
-      this.unitService.getById(this.data.assignedUnitId).subscribe((assigned) => {
-        this.selectedAssigned = { id: assigned.id, value: assigned.shortName || assigned.name };
-        this.assignedSearchControl.setValue(this.selectedAssigned);
+      this.unitService.getById(this.data.assignedUnitId).subscribe({
+        next: (assigned) => {
+          this.selectedAssigned = { id: assigned.id, value: assigned.shortName || assigned.name };
+          this.assignedSearchControl.setValue(this.selectedAssigned);
+        },
+        error: (error) => {
+          const errorMessage = ErrorHandler.handleHttpError(
+            error,
+            'Не вдалося завантажити приданий підрозділ'
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
+      });
+    }
+
+    // Если уже есть unitTypeId, найдем и установим соответствующий объект
+    if (this.data.unitTypeId) {
+      this.dictUnitTypeService.get(this.data.unitTypeId).subscribe({
+        next: (unitType: DictUnitType) => {
+          this.selectedUnitType = { id: unitType.id, value: unitType.value };
+          this.unitTypeSearchControl.setValue(this.selectedUnitType);
+        },
+        error: (error) => {
+          const errorMessage = ErrorHandler.handleHttpError(
+            error,
+            'Не вдалося завантажити тип підрозділу'
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
       });
     }
   }
 
   private loadData() {
-    // Используем forkJoin для одновременной загрузки всех данных
-    forkJoin({
-      forces: this.dictForcesTypeService.getAll(),
-      unitTypes: this.dictUnitTypeService.getAll(),
-    }).subscribe(({ forces, unitTypes }) => {
-      this.dictForcesTypes = forces;
-      this.dictUnitTypes = unitTypes;
-
-      // Принудительно обновляем представление после загрузки всех данных
-      this.cdr.detectChanges();
+    this.dictForcesTypeService.getAll().subscribe({
+      next: (forces) => {
+        this.dictForcesTypes = forces;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        const errorMessage = ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося завантажити список видів збройних сил'
+        );
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      },
     });
   }
 
@@ -174,6 +241,17 @@ export class UnitDialogComponent implements OnInit {
     const selectedUnit = event.option.value as LookupDto | null;
     this.selectedAssigned = selectedUnit;
     this.data.assignedUnitId = selectedUnit ? selectedUnit.id : undefined;
+  }
+
+  // Методы для автокомплита типа подразделения
+  displayUnitTypeFn = (unitType: LookupDto | null): string => {
+    return unitType ? unitType.value : '';
+  };
+
+  onUnitTypeSelected(event: MatAutocompleteSelectedEvent) {
+    const selectedType = event.option.value as LookupDto | null;
+    this.selectedUnitType = selectedType;
+    this.data.unitTypeId = selectedType ? selectedType.id : undefined;
   }
 
   onCancel() {
