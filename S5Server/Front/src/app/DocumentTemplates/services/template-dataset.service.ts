@@ -22,19 +22,19 @@ export class TemplateDataSetService {
   // === CRUD операции для наборов данных ===
 
   /**
-   * Получить список наборов данных для конкретного шаблона
-   * GET /api/templ_data/{id}/data-sets
+   * Получить список наборов данных
+   * GET /api/templ_data/data-sets
    */
-  getDataSets(templateId: string): Observable<TemplateDataSetDto[]> {
-    return this.http.get<TemplateDataSetDto[]>(`${this.baseUrl}/${templateId}/data-sets`)
+  getDataSets(): Observable<TemplateDataSetDto[]> {
+    return this.http.get<TemplateDataSetDto[]>(`${this.baseUrl}/data-sets`)
       .pipe(catchError(this.handleError));
   }
 
   /**
    * Создать новый набор данных
-   * POST /api/templ_data/{id}/data-sets
+   * POST /api/templ_data/data-sets
    */
-  createDataSet(templateId: string, dto: TemplateDataSetCreateDto): Observable<TemplateDataSetDto> {
+  createDataSet(dto: TemplateDataSetCreateDto): Observable<TemplateDataSetDto> {
     // Валидация перед отправкой
     const validation = TemplateDataSetUtils.validate(dto);
     if (!validation.valid) {
@@ -44,7 +44,7 @@ export class TemplateDataSetService {
     // Подготовка данных для отправки
     const serverDto = TemplateDataSetUtils.toServerDto(dto);
 
-    return this.http.post<TemplateDataSetDto>(`${this.baseUrl}/${templateId}/data-sets`, serverDto)
+    return this.http.post<TemplateDataSetDto>(`${this.baseUrl}/data-sets`, serverDto)
       .pipe(catchError(this.handleError));
   }
 
@@ -69,7 +69,7 @@ export class TemplateDataSetService {
   // === Дополнительные методы (будущие расширения) ===
 
   /**
-   * Обновить набор данных (если API будет расширен)
+   * Обновить набор данных
    * PUT /api/templ_data/data-sets/{dataSetId}
    */
   updateDataSet(dataSetId: string, dto: TemplateDataSetUpdateDto): Observable<void> {
@@ -102,23 +102,6 @@ export class TemplateDataSetService {
   // === Методы для работы с множественными операциями ===
 
   /**
-   * Массовое удаление наборов данных
-   */
-    /*
-  bulkDelete(dataSetIds: string[]): Observable<void[]> {
-    const deleteOperations = dataSetIds.map(id => this.deleteDataSet(id));
-    return new Observable(observer => {
-      Promise.all(deleteOperations.map(op => op.toPromise()))
-        .then(results => {
-          observer.next(results);
-          observer.complete();
-        })
-        .catch(error => observer.error(error));
-    });
-  }
-  */
-
-  /**
    * Клонирование набора данных
    */
   cloneDataSet(dataSetId: string, newName: string): Observable<TemplateDataSetListItem> {
@@ -126,13 +109,12 @@ export class TemplateDataSetService {
       this.getDataSet(dataSetId).subscribe({
         next: (original) => {
           const cloneDto: TemplateDataSetCreateDto = {
-            templateId: original.templateId,
             name: newName,
             dataJson: original.dataJson,
             isPublished: false // Клоны по умолчанию не опубликованы
           };
 
-          this.createDataSet(original.templateId, cloneDto).subscribe({
+          this.createDataSet(cloneDto).subscribe({
             next: (result) => {
               observer.next(result);
               observer.complete();
@@ -208,7 +190,7 @@ export type DataSetOperation = 'create' | 'update' | 'delete' | 'clone';
 export interface DataSetOperationResult {
   success: boolean;
   message: string;
-  data?: any;
+  data?: unknown;
   errors?: string[];
 }
 
@@ -219,9 +201,10 @@ export const TEMPLATE_DATASET_CONSTANTS = {
   DEFAULT_JSON: '{}',
   API_ENDPOINTS: {
     BASE: '/api/templ_data',
-    LIST: (templateId: string) => `/api/templ_data/${templateId}/data-sets`,
+    LIST: '/api/templ_data/data-sets',
     DETAIL: (dataSetId: string) => `/api/templ_data/data-sets/${dataSetId}`,
-    CREATE: (templateId: string) => `/api/templ_data/${templateId}/data-sets`,
+    CREATE: '/api/templ_data/data-sets',
+    UPDATE: (dataSetId: string) => `/api/templ_data/data-sets/${dataSetId}`,
     DELETE: (dataSetId: string) => `/api/templ_data/data-sets/${dataSetId}`
   }
 } as const;

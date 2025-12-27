@@ -3,19 +3,16 @@
 // DTO для передачи данных TemplateDataSet (соответствует TemplateDataSetDto)
 export interface TemplateDataSetDto {
   id: string;
-  templateId: string;
-  templateName?: string;
   name: string;
   dataJson: string;
   isPublished: boolean;
   publishedAtUtc?: string; // ISO date string
   createdAtUtc: string; // ISO date string
-  updatedAtUtc: string; // ISO date string
+  updatedAtUtc?: string; // ISO date string
 }
 
 // DTO для создания нового TemplateDataSet (соответствует TemplateDataSetCreateDto)
 export interface TemplateDataSetCreateDto {
-  templateId: string;
   name: string;
   dataJson: string;
   isPublished: boolean;
@@ -24,17 +21,15 @@ export interface TemplateDataSetCreateDto {
 // Упрощенная модель для списков (опциональная, для оптимизации)
 export interface TemplateDataSetListItem {
   id: string;
-  templateId: string;
-  templateName?: string;
   name: string;
   isPublished: boolean;
+  publishedAtUtc?: string; // ISO date string
   createdAtUtc: string;
-  updatedAtUtc: string;
+  updatedAtUtc?: string;
 }
 
 // Модель для обновления TemplateDataSet
 export interface TemplateDataSetUpdateDto {
-  templateId: string;
   name: string;
   dataJson: string;
   isPublished: boolean;
@@ -69,9 +64,8 @@ export class TemplateDataSetUtils {
   /**
    * Создает пустой DataSet для формы
    */
-  static createEmpty(templateId: string): Partial<TemplateDataSetCreateDto> {
+  static createEmpty(): Partial<TemplateDataSetCreateDto> {
     return {
-      templateId,
       name: '',
       dataJson: '{}',
       isPublished: false
@@ -83,10 +77,6 @@ export class TemplateDataSetUtils {
    */
   static validate(dataSet: TemplateDataSetCreateDto): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
-
-    if (!dataSet.templateId || dataSet.templateId.trim() === '') {
-      errors.push('ID шаблона обязателен');
-    }
 
     if (!dataSet.name || dataSet.name.trim() === '') {
       errors.push('Название набора данных обязательно');
@@ -115,7 +105,6 @@ export class TemplateDataSetUtils {
    */
   static toServerDto(dto: TemplateDataSetCreateDto): TemplateDataSetCreateDto {
     return {
-      templateId: dto.templateId.trim(),
       name: dto.name.trim(),
       dataJson: dto.dataJson.trim(),
       isPublished: dto.isPublished
@@ -127,7 +116,6 @@ export class TemplateDataSetUtils {
    */
   static toUpdateDto(dataSet: TemplateDataSetDto): TemplateDataSetUpdateDto {
     return {
-      templateId: dataSet.templateId,
       name: dataSet.name,
       dataJson: dataSet.dataJson,
       isPublished: dataSet.isPublished
@@ -143,7 +131,6 @@ export interface ValidationResult {
 
 // Интерфейс для фильтрации DataSets
 export interface TemplateDataSetFilter {
-  templateId?: string;
   isPublished?: boolean;
   searchText?: string;
   dateFrom?: string;

@@ -7,7 +7,7 @@
         {{ unit.shortName }}
         @if(unit.isOperational) {
         <mat-icon>groups</mat-icon>
-        <span>Оперативний підрозділ</span>
+        <span>Екіпаж/Група</span>
         }
       </mat-card-title>
     </mat-card-header>
@@ -73,6 +73,7 @@
         <app-page-soldiers [unitId]="unit.id" [currentUnitTab]="unitTag.UnitId"></app-page-soldiers>
       </div>
     </mat-expansion-panel>
+    }
 
     <!-- Придані військовослужбовці -->
     <mat-expansion-panel class="unit-section-panel">
@@ -90,14 +91,13 @@
         ></app-page-soldiers>
       </div>
     </mat-expansion-panel>
-    }
 
     <!-- Оперативні військовослужбовці -->
     <mat-expansion-panel class="unit-section-panel">
       <mat-expansion-panel-header>
         <mat-panel-title>
           <mat-icon color="accent">groups</mat-icon>
-          Оперативні військовослужбовці
+          Задіяні військовослужбовці
         </mat-panel-title>
       </mat-expansion-panel-header>
 

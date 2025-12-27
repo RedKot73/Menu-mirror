@@ -3,16 +3,9 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-import { CreateTemplateDto, RenderRequest, TemplateDto } from '../models/document-template.models';
-/*
 import {
-  TemplateDataSetDto,
-  TemplateDataSetCreateDto,
-  TemplateDataSetListItem
-} from '../DocumentTemplates/models/template-dataset.models';
-import { HandlebarsTemplateService } from '../DocumentTemplates/services/handlebars-template.service';
-*/
-import { DocTemplateUtils, TemplateFormat } from '../models/shared.models';
+  CreateTemplateDto, TemplateDto,
+} from '../models/document-template.models';
 import { ErrorHandler } from '../../shared/models/ErrorHandler';
 
 @Injectable({
@@ -20,7 +13,6 @@ import { ErrorHandler } from '../../shared/models/ErrorHandler';
 })
 export class DocumentTemplateService {
   private readonly http = inject(HttpClient);
-  //private readonly handlebarsService = inject(HandlebarsTemplateService);
   private readonly baseUrl = '/api/templates';
 
   // === CRUD операции для шаблонов ===
@@ -110,59 +102,8 @@ export class DocumentTemplateService {
       );
   }
 
-  // === Предварительный просмотр ===
-
-  previewHtml(id: string, dataJson?: string): Observable<string> {
-    const request: RenderRequest = {
-      dataJson: dataJson || '{}',
-      export: 'html',
-    };
-
-    return this.http
-      .post(`${this.baseUrl}/${id}/preview/html`, request, {
-        responseType: 'text',
-      })
-      .pipe(
-        catchError((error: HttpErrorResponse) => {
-          const message = ErrorHandler.handleHttpError(
-            error,
-            'Не вдалося сформувати попередній перегляд'
-          );
-          return throwError(() => new Error(message));
-        })
-      );
-  }
-
-  // === Экспорт документов ===
-
-  exportDocument(id: string, exportFormat: TemplateFormat, dataJson?: string): Observable<Blob> {
-    const request: RenderRequest = {
-      dataJson: dataJson || '{}',
-      export: DocTemplateUtils.formatToString(exportFormat),
-    };
-
-    return this.http
-      .post(`${this.baseUrl}/${id}/export`, request, {
-        responseType: 'blob',
-      })
-      .pipe(
-        catchError((error: HttpErrorResponse) => {
-          const message = ErrorHandler.handleHttpError(error, 'Не вдалося експортувати документ');
-          return throwError(() => new Error(message));
-        })
-      );
-  }
-
   // === Гибридный рендеринг (NEW) ===
 
-  /**
-   * Проверяет, поддерживается ли клиентский рендеринг для указанного формата
-   */
-  /*
-  supportsClientRendering(format: TemplateFormat): boolean {
-    return this.handlebarsService.supportsClientRendering(format);
-  }
-  */
   /**
    * Получает содержимое шаблона для клиентского рендеринга
    */
@@ -201,73 +142,6 @@ export class DocumentTemplateService {
       );
   }
 
-  /**
-   * Клиентский рендеринг с использованием Handlebars (только HTML/TXT)
-   */
-  /*
-  renderClientSide(templateContent: string,
-    dataJson: string,
-    format: TemplateFormat): Observable<string> {
-    return new Observable(observer => {
-      try {
-        const data = JSON.parse(dataJson || '{}');
-        const result = this.handlebarsService.renderTemplate(templateContent, data, format);
-        
-        if (result.success) {
-          observer.next(result.content!);
-          observer.complete();
-        } else {
-          observer.error(new Error(result.error));
-        }
-      } catch (error: unknown) {
-        observer.error(error);
-      }
-    });
-    }
-  */
-
-  /**
-   * Серверный рендеринг (для DOCX/PDF или fallback)
-   */
-  renderServerSide(id: string, dataJson: string, exportFormat: TemplateFormat): Observable<Blob> {
-    const request: RenderRequest = {
-      dataJson: dataJson || '{}',
-      export: DocTemplateUtils.formatToString(exportFormat),
-    };
-
-    return this.http
-      .post(`${this.baseUrl}/${id}/export`, request, {
-        responseType: 'blob',
-      })
-      .pipe(
-        catchError((error: HttpErrorResponse) => {
-          const message = ErrorHandler.handleHttpError(error, 'Не вдалося згенерувати документ');
-          return throwError(() => new Error(message));
-        })
-      );
-  }
-
-  /**
-   * Универсальный метод предпросмотра с автоматическим выбором рендеринга
-   */
-  /*
-  previewTemplate(id: string,
-    dataJson: string,
-    format: TemplateFormat): Observable<string | Blob> {
-    if (this.supportsClientRendering(format)) {
-      // Клиентский рендеринг для HTML/TXT
-      return this.getTemplateContent(id).pipe(
-        switchMap((templateContent: string) => 
-          this.renderClientSide(templateContent, dataJson, format)
-        )
-      );
-    } else {
-      // Серверный рендеринг для DOCX/PDF
-      return this.exportDocument(id, format, dataJson);
-    }
-    }
-  */
-
   // === Утилиты ===
   /**
    * Скачивает файл из Blob с указанным именем
@@ -284,17 +158,9 @@ export class DocumentTemplateService {
       formData.append('description', dto.description);
     }
 
-    formData.append('format', dto.format);
+    //formData.append('format', dto.format);
     formData.append('templateCategoryId', dto.templateCategoryId);
     formData.append('isPublished', dto.isPublished.toString());
-
-    if (dto.defaultDataSetId) {
-      formData.append('defaultDataSetId', dto.defaultDataSetId);
-    }
-
-    if (dto.file) {
-      formData.append('file', dto.file);
-    }
 
     return formData;
   }
@@ -332,6 +198,4 @@ export class DocumentTemplateService {
       return jsonString;
     }
   }
-
-  // Приватний метод handleError видалено: використовується загальний ErrorHandler.handleHttpError
 }

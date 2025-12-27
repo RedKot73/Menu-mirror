@@ -8,7 +8,9 @@
     <div class="editor-header">
         <div class="template-info">
             <h3>{{ template()?.name || 'Шаблон' }}</h3>
+            <!--
             <span class="template-format">{{ template()?.format }}</span>
+            -->
             @let isPublished = template()?.isPublished || false;
             @let statusLabel = getStatusLabel(isPublished);
             @if (isPublished) {

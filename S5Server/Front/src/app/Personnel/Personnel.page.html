@@ -178,7 +178,7 @@
 
     <!-- Operational Unit Column -->
     <ng-container matColumnDef="operationalUnitShortName">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Оперативний підрозділ</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Екіпаж/Група</th>
       <td mat-cell *matCellDef="let soldier" class="operational-unit-cell">
         @if (isEditing(soldier.id, UnitTag.OperationalId)) {
         <div class="edit-mode">

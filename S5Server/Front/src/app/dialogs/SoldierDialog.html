@@ -67,13 +67,13 @@
   </mat-form-field>
 
   <mat-form-field appearance="outline" floatLabel="always">
-    <mat-label>Оперативний підрозділ</mat-label>
+      <mat-label>Екіпаж/Група</mat-label>
     <input
       type="text"
       matInput
       [formControl]="operationalUnitSearchControl"
       [matAutocomplete]="operationalUnitAuto"
-      placeholder="Оперативний підрозділ"
+      placeholder="Екіпаж/Група"
     />
     <mat-autocomplete
       #operationalUnitAuto="matAutocomplete"

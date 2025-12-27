@@ -138,12 +138,13 @@ export class TemplateEditorComponent implements OnInit, OnDestroy {
    */
   private loadTemplateContent(template: TemplateDto): void {
     // Перевіряємо, чи підтримується перегляд для цього формату
+/*    
     if (!this.supportsEditing(template)) {
       this.loadError.set(`Формат "${template.format}" не підтримується для редагування`);
       this.clearEditor();
       return;
     }
-
+*/
     this.isLoading.set(true);
     this.loadError.set('');
 
@@ -230,12 +231,13 @@ export class TemplateEditorComponent implements OnInit, OnDestroy {
   /**
    * Перевіряє, чи підтримується редагування для даного формату
    */
+/*  
   private supportsEditing(template: TemplateDto): boolean {
     // Підтримуємо редагування тільки текстових форматів
     const editableFormats = ['html', 'txt', 'handlebars'];
     return editableFormats.includes(template.format.toLowerCase());
   }
-
+*/
   /**
    * Получает читаемое название статуса публикации
    */

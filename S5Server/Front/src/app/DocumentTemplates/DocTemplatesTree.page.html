@@ -10,8 +10,7 @@
                 </mat-tab>
                 <mat-tab label="Набори даних">
                     <!-- DataSetTable Component -->
-                    <app-template-dataset-table [selectedTemplate]="selectedTemplate()"
-                                                (dataSetSelected)="onDataSetSelected($event)">
+                    <app-template-dataset-table (dataSetSelected)="onDataSetSelected($event)">
                     </app-template-dataset-table>
                 </mat-tab>
             </mat-tab-group>

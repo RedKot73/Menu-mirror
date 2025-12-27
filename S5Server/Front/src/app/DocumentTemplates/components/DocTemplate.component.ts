@@ -26,7 +26,7 @@ import { FormsModule } from '@angular/forms';
 
 import { DocumentTemplateService } from '../services/document-template.service';
 import { DocTemplateUtils } from '../models/shared.models';
-import { TemplateDto } from '../models/document-template.models';
+import { CreateTemplateDto, TemplateDto } from '../models/document-template.models';
 import {
   CreateTemplateDialogComponent,
   EditTemplateResult,
@@ -167,13 +167,13 @@ export class DocTemplateComponent implements AfterViewInit {
     dialogRef.afterClosed().subscribe((result: EditTemplateResult) => {
       if (result) {
         // result содержит обновленный template и опционально file
-        const updateData = {
+        const updateData: CreateTemplateDto = {
           name: result.template.name,
           description: result.template.description,
-          format: result.template.format,
+          //format: result.template.format,
           templateCategoryId: result.template.templateCategoryId,
           isPublished: result.template.isPublished,
-          file: result.file,
+          //file: result.file,
         };
 
         this.documentTemplateService.updateTemplate(template.id, updateData).subscribe({
@@ -229,7 +229,8 @@ export class DocTemplateComponent implements AfterViewInit {
   downloadTemplate(template: DocumentTemplate): void {
     this.documentTemplateService.downloadFile(template.id).subscribe({
       next: (blob) => {
-        this.documentTemplateService.downloadBlob(blob, `${template.name}.${template.format}`);
+        //this.documentTemplateService.downloadBlob(blob, `${template.name}.${template.format}`);
+        this.documentTemplateService.downloadBlob(blob, `${template.name}.html`);
       },
       error: (error) => {
         console.error('Error downloading template:', error);
@@ -272,13 +273,6 @@ export class DocTemplateComponent implements AfterViewInit {
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
     });
-  }
-
-  /**
-   * Получает читаемое название формата
-   */
-  getFormatLabel(format: string): string {
-    return DocTemplateUtils.getFormatLabel(format);
   }
 
   /**

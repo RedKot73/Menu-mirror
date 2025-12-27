@@ -237,7 +237,7 @@ export class DocTemplatesTree implements AfterViewInit, OnDestroy {
   onTemplateSelected(template: TemplateDto | null): void {
     this.selectedTemplate.set(template);
     // Сбрасываем выбранный набор данных при смене шаблона
-    this.selectedDataSet.set(null);
+    //this.selectedDataSet.set(null);
   }
 
   /**

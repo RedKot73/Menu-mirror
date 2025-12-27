@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -162,13 +162,13 @@ export class CreateDataSetDialogComponent implements OnInit {
   /**
    * Валидатор для JSON
    */
-  private jsonValidator(control: any) {
+  private jsonValidator(control: AbstractControl) {
     if (!control.value) {return null;}
     
     try {
       JSON.parse(control.value);
       return null;
-    } catch (e) {
+    } catch {
       return { invalidJson: true };
     }
   }
@@ -234,13 +234,12 @@ export class CreateDataSetDialogComponent implements OnInit {
     const formValue = this.createForm.value;
     
     const createDto: TemplateDataSetCreateDto = {
-      templateId: this.data.templateId,
       name: formValue.name.trim(),
       dataJson: formValue.dataJson.trim(),
       isPublished: formValue.isPublished
     };
 
-    this.templateDataSetService.createDataSet(this.data.templateId, createDto).subscribe({
+    this.templateDataSetService.createDataSet(createDto).subscribe({
       next: (createdDataSet) => {
         this.loading.set(false);
         this.snackBar.open('Набір даних створено успішно', 'Закрити', { duration: 3000 });
@@ -267,7 +266,6 @@ export class CreateDataSetDialogComponent implements OnInit {
     const dataSetId = this.data.dataSet.id;
     
     const updateDto: TemplateDataSetUpdateDto = {
-      templateId: this.data.templateId,
       name: formValue.name.trim(),
       dataJson: formValue.dataJson.trim(),
       isPublished: formValue.isPublished

@@ -1,4 +1,11 @@
-import { Component, inject, ViewChild, effect, signal, input, output, AfterViewInit } from "@angular/core";
+import {
+  Component,
+  inject,
+  ViewChild,
+  effect,
+  signal,
+  output,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -16,11 +23,10 @@ import { FormsModule } from '@angular/forms';
 
 import { TemplateDataSetService } from '../services/template-dataset.service';
 import { TemplateDataSetListItem } from '../models/template-dataset.models';
-import { TemplateDto } from '../models/document-template.models';
 import { CreateDataSetDialogComponent } from '../dialogs/CreateDataSet-dialog.component';
-import { ConfirmDialogComponent } from "../../dialogs/ConfirmDialog.component";
+import { ConfirmDialogComponent } from '../../dialogs/ConfirmDialog.component';
 import { DocTemplateUtils } from '../models/shared.models';
-import { MatSnackBar } from "@angular/material/snack-bar";
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-template-dataset-table',
@@ -43,7 +49,7 @@ import { MatSnackBar } from "@angular/material/snack-bar";
     MatDividerModule,
   ],
 })
-export class DataSetTableComponent implements AfterViewInit {
+export class DataSetTableComponent {
   private _sort: MatSort | null = null;
 
   @ViewChild(MatSort) set matSort(sort: MatSort) {
@@ -56,9 +62,6 @@ export class DataSetTableComponent implements AfterViewInit {
   private templateDataSetService = inject(TemplateDataSetService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
-
-  // Input від родительського компонента
-  selectedTemplate = input<TemplateDto | null>(null);
 
   // Output для передачі вибраного набору даних
   dataSetSelected = output<TemplateDataSetListItem | null>();
@@ -74,6 +77,7 @@ export class DataSetTableComponent implements AfterViewInit {
 
   constructor() {
     // Отслеживаем изменения выбранного шаблона
+    /*
     effect(() => {
       const template = this.selectedTemplate();
       if (template) {
@@ -84,6 +88,7 @@ export class DataSetTableComponent implements AfterViewInit {
         this.selectedDataSet.set(null);
       }
     });
+    */
 
     // Обновляем dataSource при изменении данных
     effect(() => {
@@ -91,15 +96,12 @@ export class DataSetTableComponent implements AfterViewInit {
     });
   }
 
-  ngAfterViewInit(): void {
-  }
-
   /**
    * Загружает наборы данных для шаблона
    */
-  private loadDataSets(templateId: string): void {
+  private loadDataSets(): void {
     this.isLoading.set(true);
-    this.templateDataSetService.getDataSets(templateId).subscribe({
+    this.templateDataSetService.getDataSets().subscribe({
       next: (datasets) => {
         this.dataSets.set(datasets);
         this.dataSource.sort = this._sort;
@@ -126,18 +128,11 @@ export class DataSetTableComponent implements AfterViewInit {
    * Создает новый набор данных
    */
   createDataSet(): void {
-    const template = this.selectedTemplate();
-    if (!template) {
-      return;
-    }
-
     const dialogRef = this.dialog.open(CreateDataSetDialogComponent, {
       width: '700px',
       maxWidth: '90vw',
       disableClose: true,
       data: {
-        templateId: template.id,
-        templateName: template.name,
       },
     });
 
@@ -152,11 +147,6 @@ export class DataSetTableComponent implements AfterViewInit {
    * Редактирует набор данных
    */
   editDataSet(dataSet: TemplateDataSetListItem): void {
-    const template = this.selectedTemplate();
-    if (!template) {
-      return;
-    }
-
     // Сначала загружаем полные данные набора
     this.isLoading.set(true);
     this.templateDataSetService.getDataSet(dataSet.id).subscribe({
@@ -168,8 +158,6 @@ export class DataSetTableComponent implements AfterViewInit {
           maxWidth: '90vw',
           disableClose: true,
           data: {
-            templateId: template.id,
-            templateName: template.name,
             dataSet: fullDataSet, // Передаем полные данные для редактирования
           },
         });
@@ -249,17 +237,13 @@ export class DataSetTableComponent implements AfterViewInit {
    * Обновляет список наборов данных
    */
   refreshDataSets(): void {
+    /*
     const template = this.selectedTemplate();
     if (template) {
       this.loadDataSets(template.id);
     }
-  }
-
-  /**
-   * Получает читаемое название формата
-   */
-  getFormatLabel(format: string): string {
-    return DocTemplateUtils.getFormatLabel(format);
+    */
+    this.loadDataSets();
   }
 
   /**

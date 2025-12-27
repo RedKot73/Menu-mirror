@@ -458,15 +458,15 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
                 this.unitTree.refresh();
               }
               this.onUnitUpdated();
-              this.snackBar.open('Оперативний підрозділ успішно створено', 'Закрити', {
+                this.snackBar.open('Екіпаж/Група успішно створено', 'Закрити', {
                 duration: 3000,
               });
             },
             error: (error) => {
-              console.error('Помилка створення оперативного підрозділу:', error);
+              console.error('Помилка створення Екіпаж/Група:', error);
               const errorMessage = ErrorHandler.handleHttpError(
                 error,
-                'Помилка створення оперативного підрозділу'
+                'Помилка створення Екіпаж/Група'
               );
               this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
             },
