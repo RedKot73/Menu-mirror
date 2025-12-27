@@ -11,12 +11,12 @@ namespace S5Server.Models
         string Id,
         string Name,
         string? Description,
-        string Format,
+        //string Format,
         string TemplateCategoryId,
         string? TemplateCategoryName,
         bool IsPublished,
-        string? DefaultDataSetId,
-        string? ContentHash,
+        //string? DefaultDataSetId,
+        //string? ContentHash,
         DateTime CreatedAtUtc,
         DateTime UpdatedAtUtc)
     {
@@ -31,12 +31,12 @@ namespace S5Server.Models
                 e.Id,
                 e.Name,
                 e.Description,
-                DocumentTemplate.FormatToString(e.Format),
+                //DocumentTemplate.FormatToString(e.Format),
                 e.TemplateCategoryId,
                 e.TemplateCategory?.ShortValue,
                 e.IsPublished,
-                e.DefaultDataSetId,
-                e.ContentHash,
+                //e.DefaultDataSetId,
+                //e.ContentHash,
                 e.CreatedAtUtc,
                 e.UpdatedAtUtc
             );
@@ -45,11 +45,11 @@ namespace S5Server.Models
         {
             e.Name = dto.Name.Trim();
             e.Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim();
-            e.Format = DocumentTemplate.ParseFormat(dto.Format); // parse
+            //e.Format = DocumentTemplate.ParseFormat(dto.Format); // parse
             e.TemplateCategoryId = dto.TemplateCategoryId;
             e.IsPublished = dto.IsPublished;
-            e.DefaultDataSetId = dto.DefaultDataSetId;
-            e.ContentHash = dto.ContentHash;
+            //e.DefaultDataSetId = dto.DefaultDataSetId;
+            //e.ContentHash = dto.ContentHash;
             e.CreatedAtUtc = dto.CreatedAtUtc;
             e.UpdatedAtUtc = dto.UpdatedAtUtc;
         }
@@ -75,26 +75,26 @@ namespace S5Server.Models
         string Id,
         string Name,
         string? Description,
-        string Format,
+        //string Format,
         string TemplateCategoryId,
         string? TemplateCategoryName,
         bool IsPublished,
         DateTime? PublishedAtUtc,
-        string? DefaultDataSetId,
-        string? DefaultDataSetName,
+        //string? DefaultDataSetId,
+        //string? DefaultDataSetName,
         DateTime CreatedAtUtc,
         DateTime UpdatedAtUtc);
 
     public record CreateTemplateDto(
         [Required] string Name,
         string? Description,
-        [Required] string Format,
+        //[Required] string Format,
         string TemplateCategoryId,
         bool IsPublished,
-        string? DefaultDataSetId,
+        //string? DefaultDataSetId,
         IFormFile? File);
     public record SetCategoryDto(string? TemplateCategoryId);
-    public record SetDefaultDataSetDto(string? DefaultDataSetId);
+    //public record SetDefaultDataSetDto(string? DefaultDataSetId);
 
     /// <summary>
     /// Represents a document template, including its content, format, metadata, and associated data sets.
@@ -107,6 +107,7 @@ namespace S5Server.Models
     [Table("document_templates")]
     public class DocumentTemplate
     {
+        /*
         public enum TemplateFormat
         {
             Html,
@@ -114,6 +115,7 @@ namespace S5Server.Models
             Docx,
             Pdf
         }
+        */
 
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public string Id { get; set; } = Guid.NewGuid().ToString("D");
@@ -123,14 +125,14 @@ namespace S5Server.Models
 
         [StringLength(300)]
         public string? Description { get; set; }
-
+        /*
         // Ограниченный набор значений
         [Required]
         public TemplateFormat Format { get; set; } = TemplateFormat.Html;
 
         [NotMapped]
         public string ContentType => GetContentTypeByFormat(Format);
-
+        */
         [Required]
         public byte[] Content { get; set; } = [];
 
@@ -145,9 +147,10 @@ namespace S5Server.Models
         /// </summary>
         /// <remarks>The content hash is typically used to identify identical content efficiently. The
         /// value is a string of up to 64 characters and may be null if the content has not been hashed.</remarks>
+        /*
         [StringLength(64)]
         public string? ContentHash { get; set; }
-
+        */
         // Публикация
         /// <summary>
         /// Gets or sets a value indicating whether the content is published.
@@ -159,21 +162,26 @@ namespace S5Server.Models
         /// <summary>
         /// Gets or sets the identifier of the default data set associated with this entity.
         /// </summary>
+        /*
         [ForeignKey(nameof(DefaultDataSet))]
         public string? DefaultDataSetId { get; set; }
+        */
 
         // “Дефолтный” набор данных
         /// <summary>
         /// Gets or sets the identifier of the default data set associated with this entity.
         /// </summary>
+        /*
         [ValidateNever]
         public TemplateDataSet? DefaultDataSet { get; set; }
+        */
 
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
-
+        /*
         [ValidateNever]
         public ICollection<TemplateDataSet> DataSets { get; set; } = [];
+        */
         /// <summary>
         /// Attempts to parse the specified string into a corresponding template format value.
         /// </summary>
@@ -184,6 +192,7 @@ namespace S5Server.Models
         /// <param name="fmt">When this method returns, contains the parsed template format if parsing succeeded; otherwise, contains the
         /// default format value.</param>
         /// <returns>true if the input string was successfully parsed into a known template format; otherwise, false.</returns>
+        /*
         public static bool TryParseFormat(string? s, out TemplateFormat fmt)
         {
             switch (s?.Trim().ToLowerInvariant())
@@ -195,17 +204,20 @@ namespace S5Server.Models
                 default: fmt = TemplateFormat.Html; return false;
             }
         }
+        */
         /// <summary>
         /// Parses the specified string into a corresponding <see cref="TemplateFormat"/> value.
         /// </summary>
         /// <param name="s">The string representation of the format to parse. Can be <see langword="null"/>.</param>
         /// <returns>The <see cref="TemplateFormat"/> value that corresponds to the specified string.</returns>
         /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="s"/> does not represent a supported format.</exception>
+        /*
         public static TemplateFormat ParseFormat(string? s)
         {
             if (TryParseFormat(s, out var fmt)) return fmt;
             throw new ArgumentOutOfRangeException(nameof(s), $"Unsupported format: {s}");
         }
+        */
         /// <summary>
         /// Converts the specified template format to its corresponding string representation.
         /// </summary>
@@ -213,6 +225,7 @@ namespace S5Server.Models
         /// value.</remarks>
         /// <param name="format">The template format to convert. If the value is not a recognized format, "html" is returned by default.</param>
         /// <returns>A string representing the specified template format. Possible values are "html", "txt", "docx", or "pdf".</returns>
+        /*
         public static string FormatToString(TemplateFormat format) =>
             format switch
             {
@@ -222,6 +235,7 @@ namespace S5Server.Models
                 TemplateFormat.Pdf => "pdf",
                 _ => "html"
             };
+        */
         /// <summary>
         /// Returns the MIME content type string corresponding to the specified template format.
         /// </summary>
@@ -229,6 +243,7 @@ namespace S5Server.Models
         /// cref="TemplateFormat"/>.</param>
         /// <returns>A string representing the MIME content type for the given format. Returns "application/octet-stream" if the
         /// format is not recognized.</returns>
+        /*
         public static string GetContentTypeByFormat(TemplateFormat format) =>
             format switch
             {
@@ -238,5 +253,6 @@ namespace S5Server.Models
                 TemplateFormat.Pdf => "application/pdf",
                 _ => "application/octet-stream"
             };
+        */
     }
 }
