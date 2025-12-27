@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using S5Server.Data;
@@ -245,7 +243,7 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         [FromQuery] int limit = 10,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(term))
+       if (string.IsNullOrWhiteSpace(term))
             return Ok(Array.Empty<object>());
         if (limit is < 1 or > 100) limit = 10;
 

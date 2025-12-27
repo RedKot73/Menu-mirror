@@ -106,7 +106,7 @@ try
                   .AllowAnyMethod()
                   .AllowCredentials());
     });
-    builder.Services.AddScoped<TemplateRenderer>();
+    //builder.Services.AddScoped<TemplateRenderer>();
 
     var app = builder.Build();
 

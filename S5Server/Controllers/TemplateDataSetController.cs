@@ -18,22 +18,24 @@ namespace S5Server.Controllers
         private readonly DbSet<TemplateDataSet> _set;
         private readonly ILogger<DocumentTemplatesController> _logger;
 
-        public TemplateDataSetController(MainDbContext db, TemplateRenderer renderer, ILogger<DocumentTemplatesController> logger)
+        public TemplateDataSetController(MainDbContext db, 
+            //TemplateRenderer renderer,
+            ILogger<DocumentTemplatesController> logger)
         {
             _db = db;
             _set = _db.TemplateDataSets;
             _logger = logger;
         }
 
-        [HttpGet("{id}/data-sets")]
+        [HttpGet("data-sets")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetDataSets(string id, CancellationToken ct = default)
+        public async Task<IActionResult> GetAll(/*string id,*/ CancellationToken ct = default)
         {
             try
             {
                 var items = await _set.AsNoTracking()
-                    .Where(t => t.TemplateId == id)
+                    //.Where(t => t.TemplateId == id)
                     .OrderBy(t => t.Name)
                     .ThenByDescending(t => t.CreatedAtUtc)
                     .Select(t => TemplateDataSetDto.ToDto(t))
@@ -47,17 +49,18 @@ namespace S5Server.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка получения наборов данных TemplateId={TemplateId}", id);
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Ошибка получения наборов данных");
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
 
-        [HttpPost("{id}/data-sets")]
+        [HttpPost("data-sets")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
-        public async Task<IActionResult> CreateDataSet(string id, [FromBody] TemplateDataSetCreateDto dto,
+        public async Task<IActionResult> CreateDataSet(/*string id,*/ [FromBody] TemplateDataSetCreateDto dto,
             CancellationToken ct = default)
         {
             if (!ModelState.IsValid)
@@ -75,7 +78,7 @@ namespace S5Server.Controllers
 
                 var ds = new TemplateDataSet
                 {
-                    TemplateId = id,
+                    //TemplateId = id,
                     Name = dto.Name.Trim(),
                     DataJson = dto.DataJson,
                     CreatedAtUtc = DateTime.UtcNow
@@ -88,7 +91,8 @@ namespace S5Server.Controllers
                 }
                 catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
                 {
-                    _logger.LogInformation(ex, "Конфликт уникальности набора данных Name={Name} TemplateId={TemplateId}", ds.Name, id);
+                    if (_logger.IsEnabled(LogLevel.Information))
+                        _logger.LogInformation(ex, "Конфликт уникальности набора данных Name={Name}", ds.Name);
                     return Problem(
                         statusCode: 409,
                         title: "Конфликт уникальности",
@@ -102,7 +106,8 @@ namespace S5Server.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка создания набора данных TemplateId={TemplateId}", id);
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Ошибка создания набора данных");
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
@@ -128,7 +133,8 @@ namespace S5Server.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка получения набора данных DataSetId={DataSetId}", dataSetId);
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Ошибка получения набора данных DataSetId={DataSetId}", dataSetId);
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
@@ -154,9 +160,10 @@ namespace S5Server.Controllers
                     return Problem(statusCode: 404, title: "Не найдено", detail: $"DataSetId={dataSetId}");
 
                 // (Опционально) не позволяем менять TemplateId набора
+                /*
                 if (!string.IsNullOrWhiteSpace(dto.TemplateId) && !string.Equals(dto.TemplateId, ds.TemplateId, StringComparison.Ordinal))
                     return Problem(statusCode: 400, title: "Некорректные данные", detail: "TemplateId не совпадает с набором данных.");
-
+                */
                 // Валидация JSON
                 /*
                 try { JsonDocument.Parse(dto.DataJson); }
@@ -184,7 +191,8 @@ namespace S5Server.Controllers
                 }
                 catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
                 {
-                    _logger.LogInformation(ex, "Конфликт уникальности набора данных при обновлении Name={Name} DataSetId={DataSetId}", ds.Name, dataSetId);
+                    if (_logger.IsEnabled(LogLevel.Information))
+                        _logger.LogInformation(ex, "Конфликт уникальности набора данных при обновлении Name={Name} DataSetId={DataSetId}", ds.Name, dataSetId);
                     return Problem(
                         statusCode: 409,
                         title: "Конфликт уникальности",
@@ -193,7 +201,8 @@ namespace S5Server.Controllers
                 }
                 catch (DbUpdateConcurrencyException ex)
                 {
-                    _logger.LogWarning(ex, "Конкурентный конфликт при обновлении набора данных DataSetId={DataSetId}", dataSetId);
+                    if (_logger.IsEnabled(LogLevel.Warning))
+                        _logger.LogWarning(ex, "Конкурентный конфликт при обновлении набора данных DataSetId={DataSetId}", dataSetId);
                     return Problem(statusCode: 409, title: "Конкурентный конфликт");
                 }
             }
@@ -203,7 +212,8 @@ namespace S5Server.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при обновлении набора данных DataSetId={DataSetId}", dataSetId);
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Ошибка при обновлении набора данных DataSetId={DataSetId}", dataSetId);
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
@@ -230,7 +240,8 @@ namespace S5Server.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка удаления набора данных DataSetId={DataSetId}", dataSetId);
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Ошибка удаления набора данных DataSetId={DataSetId}", dataSetId);
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }

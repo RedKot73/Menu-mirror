@@ -307,6 +307,7 @@ namespace S5Server.Data
                 entity.Property(e => e.Content).IsRequired().HasColumnType("BLOB");
 
                 // Храним enum Format в нижнем регистре (html|txt|docx|pdf)
+                /*
                 var fmtConverter = new ValueConverter<DocumentTemplate.TemplateFormat, string>(
                     v => DocumentTemplate.FormatToString(v),
                     v => DocumentTemplate.ParseFormat(v)
@@ -315,28 +316,29 @@ namespace S5Server.Data
                       .HasConversion(fmtConverter)
                       .IsRequired()
                       .HasColumnType("TEXT(10)");
-
+                */
                 entity.Property(e => e.TemplateCategoryId).HasColumnType("TEXT(36)");
                 entity.HasOne(e => e.TemplateCategory)
                       .WithMany()
                       .HasForeignKey(e => e.TemplateCategoryId)
                       .OnDelete(DeleteBehavior.Restrict);
 
-                entity.Property(e => e.ContentHash).HasColumnType("TEXT(64)");
+                //entity.Property(e => e.ContentHash).HasColumnType("TEXT(64)");
                 entity.Property(e => e.IsPublished).HasColumnType("INTEGER");
                 entity.Property(e => e.PublishedAtUtc).HasColumnType("TEXT");
-
+                /*
                 entity.Property(e => e.DefaultDataSetId).HasColumnType("TEXT(36)");
                 entity.HasOne(e => e.DefaultDataSet)
                       .WithMany()
                       .HasForeignKey(e => e.DefaultDataSetId)
                       .OnDelete(DeleteBehavior.SetNull);
+                */
 
                 entity.Property(e => e.CreatedAtUtc).HasColumnType("TEXT");
                 entity.Property(e => e.UpdatedAtUtc).HasColumnType("TEXT");
 
                 entity.HasIndex(e => e.Name).IsUnique();
-                entity.HasIndex(e => e.ContentHash);
+                //entity.HasIndex(e => e.ContentHash);
                 entity.HasIndex(e => e.IsPublished);
             });
 
@@ -345,17 +347,18 @@ namespace S5Server.Data
                 entity.ToTable("template_data_sets");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).HasColumnType("TEXT(36)");
-                entity.Property(e => e.TemplateId).IsRequired().HasColumnType("TEXT(36)");
+                //entity.Property(e => e.TemplateId).IsRequired().HasColumnType("TEXT(36)");
                 entity.Property(e => e.Name).IsRequired().HasColumnType("TEXT(150)");
                 entity.Property(e => e.DataJson).IsRequired().HasColumnType("TEXT");
                 entity.Property(e => e.CreatedAtUtc).HasColumnType("TEXT");
-
+                /*
                 entity.HasOne(d => d.Template)
                       .WithMany(t => t.DataSets)
                       .HasForeignKey(d => d.TemplateId)
                       .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasIndex(e => new { e.TemplateId, e.Name }).IsUnique();
+                */
             });
         }
 

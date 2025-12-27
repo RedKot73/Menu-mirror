@@ -11,10 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 using S5Server.Data;
 using S5Server.Models;
-using S5Server.Services;
 using S5Server.Utils;
-
-using static S5Server.Models.DocumentTemplate;
 
 namespace S5Server.Controllers
 {
@@ -24,27 +21,28 @@ namespace S5Server.Controllers
     {
         private readonly MainDbContext _db;
         private readonly DbSet<DocumentTemplate> _set;
-        private readonly TemplateRenderer _renderer;
+        //private readonly TemplateRenderer _renderer;
         private readonly ILogger<DocumentTemplatesController> _logger;
 
         public DocumentTemplatesController(MainDbContext db,
-            TemplateRenderer renderer,
+            //TemplateRenderer renderer,
             ILogger<DocumentTemplatesController> logger)
         {
             _db = db;
             _set = _db.DocumentTemplates;
-            _renderer = renderer;
+            //_renderer = renderer;
             _logger = logger;
         }
 
-        public record RenderRequest(string? DataJson, string Export /* html|txt|docx|pdf */);
-        public record ClientHtmlExportRequest(string Name, string Html, string Export /* html|txt|pdf|docx*/);
-
+        //public record RenderRequest(string? DataJson, string Export /* html|txt|docx|pdf */);
+        //public record ClientHtmlExportRequest(string Name, string Html, string Export /* html|txt|pdf|docx*/);
+        /*
         private static string ComputeSha256(byte[] data)
         {
             var hash = SHA256.HashData(data);
             return Convert.ToHexString(hash).ToLowerInvariant();
         }
+        */
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -66,7 +64,8 @@ namespace S5Server.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при получении списка шаблонов");
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Ошибка при получении списка шаблонов");
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
@@ -93,7 +92,8 @@ namespace S5Server.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при получении шаблона Id={Id}", id);
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Ошибка при получении шаблона Id={Id}", id);
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
@@ -114,10 +114,10 @@ namespace S5Server.Controllers
                 return Problem(statusCode: 400, title: "Файл шаблона не передано");
             if (dto.File.Length == 0)//Проверить DefaultDataSetId
                 return Problem(statusCode: 400, title: "Файл шаблона порожній");
-
+            /*
             if (!DocumentTemplate.TryParseFormat(dto.Format, out var format))
                 return Problem(statusCode: 400, title: "Поддерживаемые форматы: html, txt, docx, pdf");
-
+            */
             try
             {
                 using var ms = new MemoryStream();
@@ -128,12 +128,12 @@ namespace S5Server.Controllers
                 {
                     Name = dto.Name.Trim(),
                     Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim(),
-                    Format = format,
+                    //Format = format,
                     Content = content,
-                    ContentHash = ComputeSha256(content),
+                    //ContentHash = ComputeSha256(content),
                     TemplateCategoryId = dto.TemplateCategoryId,
                     IsPublished = dto.IsPublished,
-                    DefaultDataSetId = string.IsNullOrWhiteSpace(dto.DefaultDataSetId) ? null : dto.DefaultDataSetId.Trim(),
+                    //DefaultDataSetId = string.IsNullOrWhiteSpace(dto.DefaultDataSetId) ? null : dto.DefaultDataSetId.Trim(),
                     CreatedAtUtc = DateTime.UtcNow,
                     UpdatedAtUtc = DateTime.UtcNow
                 };
@@ -150,17 +150,20 @@ namespace S5Server.Controllers
             }
             catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
             {
-                _logger.LogInformation(ex, "Конфликт уникальности при создании шаблона Name={Name}", dto.Name);
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation(ex, "Конфликт уникальности при создании шаблона Name={Name}", dto.Name);
                 return Problem(statusCode: 409, title: "Конфликт уникальности", detail: $"Шаблон с именем \"{dto.Name}\" уже существует.");
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                _logger.LogWarning(ex, "Конкурентный конфликт при создании шаблона Name={Name}", dto.Name);
+                if (_logger.IsEnabled(LogLevel.Warning))
+                    _logger.LogWarning(ex, "Конкурентный конфликт при создании шаблона Name={Name}", dto.Name);
                 return Problem(statusCode: 409, title: "Конкурентный конфликт");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Неизвестная ошибка при создании шаблона Name={Name}", dto.Name);
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Неизвестная ошибка при создании шаблона Name={Name}", dto.Name);
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
@@ -187,20 +190,21 @@ namespace S5Server.Controllers
                 return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
 
             // Формат — если не пришёл, используем текущий
+            /*
             if (!string.IsNullOrWhiteSpace(dto.Format))
             {
                 if (!DocumentTemplate.TryParseFormat(dto.Format, out var newFormat))
                     return Problem(statusCode: 400, title: "Поддерживаемые форматы: html, txt, docx, pdf");
                 t.Format = newFormat;
             }
-
+            */
             if (dto.File != null && dto.File.Length > 0)
             {
                 using var ms = new MemoryStream();
                 await dto.File.CopyToAsync(ms, ct);
                 var content = ms.ToArray();
                 t.Content = content;
-                t.ContentHash = ComputeSha256(content);
+                //t.ContentHash = ComputeSha256(content);
             }
 
             t.Name = dto.Name.Trim();
@@ -219,17 +223,20 @@ namespace S5Server.Controllers
             }
             catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
             {
-                _logger.LogInformation(ex, "Конфликт уникальности при обновлении шаблона Id={Id} Name={Name}", id, dto.Name);
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation(ex, "Конфликт уникальности при обновлении шаблона Id={Id} Name={Name}", id, dto.Name);
                 return Problem(statusCode: 409, title: "Конфликт уникальности", detail: $"Шаблон с именем \"{dto.Name}\" уже существует.");
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                _logger.LogWarning(ex, "Конкурентный конфликт при обновлении шаблона Id={Id}", id);
+                if (_logger.IsEnabled(LogLevel.Warning))
+                    _logger.LogWarning(ex, "Конкурентный конфликт при обновлении шаблона Id={Id}", id);
                 return Problem(statusCode: 409, title: "Конкурентный конфликт");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при обновлении шаблона Id={Id}", id);
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Ошибка при обновлении шаблона Id={Id}", id);
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
@@ -238,7 +245,9 @@ namespace S5Server.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> SetCategory(string id, [FromBody] SetCategoryDto dto, CancellationToken ct = default)
+        public async Task<IActionResult> SetCategory(string id,
+            [FromBody] SetCategoryDto dto,
+            CancellationToken ct = default)
         {
             try
             {
@@ -255,7 +264,8 @@ namespace S5Server.Controllers
                     var exists = await _db.DictTemplateCategories.AsNoTracking()
                         .AnyAsync(c => c.Id == newCatId, ct);
                     if (!exists)
-                        return Problem(statusCode: 404, title: "Категория не найдена", detail: $"TemplateCategoryId={newCatId}");
+                        return Problem(statusCode: 404, title: "Категория не найдена",
+                            detail: $"TemplateCategoryId={newCatId}");
                 }
 
                 t.TemplateCategoryId = newCatId;
@@ -269,7 +279,8 @@ namespace S5Server.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка установки категории шаблона Id={Id}", id);
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Ошибка установки категории шаблона Id={Id}", id);
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
@@ -299,7 +310,8 @@ namespace S5Server.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка публикации шаблона Id={Id}", id);
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Ошибка публикации шаблона Id={Id}", id);
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
@@ -329,7 +341,8 @@ namespace S5Server.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка снятия с публикации шаблона Id={Id}", id);
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Ошибка снятия с публикации шаблона Id={Id}", id);
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
@@ -338,6 +351,7 @@ namespace S5Server.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        /*
         public async Task<IActionResult> SetDefaultDataSet(string id, [FromBody] SetDefaultDataSetDto dto, CancellationToken ct = default)
         {
             try
@@ -373,7 +387,7 @@ namespace S5Server.Controllers
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
-
+        */
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -395,7 +409,8 @@ namespace S5Server.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при удалении шаблона Id={Id}", id);
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Ошибка при удалении шаблона Id={Id}", id);
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
@@ -412,7 +427,7 @@ namespace S5Server.Controllers
                     .FirstOrDefaultAsync(x => x.Id == id, ct);
                 if (t == null)
                     return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
-                return File(t.Content, t.ContentType);
+                return File(t.Content, "text/html; charset=utf-8"/*t.ContentType*/);
             }
             catch (OperationCanceledException)
             {
@@ -420,7 +435,8 @@ namespace S5Server.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при выдаче файла шаблона Id={Id}", id);
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Ошибка при выдаче файла шаблона Id={Id}", id);
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
@@ -440,14 +456,15 @@ namespace S5Server.Controllers
                     return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
 
                 // Поддерживаем клиентский рендер только для html/txt
-                if (t.Format is DocumentTemplate.TemplateFormat.Html or DocumentTemplate.TemplateFormat.Txt)
+                //if (t.Format is DocumentTemplate.TemplateFormat.Html or DocumentTemplate.TemplateFormat.Txt)
                 {
                     var text = Encoding.UTF8.GetString(t.Content);
                     return Content(text, "text/plain; charset=utf-8");
                 }
-
+                /*
                 return Problem(statusCode: 415, title: "Неподдерживаемый формат",
                                detail: $"Для формата '{DocumentTemplate.FormatToString(t.Format)}' контент как текст недоступен.");
+                */
             }
             catch (OperationCanceledException)
             {
@@ -455,7 +472,8 @@ namespace S5Server.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка выдачи содержимого шаблона Id={Id}", id);
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Ошибка выдачи содержимого шаблона Id={Id}", id);
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
@@ -483,7 +501,7 @@ namespace S5Server.Controllers
                     return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
 
                 t.Content = Encoding.UTF8.GetBytes(req.Content);
-                t.ContentHash = ComputeSha256(t.Content);
+                //t.ContentHash = ComputeSha256(t.Content);
                 t.UpdatedAtUtc = DateTime.UtcNow;
                 await _db.SaveChangesAsync(ct);
 
@@ -495,11 +513,12 @@ namespace S5Server.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка выдачи содержимого шаблона Id={Id}", id);
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Ошибка выдачи содержимого шаблона Id={Id}", id);
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
-
+        /*
         [HttpGet("{id}/details")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -541,7 +560,8 @@ namespace S5Server.Controllers
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
-
+        */
+        /*
         [HttpPost("{id}/preview/html")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [Produces("text/html")]
@@ -585,7 +605,8 @@ namespace S5Server.Controllers
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
-
+        */
+        /*
         [HttpPost("{id}/export")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> Export(string id,
@@ -620,7 +641,8 @@ namespace S5Server.Controllers
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
-
+        */
+        /*
         [HttpPost("export-from-html")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -651,5 +673,6 @@ namespace S5Server.Controllers
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
         }
+        */
     }
 }
