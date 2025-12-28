@@ -50,16 +50,31 @@
     <mat-card>
       <mat-card-header>
         <mat-card-title>Вибрані підрозділи ({{ selectedUnits().length }})</mat-card-title>
-        <button
-          mat-raised-button
-          color="accent"
-          (click)="openJsonEditor()"
-          [disabled]="selectedUnits().length === 0"
-          matTooltip="Переглянути дані у форматі JSON"
-        >
-          <mat-icon>data_object</mat-icon>
-          Дані документа
-        </button>
+        <div class="header-actions">
+          <button
+            mat-raised-button
+            color="accent"
+            (click)="openJsonEditor()"
+            [disabled]="selectedUnits().length === 0"
+            matTooltip="Переглянути дані у форматі JSON"
+          >
+            <mat-icon>data_object</mat-icon>
+            Дані документа
+          </button>
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="saveSelectedUnitsAsDataSet()"
+            [disabled]="selectedUnits().length === 0 || isSaving()"
+            matTooltip="Зберегти дані"
+          >
+            @if (isSaving()) {
+            <mat-icon>hourglass_empty</mat-icon>
+            } @else {
+            <mat-icon>save</mat-icon>
+            } Зберегти
+          </button>
+        </div>
       </mat-card-header>
 
       <mat-card-content>

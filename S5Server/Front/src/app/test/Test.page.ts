@@ -43,6 +43,8 @@ import { JsonEditorDialogComponent } from '../DocumentTemplates/components/JsonE
 import { ErrorHandler } from '../shared/models/ErrorHandler';
 import { DictDroneModelService } from '../../ServerService/dictDroneModel.service';
 import { LookupDto } from '../shared/models/lookup.models';
+import { TemplateDataSetService } from '../DocumentTemplates/services/template-dataset.service';
+import { TemplateDataSetCreateDto } from '../DocumentTemplates/models/template-dataset.models';
 import {
   isCriticalStatus,
   isSevereStatus,
@@ -84,6 +86,7 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
   private dictDroneModelService = inject(DictDroneModelService);
+  private dataSetService = inject(TemplateDataSetService);
   breakpointObserver = inject(BreakpointObserver);
 
   // --- ViewChild References ---
@@ -101,6 +104,9 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   // --- Document Info ---
   documentDate = signal<Date>(new Date());
   documentNumber = signal<string>('');
+
+  // --- Save State ---
+  isSaving = signal<boolean>(false);
 
   // --- Drone Model Autocomplete ---
   droneModelSearchControls = new Map<string, FormControl<LookupDto | string | null>>();
@@ -527,5 +533,83 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     this.selectedDroneModels.set(unitId, selectedDroneModel);
     // TODO: Зберегти вибрану модель в дані підрозділу
     console.log(`Selected drone model for unit ${unitId}:`, selectedDroneModel);
+  }
+
+  /**
+   * Зберігає вибрані підрозділи як набір даних
+   */
+  saveSelectedUnitsAsDataSet(): void {
+    if (this.selectedUnits().length === 0) {
+      this.snackBar.open('Немає вибраних підрозділів для збереження', 'Закрити', {
+        duration: 3000,
+      });
+      return;
+    }
+
+    // Формуємо дані для збереження
+    const dataToSave = {
+      documentDate: this.documentDate().toISOString(),
+      documentNumber: this.documentNumber(),
+      units: this.selectedUnits().map((unit) => ({
+        id: unit.id,
+        shortName: unit.shortName,
+        unitType: unit.unitType,
+        parentShortName: unit.parentShortName,
+        assignedShortName: unit.assignedShortName,
+        comment: unit.comment,
+        soldiers: unit.soldiers.map((soldier) => ({
+          fio: soldier.fio,
+          nickName: soldier.nickName,
+          rankShortValue: soldier.rankShortValue,
+          positionValue: soldier.positionValue,
+          stateValue: soldier.stateValue,
+          assignedUnitShortName: soldier.assignedUnitShortName,
+          arrivedAt: soldier.arrivedAt,
+          departedAt: soldier.departedAt,
+          comment: soldier.comment,
+        })),
+        selectedDroneModel: this.selectedDroneModels.get(unit.id),
+      })),
+      savedAt: new Date().toISOString(),
+    };
+
+    const dataJson = JSON.stringify(dataToSave, null, 2);
+
+    // Валідація JSON
+    try {
+      JSON.parse(dataJson);
+    } catch (e) {
+      const errorMessage = ErrorHandler.handleJsonError(e);
+      this.snackBar.open(errorMessage, 'Закрити', { duration: 7000 });
+      return;
+    }
+
+    // Генеруємо назву на основі дати та номера документа
+    const dateStr = this.documentDate().toLocaleDateString('uk-UA');
+    const docNum = this.documentNumber() || 'без номера';
+    const dataSetName = `Дані документа від ${dateStr} № ${docNum}`;
+
+    const createDto: TemplateDataSetCreateDto = {
+      name: dataSetName,
+      dataJson: dataJson,
+      isPublished: false,
+    };
+
+    this.isSaving.set(true);
+
+    this.dataSetService.createDataSet(createDto).subscribe({
+      next: (createdDataSet) => {
+        this.isSaving.set(false);
+        this.snackBar.open(`Дані успішно збережено як набір "${createdDataSet.name}"`, 'Закрити', {
+          duration: 5000,
+        });
+      },
+      error: (error) => {
+        this.isSaving.set(false);
+        console.error('Error saving dataset:', error);
+        const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка збереження даних');
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      },
+    });
   }
 }

@@ -2,16 +2,16 @@
     <div class="panel nav-panel" [style.width.%]="navPanelWidth()" [class.collapsed]="isNavPanelCollapsed()">
         <div class="panel-content" [class.hidden]="isNavPanelCollapsed()">
             <mat-tab-group>
+                <mat-tab label="Набори даних">
+                    <!-- DataSetTable Component -->
+                    <app-template-dataset-table (dataSetSelected)="onDataSetSelected($event)">
+                    </app-template-dataset-table>
+                </mat-tab>
                 <mat-tab label="Шаблони документів">
                     <!-- DocTemplate Component -->
                     <app-page-doc-templates [selectedTemplate]="selectedTemplate()"
                                             (templateSelected)="onTemplateSelected($event)">
                     </app-page-doc-templates>
-                </mat-tab>
-                <mat-tab label="Набори даних">
-                    <!-- DataSetTable Component -->
-                    <app-template-dataset-table (dataSetSelected)="onDataSetSelected($event)">
-                    </app-template-dataset-table>
                 </mat-tab>
             </mat-tab-group>
         </div>
@@ -32,17 +32,17 @@
 
     <div class="panel content-panel" [style.width.%]="contentPanelWidth()">
         <mat-tab-group dynamicHeight (selectedIndexChange)="onTabChange($event)">
-            <mat-tab label="Шаблон">
-                <!-- Template Editor -->
-                <app-template-editor #templateEditor
-                                     [template]="selectedTemplate()">
-                </app-template-editor>
-            </mat-tab>
             <mat-tab label="Дані документа">
                 <!-- DataSet Editor -->
                 <app-dataset-editor #dataSetEditor
                                     [dataSet]="selectedDataSet()">
                 </app-dataset-editor>
+            </mat-tab>
+            <mat-tab label="Шаблон">
+                <!-- Template Editor -->
+                <app-template-editor #templateEditor
+                                     [template]="selectedTemplate()">
+                </app-template-editor>
             </mat-tab>
             <mat-tab label="Результат обробки">
                 <!-- Result Editor -->

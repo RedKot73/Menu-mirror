@@ -36,6 +36,12 @@
       background-color: #e3f2fd;
       padding: 16px;
       margin: -16px -16px 0 -16px;
+
+      .header-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
     }
 
     mat-card-content {
