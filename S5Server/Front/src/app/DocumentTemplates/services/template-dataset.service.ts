@@ -13,7 +13,7 @@ import {
 //import { DocTemplateUtils } from '../Models/shared.models';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class TemplateDataSetService {
   private readonly http = inject(HttpClient);
@@ -26,7 +26,8 @@ export class TemplateDataSetService {
    * GET /api/templ_data/data-sets
    */
   getDataSets(): Observable<TemplateDataSetDto[]> {
-    return this.http.get<TemplateDataSetDto[]>(`${this.baseUrl}/data-sets`)
+    return this.http
+      .get<TemplateDataSetDto[]>(`${this.baseUrl}/data-sets`)
       .pipe(catchError(this.handleError));
   }
 
@@ -42,9 +43,10 @@ export class TemplateDataSetService {
     }
 
     // Подготовка данных для отправки
-    const serverDto = TemplateDataSetUtils.toServerDto(dto);
+    //const serverDto = TemplateDataSetUtils.toServerDto(dto);
 
-    return this.http.post<TemplateDataSetDto>(`${this.baseUrl}/data-sets`, serverDto)
+    return this.http
+      .post<TemplateDataSetDto>(`${this.baseUrl}/data-sets`, dto)
       .pipe(catchError(this.handleError));
   }
 
@@ -52,8 +54,9 @@ export class TemplateDataSetService {
    * Получить конкретный набор данных по ID
    * GET /api/templ_data/data-sets/{dataSetId}
    */
-  getDataSet(dataSetId: string): Observable<TemplateDataSetDto> {
-    return this.http.get<TemplateDataSetDto>(`${this.baseUrl}/data-sets/${dataSetId}`)
+  getDataSetById(dataSetId: string): Observable<TemplateDataSetDto> {
+    return this.http
+      .get<TemplateDataSetDto>(`${this.baseUrl}/data-sets/${dataSetId}`)
       .pipe(catchError(this.handleError));
   }
 
@@ -62,7 +65,8 @@ export class TemplateDataSetService {
    * DELETE /api/templ_data/data-sets/{dataSetId}
    */
   deleteDataSet(dataSetId: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/data-sets/${dataSetId}`)
+    return this.http
+      .delete<void>(`${this.baseUrl}/data-sets/${dataSetId}`)
       .pipe(catchError(this.handleError));
   }
 
@@ -73,7 +77,8 @@ export class TemplateDataSetService {
    * PUT /api/templ_data/data-sets/{dataSetId}
    */
   updateDataSet(dataSetId: string, dto: TemplateDataSetUpdateDto): Observable<void> {
-    return this.http.put<void>(`${this.baseUrl}/data-sets/${dataSetId}`, dto)
+    return this.http
+      .put<void>(`${this.baseUrl}/data-sets/${dataSetId}`, dto)
       .pipe(catchError(this.handleError));
   }
 
@@ -105,13 +110,13 @@ export class TemplateDataSetService {
    * Клонирование набора данных
    */
   cloneDataSet(dataSetId: string, newName: string): Observable<TemplateDataSetListItem> {
-    return new Observable(observer => {
-      this.getDataSet(dataSetId).subscribe({
+    return new Observable((observer) => {
+      this.getDataSetById(dataSetId).subscribe({
         next: (original) => {
           const cloneDto: TemplateDataSetCreateDto = {
             name: newName,
             dataJson: original.dataJson,
-            isPublished: false // Клоны по умолчанию не опубликованы
+            isPublished: false, // Клоны по умолчанию не опубликованы
           };
 
           this.createDataSet(cloneDto).subscribe({
@@ -119,10 +124,10 @@ export class TemplateDataSetService {
               observer.next(result);
               observer.complete();
             },
-            error: (error) => observer.error(error)
+            error: (error) => observer.error(error),
           });
         },
-        error: (error) => observer.error(error)
+        error: (error) => observer.error(error),
       });
     });
   }
@@ -131,7 +136,7 @@ export class TemplateDataSetService {
 
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'Произошла неизвестная ошибка';
-    
+
     if (error.error instanceof ErrorEvent) {
       // Клиентская ошибка
       errorMessage = `Ошибка: ${error.error.message}`;
@@ -169,7 +174,7 @@ export class TemplateDataSetService {
           errorMessage = `Ошибка сервера: ${error.status}`;
       }
     }
-    
+
     console.error('TemplateDataSetService Error:', error);
     return throwError(() => new Error(errorMessage));
   }

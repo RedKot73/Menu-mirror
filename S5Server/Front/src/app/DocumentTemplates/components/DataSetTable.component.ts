@@ -1,11 +1,4 @@
-import {
-  Component,
-  inject,
-  ViewChild,
-  effect,
-  signal,
-  output,
-} from '@angular/core';
+import { Component, inject, ViewChild, effect, signal, output, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -23,7 +16,6 @@ import { FormsModule } from '@angular/forms';
 
 import { TemplateDataSetService } from '../services/template-dataset.service';
 import { TemplateDataSetListItem } from '../models/template-dataset.models';
-import { CreateDataSetDialogComponent } from '../dialogs/CreateDataSet-dialog.component';
 import { ConfirmDialogComponent } from '../../dialogs/ConfirmDialog.component';
 import { DocTemplateUtils } from '../models/shared.models';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -49,7 +41,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     MatDividerModule,
   ],
 })
-export class DataSetTableComponent {
+export class DataSetTableComponent implements OnInit {
   private _sort: MatSort | null = null;
 
   @ViewChild(MatSort) set matSort(sort: MatSort) {
@@ -76,30 +68,21 @@ export class DataSetTableComponent {
   dataSource = new MatTableDataSource<TemplateDataSetListItem>([]);
 
   constructor() {
-    // Отслеживаем изменения выбранного шаблона
-    /*
-    effect(() => {
-      const template = this.selectedTemplate();
-      if (template) {
-        this.loadDataSets(template.id);
-      } else {
-        this.dataSets.set([]);
-        this.dataSource.data = [];
-        this.selectedDataSet.set(null);
-      }
-    });
-    */
-
     // Обновляем dataSource при изменении данных
     effect(() => {
       this.dataSource.data = this.dataSets();
     });
   }
 
+  ngOnInit(): void {
+    // Загружаем наборы данных при инициализации
+    this.loadDataSets();
+  }
+
   /**
    * Загружает наборы данных для шаблона
    */
-  private loadDataSets(): void {
+  loadDataSets(): void {
     this.isLoading.set(true);
     this.templateDataSetService.getDataSets().subscribe({
       next: (datasets) => {
@@ -127,52 +110,19 @@ export class DataSetTableComponent {
   /**
    * Создает новый набор данных
    */
+  /*
   createDataSet(): void {
     const dialogRef = this.dialog.open(CreateDataSetDialogComponent, {
       width: '700px',
       maxWidth: '90vw',
       disableClose: true,
-      data: {
-      },
+      data: {},
     });
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.refreshDataSets();
       }
-    });
-  }
-
-  /**
-   * Редактирует набор данных
-   */
-  editDataSet(dataSet: TemplateDataSetListItem): void {
-    // Сначала загружаем полные данные набора
-    this.isLoading.set(true);
-    this.templateDataSetService.getDataSet(dataSet.id).subscribe({
-      next: (fullDataSet) => {
-        this.isLoading.set(false);
-
-        const dialogRef = this.dialog.open(CreateDataSetDialogComponent, {
-          width: '700px',
-          maxWidth: '90vw',
-          disableClose: true,
-          data: {
-            dataSet: fullDataSet, // Передаем полные данные для редактирования
-          },
-        });
-
-        dialogRef.afterClosed().subscribe((result) => {
-          if (result) {
-            this.refreshDataSets();
-          }
-        });
-      },
-      error: (error) => {
-        this.isLoading.set(false);
-        console.error('Error loading dataset for edit:', error);
-        this.snackBar.open('Помилка завантаження наборів даних', 'Закрити', { duration: 5000 });
-      },
     });
   }
 
@@ -185,7 +135,8 @@ export class DataSetTableComponent {
 
     this.templateDataSetService.cloneDataSet(dataSet.id, newName).subscribe({
       next: () => {
-        this.refreshDataSets();
+        this.loadDataSets();
+            this.snackBar.open('Набір даних клоновано успішно', 'Закрити', { duration: 3000 });
       },
       error: (error) => {
         console.error('Error cloning dataset:', error);
@@ -221,7 +172,8 @@ export class DataSetTableComponent {
             if (this.selectedDataSet()?.id === dataSet.id) {
               this.selectedDataSet.set(null);
             }
-            this.refreshDataSets();
+            this.loadDataSets();
+            this.snackBar.open('Набір даних видалено успішно', 'Закрити', { duration: 3000 });
           },
           error: (error) => {
             console.error('Error deleting dataset:', error);
@@ -233,18 +185,6 @@ export class DataSetTableComponent {
     });
   }
 
-  /**
-   * Обновляет список наборов данных
-   */
-  refreshDataSets(): void {
-    /*
-    const template = this.selectedTemplate();
-    if (template) {
-      this.loadDataSets(template.id);
-    }
-    */
-    this.loadDataSets();
-  }
 
   /**
    * Получает читаемое название статуса публикации

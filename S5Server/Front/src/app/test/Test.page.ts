@@ -28,6 +28,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTabsModule } from '@angular/material/tabs';
 import { MatDialog } from '@angular/material/dialog';
 import {
   MatAutocompleteModule,
@@ -39,12 +40,18 @@ import { debounceTime, distinctUntilChanged, switchMap, startWith, finalize } fr
 import { UnitService, UnitDataSetDto } from '../Unit/services/unit.service';
 import { UnitTreeComponent } from '../Unit/UnitTree.component';
 import { UnitTreeNode } from '../Unit/unit-tree-node.component';
+import { DataSetTableComponent } from '../DocumentTemplates/components/DataSetTable.component';
 import { JsonEditorDialogComponent } from '../DocumentTemplates/components/JsonEditorDialog.component';
 import { ErrorHandler } from '../shared/models/ErrorHandler';
 import { DictDroneModelService } from '../../ServerService/dictDroneModel.service';
 import { LookupDto } from '../shared/models/lookup.models';
 import { TemplateDataSetService } from '../DocumentTemplates/services/template-dataset.service';
-import { TemplateDataSetCreateDto } from '../DocumentTemplates/models/template-dataset.models';
+import {
+  TemplateDataSetCreateDto,
+  TemplateDataSetUpdateDto,
+  TemplateDataSetListItem,
+  DocumentDataSet,
+} from '../DocumentTemplates/models/template-dataset.models';
 import {
   isCriticalStatus,
   isSevereStatus,
@@ -73,8 +80,10 @@ import {
     MatSortModule,
     MatMenuModule,
     MatDividerModule,
+    MatTabsModule,
     MatAutocompleteModule,
     UnitTreeComponent,
+    DataSetTableComponent,
   ],
   providers: [provideNativeDateAdapter()],
   templateUrl: './Test.page.html',
@@ -101,12 +110,16 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   // --- Selected Units List with DataSets ---
   selectedUnits = signal<UnitDataSetDto[]>([]);
 
+  // --- Current Loaded DataSet ---
+  currentDataSet = signal<TemplateDataSetListItem | null>(null);
+
   // --- Document Info ---
   documentDate = signal<Date>(new Date());
   documentNumber = signal<string>('');
 
   // --- Save State ---
   isSaving = signal<boolean>(false);
+  hasUnsavedChanges = signal<boolean>(false);
 
   // --- Drone Model Autocomplete ---
   droneModelSearchControls = new Map<string, FormControl<LookupDto | string | null>>();
@@ -372,8 +385,24 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   /**
    * Обновляет дерево подразделений
    */
-  refresh() {
+  loadUnitTree() {
     this.unitTree?.refresh();
+  }
+
+  /**
+   * Перевіряє наявність незбережених змін і запитує підтвердження
+   * @returns true якщо можна продовжити, false якщо користувач скасував
+   */
+  checkUnsavedChanges(): boolean {
+    if (this.hasUnsavedChanges()) {
+      const confirmed = confirm(
+        '⚠️ У вас є незбережені зміни!\n\n' +
+          'Якщо ви продовжите, всі незбережені дані будуть втрачені.\n\n' +
+          'Продовжити?'
+      );
+      return confirmed;
+    }
+    return true;
   }
 
   /**
@@ -391,6 +420,8 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     this.unitService.getUnitDataSet(node.id).subscribe({
       next: (unitDataSet) => {
         this.selectedUnits.set([...currentList, unitDataSet]);
+        // Позначаємо що є незбережені зміни
+        this.hasUnsavedChanges.set(true);
       },
       error: (error) => {
         console.error('Помилка завантаження даних підрозділу:', error);
@@ -409,6 +440,44 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   removeUnitFromSelection(nodeId: string) {
     const currentList = this.selectedUnits();
     this.selectedUnits.set(currentList.filter((u) => u.id !== nodeId));
+    // Позначаємо що є незбережені зміни
+    this.hasUnsavedChanges.set(true);
+  }
+
+  onDataSetSelected($event: TemplateDataSetListItem | null) {
+    // Перевіряємо чи немає незбережених змін перед завантаженням нового набору
+    if (!this.checkUnsavedChanges()) {
+      return; // Користувач скасував завантаження
+    }
+
+    this.dataSetService.getDataSetById($event!.id).subscribe({
+      next: (dataSet) => {
+        const documentData: DocumentDataSet = JSON.parse(dataSet.dataJson) as DocumentDataSet;
+        
+        // Зберігаємо інформацію про поточний завантажений DataSet
+        this.currentDataSet.set($event);
+        
+        // Оновлюємо дату та номер документа
+        this.documentDate.set(new Date(documentData.documentDate));
+        this.documentNumber.set(documentData.documentNumber);
+        
+        // Оновлюємо вибрані підрозділи
+        this.selectedUnits.set(documentData.units);
+        
+        // Скидаємо прапорець незбережених змін (ми щойно завантажили збережені дані)
+        this.hasUnsavedChanges.set(false);
+        
+        this.snackBar.open(`Завантажено набір "${dataSet.name}"`, 'Закрити', { duration: 3000 });
+      },
+      error: (error) => {
+        console.error('Помилка завантаження набору даних:', error);
+        const errorMessage = ErrorHandler.handleHttpError(
+          error,
+          'Помилка завантаження набору даних:'
+        );
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      },
+    });
   }
 
   /**
@@ -435,6 +504,7 @@ export class TestComponent implements AfterViewInit, OnDestroy {
         try {
           const updatedUnits = JSON.parse(result);
           this.selectedUnits.set(updatedUnits);
+          this.hasUnsavedChanges.set(true);
           this.snackBar.open('Дані успішно оновлено', 'Закрити', { duration: 3000 });
         } catch (error) {
           console.error('Error parsing JSON:', error);
@@ -531,8 +601,6 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   onDroneModelSelected(unitId: string, event: MatAutocompleteSelectedEvent): void {
     const selectedDroneModel = event.option.value as LookupDto | null;
     this.selectedDroneModels.set(unitId, selectedDroneModel);
-    // TODO: Зберегти вибрану модель в дані підрозділу
-    console.log(`Selected drone model for unit ${unitId}:`, selectedDroneModel);
   }
 
   /**
@@ -547,69 +615,116 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     }
 
     // Формуємо дані для збереження
-    const dataToSave = {
+    const dataToSave: DocumentDataSet = {
       documentDate: this.documentDate().toISOString(),
       documentNumber: this.documentNumber(),
-      units: this.selectedUnits().map((unit) => ({
-        id: unit.id,
-        shortName: unit.shortName,
-        unitType: unit.unitType,
-        parentShortName: unit.parentShortName,
-        assignedShortName: unit.assignedShortName,
-        comment: unit.comment,
-        soldiers: unit.soldiers.map((soldier) => ({
-          fio: soldier.fio,
-          nickName: soldier.nickName,
-          rankShortValue: soldier.rankShortValue,
-          positionValue: soldier.positionValue,
-          stateValue: soldier.stateValue,
-          assignedUnitShortName: soldier.assignedUnitShortName,
-          arrivedAt: soldier.arrivedAt,
-          departedAt: soldier.departedAt,
-          comment: soldier.comment,
-        })),
-        selectedDroneModel: this.selectedDroneModels.get(unit.id),
-      })),
+      units: this.selectedUnits(),
       savedAt: new Date().toISOString(),
     };
 
     const dataJson = JSON.stringify(dataToSave, null, 2);
-
-    // Валідація JSON
-    try {
-      JSON.parse(dataJson);
-    } catch (e) {
-      const errorMessage = ErrorHandler.handleJsonError(e);
-      this.snackBar.open(errorMessage, 'Закрити', { duration: 7000 });
-      return;
-    }
-
     // Генеруємо назву на основі дати та номера документа
     const dateStr = this.documentDate().toLocaleDateString('uk-UA');
-    const docNum = this.documentNumber() || 'без номера';
-    const dataSetName = `Дані документа від ${dateStr} № ${docNum}`;
-
-    const createDto: TemplateDataSetCreateDto = {
-      name: dataSetName,
-      dataJson: dataJson,
-      isPublished: false,
-    };
+    const docNum = this.documentNumber();
+    const dataSetName = docNum || `Дані документа від ${dateStr} № ${docNum}`;
 
     this.isSaving.set(true);
 
-    this.dataSetService.createDataSet(createDto).subscribe({
-      next: (createdDataSet) => {
-        this.isSaving.set(false);
-        this.snackBar.open(`Дані успішно збережено як набір "${createdDataSet.name}"`, 'Закрити', {
-          duration: 5000,
-        });
-      },
-      error: (error) => {
-        this.isSaving.set(false);
-        console.error('Error saving dataset:', error);
-        const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка збереження даних');
-        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-      },
-    });
+    // Перевіряємо чи є поточний завантажений DataSet
+    const currentDataSet = this.currentDataSet();
+    
+    if (currentDataSet) {
+      // Оновлюємо існуючий DataSet
+      const updateDto: TemplateDataSetUpdateDto = {
+        name: dataSetName,
+        dataJson: dataJson,
+        isPublished: currentDataSet.isPublished,
+      };
+
+      this.dataSetService.updateDataSet(currentDataSet.id, updateDto).subscribe({
+        next: () => {
+          this.isSaving.set(false);
+          this.hasUnsavedChanges.set(false);
+          this.snackBar.open(`Набір "${dataSetName}" успішно оновлено`, 'Закрити', {
+            duration: 5000,
+          });
+        },
+        error: (error) => {
+          this.isSaving.set(false);
+          console.error('Error updating dataset:', error);
+          const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка оновлення даних');
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
+      });
+    } else {
+      // Створюємо новий DataSet
+      const createDto: TemplateDataSetCreateDto = {
+        name: dataSetName,
+        dataJson: dataJson,
+        isPublished: false,
+      };
+
+      this.dataSetService.createDataSet(createDto).subscribe({
+        next: (createdDataSet) => {
+          this.isSaving.set(false);
+          this.hasUnsavedChanges.set(false);
+          // Зберігаємо інформацію про новостворений DataSet
+          this.currentDataSet.set({
+            id: createdDataSet.id,
+            name: createdDataSet.name,
+            isPublished: createdDataSet.isPublished,
+            createdAtUtc: createdDataSet.createdAtUtc,
+            updatedAtUtc: createdDataSet.updatedAtUtc,
+            publishedAtUtc: createdDataSet.publishedAtUtc,
+          });
+          this.snackBar.open(`Дані успішно збережено як набір "${createdDataSet.name}"`, 'Закрити', {
+            duration: 5000,
+          });
+        },
+        error: (error) => {
+          this.isSaving.set(false);
+          console.error('Error creating dataset:', error);
+          const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка збереження даних');
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
+      });
+    }
+  }
+
+  /**
+   * Створює новий набір даних (очищає форму)
+   */
+  createNewDataSet(): void {
+    // Перевіряємо наявність незбережених змін
+    if (!this.checkUnsavedChanges()) {
+      return;
+    }
+
+    // Очищаємо поточний DataSet (переходимо в режим створення нового)
+    this.currentDataSet.set(null);
+
+    // Очищуємо всі дані
+    this.selectedUnits.set([]);
+    this.documentDate.set(new Date());
+    this.documentNumber.set('');
+    this.selectedDroneModels.clear();
+    this.droneModelSearchControls.clear();
+    this.filteredDroneModels.clear();
+    this.isLoadingDroneModels.clear();
+
+    // Скидаємо прапорець стану
+    this.hasUnsavedChanges.set(false);
+
+    this.snackBar.open('Створено новий набір даних', 'Закрити', { duration: 3000 });
+  }
+
+  /**
+   * Перевіряє перед закриттям сторінки
+   */
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: BeforeUnloadEvent): void {
+    if (this.hasUnsavedChanges()) {
+      $event.preventDefault();
+    }
   }
 }

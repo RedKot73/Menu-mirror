@@ -1,5 +1,7 @@
 // Модели для работы с TemplateDataSet API
 
+import { UnitDataSetDto } from '../../Unit/services/unit.service';
+
 // DTO для передачи данных TemplateDataSet (соответствует TemplateDataSetDto)
 export interface TemplateDataSetDto {
   id: string;
@@ -35,43 +37,19 @@ export interface TemplateDataSetUpdateDto {
   isPublished: boolean;
 }
 
+/**
+ * Полная модель данных документа (сохраняется в dataJson)
+ * Использует UnitDataSetDto из unit.service для подразделений
+ */
+export interface DocumentDataSet {
+  documentDate: string; // ISO date string
+  documentNumber: string;
+  units: UnitDataSetDto[];
+  savedAt: string; // ISO date string
+}
+
 // Утилиты для работы с TemplateDataSet
 export class TemplateDataSetUtils {
-  /**
-   * Проверяет, является ли JSON строка валидной
-   */
-  static isValidJson(jsonString: string): boolean {
-    try {
-      JSON.parse(jsonString);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Форматирует JSON строку с отступами
-   */
-  static formatJson(jsonString: string, spaces: number = 2): string {
-    try {
-      const parsed = JSON.parse(jsonString);
-      return JSON.stringify(parsed, null, spaces);
-    } catch {
-      return jsonString;
-    }
-  }
-
-  /**
-   * Создает пустой DataSet для формы
-   */
-  static createEmpty(): Partial<TemplateDataSetCreateDto> {
-    return {
-      name: '',
-      dataJson: '{}',
-      isPublished: false
-    };
-  }
-
   /**
    * Валидирует DataSet перед отправкой
    */
@@ -82,7 +60,7 @@ export class TemplateDataSetUtils {
       errors.push('Название набора данных обязательно');
     }
 
-    if (dataSet.name && dataSet.name.length > 150) {
+    if (dataSet.name.length > 150) {
       errors.push('Название не должно превышать 150 символов');
     }
 
@@ -90,55 +68,15 @@ export class TemplateDataSetUtils {
       errors.push('JSON данные обязательны');
     }
 
-    if (dataSet.dataJson && !this.isValidJson(dataSet.dataJson)) {
+    try {
+      JSON.parse(dataSet.dataJson);
+    } catch {
       errors.push('JSON данные должны быть в валидном формате');
     }
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
-
-  /**
-   * Преобразует DTO в формат для отправки на сервер
-   */
-  static toServerDto(dto: TemplateDataSetCreateDto): TemplateDataSetCreateDto {
-    return {
-      name: dto.name.trim(),
-      dataJson: dto.dataJson.trim(),
-      isPublished: dto.isPublished
-    };
-  }
-
-  /**
-   * Создает DTO для обновления из существующего DataSet
-   */
-  static toUpdateDto(dataSet: TemplateDataSetDto): TemplateDataSetUpdateDto {
-    return {
-      name: dataSet.name,
-      dataJson: dataSet.dataJson,
-      isPublished: dataSet.isPublished
-    };
-  }
-}
-
-// Интерфейс для результата валидации
-export interface ValidationResult {
-  valid: boolean;
-  errors: string[];
-}
-
-// Интерфейс для фильтрации DataSets
-export interface TemplateDataSetFilter {
-  isPublished?: boolean;
-  searchText?: string;
-  dateFrom?: string;
-  dateTo?: string;
-}
-
-// Интерфейс для сортировки DataSets
-export interface TemplateDataSetSort {
-  field: 'name' | 'createdAtUtc' | 'updatedAtUtc' | 'isPublished';
-  direction: 'asc' | 'desc';
 }

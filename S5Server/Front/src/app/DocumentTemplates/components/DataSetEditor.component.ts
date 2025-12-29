@@ -101,25 +101,28 @@ export class DataSetEditorComponent {
         this.isLoading.set(true);
         this.loadError.set('');
 
-        this.dataSetService.getDataSet(dataSet.id).subscribe({
-            next: (fullData: TemplateDataSetDto) => {
-                this.fullDataSet.set(fullData);
-                
-                // Встановлюємо значення у форму
-                this.dataJsonControl.setValue(fullData.dataJson);
-                this.dataJsonControl.markAsPristine();
-                this.dataJsonControl.markAsUntouched();
-                this.formDirty.set(false);
-                this.originalContent.set(fullData.dataJson);
-                this.isLoading.set(false);
-            },
-            error: (error) => {
-                console.error('Error loading dataset content:', error);
-                const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка завантаження вмісту набору даних');
-                this.loadError.set(errorMessage);
-                this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-                this.isLoading.set(false);
-            }
+        this.dataSetService.getDataSetById(dataSet.id).subscribe({
+          next: (fullData: TemplateDataSetDto) => {
+            this.fullDataSet.set(fullData);
+
+            // Встановлюємо значення у форму
+            this.dataJsonControl.setValue(fullData.dataJson);
+            this.dataJsonControl.markAsPristine();
+            this.dataJsonControl.markAsUntouched();
+            this.formDirty.set(false);
+            this.originalContent.set(fullData.dataJson);
+            this.isLoading.set(false);
+          },
+          error: (error) => {
+            console.error('Error loading dataset content:', error);
+            const errorMessage = ErrorHandler.handleHttpError(
+              error,
+              'Помилка завантаження вмісту набору даних'
+            );
+            this.loadError.set(errorMessage);
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+            this.isLoading.set(false);
+          },
         });
     }
 

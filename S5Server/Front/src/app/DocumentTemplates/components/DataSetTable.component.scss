@@ -1,79 +1,12 @@
 .panel-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
-  margin-bottom: 1rem;
-  padding: 0.5rem;
+  //gap: 8px;
+  margin-bottom: 0.5rem;
+  //padding: 0.1rem;
   background-color: #e3f2fd;
   border-bottom: 1px solid #ddd;
-
-  h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 500;
-  color: #1976d2;
-  }
-
-  .header-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-}
-
-.dataset-container {
-  padding: 16px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.dataset-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.dataset-header h3 {
-  margin: 0;
-  color: #333;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.template-info {
-  margin-bottom: 16px;
-}
-
-.no-template {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-  color: #666;
-  text-align: center;
-}
-
-.no-template mat-icon {
-  font-size: 48px;
-  width: 48px;
-  height: 48px;
-  margin-bottom: 16px;
-  color: #ccc;
-}
-
-.search-container {
-  margin-bottom: 16px;
-}
-
-.search-field {
-  width: 100%;
 }
 
 .loading-container {
@@ -83,10 +16,10 @@
   justify-content: center;
   padding: 40px;
   color: #666;
-}
 
-.loading-container p {
-  margin-top: 16px;
+  p {
+    margin-top: 16px;
+  }
 }
 
 .table-container {
@@ -99,20 +32,20 @@
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
 
-.datasets-table th {
-  background-color: #fafafa;
-  font-weight: 600;
-}
+  th {
+    background-color: #fafafa;
+    font-weight: 600;
+  }
 
-.datasets-table tr:hover {
-  background-color: #f5f5f5;
-  cursor: pointer;
-}
+  tr:hover {
+    background-color: #f5f5f5;
+    cursor: pointer;
+  }
 
-.datasets-table tr.selected {
-  background-color: #e3f2fd !important;
+  tr.selected {
+    background-color: #e3f2fd !important;
+  }
 }
 
 .dataset-name {
@@ -127,12 +60,12 @@
   padding: 40px;
   color: #666;
   text-align: center;
-}
 
-.no-data mat-icon {
-  font-size: 48px;
-  width: 48px;
-  height: 48px;
-  margin-bottom: 16px;
-  color: #ccc;
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    color: #ccc;
+  }
 }

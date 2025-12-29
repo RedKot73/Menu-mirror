@@ -4,29 +4,42 @@
     [style.width.%]="navPanelWidth()"
     [class.collapsed]="isNavPanelCollapsed()"
   >
-    <div class="panel-header" [class.hidden]="isNavPanelCollapsed()">
-      <h3>Дерево підрозділів</h3>
-      <div class="header-actions">
-        <button mat-raised-button color="primary" (click)="refresh()" [disabled]="loading()">
-          <mat-icon>refresh</mat-icon>
-          Оновити
-        </button>
-      </div>
-    </div>
     <div class="panel-content" [class.hidden]="isNavPanelCollapsed()">
-      <!-- Кастомный шаблон действий узла -->
-      <ng-template #nodeActions let-node>
-        <button
-          mat-icon-button
-          matTooltip="Додати до списку вибору"
-          (click)="addUnitToSelection(node); $event.stopPropagation()"
-        >
-          <mat-icon color="primary">add_circle</mat-icon>
-        </button>
-      </ng-template>
+      <mat-tab-group>
+        <mat-tab label="Дерево підрозділів">
+          <!-- Кастомный шаблон действий узла -->
+          <ng-template #nodeActions let-node>
+            <button
+              mat-icon-button
+              matTooltip="Додати до списку вибору"
+              (click)="addUnitToSelection(node); $event.stopPropagation()"
+            >
+              <mat-icon color="primary">add_circle</mat-icon>
+            </button>
+          </ng-template>
 
-      <!-- Дерево подразделений с кастомными действиями -->
-      <unit-tree class="unit-tree" [nodeActionsTemplate]="nodeActions"></unit-tree>
+          <!-- Дерево подразделений с кастомными действиями -->
+          <div class="panel-header">
+            <button mat-icon-button (click)="loadUnitTree()" matTooltip="Оновити перелік">
+              <mat-icon>refresh</mat-icon>
+            </button>
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="createNewDataSet()"
+              matTooltip="Створити набір"
+            >
+              <mat-icon>add</mat-icon>
+              Створити набір
+            </button>
+          </div>
+          <unit-tree class="unit-tree" [nodeActionsTemplate]="nodeActions"></unit-tree>
+        </mat-tab>
+        <mat-tab label="Набори даних">
+          <!-- Таблица з наборами даних -->
+          <app-template-dataset-table class="dataset-table" (dataSetSelected)="onDataSetSelected($event)"></app-template-dataset-table>
+        </mat-tab>
+      </mat-tab-group>
     </div>
   </div>
 
@@ -49,7 +62,13 @@
   <div class="panel content-panel" [style.width.%]="contentPanelWidth()">
     <mat-card>
       <mat-card-header>
-        <mat-card-title>Вибрані підрозділи ({{ selectedUnits().length }})</mat-card-title>
+        <mat-card-title>
+          Вибрані підрозділи ({{ selectedUnits().length }}) @if (hasUnsavedChanges()) {
+          <mat-icon class="unsaved-indicator" matTooltip="Є незбережені зміни" color="warn">
+            warning
+          </mat-icon>
+          }
+        </mat-card-title>
         <div class="header-actions">
           <button
             mat-raised-button

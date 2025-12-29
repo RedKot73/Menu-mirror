@@ -1,16 +1,16 @@
 <!-- Header -->
 <div class="panel-header">
-  <div class="header-actions">
-    <button mat-icon-button (click)="refreshDataSets()" matTooltip="Оновити перелік">
-      <mat-icon>refresh</mat-icon>
-    </button>
-    <button mat-raised-button color="primary" (click)="createDataSet()" matTooltip="Створити набір">
-      <mat-icon>add</mat-icon>
-      Створити набір
-    </button>
-  </div>
+  <button mat-icon-button (click)="loadDataSets()" matTooltip="Оновити перелік">
+    <mat-icon>refresh</mat-icon>
+  </button>
+  <!--
+  <button mat-raised-button color="primary" (click)="createDataSet()" matTooltip="Створити набір">
+    <mat-icon>add</mat-icon>
+    Створити набір
+  </button>
+  -->
 </div>
-
+  
 <!-- Loading -->
 @if (isLoading()) {
 <div class="loading-container">
@@ -71,10 +71,12 @@
         <!-- Actions Menu -->
         <mat-menu #datasetMenu="matMenu">
           <ng-template matMenuContent let-dataSet="dataSet">
+            <!--
             <button mat-menu-item (click)="editDataSet(dataSet)">
               <mat-icon>edit</mat-icon>
               <span>Редагувати</span>
             </button>
+            -->
             <button mat-menu-item (click)="cloneDataSet(dataSet)">
               <mat-icon>content_copy</mat-icon>
               <span>Клонувати</span>
