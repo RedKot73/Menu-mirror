@@ -470,31 +470,48 @@
   }
 }
 
-.status-published {
-  background-color: #e8f5e8 !important;
-  color: #388e3c !important;
+// Перемикач статусу публікації
+.status-toggle {
+  mat-button-toggle {
+    &[aria-pressed='true'] {
+      &:has(mat-icon) {
+        font-weight: 600;
+      }
+    }
 
-  mat-icon {
-    font-size: 16px !important;
-    width: 16px !important;
-    height: 16px !important;
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      margin-right: 4px;
+    }
   }
-}
 
-.status-draft {
-  background-color: #fff3e0 !important;
-  color: #f57c00 !important;
+  // Стилі для опублікованого статусу
+  mat-button-toggle[ng-reflect-value='true'][aria-pressed='true'] {
+    background-color: #e8f5e8;
+    color: #388e3c;
 
-  mat-icon {
-    font-size: 16px !important;
-    width: 16px !important;
-    height: 16px !important;
+    mat-icon {
+      color: #388e3c;
+    }
+  }
+
+  // Стилі для чернетки
+  mat-button-toggle[ng-reflect-value='false'][aria-pressed='true'] {
+    background-color: #fff3e0;
+    color: #f57c00;
+
+    mat-icon {
+      color: #f57c00;
+    }
   }
 }
 
 // Анімація для індикатора незбережених змін
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {

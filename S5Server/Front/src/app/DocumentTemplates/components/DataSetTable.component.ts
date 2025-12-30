@@ -129,6 +129,7 @@ export class DataSetTableComponent implements OnInit {
   /**
    * Клонирует набор данных
    */
+  /*
   cloneDataSet(dataSet: TemplateDataSetListItem): void {
     const newName = `${dataSet.name} (копія)`;
     this.isLoading.set(true);
@@ -145,7 +146,8 @@ export class DataSetTableComponent implements OnInit {
       },
     });
   }
-
+  */
+ 
   /**
    * Удаляет набор данных
    */

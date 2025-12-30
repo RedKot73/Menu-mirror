@@ -30,6 +30,7 @@ import { MatSortModule } from '@angular/material/sort';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDialog } from '@angular/material/dialog';
 import {
   MatAutocompleteModule,
@@ -84,6 +85,7 @@ import { DocTemplateUtils } from '../DocumentTemplates/models/shared.models';
     MatMenuModule,
     MatDividerModule,
     MatTabsModule,
+    MatButtonToggleModule,
     MatAutocompleteModule,
     UnitTreeComponent,
     DataSetTableComponent,
@@ -725,14 +727,59 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     this.snackBar.open('Створено новий набір даних', 'Закрити', { duration: 3000 });
   }
 
-    /**
-     * Отримує читабельну назву статусу публікації
-     */
-    getStatusLabel(isPublished: boolean): string {
-        return DocTemplateUtils.getStatusLabel(isPublished);
+  /**
+   * Отримує читабельну назву статусу публікації
+   */
+  getStatusLabel(isPublished: boolean): string {
+    return DocTemplateUtils.getStatusLabel(isPublished);
+  }
+
+  /**
+   * Обробник зміни статусу публікації
+   */
+  onPublishStatusChange(isPublished: boolean): void {
+    const currentDataSet = this.dataSet();
+    if (!currentDataSet) {
+      this.snackBar.open('Немає завантаженого набору даних', 'Закрити', { duration: 3000 });
+      return;
     }
 
-    /**
+    // Перевіряємо чи статус дійсно змінився
+    if (currentDataSet.isPublished === isPublished) {
+      return;
+    }
+
+    this.isSaving.set(true);
+
+    this.dataSetService.publish(currentDataSet.id, isPublished).subscribe({
+      next: () => {
+        this.isSaving.set(false);
+        // Оновлюємо статус в локальному signal
+        this.dataSet.set({
+          ...currentDataSet,
+          isPublished: isPublished,
+          publishedAtUtc: isPublished ? new Date().toISOString() : undefined,
+          updatedAtUtc: new Date().toISOString(),
+        });
+
+        const statusText = isPublished ? 'опубліковано' : 'знято з публікації';
+        this.snackBar.open(`Набір "${currentDataSet.name}" ${statusText}`, 'Закрити', {
+          duration: 3000,
+        });
+      },
+      error: (error) => {
+        this.isSaving.set(false);
+        console.error('Error changing publish status:', error);
+        const errorMessage = ErrorHandler.handleHttpError(
+          error,
+          'Помилка зміни статусу публікації'
+        );
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      },
+    });
+  }
+
+  /**
    * Перевіряє перед закриттям сторінки
    */
   @HostListener('window:beforeunload', ['$event'])

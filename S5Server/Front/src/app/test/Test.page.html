@@ -37,7 +37,10 @@
         </mat-tab>
         <mat-tab label="Набори даних">
           <!-- Таблица з наборами даних -->
-          <app-template-dataset-table class="dataset-table" (dataSetSelected)="onDataSetSelected($event)"></app-template-dataset-table>
+          <app-template-dataset-table
+            class="dataset-table"
+            (dataSetSelected)="onDataSetSelected($event)"
+          ></app-template-dataset-table>
         </mat-tab>
       </mat-tab-group>
     </div>
@@ -63,24 +66,30 @@
     <mat-card>
       <mat-card-header>
         <mat-card-title>
-          Вибрані підрозділи ({{ selectedUnits().length }}) 
+          Вибрані підрозділи ({{ selectedUnits().length }})
           @if (hasUnsavedChanges()) {
           <mat-icon class="unsaved-indicator" matTooltip="Є незбережені зміни" color="warn">
             warning
           </mat-icon>
           }
-            @let isPublished = dataSet()?.isPublished || false;
-            @if (isPublished) {
-            <mat-chip class="status-published">
-                <mat-icon>check_circle</mat-icon>
-                {{ getStatusLabel(isPublished) }}
-            </mat-chip>
-            } @else {
-            <mat-chip class="status-draft">
-                <mat-icon>edit</mat-icon>
-                {{ getStatusLabel(isPublished) }}
-            </mat-chip>
-            }
+          @let currentDataSet = dataSet();
+          @if (currentDataSet) {
+          <mat-button-toggle-group
+            [value]="currentDataSet.isPublished"
+            (change)="onPublishStatusChange($event.value)"
+            class="status-toggle"
+            [disabled]="isSaving()"
+          >
+            <mat-button-toggle [value]="false" matTooltip="Чернетка">
+              <mat-icon>edit</mat-icon>
+              {{ getStatusLabel(false) }}
+            </mat-button-toggle>
+            <mat-button-toggle [value]="true" matTooltip="Опубліковано">
+              <mat-icon>check_circle</mat-icon>
+              {{ getStatusLabel(true) }}
+            </mat-button-toggle>
+          </mat-button-toggle-group>
+          }
         </mat-card-title>
         <div class="header-actions">
           <button

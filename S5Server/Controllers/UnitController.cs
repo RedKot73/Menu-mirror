@@ -88,10 +88,6 @@ namespace S5Server.Controllers
                     _set.Any(c => c.ParentId == u.Id)//поле HasChildren
                 ))
                 .ToListAsync(ct);
-            /*
-            _logger.LogInformation("Завантажено {Count} підрозділів для ParentId={ParentId}, Search={Search}",
-                list.Count, parentId ?? "всі", search ?? "без фільтру");
-            */
             return Ok(list);
         }
 

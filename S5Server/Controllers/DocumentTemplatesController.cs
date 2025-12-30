@@ -1,11 +1,5 @@
-﻿using System.Net.Http;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
+﻿using System.Text;
 
-using DocumentFormat.OpenXml.Office2010.Excel;
-
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,28 +15,15 @@ namespace S5Server.Controllers
     {
         private readonly MainDbContext _db;
         private readonly DbSet<DocumentTemplate> _set;
-        //private readonly TemplateRenderer _renderer;
         private readonly ILogger<DocumentTemplatesController> _logger;
 
         public DocumentTemplatesController(MainDbContext db,
-            //TemplateRenderer renderer,
             ILogger<DocumentTemplatesController> logger)
         {
             _db = db;
             _set = _db.DocumentTemplates;
-            //_renderer = renderer;
             _logger = logger;
         }
-
-        //public record RenderRequest(string? DataJson, string Export /* html|txt|docx|pdf */);
-        //public record ClientHtmlExportRequest(string Name, string Html, string Export /* html|txt|pdf|docx*/);
-        /*
-        private static string ComputeSha256(byte[] data)
-        {
-            var hash = SHA256.HashData(data);
-            return Convert.ToHexString(hash).ToLowerInvariant();
-        }
-        */
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -114,10 +95,7 @@ namespace S5Server.Controllers
                 return Problem(statusCode: 400, title: "Файл шаблона не передано");
             if (dto.File.Length == 0)//Проверить DefaultDataSetId
                 return Problem(statusCode: 400, title: "Файл шаблона порожній");
-            /*
-            if (!DocumentTemplate.TryParseFormat(dto.Format, out var format))
-                return Problem(statusCode: 400, title: "Поддерживаемые форматы: html, txt, docx, pdf");
-            */
+
             try
             {
                 using var ms = new MemoryStream();
@@ -128,12 +106,9 @@ namespace S5Server.Controllers
                 {
                     Name = dto.Name.Trim(),
                     Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim(),
-                    //Format = format,
                     Content = content,
-                    //ContentHash = ComputeSha256(content),
                     TemplateCategoryId = dto.TemplateCategoryId,
                     IsPublished = dto.IsPublished,
-                    //DefaultDataSetId = string.IsNullOrWhiteSpace(dto.DefaultDataSetId) ? null : dto.DefaultDataSetId.Trim(),
                     CreatedAtUtc = DateTime.UtcNow,
                     UpdatedAtUtc = DateTime.UtcNow
                 };
@@ -189,22 +164,12 @@ namespace S5Server.Controllers
             if (t == null)
                 return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
 
-            // Формат — если не пришёл, используем текущий
-            /*
-            if (!string.IsNullOrWhiteSpace(dto.Format))
-            {
-                if (!DocumentTemplate.TryParseFormat(dto.Format, out var newFormat))
-                    return Problem(statusCode: 400, title: "Поддерживаемые форматы: html, txt, docx, pdf");
-                t.Format = newFormat;
-            }
-            */
             if (dto.File != null && dto.File.Length > 0)
             {
                 using var ms = new MemoryStream();
                 await dto.File.CopyToAsync(ms, ct);
                 var content = ms.ToArray();
                 t.Content = content;
-                //t.ContentHash = ComputeSha256(content);
             }
 
             t.Name = dto.Name.Trim();
@@ -347,47 +312,6 @@ namespace S5Server.Controllers
             }
         }
 
-        [HttpPatch("{id}/default-data-set")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        /*
-        public async Task<IActionResult> SetDefaultDataSet(string id, [FromBody] SetDefaultDataSetDto dto, CancellationToken ct = default)
-        {
-            try
-            {
-                var t = await _set
-                    .AsTracking()
-                    .FirstOrDefaultAsync(x => x.Id == id, ct);
-                if (t == null)
-                    return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
-
-                if (string.IsNullOrWhiteSpace(dto.DefaultDataSetId))
-                {
-                    t.DefaultDataSetId = null;
-                }
-                else
-                {
-                    var dsId = dto.DefaultDataSetId.Trim();
-                    // Валидацию принадлежности набора данных шаблону можно вернуть при необходимости
-                    t.DefaultDataSetId = dsId;
-                }
-
-                t.UpdatedAtUtc = DateTime.UtcNow;
-                await _db.SaveChangesAsync(ct);
-                return NoContent();
-            }
-            catch (OperationCanceledException)
-            {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка установки дефолтного набора данных Id={Id}", id);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
-            }
-        }
-        */
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -455,16 +379,8 @@ namespace S5Server.Controllers
                 if (t == null)
                     return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
 
-                // Поддерживаем клиентский рендер только для html/txt
-                //if (t.Format is DocumentTemplate.TemplateFormat.Html or DocumentTemplate.TemplateFormat.Txt)
-                {
-                    var text = Encoding.UTF8.GetString(t.Content);
-                    return Content(text, "text/plain; charset=utf-8");
-                }
-                /*
-                return Problem(statusCode: 415, title: "Неподдерживаемый формат",
-                               detail: $"Для формата '{DocumentTemplate.FormatToString(t.Format)}' контент как текст недоступен.");
-                */
+                var text = Encoding.UTF8.GetString(t.Content);
+                return Content(text, "text/plain; charset=utf-8");
             }
             catch (OperationCanceledException)
             {

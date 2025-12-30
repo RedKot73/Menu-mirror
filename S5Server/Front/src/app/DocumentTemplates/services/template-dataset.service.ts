@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -6,10 +6,10 @@ import { catchError } from 'rxjs/operators';
 import {
     TemplateDataSetDto,
     TemplateDataSetCreateDto,
-    TemplateDataSetListItem,
     TemplateDataSetUpdateDto,
     TemplateDataSetUtils
 } from '../models/template-dataset.models';//'../Models/template-dataset.models';
+import { ErrorHandler } from '../../shared/models/ErrorHandler';
 //import { DocTemplateUtils } from '../Models/shared.models';
 
 @Injectable({
@@ -28,7 +28,12 @@ export class TemplateDataSetService {
   getDataSets(): Observable<TemplateDataSetDto[]> {
     return this.http
       .get<TemplateDataSetDto[]>(`${this.baseUrl}/data-sets`)
-      .pipe(catchError(this.handleError));
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          const message = ErrorHandler.handleHttpError(error, 'Не вдалося отримати набори даних');
+          return throwError(() => new Error(message));
+        })
+      );
   }
 
   /**
@@ -47,7 +52,12 @@ export class TemplateDataSetService {
 
     return this.http
       .post<TemplateDataSetDto>(`${this.baseUrl}/data-sets`, dto)
-      .pipe(catchError(this.handleError));
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          const message = ErrorHandler.handleHttpError(error, 'Не вдалося створити набір даних');
+          return throwError(() => new Error(message));
+        })
+      );
   }
 
   /**
@@ -57,7 +67,12 @@ export class TemplateDataSetService {
   getDataSetById(dataSetId: string): Observable<TemplateDataSetDto> {
     return this.http
       .get<TemplateDataSetDto>(`${this.baseUrl}/data-sets/${dataSetId}`)
-      .pipe(catchError(this.handleError));
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          const message = ErrorHandler.handleHttpError(error, 'Не вдалося отримати набір даних');
+          return throwError(() => new Error(message));
+        })
+      );
   }
 
   /**
@@ -67,7 +82,12 @@ export class TemplateDataSetService {
   deleteDataSet(dataSetId: string): Observable<void> {
     return this.http
       .delete<void>(`${this.baseUrl}/data-sets/${dataSetId}`)
-      .pipe(catchError(this.handleError));
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          const message = ErrorHandler.handleHttpError(error, 'Не вдалося видалити набір даних');
+          return throwError(() => new Error(message));
+        })
+    );
   }
 
   // === Дополнительные методы (будущие расширения) ===
@@ -79,36 +99,45 @@ export class TemplateDataSetService {
   updateDataSet(dataSetId: string, dto: TemplateDataSetUpdateDto): Observable<void> {
     return this.http
       .put<void>(`${this.baseUrl}/data-sets/${dataSetId}`, dto)
-      .pipe(catchError(this.handleError));
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          const message = ErrorHandler.handleHttpError(error, 'Не вдалося оновити набір даних');
+          return throwError(() => new Error(message));
+        })
+    );
   }
 
   // === Работа с сигналами ===
   /**
    * Создает реактивный сигнал для списка наборов данных
    */
+  /*
   createItemsSignal() {
     return signal<TemplateDataSetListItem[]>([]);
   }
-
+*/
   /**
    * Создает реактивный сигнал для текущего набора данных
    */
+  /*
   createCurrentSignal() {
     return signal<TemplateDataSetDto | null>(null);
   }
-
+*/
   /**
    * Создает реактивный сигнал для состояния загрузки
    */
+  /*
   createLoadingSignal() {
     return signal<boolean>(false);
   }
-
+*/
   // === Методы для работы с множественными операциями ===
 
   /**
    * Клонирование набора данных
    */
+/*  
   cloneDataSet(dataSetId: string, newName: string): Observable<TemplateDataSetListItem> {
     return new Observable((observer) => {
       this.getDataSetById(dataSetId).subscribe({
@@ -131,76 +160,45 @@ export class TemplateDataSetService {
       });
     });
   }
+*/
 
-  // === Обработка ошибок ===
-
-  private handleError(error: HttpErrorResponse): Observable<never> {
-    let errorMessage = 'Произошла неизвестная ошибка';
-
-    if (error.error instanceof ErrorEvent) {
-      // Клиентская ошибка
-      errorMessage = `Ошибка: ${error.error.message}`;
-    } else {
-      // Серверная ошибка
-      switch (error.status) {
-        case 400:
-          errorMessage = 'Неверные данные запроса';
-          if (error.error?.title) {
-            errorMessage = error.error.title;
-            if (error.error.detail) {
-              errorMessage += `: ${error.error.detail}`;
-            }
-          }
-          break;
-        case 404:
-          errorMessage = 'Набор данных не найден';
-          if (error.error?.detail) {
-            errorMessage += `: ${error.error.detail}`;
-          }
-          break;
-        case 409:
-          errorMessage = 'Конфликт данных (например, дублирование имени)';
-          if (error.error?.detail) {
-            errorMessage = error.error.detail;
-          }
-          break;
-        case 499:
-          errorMessage = 'Запрос отменен';
-          break;
-        case 500:
-          errorMessage = 'Внутренняя ошибка сервера';
-          break;
-        default:
-          errorMessage = `Ошибка сервера: ${error.status}`;
-      }
-    }
-
-    console.error('TemplateDataSetService Error:', error);
-    return throwError(() => new Error(errorMessage));
+  publish(id: string, set_publish: boolean): Observable<void> {
+    // POST /api/templ_data/{id}/publish/{set_publish}
+    return this.http
+      .post<void>(`${this.baseUrl}/${id}/publish/${set_publish ? 'true' : 'false'}`, {})
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          const message = ErrorHandler.handleHttpError(
+            error,
+            'Не вдалося змінити статус публікації набору даних'
+          );
+          return throwError(() => new Error(message));
+        })
+      );
   }
 }
 
 // === Интерфейс для работы с сервисом ===
-
+/*
 export interface TemplateDataSetServiceConfig {
   baseUrl?: string;
   timeout?: number;
   retryAttempts?: number;
 }
-
+*/
 // === Дополнительные типы для удобства ===
 
-export type DataSetOperation = 'create' | 'update' | 'delete' | 'clone';
-
+//export type DataSetOperation = 'create' | 'update' | 'delete' | 'clone';
+/*
 export interface DataSetOperationResult {
   success: boolean;
   message: string;
   data?: unknown;
   errors?: string[];
 }
-
+*/
 // === Константы ===
-
+/*
 export const TEMPLATE_DATASET_CONSTANTS = {
   MAX_NAME_LENGTH: 150,
   DEFAULT_JSON: '{}',
@@ -213,3 +211,4 @@ export const TEMPLATE_DATASET_CONSTANTS = {
     DELETE: (dataSetId: string) => `/api/templ_data/data-sets/${dataSetId}`
   }
 } as const;
+*/

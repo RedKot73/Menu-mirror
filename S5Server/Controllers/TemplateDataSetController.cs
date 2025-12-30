@@ -60,7 +60,7 @@ namespace S5Server.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
-        public async Task<IActionResult> CreateDataSet(/*string id,*/ [FromBody] TemplateDataSetCreateDto dto,
+        public async Task<IActionResult> CreateDataSet([FromBody] TemplateDataSetCreateDto dto,
             CancellationToken ct = default)
         {
             if (!ModelState.IsValid)
@@ -159,20 +159,6 @@ namespace S5Server.Controllers
                 if (ds == null)
                     return Problem(statusCode: 404, title: "Не найдено", detail: $"DataSetId={dataSetId}");
 
-                // (Опционально) не позволяем менять TemplateId набора
-                /*
-                if (!string.IsNullOrWhiteSpace(dto.TemplateId) && !string.Equals(dto.TemplateId, ds.TemplateId, StringComparison.Ordinal))
-                    return Problem(statusCode: 400, title: "Некорректные данные", detail: "TemplateId не совпадает с набором данных.");
-                */
-                // Валидация JSON
-                /*
-                try { JsonDocument.Parse(dto.DataJson); }
-                catch
-                {
-                    return Problem(statusCode: 400, title: "Некорректный JSON");
-                }
-                */
-
                 var publishStateChanged = ds.IsPublished != dto.IsPublished;
 
                 ds.Name = dto.Name.Trim();
@@ -246,5 +232,35 @@ namespace S5Server.Controllers
             }
         }
 
+        [HttpPost("{id}/publish/{set_publish}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Publish(string id, bool set_publish, CancellationToken ct = default)
+        {
+            try
+            {
+                var t = await _set
+                    .AsTracking()
+                    .FirstOrDefaultAsync(x => x.Id == id, ct);
+                if (t == null)
+                    return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+
+                t.IsPublished = set_publish;
+                t.PublishedAtUtc = DateTime.UtcNow;
+                t.UpdatedAtUtc = DateTime.UtcNow;
+                await _db.SaveChangesAsync(ct);
+                return NoContent();
+            }
+            catch (OperationCanceledException)
+            {
+                return Problem(statusCode: 499, title: "Отмена клиентом");
+            }
+            catch (Exception ex)
+            {
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Помилка публікації даних документа Id={Id}", id);
+                return Problem(statusCode: 500, title: "Помилка публікації даних документа");
+            }
+        }
     }
 }
