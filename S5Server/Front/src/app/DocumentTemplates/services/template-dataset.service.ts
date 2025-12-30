@@ -177,38 +177,3 @@ export class TemplateDataSetService {
       );
   }
 }
-
-// === Интерфейс для работы с сервисом ===
-/*
-export interface TemplateDataSetServiceConfig {
-  baseUrl?: string;
-  timeout?: number;
-  retryAttempts?: number;
-}
-*/
-// === Дополнительные типы для удобства ===
-
-//export type DataSetOperation = 'create' | 'update' | 'delete' | 'clone';
-/*
-export interface DataSetOperationResult {
-  success: boolean;
-  message: string;
-  data?: unknown;
-  errors?: string[];
-}
-*/
-// === Константы ===
-/*
-export const TEMPLATE_DATASET_CONSTANTS = {
-  MAX_NAME_LENGTH: 150,
-  DEFAULT_JSON: '{}',
-  API_ENDPOINTS: {
-    BASE: '/api/templ_data',
-    LIST: '/api/templ_data/data-sets',
-    DETAIL: (dataSetId: string) => `/api/templ_data/data-sets/${dataSetId}`,
-    CREATE: '/api/templ_data/data-sets',
-    UPDATE: (dataSetId: string) => `/api/templ_data/data-sets/${dataSetId}`,
-    DELETE: (dataSetId: string) => `/api/templ_data/data-sets/${dataSetId}`
-  }
-} as const;
-*/
