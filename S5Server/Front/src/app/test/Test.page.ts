@@ -24,6 +24,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule, MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
 import { MatMenuModule } from '@angular/material/menu';
@@ -58,6 +59,7 @@ import {
   isProblematicStatus,
   isRecoveryStatus,
 } from '../Soldier/Soldier.constant';
+import { DocTemplateUtils } from '../DocumentTemplates/models/shared.models';
 
 @Component({
   selector: 'app-test-page',
@@ -69,6 +71,7 @@ import {
     ReactiveFormsModule,
     MatTooltipModule,
     MatIconModule,
+    MatChipsModule,
     MatButtonModule,
     MatCardModule,
     MatExpansionModule,
@@ -111,7 +114,7 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   selectedUnits = signal<UnitDataSetDto[]>([]);
 
   // --- Current Loaded DataSet ---
-  currentDataSet = signal<TemplateDataSetListItem | null>(null);
+  dataSet = signal<TemplateDataSetListItem | null>(null);
 
   // --- Document Info ---
   documentDate = signal<Date>(new Date());
@@ -453,20 +456,20 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     this.dataSetService.getDataSetById($event!.id).subscribe({
       next: (dataSet) => {
         const documentData: DocumentDataSet = JSON.parse(dataSet.dataJson) as DocumentDataSet;
-        
+
         // Зберігаємо інформацію про поточний завантажений DataSet
-        this.currentDataSet.set($event);
-        
+        this.dataSet.set($event);
+
         // Оновлюємо дату та номер документа
         this.documentDate.set(new Date(documentData.documentDate));
         this.documentNumber.set(documentData.documentNumber);
-        
+
         // Оновлюємо вибрані підрозділи
         this.selectedUnits.set(documentData.units);
-        
+
         // Скидаємо прапорець незбережених змін (ми щойно завантажили збережені дані)
         this.hasUnsavedChanges.set(false);
-        
+
         this.snackBar.open(`Завантажено набір "${dataSet.name}"`, 'Закрити', { duration: 3000 });
       },
       error: (error) => {
@@ -631,8 +634,8 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     this.isSaving.set(true);
 
     // Перевіряємо чи є поточний завантажений DataSet
-    const currentDataSet = this.currentDataSet();
-    
+    const currentDataSet = this.dataSet();
+
     if (currentDataSet) {
       // Оновлюємо існуючий DataSet
       const updateDto: TemplateDataSetUpdateDto = {
@@ -669,7 +672,7 @@ export class TestComponent implements AfterViewInit, OnDestroy {
           this.isSaving.set(false);
           this.hasUnsavedChanges.set(false);
           // Зберігаємо інформацію про новостворений DataSet
-          this.currentDataSet.set({
+          this.dataSet.set({
             id: createdDataSet.id,
             name: createdDataSet.name,
             isPublished: createdDataSet.isPublished,
@@ -677,9 +680,13 @@ export class TestComponent implements AfterViewInit, OnDestroy {
             updatedAtUtc: createdDataSet.updatedAtUtc,
             publishedAtUtc: createdDataSet.publishedAtUtc,
           });
-          this.snackBar.open(`Дані успішно збережено як набір "${createdDataSet.name}"`, 'Закрити', {
-            duration: 5000,
-          });
+          this.snackBar.open(
+            `Дані успішно збережено як набір "${createdDataSet.name}"`,
+            'Закрити',
+            {
+              duration: 5000,
+            }
+          );
         },
         error: (error) => {
           this.isSaving.set(false);
@@ -701,7 +708,7 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     }
 
     // Очищаємо поточний DataSet (переходимо в режим створення нового)
-    this.currentDataSet.set(null);
+    this.dataSet.set(null);
 
     // Очищуємо всі дані
     this.selectedUnits.set([]);
@@ -718,7 +725,14 @@ export class TestComponent implements AfterViewInit, OnDestroy {
     this.snackBar.open('Створено новий набір даних', 'Закрити', { duration: 3000 });
   }
 
-  /**
+    /**
+     * Отримує читабельну назву статусу публікації
+     */
+    getStatusLabel(isPublished: boolean): string {
+        return DocTemplateUtils.getStatusLabel(isPublished);
+    }
+
+    /**
    * Перевіряє перед закриттям сторінки
    */
   @HostListener('window:beforeunload', ['$event'])
