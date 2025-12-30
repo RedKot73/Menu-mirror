@@ -22,35 +22,15 @@
   <app-codemirror-editor
     [content]="jsonContent()"
     [language]="'javascript'"
-    [readOnly]="data.readOnly"
-    (contentChange)="onContentChange($event)"
+    [readOnly]=true
     class="json-editor"
   >
   </app-codemirror-editor>
-
-  @if (isDirty()) {
-  <div class="dirty-indicator">
-    <mat-icon>edit</mat-icon>
-    <span>Є незбережені зміни</span>
-  </div>
-  }
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">
+  <button mat-button (click)="onClose()">
     <mat-icon>close</mat-icon>
     Закрити
   </button>
-
-  @if (!data.readOnly) {
-  <button
-    mat-raised-button
-    color="primary"
-    (click)="onSave()"
-    [disabled]="!isDirty() || data.readOnly"
-  >
-    <mat-icon>save</mat-icon>
-    Застосувати
-  </button>
-  }
 </mat-dialog-actions>

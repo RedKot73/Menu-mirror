@@ -63,11 +63,24 @@
     <mat-card>
       <mat-card-header>
         <mat-card-title>
-          Вибрані підрозділи ({{ selectedUnits().length }}) @if (hasUnsavedChanges()) {
+          Вибрані підрозділи ({{ selectedUnits().length }}) 
+          @if (hasUnsavedChanges()) {
           <mat-icon class="unsaved-indicator" matTooltip="Є незбережені зміни" color="warn">
             warning
           </mat-icon>
           }
+            @let isPublished = dataSet()?.isPublished || false;
+            @if (isPublished) {
+            <mat-chip class="status-published">
+                <mat-icon>check_circle</mat-icon>
+                {{ getStatusLabel(isPublished) }}
+            </mat-chip>
+            } @else {
+            <mat-chip class="status-draft">
+                <mat-icon>edit</mat-icon>
+                {{ getStatusLabel(isPublished) }}
+            </mat-chip>
+            }
         </mat-card-title>
         <div class="header-actions">
           <button

@@ -32,7 +32,7 @@ export interface JsonEditorDialogData {
 })
 export class JsonEditorDialogComponent {
   jsonContent = signal<string>('');
-  isDirty = signal<boolean>(false);
+  //isDirty = signal<boolean>(false);
 
   private originalContent: string;
   private snackBar = inject(MatSnackBar);
@@ -44,16 +44,16 @@ export class JsonEditorDialogComponent {
     this.jsonContent.set(this.doFormatJson(data.jsonContent));
     this.originalContent = data.jsonContent;
   }
-
+  /*
   onContentChange(newContent: string): void {
     this.jsonContent.set(newContent);
     this.isDirty.set(newContent !== this.originalContent);
   }
-
+*/
   formatJson(): void {
     const formatted = this.doFormatJson(this.jsonContent());
     this.jsonContent.set(formatted);
-    this.isDirty.set(formatted !== this.originalContent);
+    //this.isDirty.set(formatted !== this.originalContent);
   }
 
   doFormatJson(json: string): string {
@@ -78,7 +78,7 @@ export class JsonEditorDialogComponent {
       this.snackBar.open(`Помилка: ${errorMessage}`, 'Закрити', { duration: 5000 });
     }
   }
-
+  /*
   onSave(): void {
     this.dialogRef.close(this.jsonContent());
   }
@@ -90,6 +90,10 @@ export class JsonEditorDialogComponent {
         return;
       }
     }
+    this.dialogRef.close();
+  }
+  */
+ onClose(): void {
     this.dialogRef.close();
   }
 }
