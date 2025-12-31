@@ -1,0 +1,310 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>
+      Вибрані підрозділи ({{ selectedUnits().length }})
+      @if (hasUnsavedChanges()) {
+      <mat-icon class="unsaved-indicator" matTooltip="Є незбережені зміни" color="warn">
+        warning
+      </mat-icon>
+      }
+      @let currentDataSet = dataSet();
+      @if (currentDataSet) {
+      <mat-button-toggle-group
+        [value]="currentDataSet.isPublished"
+        (change)="onPublishStatusChange($event.value)"
+        class="status-toggle"
+        [disabled]="isSaving()"
+      >
+        <mat-button-toggle [value]="false" matTooltip="Чернетка">
+          <mat-icon>edit</mat-icon>
+          {{ getStatusLabel(false) }}
+        </mat-button-toggle>
+        <mat-button-toggle [value]="true" matTooltip="Опубліковано">
+          <mat-icon>check_circle</mat-icon>
+          {{ getStatusLabel(true) }}
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+      }
+    </mat-card-title>
+    <div class="header-actions">
+      <button
+        mat-raised-button
+        color="accent"
+        (click)="openJsonEditor()"
+        [disabled]="selectedUnits().length === 0"
+        matTooltip="Переглянути дані у форматі JSON"
+      >
+        <mat-icon>data_object</mat-icon>
+        Дані документа
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="saveSelectedUnitsAsDataSet()"
+        [disabled]="selectedUnits().length === 0 || isSaving()"
+        matTooltip="Зберегти дані"
+      >
+        @if (isSaving()) {
+        <mat-icon>hourglass_empty</mat-icon>
+        } @else {
+        <mat-icon>save</mat-icon>
+        } Зберегти
+      </button>
+    </div>
+  </mat-card-header>
+
+  <mat-card-content>
+    <mat-form-field appearance="outline" class="document-field">
+      <mat-label>Дата документа</mat-label>
+      <input
+        matInput
+        [matDatepicker]="picker"
+        [value]="documentDate()"
+        (dateChange)="onDocumentDateChange($event)"
+      />
+      <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="document-field">
+      <mat-label>Номер документа</mat-label>
+      <input
+        matInput
+        type="text"
+        [value]="documentNumber()"
+        (input)="onDocumentNumberChange($event)"
+      />
+    </mat-form-field>
+  </mat-card-content>
+</mat-card>
+
+<div class="selected-units-list">
+  @if (selectedUnits().length === 0) {
+  <div class="empty-list">
+    <mat-icon>inbox</mat-icon>
+    <p>Список порожній. Додайте підрозділи з дерева.</p>
+  </div>
+  } @else {
+  <div class="units-list">
+    @for (unit of selectedUnits(); track unit.id) {
+    <!-- Детальная информация о подразделении -->
+    <mat-card class="unit-details-card">
+      <mat-card-header>
+        <mat-card-title>{{ unit.shortName }}</mat-card-title>
+        <button
+          mat-icon-button
+          matTooltip="Видалити зі списку"
+          (click)="removeUnitFromSelection(unit.id)"
+          class="remove-button"
+        >
+          <mat-icon color="warn">remove_circle</mat-icon>
+        </button>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="unit-info-grid">
+          <div class="info-item inline">
+            <strong>Тип підрозділу:</strong>
+            <span>{{ unit.unitType || 'Не вказано' }}</span>
+          </div>
+
+          @if (unit.parentShortName) {
+          <div class="info-item inline">
+            <strong>Батьківський підрозділ:</strong>
+            <span>{{ unit.parentShortName }}</span>
+          </div>
+          } @if (unit.assignedShortName) {
+          <div class="info-item inline">
+            <strong>Приданий до:</strong>
+            <span>{{ unit.assignedShortName }}</span>
+          </div>
+          } @if (unit.comment) {
+          <div class="info-item full-width comment">
+            <strong>Коментар:</strong>
+            <span>{{ unit.comment }}</span>
+          </div>
+          }
+        </div>
+
+        <div class="task-assignments">
+          <div class="task-item">
+            <strong>Завдання:</strong>
+            <mat-form-field appearance="outline" class="task-select">
+              <mat-select placeholder="Оберіть завдання">
+                <mat-option value="reserve">Резерв (30)</mat-option>
+                <mat-option value="combat">Бойовий виліт (100)</mat-option>
+                <mat-option value="recon">Реко (100)</mat-option>
+                <mat-option value="engineer">Інженери (100)</mat-option>
+                <mat-option value="guard">Охорона (100)</mat-option>
+                <mat-option value="notUsed">Не застосовувався (Х)</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div class="task-item">
+            <strong>РСП для екіпажів:</strong>
+            <mat-form-field appearance="outline" class="task-select">
+              <mat-select placeholder="Оберіть РСП">
+                <mat-option value="reserve">півд.-сх. ГУЛЯЙПОЛЕ - 102 обр ТрО</mat-option>
+                <mat-option value="combat">півд. ГУЛЯЙПОЛЕ - 102 обр ТрО</mat-option>
+                <mat-option value="recon">ГУЛЯЙПОЛЕ - 102 обр ТрО</mat-option>
+                <mat-option value="engineer">сх. ГУЛЯЙПОЛЕ - 102 обр ТрО</mat-option>
+                <mat-option value="guard">ВИСОКЕ - 102 обр ТрО</mat-option>
+                <mat-option value="notUsed">зах. МАЛИНІВКА - 102 обр ТрО</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div class="task-item">
+            <strong>Засіб:</strong>
+            <mat-form-field appearance="outline" class="task-select">
+              <input
+                type="text"
+                matInput
+                [formControl]="getDroneModelControl(unit.id)"
+                [matAutocomplete]="droneModelAuto"
+                placeholder="Оберіть модель БПЛА"
+              />
+              <mat-autocomplete
+                #droneModelAuto="matAutocomplete"
+                [displayWith]="displayDroneModelFn"
+                (optionSelected)="onDroneModelSelected(unit.id, $event)"
+              >
+                <mat-option [value]="null">Не вибрано</mat-option>
+                @if (isLoadingDroneModel(unit.id)) {
+                <mat-option disabled>Завантаження...</mat-option>
+                } @for (model of getFilteredDroneModels(unit.id) | async; track model.id) {
+                <mat-option [value]="model">{{ model.value }}</mat-option>
+                }
+              </mat-autocomplete>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <mat-accordion class="sections-accordion">
+          <mat-expansion-panel class="unit-section-panel">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon color="primary">group</mat-icon>
+                Особовий склад ({{ unit.soldiers.length }})
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <div class="section-content">
+              @if (unit.soldiers.length === 0) {
+              <p class="no-soldiers">Особовий склад відсутній</p>
+              }
+              @else {
+              <table
+                mat-table
+                [dataSource]="unit.soldiers"
+                class="mat-elevation-z8"
+                style="width: 100%; margin-top: 1em"
+              >
+                <!-- FIO Column -->
+                <ng-container matColumnDef="fio">
+                  <th mat-header-cell *matHeaderCellDef>ПІБ</th>
+                  <td mat-cell *matCellDef="let soldier">
+                    <span class="fio">{{ soldier.fio }}</span>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="nickName">
+                  <th mat-header-cell *matHeaderCellDef>Позивний</th>
+                  <td mat-cell *matCellDef="let soldier">{{ soldier.nickName }}</td>
+                </ng-container>
+
+                <!-- Rank Column -->
+                <ng-container matColumnDef="rankShortValue">
+                  <th mat-header-cell *matHeaderCellDef>Звання</th>
+                  <td mat-cell *matCellDef="let soldier">
+                    {{ soldier.rankShortValue }}
+                  </td>
+                </ng-container>
+
+                <!-- Position Column -->
+                <ng-container matColumnDef="positionValue">
+                  <th mat-header-cell *matHeaderCellDef>Посада</th>
+                  <td mat-cell *matCellDef="let soldier">
+                    {{ soldier.positionValue }}
+                  </td>
+                </ng-container>
+
+                <!-- State Column -->
+                <ng-container matColumnDef="stateValue">
+                  <th mat-header-cell *matHeaderCellDef>Статус</th>
+                  <td mat-cell *matCellDef="let soldier">
+                    <span class="state-badge">{{ soldier.stateValue }}</span>
+                  </td>
+                </ng-container>
+
+                <!-- Assigned Unit Column -->
+                <ng-container matColumnDef="assignedUnitShortName">
+                  <th mat-header-cell *matHeaderCellDef>Приданий до</th>
+                  <td mat-cell *matCellDef="let soldier">
+                    {{ soldier.assignedUnitShortName || '-' }}
+                  </td>
+                </ng-container>
+
+                <!-- ArrivedAt Column -->
+                <ng-container matColumnDef="arrivedAt">
+                  <th mat-header-cell *matHeaderCellDef>Прибув</th>
+                  <td
+                    mat-cell
+                    *matCellDef="let soldier"
+                    [class.row-overdue]="isArrivedMoreThan14DaysAgo(soldier.arrivedAt)"
+                  >
+                    {{ soldier.arrivedAt | date : 'dd.MM.yyyy' }}
+                  </td>
+                </ng-container>
+
+                <!-- DepartedAt Column -->
+                <ng-container matColumnDef="departedAt">
+                  <th mat-header-cell *matHeaderCellDef>Вибув</th>
+                  <td mat-cell *matCellDef="let soldier">
+                    {{ soldier.departedAt ? (soldier.departedAt | date : 'dd.MM.yyyy') : '-' }}
+                  </td>
+                </ng-container>
+
+                <!-- Comment Column -->
+                <ng-container matColumnDef="comment">
+                  <th mat-header-cell *matHeaderCellDef>Коментар</th>
+                  <td mat-cell *matCellDef="let soldier" class="comment-cell">
+                    <span
+                      class="comment-text"
+                      [matTooltip]="
+                        soldier.comment && soldier.comment.length > 50 ? soldier.comment : ''
+                      "
+                      [title]="
+                        soldier.comment && soldier.comment.length > 50 ? soldier.comment : ''
+                      "
+                    >
+                      {{
+                        soldier.comment
+                          ? soldier.comment.length > 50
+                            ? (soldier.comment | slice : 0 : 50) + '...'
+                            : soldier.comment
+                          : '-'
+                      }}
+                    </span>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="soldiersDisplayedColumns"></tr>
+                <tr
+                  mat-row
+                  *matRowDef="let row; columns: soldiersDisplayedColumns"
+                  [class.row-critical]="isCriticalStatus(row.stateId)"
+                  [class.row-severe]="isSevereStatus(row.stateId)"
+                  [class.row-problematic]="isProblematicStatus(row.stateId)"
+                  [class.row-recovery]="isRecoveryStatus(row.stateId)"
+                ></tr>
+              </table>
+              }
+            </div>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </mat-card-content>
+    </mat-card>
+    }
+  </div>
+  }
+</div>
