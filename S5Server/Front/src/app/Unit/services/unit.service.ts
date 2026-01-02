@@ -265,19 +265,6 @@ export class UnitService {
     );
   }
 
-  // Получить набор данных підрозділу з особовим складом для формування документів
-  getUnitDataSet(id: string): Observable<UnitDataSetDto> {
-    return this.http.get<UnitDataSetDto>(`${this.api}/${id}/data-set`).pipe(
-      catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(
-          error,
-          'Не вдалося отримати набір даних підрозділу'
-        );
-        return throwError(() => new Error(message));
-      })
-    );
-  }
-
   moveUpDown(id: string, moveUp: boolean): Observable<void> {
     // POST /api/Unit/{unitId}/moveUpDown/{toUp}
     return this.http
@@ -292,5 +279,4 @@ export class UnitService {
         })
       );
   }
-
 }

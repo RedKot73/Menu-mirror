@@ -326,40 +326,6 @@ namespace S5Server.Controllers
         }
 
         /// <summary>
-        /// Набор данных підрозділу для формування документу на фронті (Angular)
-        /// </summary>
-        [HttpGet("{id}/data-set")]
-        public async Task<ActionResult<UnitDataSetDto>> GetUnitDataSet(string id, CancellationToken ct = default)
-        {
-            var unit = await Query()
-                .AsNoTracking()
-                .Include(u => u.Parent)
-                .Include(u => u.AssignedUnit)
-                .Include(u => u.UnitType)
-                .FirstOrDefaultAsync(u => u.Id == id, ct);
-
-            if (unit is null)
-                return NotFound();
-
-            var soldiers = await _db.Soldiers
-                .AsNoTracking()
-                .Include(s => s.Unit)
-                .Include(s => s.AssignedUnit)
-                .Include(s => s.OperationalUnit)
-                .Include(s => s.Rank)
-                .Include(s => s.Position)
-                .Include(s => s.State)
-                .Where(s => s.UnitId == id)
-                .OrderBy(s => s.Rank.OrderVal)
-                .ThenBy(s => s.LastName)
-                .ThenBy(s => s.FirstName)
-                .Select(s => SoldierDto.ToDto(s))
-                .ToListAsync(ct);
-
-            return Ok(UnitDataSetDto.From(unit, soldiers));
-        }
-
-        /// <summary>
         /// Змінити порядковий номер сортування
         /// </summary>
         [HttpPost("{unitId}/moveUpDown/{toUp}")]

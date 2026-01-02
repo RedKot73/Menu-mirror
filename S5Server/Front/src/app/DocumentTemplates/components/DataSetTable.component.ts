@@ -10,7 +10,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -39,6 +39,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     MatChipsModule,
     MatProgressSpinnerModule,
     MatDividerModule,
+    MatDialogModule,
   ],
 })
 export class DataSetTableComponent implements OnInit {
@@ -147,7 +148,7 @@ export class DataSetTableComponent implements OnInit {
     });
   }
   */
- 
+
   /**
    * Удаляет набор данных
    */
@@ -186,7 +187,6 @@ export class DataSetTableComponent implements OnInit {
       }
     });
   }
-
 
   /**
    * Получает читаемое название статуса публикации

@@ -7,10 +7,10 @@ import {
     TemplateDataSetDto,
     TemplateDataSetCreateDto,
     TemplateDataSetUpdateDto,
-    TemplateDataSetUtils
-} from '../models/template-dataset.models';//'../Models/template-dataset.models';
+    TemplateDataSetUtils,
+    UnitTaskDto
+} from '../models/template-dataset.models';
 import { ErrorHandler } from '../../shared/models/ErrorHandler';
-//import { DocTemplateUtils } from '../Models/shared.models';
 
 @Injectable({
   providedIn: 'root',
@@ -26,14 +26,25 @@ export class TemplateDataSetService {
    * GET /api/templ_data/data-sets
    */
   getDataSets(): Observable<TemplateDataSetDto[]> {
-    return this.http
-      .get<TemplateDataSetDto[]>(`${this.baseUrl}/data-sets`)
-      .pipe(
-        catchError((error: HttpErrorResponse) => {
-          const message = ErrorHandler.handleHttpError(error, 'Не вдалося отримати набори даних');
-          return throwError(() => new Error(message));
-        })
-      );
+    return this.http.get<TemplateDataSetDto[]>(`${this.baseUrl}/data-sets`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = ErrorHandler.handleHttpError(error, 'Не вдалося отримати набори даних');
+        return throwError(() => new Error(message));
+      })
+    );
+  }
+
+  // Получить набор данных підрозділу з особовим складом для формування документів
+  getUnitDataSet(id: string): Observable<UnitTaskDto> {
+    return this.http.get<UnitTaskDto>(`${this.baseUrl}/data-sets/unit-task/${id}`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося отримати набір даних підрозділу'
+        );
+        return throwError(() => new Error(message));
+      })
+    );
   }
 
   /**
@@ -50,14 +61,12 @@ export class TemplateDataSetService {
     // Подготовка данных для отправки
     //const serverDto = TemplateDataSetUtils.toServerDto(dto);
 
-    return this.http
-      .post<TemplateDataSetDto>(`${this.baseUrl}/data-sets`, dto)
-      .pipe(
-        catchError((error: HttpErrorResponse) => {
-          const message = ErrorHandler.handleHttpError(error, 'Не вдалося створити набір даних');
-          return throwError(() => new Error(message));
-        })
-      );
+    return this.http.post<TemplateDataSetDto>(`${this.baseUrl}/data-sets`, dto).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = ErrorHandler.handleHttpError(error, 'Не вдалося створити набір даних');
+        return throwError(() => new Error(message));
+      })
+    );
   }
 
   /**
@@ -65,14 +74,12 @@ export class TemplateDataSetService {
    * GET /api/templ_data/data-sets/{dataSetId}
    */
   getDataSetById(dataSetId: string): Observable<TemplateDataSetDto> {
-    return this.http
-      .get<TemplateDataSetDto>(`${this.baseUrl}/data-sets/${dataSetId}`)
-      .pipe(
-        catchError((error: HttpErrorResponse) => {
-          const message = ErrorHandler.handleHttpError(error, 'Не вдалося отримати набір даних');
-          return throwError(() => new Error(message));
-        })
-      );
+    return this.http.get<TemplateDataSetDto>(`${this.baseUrl}/data-sets/${dataSetId}`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = ErrorHandler.handleHttpError(error, 'Не вдалося отримати набір даних');
+        return throwError(() => new Error(message));
+      })
+    );
   }
 
   /**
@@ -80,87 +87,26 @@ export class TemplateDataSetService {
    * DELETE /api/templ_data/data-sets/{dataSetId}
    */
   deleteDataSet(dataSetId: string): Observable<void> {
-    return this.http
-      .delete<void>(`${this.baseUrl}/data-sets/${dataSetId}`)
-      .pipe(
-        catchError((error: HttpErrorResponse) => {
-          const message = ErrorHandler.handleHttpError(error, 'Не вдалося видалити набір даних');
-          return throwError(() => new Error(message));
-        })
+    return this.http.delete<void>(`${this.baseUrl}/data-sets/${dataSetId}`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = ErrorHandler.handleHttpError(error, 'Не вдалося видалити набір даних');
+        return throwError(() => new Error(message));
+      })
     );
   }
-
-  // === Дополнительные методы (будущие расширения) ===
 
   /**
    * Обновить набор данных
    * PUT /api/templ_data/data-sets/{dataSetId}
    */
   updateDataSet(dataSetId: string, dto: TemplateDataSetUpdateDto): Observable<void> {
-    return this.http
-      .put<void>(`${this.baseUrl}/data-sets/${dataSetId}`, dto)
-      .pipe(
-        catchError((error: HttpErrorResponse) => {
-          const message = ErrorHandler.handleHttpError(error, 'Не вдалося оновити набір даних');
-          return throwError(() => new Error(message));
-        })
+    return this.http.put<void>(`${this.baseUrl}/data-sets/${dataSetId}`, dto).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = ErrorHandler.handleHttpError(error, 'Не вдалося оновити набір даних');
+        return throwError(() => new Error(message));
+      })
     );
   }
-
-  // === Работа с сигналами ===
-  /**
-   * Создает реактивный сигнал для списка наборов данных
-   */
-  /*
-  createItemsSignal() {
-    return signal<TemplateDataSetListItem[]>([]);
-  }
-*/
-  /**
-   * Создает реактивный сигнал для текущего набора данных
-   */
-  /*
-  createCurrentSignal() {
-    return signal<TemplateDataSetDto | null>(null);
-  }
-*/
-  /**
-   * Создает реактивный сигнал для состояния загрузки
-   */
-  /*
-  createLoadingSignal() {
-    return signal<boolean>(false);
-  }
-*/
-  // === Методы для работы с множественными операциями ===
-
-  /**
-   * Клонирование набора данных
-   */
-/*  
-  cloneDataSet(dataSetId: string, newName: string): Observable<TemplateDataSetListItem> {
-    return new Observable((observer) => {
-      this.getDataSetById(dataSetId).subscribe({
-        next: (original) => {
-          const cloneDto: TemplateDataSetCreateDto = {
-            name: newName,
-            dataJson: original.dataJson,
-            isPublished: false, // Клоны по умолчанию не опубликованы
-          };
-
-          this.createDataSet(cloneDto).subscribe({
-            next: (result) => {
-              observer.next(result);
-              observer.complete();
-            },
-            error: (error) => observer.error(error),
-          });
-        },
-        error: (error) => observer.error(error),
-      });
-    });
-  }
-*/
 
   publish(id: string, set_publish: boolean): Observable<void> {
     // POST /api/templ_data/{id}/publish/{set_publish}

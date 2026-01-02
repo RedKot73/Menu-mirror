@@ -3,7 +3,6 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
-import { BreakpointObserver } from '@angular/cdk/layout';
 import { debounceTime, distinctUntilChanged, switchMap, startWith, finalize } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 
@@ -26,18 +25,17 @@ import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { UnitService } from '../../Unit/services/unit.service';
 import {
   DocumentDataSet,
   TemplateDataSetCreateDto,
   TemplateDataSetUpdateDto,
+  UnitTaskDto,
 } from '../models/template-dataset.models';
 import { TemplateDataSetService } from '../services/template-dataset.service';
 import { JsonEditorDialogComponent } from '../components/JsonEditorDialog.component';
 import { ErrorHandler } from '../../shared/models/ErrorHandler';
 import { DictDroneModelService } from '../../../ServerService/dictDroneModel.service';
 import { LookupDto } from '../../shared/models/lookup.models';
-import { UnitDataSetDto } from '../../Unit/services/unit.service';
 import { TemplateDataSetListItem } from '../models/template-dataset.models';
 import { DocTemplateUtils } from '../models/shared.models';
 import {
@@ -75,13 +73,11 @@ export class UnitsTaskEditorComponent {
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
 
-  private unitService = inject(UnitService);
   private dataSetService = inject(TemplateDataSetService);
   private dictDroneModelService = inject(DictDroneModelService);
-  private breakpointObserver = inject(BreakpointObserver);
 
   // --- Selected Units List with DataSets ---
-  protected selectedUnits = signal<UnitDataSetDto[]>([]);
+  protected selectedUnits = signal<UnitTaskDto[]>([]);
 
   // --- Current Loaded DataSet ---
   protected dataSet = signal<TemplateDataSetListItem | null>(null);
@@ -99,6 +95,10 @@ export class UnitsTaskEditorComponent {
   private filteredDroneModels = new Map<string, Observable<LookupDto[]>>();
   private isLoadingDroneModels = new Map<string, boolean>();
   private selectedDroneModels = new Map<string, LookupDto | null>();
+
+  // --- Task and Area Selection ---
+  private taskSelectionControls = new Map<string, FormControl<string | null>>();
+  private areaSelectionControls = new Map<string, FormControl<string | null>>();
 
   // --- Soldiers Table Configuration ---
   protected soldiersDisplayedColumns = [
@@ -139,7 +139,7 @@ export class UnitsTaskEditorComponent {
     const units = this.selectedUnits();
     const jsonString = JSON.stringify(units, null, 2);
 
-    const dialogRef = this.dialog.open(JsonEditorDialogComponent, {
+    this.dialog.open(JsonEditorDialogComponent, {
       data: {
         jsonContent: jsonString,
         readOnly: false,
@@ -149,20 +149,6 @@ export class UnitsTaskEditorComponent {
       maxWidth: '1400px',
       height: '80vh',
       disableClose: false,
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        try {
-          const updatedUnits = JSON.parse(result);
-          this.selectedUnits.set(updatedUnits);
-          this.hasUnsavedChanges.set(true);
-          this.snackBar.open('Дані успішно оновлено', 'Закрити', { duration: 3000 });
-        } catch (error) {
-          console.error('Error parsing JSON:', error);
-          this.snackBar.open('Помилка парсингу JSON', 'Закрити', { duration: 5000 });
-        }
-      }
     });
   }
 
@@ -253,6 +239,79 @@ export class UnitsTaskEditorComponent {
   onDroneModelSelected(unitId: string, event: MatAutocompleteSelectedEvent): void {
     const selectedDroneModel = event.option.value as LookupDto | null;
     this.selectedDroneModels.set(unitId, selectedDroneModel);
+
+    // Оновлюємо Means в UnitTaskDto
+    const units = this.selectedUnits();
+    const unitIndex = units.findIndex((u) => u.id === unitId);
+    if (unitIndex !== -1) {
+      const updatedUnit = { ...units[unitIndex] };
+      updatedUnit.Means = selectedDroneModel ? [selectedDroneModel.value] : [];
+      units[unitIndex] = updatedUnit;
+      this.selectedUnits.set([...units]);
+      this.hasUnsavedChanges.set(true);
+    }
+  }
+
+  /**
+   * Отримує FormControl для вибору завдання
+   */
+  getTaskControl(unitId: string): FormControl<string | null> {
+    if (!this.taskSelectionControls.has(unitId)) {
+      const control = new FormControl<string | null>(null);
+      this.taskSelectionControls.set(unitId, control);
+
+      // Підписуємося на зміни
+      control.valueChanges.subscribe((value) => {
+        this.onTaskChange(unitId, value);
+      });
+    }
+    return this.taskSelectionControls.get(unitId)!;
+  }
+
+  /**
+   * Отримує FormControl для вибору зони (РСП)
+   */
+  getAreaControl(unitId: string): FormControl<string | null> {
+    if (!this.areaSelectionControls.has(unitId)) {
+      const control = new FormControl<string | null>(null);
+      this.areaSelectionControls.set(unitId, control);
+
+      // Підписуємося на зміни
+      control.valueChanges.subscribe((value) => {
+        this.onAreaChange(unitId, value);
+      });
+    }
+    return this.areaSelectionControls.get(unitId)!;
+  }
+
+  /**
+   * Обробник зміни завдання
+   */
+  private onTaskChange(unitId: string, taskValue: string | null): void {
+    const units = this.selectedUnits();
+    const unitIndex = units.findIndex((u) => u.id === unitId);
+    if (unitIndex !== -1) {
+      const updatedUnit = { ...units[unitIndex] };
+      updatedUnit.TaskValue = taskValue || '';
+      units[unitIndex] = updatedUnit;
+      this.selectedUnits.set([...units]);
+      this.hasUnsavedChanges.set(true);
+    }
+  }
+
+  /**
+   * Обробник зміни зони (РСП)
+   */
+  private onAreaChange(unitId: string, areaValue: string | null): void {
+    const units = this.selectedUnits();
+    const unitIndex = units.findIndex((u) => u.id === unitId);
+    if (unitIndex !== -1) {
+      const updatedUnit = { ...units[unitIndex] };
+      updatedUnit.AreaValue = areaValue || '';
+      units[unitIndex] = updatedUnit;
+      this.selectedUnits.set([...units]);
+      this.hasUnsavedChanges.set(true);
+    }
   }
 
   /**
@@ -283,9 +342,23 @@ export class UnitsTaskEditorComponent {
     }
 
     // Загружаем полный DataSet подразделения через UnitService
-    this.unitService.getUnitDataSet(unitId).subscribe({
+    this.dataSetService.getUnitDataSet(unitId).subscribe({
       next: (unitDataSet) => {
-        this.selectedUnits.set([...currentList, unitDataSet]);
+        // Створюємо UnitTaskDto з порожніми значеннями завдань
+        const unitTask: UnitTaskDto = {
+          ...unitDataSet,
+          TaskId: '',
+          TaskValue: '',
+          AreaId: '',
+          AreaValue: '',
+          Means: [],
+        };
+
+        // Ініціалізуємо FormControl для Task та Area
+        this.taskSelectionControls.set(unitId, new FormControl<string | null>(null));
+        this.areaSelectionControls.set(unitId, new FormControl<string | null>(null));
+
+        this.selectedUnits.set([...currentList, unitTask]);
         // Позначаємо що є незбережені зміни
         this.hasUnsavedChanges.set(true);
       },
@@ -310,8 +383,10 @@ export class UnitsTaskEditorComponent {
     this.hasUnsavedChanges.set(true);
   }
 
-  loadDataSet(dataSetId: string): void
-  {
+  loadDataSet(dataSetId: string): void {
+    if (this.dataSet()?.id === dataSetId) {
+      return; // Вже завантажено
+    }
     // Перевіряємо чи немає незбережених змін перед завантаженням нового набору
     if (!this.checkUnsavedChanges()) {
       return; // Користувач скасував завантаження
@@ -320,6 +395,12 @@ export class UnitsTaskEditorComponent {
     this.dataSetService.getDataSetById(dataSetId).subscribe({
       next: (dataSet) => {
         const documentData: DocumentDataSet = JSON.parse(dataSet.dataJson) as DocumentDataSet;
+        if (!documentData || !documentData.unitsTask) {
+          this.snackBar.open('Набір даних не містить інформації про підрозділи', 'Закрити', {
+            duration: 5000,
+          });
+          return;
+        }
 
         // Зберігаємо інформацію про поточний завантажений DataSet
         this.dataSet.set(dataSet);
@@ -329,7 +410,26 @@ export class UnitsTaskEditorComponent {
         this.documentNumber.set(documentData.documentNumber);
 
         // Оновлюємо вибрані підрозділи
-        this.selectedUnits.set(documentData.units);
+        this.selectedUnits.set(documentData.unitsTask);
+
+        // Ініціалізуємо FormControl для кожного підрозділу
+        documentData.unitsTask.forEach((unit) => {
+          // Task
+          const taskControl = new FormControl<string | null>(unit.TaskValue || null);
+          taskControl.valueChanges.subscribe((value) => this.onTaskChange(unit.id, value));
+          this.taskSelectionControls.set(unit.id, taskControl);
+
+          // Area
+          const areaControl = new FormControl<string | null>(unit.AreaValue || null);
+          areaControl.valueChanges.subscribe((value) => this.onAreaChange(unit.id, value));
+          this.areaSelectionControls.set(unit.id, areaControl);
+
+          // Drone Model
+          if (unit.Means && unit.Means.length > 0) {
+            const droneModel: LookupDto = { id: '', value: unit.Means[0] };
+            this.selectedDroneModels.set(unit.id, droneModel);
+          }
+        });
 
         // Скидаємо прапорець незбережених змін (ми щойно завантажили збережені дані)
         this.hasUnsavedChanges.set(false);
@@ -362,7 +462,7 @@ export class UnitsTaskEditorComponent {
     const dataToSave: DocumentDataSet = {
       documentDate: this.documentDate().toISOString(),
       documentNumber: this.documentNumber(),
-      units: this.selectedUnits(),
+      unitsTask: this.selectedUnits(),
       savedAt: new Date().toISOString(),
     };
 

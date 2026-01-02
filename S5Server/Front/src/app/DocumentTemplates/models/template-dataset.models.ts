@@ -37,6 +37,14 @@ export interface TemplateDataSetUpdateDto {
   isPublished: boolean;
 }
 
+export interface UnitTaskDto extends UnitDataSetDto {
+  TaskId: string;
+  TaskValue: string;
+  AreaId: string;
+  AreaValue: string;
+  Means: string[];
+}
+
 /**
  * Полная модель данных документа (сохраняется в dataJson)
  * Использует UnitDataSetDto из unit.service для подразделений
@@ -44,7 +52,7 @@ export interface TemplateDataSetUpdateDto {
 export interface DocumentDataSet {
   documentDate: string; // ISO date string
   documentNumber: string;
-  units: UnitDataSetDto[];
+  unitsTask: UnitTaskDto[];
   savedAt: string; // ISO date string
 }
 

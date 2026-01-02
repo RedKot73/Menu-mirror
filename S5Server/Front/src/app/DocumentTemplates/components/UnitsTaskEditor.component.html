@@ -125,7 +125,7 @@
         <div class="task-item">
           <strong>Завдання:</strong>
           <mat-form-field appearance="outline" class="task-select">
-            <mat-select placeholder="Оберіть завдання">
+            <mat-select placeholder="Оберіть завдання" [formControl]="getTaskControl(unit.id)">
               <mat-option value="reserve">Резерв (30)</mat-option>
               <mat-option value="combat">Бойовий виліт (100)</mat-option>
               <mat-option value="recon">Реко (100)</mat-option>
@@ -138,7 +138,7 @@
         <div class="task-item">
           <strong>РСП для екіпажів:</strong>
           <mat-form-field appearance="outline" class="task-select">
-            <mat-select placeholder="Оберіть РСП">
+            <mat-select placeholder="Оберіть РСП" [formControl]="getAreaControl(unit.id)">
               <mat-option value="reserve">півд.-сх. ГУЛЯЙПОЛЕ - 102 обр ТрО</mat-option>
               <mat-option value="combat">півд. ГУЛЯЙПОЛЕ - 102 обр ТрО</mat-option>
               <mat-option value="recon">ГУЛЯЙПОЛЕ - 102 обр ТрО</mat-option>

@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 using S5Server.Data;
 using S5Server.Models;
-using S5Server.Services;
 using S5Server.Utils;
 
 namespace S5Server.Controllers
@@ -137,6 +136,40 @@ namespace S5Server.Controllers
                     _logger.LogError(ex, "Ошибка получения набора данных DataSetId={DataSetId}", dataSetId);
                 return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
             }
+        }
+
+        /// <summary>
+        /// Набор данных підрозділу для формування документу на фронті (Angular)
+        /// </summary>
+        [HttpGet("data-sets/unit-task/{id}")]
+        public async Task<ActionResult<UnitDataSetDto>> GetUnitDataSet(string id, CancellationToken ct = default)
+        {
+            var unit = await _db.Units//Query()
+                .AsNoTracking()
+                .Include(u => u.Parent)
+                .Include(u => u.AssignedUnit)
+                .Include(u => u.UnitType)
+                .FirstOrDefaultAsync(u => u.Id == id, ct);
+
+            if (unit is null)
+                return NotFound();
+
+            var soldiers = await _db.Soldiers
+                .AsNoTracking()
+                .Include(s => s.Unit)
+                .Include(s => s.AssignedUnit)
+                .Include(s => s.OperationalUnit)
+                .Include(s => s.Rank)
+                .Include(s => s.Position)
+                .Include(s => s.State)
+                .Where(s => s.UnitId == id)
+                .OrderBy(s => s.Rank.OrderVal)
+                .ThenBy(s => s.LastName)
+                .ThenBy(s => s.FirstName)
+                .Select(s => SoldierDto.ToDto(s))
+                .ToListAsync(ct);
+
+            return Ok(UnitDataSetDto.From(unit, soldiers));
         }
 
         [HttpPut("data-sets/{dataSetId}")]
