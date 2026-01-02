@@ -1,29 +1,18 @@
 import { inject, signal, HostListener } from '@angular/core';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, switchMap, startWith, finalize } from 'rxjs/operators';
-import { Observable, of } from 'rxjs';
+import { ReactiveFormsModule } from '@angular/forms';
 
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDatepickerModule, MatDatepickerInputEvent } from '@angular/material/datepicker';
-import {
-  MatAutocompleteModule,
-  MatAutocompleteSelectedEvent,
-} from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatTableModule } from '@angular/material/table';
-import { MatSortModule } from '@angular/material/sort';
-import { MatTooltipModule } from '@angular/material/tooltip';
 
 import {
   DocumentDataSet,
@@ -33,17 +22,10 @@ import {
 } from '../models/template-dataset.models';
 import { TemplateDataSetService } from '../services/template-dataset.service';
 import { JsonEditorDialogComponent } from '../components/JsonEditorDialog.component';
+import { UnitTaskCardComponent } from './UnitTaskCard.component';
 import { ErrorHandler } from '../../shared/models/ErrorHandler';
-import { DictDroneModelService } from '../../../ServerService/dictDroneModel.service';
-import { LookupDto } from '../../shared/models/lookup.models';
 import { TemplateDataSetListItem } from '../models/template-dataset.models';
 import { DocTemplateUtils } from '../models/shared.models';
-import {
-  isCriticalStatus,
-  isSevereStatus,
-  isProblematicStatus,
-  isRecoveryStatus,
-} from '../../Soldier/Soldier.constant';
 
 @Component({
   selector: 'app-units-task-editor',
@@ -54,17 +36,12 @@ import {
     ReactiveFormsModule,
     MatCardModule,
     MatDatepickerModule,
-    MatAutocompleteModule,
     MatIconModule,
     MatButtonModule,
     MatButtonToggleModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
-    MatExpansionModule,
-    MatTableModule,
-    MatSortModule,
-    MatTooltipModule,
+    UnitTaskCardComponent,
   ],
   templateUrl: './UnitsTaskEditor.component.html',
   styleUrls: ['./UnitsTaskEditor.component.scss'],
@@ -74,7 +51,6 @@ export class UnitsTaskEditorComponent {
   private dialog = inject(MatDialog);
 
   private dataSetService = inject(TemplateDataSetService);
-  private dictDroneModelService = inject(DictDroneModelService);
 
   // --- Selected Units List with DataSets ---
   protected selectedUnits = signal<UnitTaskDto[]>([]);
@@ -90,46 +66,17 @@ export class UnitsTaskEditorComponent {
   protected isSaving = signal<boolean>(false);
   protected hasUnsavedChanges = signal<boolean>(false);
 
-  // --- Drone Model Autocomplete ---
-  private droneModelSearchControls = new Map<string, FormControl<LookupDto | string | null>>();
-  private filteredDroneModels = new Map<string, Observable<LookupDto[]>>();
-  private isLoadingDroneModels = new Map<string, boolean>();
-  private selectedDroneModels = new Map<string, LookupDto | null>();
-
-  // --- Task and Area Selection ---
-  private taskSelectionControls = new Map<string, FormControl<string | null>>();
-  private areaSelectionControls = new Map<string, FormControl<string | null>>();
-
-  // --- Soldiers Table Configuration ---
-  protected soldiersDisplayedColumns = [
-    'fio',
-    'nickName',
-    'rankShortValue',
-    'positionValue',
-    'stateValue',
-    'assignedUnitShortName',
-    'arrivedAt',
-    'departedAt',
-    'comment',
-  ];
-  // Методы для проверки статусов (делаем доступными в шаблоне)
-  isCriticalStatus = isCriticalStatus;
-  isSevereStatus = isSevereStatus;
-  isProblematicStatus = isProblematicStatus;
-  isRecoveryStatus = isRecoveryStatus;
-
-  // Проверка даты прибытия (более 14 дней назад)
-  isArrivedMoreThan14DaysAgo(arrivedAt: Date): boolean {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Сброс времени для корректного сравнения дат
-
-    const arrived = new Date(arrivedAt);
-    arrived.setHours(0, 0, 0, 0);
-
-    const fourteenDaysAgo = new Date(today);
-    fourteenDaysAgo.setDate(today.getDate() - 14);
-
-    return arrived >= fourteenDaysAgo;
+  /**
+   * Обробник зміни підрозділу з дочірнього компонента
+   */
+  onUnitChange(updatedUnit: UnitTaskDto): void {
+    const units = this.selectedUnits();
+    const unitIndex = units.findIndex((u) => u.id === updatedUnit.id);
+    if (unitIndex !== -1) {
+      units[unitIndex] = updatedUnit;
+      this.selectedUnits.set([...units]);
+      this.hasUnsavedChanges.set(true);
+    }
   }
 
   /**
@@ -172,6 +119,7 @@ export class UnitsTaskEditorComponent {
   /**
    * Ініціалізує автокомпліт для моделі БПЛА для конкретного підрозділу
    */
+  /*
   initDroneModelAutocomplete(unitId: string): void {
     if (!this.droneModelSearchControls.has(unitId)) {
       const control = new FormControl<LookupDto | string | null>(null);
@@ -202,40 +150,45 @@ export class UnitsTaskEditorComponent {
       this.filteredDroneModels.set(unitId, filtered);
     }
   }
-
+*/
   /**
    * Отримує FormControl для пошуку моделі БПЛА
    */
+  /*
   getDroneModelControl(unitId: string): FormControl<LookupDto | string | null> {
     this.initDroneModelAutocomplete(unitId);
     return this.droneModelSearchControls.get(unitId)!;
   }
-
+*/
   /**
    * Отримує Observable для фільтрованих моделей БПЛА
    */
+  /*
   getFilteredDroneModels(unitId: string): Observable<LookupDto[]> {
     this.initDroneModelAutocomplete(unitId);
     return this.filteredDroneModels.get(unitId)!;
   }
-
+*/
   /**
    * Перевіряє, чи завантажуються моделі БПЛА
    */
+  /*
   isLoadingDroneModel(unitId: string): boolean {
     return this.isLoadingDroneModels.get(unitId) || false;
   }
-
+*/
   /**
    * Відображення назви моделі БПЛА в автокомпліті
    */
+  /*
   displayDroneModelFn = (droneModel: LookupDto | null): string => {
     return droneModel ? droneModel.value : '';
   };
-
+*/
   /**
    * Обробник вибору моделі БПЛА
    */
+  /*
   onDroneModelSelected(unitId: string, event: MatAutocompleteSelectedEvent): void {
     const selectedDroneModel = event.option.value as LookupDto | null;
     this.selectedDroneModels.set(unitId, selectedDroneModel);
@@ -251,10 +204,11 @@ export class UnitsTaskEditorComponent {
       this.hasUnsavedChanges.set(true);
     }
   }
-
+*/
   /**
    * Отримує FormControl для вибору завдання
    */
+  /*
   getTaskControl(unitId: string): FormControl<string | null> {
     if (!this.taskSelectionControls.has(unitId)) {
       const control = new FormControl<string | null>(null);
@@ -267,10 +221,11 @@ export class UnitsTaskEditorComponent {
     }
     return this.taskSelectionControls.get(unitId)!;
   }
-
+*/
   /**
    * Отримує FormControl для вибору зони (РСП)
    */
+  /*
   getAreaControl(unitId: string): FormControl<string | null> {
     if (!this.areaSelectionControls.has(unitId)) {
       const control = new FormControl<string | null>(null);
@@ -283,10 +238,11 @@ export class UnitsTaskEditorComponent {
     }
     return this.areaSelectionControls.get(unitId)!;
   }
-
+*/
   /**
    * Обробник зміни завдання
    */
+  /*
   private onTaskChange(unitId: string, taskValue: string | null): void {
     const units = this.selectedUnits();
     const unitIndex = units.findIndex((u) => u.id === unitId);
@@ -298,10 +254,11 @@ export class UnitsTaskEditorComponent {
       this.hasUnsavedChanges.set(true);
     }
   }
-
+*/
   /**
    * Обробник зміни зони (РСП)
    */
+  /*
   private onAreaChange(unitId: string, areaValue: string | null): void {
     const units = this.selectedUnits();
     const unitIndex = units.findIndex((u) => u.id === unitId);
@@ -313,7 +270,7 @@ export class UnitsTaskEditorComponent {
       this.hasUnsavedChanges.set(true);
     }
   }
-
+*/
   /**
    * Перевіряє наявність незбережених змін і запитує підтвердження
    * @returns true якщо можна продовжити, false якщо користувач скасував
@@ -341,7 +298,7 @@ export class UnitsTaskEditorComponent {
       return;
     }
 
-    // Загружаем полный DataSet подразделения через UnitService
+    // Загружаем полный DataSet подразделения
     this.dataSetService.getUnitDataSet(unitId).subscribe({
       next: (unitDataSet) => {
         // Створюємо UnitTaskDto з порожніми значеннями завдань
@@ -353,10 +310,6 @@ export class UnitsTaskEditorComponent {
           AreaValue: '',
           Means: [],
         };
-
-        // Ініціалізуємо FormControl для Task та Area
-        this.taskSelectionControls.set(unitId, new FormControl<string | null>(null));
-        this.areaSelectionControls.set(unitId, new FormControl<string | null>(null));
 
         this.selectedUnits.set([...currentList, unitTask]);
         // Позначаємо що є незбережені зміни
@@ -411,25 +364,6 @@ export class UnitsTaskEditorComponent {
 
         // Оновлюємо вибрані підрозділи
         this.selectedUnits.set(documentData.unitsTask);
-
-        // Ініціалізуємо FormControl для кожного підрозділу
-        documentData.unitsTask.forEach((unit) => {
-          // Task
-          const taskControl = new FormControl<string | null>(unit.TaskValue || null);
-          taskControl.valueChanges.subscribe((value) => this.onTaskChange(unit.id, value));
-          this.taskSelectionControls.set(unit.id, taskControl);
-
-          // Area
-          const areaControl = new FormControl<string | null>(unit.AreaValue || null);
-          areaControl.valueChanges.subscribe((value) => this.onAreaChange(unit.id, value));
-          this.areaSelectionControls.set(unit.id, areaControl);
-
-          // Drone Model
-          if (unit.Means && unit.Means.length > 0) {
-            const droneModel: LookupDto = { id: '', value: unit.Means[0] };
-            this.selectedDroneModels.set(unit.id, droneModel);
-          }
-        });
 
         // Скидаємо прапорець незбережених змін (ми щойно завантажили збережені дані)
         this.hasUnsavedChanges.set(false);
@@ -555,10 +489,12 @@ export class UnitsTaskEditorComponent {
     this.selectedUnits.set([]);
     this.documentDate.set(new Date());
     this.documentNumber.set('');
+    /*
     this.selectedDroneModels.clear();
     this.droneModelSearchControls.clear();
     this.filteredDroneModels.clear();
     this.isLoadingDroneModels.clear();
+    */
 
     // Скидаємо прапорець стану
     this.hasUnsavedChanges.set(false);
