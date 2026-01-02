@@ -1,63 +1,74 @@
+// ===== COMPONENT HOST =====
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
 .tree-container {
-    padding: 16px;
-    height: 100%;
-    overflow: auto;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px;
 }
 
 .tree-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #e0e0e0;
-    
-    h3 {
-        margin: 0;
-        color: #333;
-        font-weight: 500;
-    }
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+
+  h3 {
+    margin: 0;
+    color: #333;
+    font-weight: 500;
+  }
 }
 
 .loading-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px;
-    gap: 16px;
-    
-    span {
-        color: #666;
-        font-size: 14px;
-    }
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 16px;
+
+  span {
+    color: #666;
+    font-size: 14px;
+  }
 }
 
 .unit-tree {
-    background: transparent;
-    
-    .mat-tree-node {
-        min-height: auto;
-    }
+  background: transparent;
+
+  .mat-tree-node {
+    min-height: auto;
+  }
 }
 
 .tree-node {
-    margin: 2px 0;
+  margin: 2px 0;
 }
 
 // Адаптивность для мобильных устройств
 @media (max-width: 768px) {
-    .tree-container {
-        padding: 8px;
+  .tree-container {
+    padding: 8px;
+  }
+
+  .tree-header {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+
+    button {
+      width: 100%;
     }
-    
-    .tree-header {
-        flex-direction: column;
-        gap: 8px;
-        align-items: stretch;
-        
-        button {
-            width: 100%;
-        }
-    }
+  }
 }

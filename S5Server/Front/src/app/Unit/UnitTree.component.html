@@ -4,22 +4,24 @@
   <span>Завантаження дерева підрозділів...</span>
 </div>
 } @else {
-<mat-tree
-  [dataSource]="dataSource"
-  [childrenAccessor]="childrenAccessor"
-  [expansionKey]="expansionKey"
-  class="unit-tree"
->
-  <!-- Универсальный узел дерева -->
-  <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle class="tree-node">
-    <unit-tree-node
-      [node]="node"
-      [isExpanded]="expansionModel.isSelected(node.id)"
-      [nodeActionsTemplate]="nodeActionsTemplate()"
-      (toggleNode)="toggleNode($event)"
-      (selectNode)="selectUnit($event)"
-    >
-    </unit-tree-node>
-  </mat-tree-node>
-</mat-tree>
+<div class="tree-container">
+  <mat-tree
+    [dataSource]="dataSource"
+    [childrenAccessor]="childrenAccessor"
+    [expansionKey]="expansionKey"
+    class="unit-tree"
+  >
+    <!-- Универсальный узел дерева -->
+    <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle class="tree-node">
+      <unit-tree-node
+        [node]="node"
+        [isExpanded]="expansionModel.isSelected(node.id)"
+        [nodeActionsTemplate]="nodeActionsTemplate()"
+        (toggleNode)="toggleNode($event)"
+        (selectNode)="selectUnit($event)"
+      >
+      </unit-tree-node>
+    </mat-tree-node>
+  </mat-tree>
+</div>
 }
