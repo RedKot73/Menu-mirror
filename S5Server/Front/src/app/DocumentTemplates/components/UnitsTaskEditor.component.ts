@@ -3,22 +3,23 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { debounceTime, distinctUntilChanged, switchMap, startWith, finalize } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDatepickerModule, MatDatepickerInputEvent } from '@angular/material/datepicker';
-import { provideNativeDateAdapter } from '@angular/material/core';
 import {
   MatAutocompleteModule,
   MatAutocompleteSelectedEvent,
 } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTableModule } from '@angular/material/table';
@@ -57,8 +58,10 @@ import {
     MatDatepickerModule,
     MatAutocompleteModule,
     MatIconModule,
+    MatButtonModule,
     MatButtonToggleModule,
     MatFormFieldModule,
+    MatInputModule,
     MatSelectModule,
     MatExpansionModule,
     MatTableModule,
@@ -253,6 +256,51 @@ export class UnitsTaskEditorComponent {
   }
 
   /**
+   * Перевіряє наявність незбережених змін і запитує підтвердження
+   * @returns true якщо можна продовжити, false якщо користувач скасував
+   */
+  checkUnsavedChanges(): boolean {
+    if (this.hasUnsavedChanges()) {
+      const confirmed = confirm(
+        '⚠️ У вас є незбережені зміни!\n\n' +
+          'Якщо ви продовжите, всі незбережені дані будуть втрачені.\n\n' +
+          'Продовжити?'
+      );
+      return confirmed;
+    }
+    return true;
+  }
+
+  /**
+   * Добавляет подразделение в список выбранных
+   * Загружает полный DataSet с особовим складом через API
+   */
+  addUnitToSelection(unitId: string) {
+    const currentList = this.selectedUnits();
+    // Проверяем, нет ли уже этого подразделения в списке
+    if (currentList.find((u) => u.id === unitId)) {
+      return;
+    }
+
+    // Загружаем полный DataSet подразделения через UnitService
+    this.unitService.getUnitDataSet(unitId).subscribe({
+      next: (unitDataSet) => {
+        this.selectedUnits.set([...currentList, unitDataSet]);
+        // Позначаємо що є незбережені зміни
+        this.hasUnsavedChanges.set(true);
+      },
+      error: (error) => {
+        console.error('Помилка завантаження даних підрозділу:', error);
+        const errorMessage = ErrorHandler.handleHttpError(
+          error,
+          'Помилка завантаження даних підрозділу:'
+        );
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      },
+    });
+  }
+
+  /**
    * Удаляет подразделение из списка выбранных
    */
   removeUnitFromSelection(nodeId: string) {
@@ -260,6 +308,43 @@ export class UnitsTaskEditorComponent {
     this.selectedUnits.set(currentList.filter((u) => u.id !== nodeId));
     // Позначаємо що є незбережені зміни
     this.hasUnsavedChanges.set(true);
+  }
+
+  loadDataSet(dataSetId: string): void
+  {
+    // Перевіряємо чи немає незбережених змін перед завантаженням нового набору
+    if (!this.checkUnsavedChanges()) {
+      return; // Користувач скасував завантаження
+    }
+
+    this.dataSetService.getDataSetById(dataSetId).subscribe({
+      next: (dataSet) => {
+        const documentData: DocumentDataSet = JSON.parse(dataSet.dataJson) as DocumentDataSet;
+
+        // Зберігаємо інформацію про поточний завантажений DataSet
+        this.dataSet.set(dataSet);
+
+        // Оновлюємо дату та номер документа
+        this.documentDate.set(new Date(documentData.documentDate));
+        this.documentNumber.set(documentData.documentNumber);
+
+        // Оновлюємо вибрані підрозділи
+        this.selectedUnits.set(documentData.units);
+
+        // Скидаємо прапорець незбережених змін (ми щойно завантажили збережені дані)
+        this.hasUnsavedChanges.set(false);
+
+        this.snackBar.open(`Завантажено набір "${dataSet.name}"`, 'Закрити', { duration: 3000 });
+      },
+      error: (error) => {
+        console.error('Помилка завантаження набору даних:', error);
+        const errorMessage = ErrorHandler.handleHttpError(
+          error,
+          'Помилка завантаження набору даних:'
+        );
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      },
+    });
   }
 
   /**
@@ -281,7 +366,7 @@ export class UnitsTaskEditorComponent {
       savedAt: new Date().toISOString(),
     };
 
-    const dataJson = JSON.stringify(dataToSave, null, 2);
+    const dataJson = JSON.stringify(dataToSave, null);
     // Генеруємо назву на основі дати та номера документа
     const dateStr = this.documentDate().toLocaleDateString('uk-UA');
     const docNum = this.documentNumber();
@@ -352,22 +437,6 @@ export class UnitsTaskEditorComponent {
         },
       });
     }
-  }
-
-  /**
-   * Перевіряє наявність незбережених змін і запитує підтвердження
-   * @returns true якщо можна продовжити, false якщо користувач скасував
-   */
-  checkUnsavedChanges(): boolean {
-    if (this.hasUnsavedChanges()) {
-      const confirmed = confirm(
-        '⚠️ У вас є незбережені зміни!\n\n' +
-          'Якщо ви продовжите, всі незбережені дані будуть втрачені.\n\n' +
-          'Продовжити?'
-      );
-      return confirmed;
-    }
-    return true;
   }
 
   /**
