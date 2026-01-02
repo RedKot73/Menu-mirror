@@ -7,7 +7,7 @@ import { MatMenuModule } from '@angular/material/menu';
 @Component({
   selector: 'app-navigator',
   template: `
-    <mat-toolbar class="sidenav-container">
+    <mat-toolbar>
       <button matButton [matMenuTriggerFor]="dictionaries">Довідники</button>
 
       <button matButton routerLink="/test" routerLinkActive="active-link">Дані документа</button>
@@ -69,29 +69,10 @@ import { MatMenuModule } from '@angular/material/menu';
     </mat-toolbar>
   `,
   styles: `
-    .sidenav-container {
-      height: auto;/*100%;*/
+    mat-toolbar {
       background: lightcyan;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-    
-    .sidenav {
-      width: 200px;
-    }
-    
-    .sidenav .mat-toolbar {
-      background: inherit;
-    }
-    
-    .mat-toolbar.mat-primary {
-      position: sticky;
-      top: 0;
-      z-index: 1;
     }
 
-    /* Стили для активной ссылки */
     .active-link {
       background-color: #1976d2 !important;
       color: white !important;
@@ -100,18 +81,15 @@ import { MatMenuModule } from '@angular/material/menu';
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
-    /* Эффект при наведении на активную ссылку */
     .active-link:hover {
       background-color: #1565c0 !important;
     }
 
-    /* Дополнительное выделение для обычных кнопок при наведении */
     button[matButton]:not(.active-link):hover {
       background-color: rgba(25, 118, 210, 0.1);
       border-radius: 4px;
     }
 
-    /* Стили для активных пунктов меню */
     .active-menu-item {
       background-color: #e3f2fd !important;
       color: #1976d2 !important;
@@ -121,7 +99,7 @@ import { MatMenuModule } from '@angular/material/menu';
     .active-menu-item:hover {
       background-color: #bbdefb !important;
     }
-   `,
+  `,
   imports: [RouterLink, RouterLinkActive, MatToolbarModule, MatButtonModule, MatMenuModule],
 })
 export class NavigatorComponent {}
