@@ -23,7 +23,7 @@
 } @else if (items().length === 0) {
 <div class="no-data">Нет доступных шаблонов</div>
 } @else {
-<table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" style="width:100%; margin-top: 1em;">
+<table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" >
     <!-- Menu Column -->
     <ng-container matColumnDef="menu">
         <th mat-header-cell *matHeaderCellDef style="width: 60px;"> Дії </th>
@@ -71,18 +71,6 @@
             <div class="template-name">{{ template.name }}</div>
         </td>
     </ng-container>
-
-    <!-- Format Column -->
-    <!--
-    <ng-container matColumnDef="format">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Формат </th>
-        <td mat-cell *matCellDef="let template">
-            <mat-chip class="format-chip" [class]="'format-' + template.format">
-                {{ getFormatLabel(template.format) }}
-            </mat-chip>
-        </td>
-    </ng-container>
-    -->
 
     <!-- Status Column -->
     <ng-container matColumnDef="status">
