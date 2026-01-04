@@ -1,101 +1,124 @@
 import { Injectable } from '@angular/core';
 import Handlebars from 'handlebars';
 import { DatasetData, TemplateRenderResult } from '../models/template.types';
-//import { /*DocTemplateUtils,*/ TemplateFormat } from '../models/shared.models';
 
-/*
-export interface ClientTemplateProcessor {
-  format: TemplateFormat.Html | TemplateFormat.Txt;
-  supportsClientRendering: true;
-}
-
-export interface ServerTemplateProcessor {
-  format: TemplateFormat.Docx; //| TemplateFormat.Pdf;
-  supportsClientRendering: false;
-}
-
-export type TemplateProcessor = ClientTemplateProcessor | ServerTemplateProcessor;
-*/
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class HandlebarsTemplateService {
-
   constructor() {
     this.registerHelpers();
   }
 
   /**
-   * Получает процессор для указанного формата
-   */
-  /*
-  getTemplateProcessor(format: TemplateFormat): TemplateProcessor {
-    if (format === TemplateFormat.Html || format === TemplateFormat.Txt) {
-      return {
-        format: format,
-        supportsClientRendering: true
-      };
-    }
-    
-    return {
-      format: format,
-      supportsClientRendering: false
-    };
-  }
-  */
-
-  /**
    * Компилирует и рендерит шаблон с данными на клиенте (только для HTML/TXT)
    */
-  renderTemplate(templateContent: string, data: DatasetData/*, format: TemplateFormat*/): TemplateRenderResult {
+  renderTemplate(
+    templateContent: string,
+    data: DatasetData): TemplateRenderResult
+  {
     try {
-      /*
-      // Проверяем поддержку клиентского рендеринга
-      if (!DocTemplateUtils.supportsClientRendering(format)) {
-        return {
-          success: false,
-          error: `Формат ${format} не поддерживает клиентский рендеринг. Используйте серверный API.`
-        };
-      }
-      */
-
-      // Валидация шаблона
-      /*
-      const validation = this.validateTemplate(templateContent);
-      if (!validation.isValid) {
-        return {
-          success: false,
-          error: `Ошибка в шаблоне: ${validation.errors.join(', ')}`
-        };
-      }
-      */
-      //data = { title: "My New Post", body: "This is my first post!" }
-
       // Компиляция шаблона
       const template = Handlebars.compile(templateContent);
-      
+
       // Рендеринг с данными
       const renderedContent = template(data);
-      
+
       return {
         success: true,
-        content: renderedContent
+        content: renderedContent,
       };
-
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
-      return {
-        success: false,
-        error: `Ошибка рендеринга: ${errorMessage}`
-      };
+      if (error instanceof Error) {
+        throw error; // Пробрасываем оригинальное исключение
+      }
+      throw new Error(`Ошибка рендеринга: ${String(error)}`); // Создаем новое исключение
     }
   }
 
+  /**
+   * Регистрирует кастомные помощники Handlebars
+   */
+  private registerHelpers(): void {
+    // Помощник для форматирования дат
+    Handlebars.registerHelper(
+      'formatDate',
+      function (date: string | number | Date, format: string) {
+        if (!date) {
+          return '';
+        }
+
+        const d = new Date(date);
+        if (isNaN(d.getTime())) {
+          return date;
+        }
+
+        switch (format) {
+          case 'short':
+            return d.toLocaleDateString('ru-RU');
+          case 'long':
+            return d.toLocaleDateString('ru-RU', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            });
+          case 'datetime':
+            return d.toLocaleString('ru-RU');
+          default:
+            return d.toLocaleDateString('ru-RU');
+        }
+      }
+    );
+
+    // Помощник для форматирования чисел
+    Handlebars.registerHelper('formatNumber', function (value: number, decimals?: number) {
+      if (typeof value !== 'number') {
+        return value;
+      }
+      return value.toLocaleString('ru-RU', {
+        minimumFractionDigits: decimals || 0,
+        maximumFractionDigits: decimals || 2,
+      });
+    });
+
+    // Помощник для условий с операторами
+    Handlebars.registerHelper(
+      'ifCond',
+      function (this: any, v1: any, operator: string, v2: any, options: any) {
+        switch (operator) {
+          case '==':
+            return v1 === v2 ? options.fn(this) : options.inverse(this);
+          case '===':
+            return v1 === v2 ? options.fn(this) : options.inverse(this);
+          case '!=':
+            return v1 !== v2 ? options.fn(this) : options.inverse(this);
+          case '!==':
+            return v1 !== v2 ? options.fn(this) : options.inverse(this);
+          case '<':
+            return v1 < v2 ? options.fn(this) : options.inverse(this);
+          case '<=':
+            return v1 <= v2 ? options.fn(this) : options.inverse(this);
+          case '>':
+            return v1 > v2 ? options.fn(this) : options.inverse(this);
+          case '>=':
+            return v1 >= v2 ? options.fn(this) : options.inverse(this);
+          default:
+            return options.inverse(this);
+        }
+      }
+    );
+
+    // Помощник для индексов в циклах
+    Handlebars.registerHelper('inc', function (value: number) {
+      return value + 1;
+    });
+  }
   /**
    * Валидирует синтаксис Handlebars шаблона
    */
-/*  
+  /*  
   validateTemplate(templateContent: string): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
@@ -132,7 +155,7 @@ export class HandlebarsTemplateService {
   /**
    * Получает список переменных из шаблона
    */
-/*  
+  /*  
   extractTemplateVariables(templateContent: string): string[] {
     const variables = new Set<string>();
     
@@ -160,7 +183,7 @@ export class HandlebarsTemplateService {
   /**
    * Создает пример данных на основе переменных в шаблоне
    */
-/*  
+  /*  
   generateSampleData(templateContent: string): any {
     const variables = this.extractTemplateVariables(templateContent);
     const sampleData: any = {};
@@ -183,73 +206,7 @@ export class HandlebarsTemplateService {
     return sampleData;
   }
 */
-  /**
-   * Регистрирует кастомные помощники Handlebars
-   */
-  private registerHelpers(): void {
-    // Помощник для форматирования дат
-    Handlebars.registerHelper('formatDate', function (date: string | number | Date, format: string) {
-      if (!date) {return '';}
-      
-      const d = new Date(date);
-      if (isNaN(d.getTime())) {return date;}
-      
-      switch (format) {
-        case 'short':
-          return d.toLocaleDateString('ru-RU');
-        case 'long':
-          return d.toLocaleDateString('ru-RU', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          });
-        case 'datetime':
-          return d.toLocaleString('ru-RU');
-        default:
-          return d.toLocaleDateString('ru-RU');
-      }
-    });
-
-    // Помощник для форматирования чисел
-    Handlebars.registerHelper('formatNumber', function(value: number, decimals?: number) {
-      if (typeof value !== 'number') {return value;}
-      return value.toLocaleString('ru-RU', { 
-        minimumFractionDigits: decimals || 0,
-        maximumFractionDigits: decimals || 2
-      });
-    });
-
-    // Помощник для условий с операторами
-    Handlebars.registerHelper('ifCond', function(this: any, v1: any, operator: string, v2: any, options: any) {
-      switch (operator) {
-        case '==':
-          return (v1 === v2) ? options.fn(this) : options.inverse(this);
-        case '===':
-          return (v1 === v2) ? options.fn(this) : options.inverse(this);
-        case '!=':
-          return (v1 !== v2) ? options.fn(this) : options.inverse(this);
-        case '!==':
-          return (v1 !== v2) ? options.fn(this) : options.inverse(this);
-        case '<':
-          return (v1 < v2) ? options.fn(this) : options.inverse(this);
-        case '<=':
-          return (v1 <= v2) ? options.fn(this) : options.inverse(this);
-        case '>':
-          return (v1 > v2) ? options.fn(this) : options.inverse(this);
-        case '>=':
-          return (v1 >= v2) ? options.fn(this) : options.inverse(this);
-        default:
-          return options.inverse(this);
-      }
-    });
-
-    // Помощник для индексов в циклах
-    Handlebars.registerHelper('inc', function(value: number) {
-      return value + 1;
-    });
-  }
-/*
+  /*
   private checkBracketBalance(content: string): { balanced: boolean } {
     let count = 0;
     let inHandlebars = false;
@@ -303,12 +260,12 @@ export class HandlebarsTemplateService {
     
     return errors;
   }
-*/
+
   private isHandlebarsHelper(variable: string): boolean {
     const helpers = ['if', 'unless', 'each', 'with', 'lookup', 'log', 'formatDate', 'formatNumber', 'ifCond', 'inc'];
     return helpers.includes(variable.split('.')[0]);
   }
-/*
+
   private getSampleValueForVariable(variable: string): any {
     const varName = variable.toLowerCase();
     

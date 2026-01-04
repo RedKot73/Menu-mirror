@@ -300,11 +300,11 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   /**
    * Загружает полный DataSet с особовим складом через API
    */
-  onDataSetSelected($event: TemplateDataSetListItem | null) {
-    if (!$event) {
+  onDataSetSelected(dataSet: TemplateDataSetListItem | null) {
+    if (!dataSet) {
       return;
     }
-    this.unitsTaskEditor.loadDataSet($event?.id);
+    this.unitsTaskEditor.loadDataSet(dataSet.id);
   }
 
   /**
@@ -313,5 +313,4 @@ export class TestComponent implements AfterViewInit, OnDestroy {
   createNewDataSet(): void {
     this.unitsTaskEditor.createNewDataSet();
   }
-
 }

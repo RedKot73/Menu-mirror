@@ -8,8 +8,10 @@
       <mat-tab-group>
         <mat-tab label="Набори даних">
           <!-- Таблица з наборами даних -->
-          <app-template-dataset-table (dataSetSelected)="onDataSetSelected($event)">
-          </app-template-dataset-table>
+          <app-template-dataset-table
+            class="dataset-table"
+            (dataSetSelected)="onDataSetSelected($event)"
+          ></app-template-dataset-table>
         </mat-tab>
         <mat-tab label="Шаблони документів">
           <!-- Компонент шаблонів документів -->
@@ -43,7 +45,10 @@
     <mat-tab-group dynamicHeight (selectedIndexChange)="onTabChange($event)">
       <mat-tab label="Дані документа">
         <!-- DataSet Editor -->
-        <app-dataset-editor #dataSetEditor [dataSet]="selectedDataSet()"> </app-dataset-editor>
+    <app-units-task-editor #unitsTaskEditor></app-units-task-editor>
+<!--
+    <app-dataset-editor #dataSetEditor [dataSet]="selectedDataSet()"> </app-dataset-editor>
+      -->
       </mat-tab>
       <mat-tab label="Шаблон">
         <!-- Template Editor -->

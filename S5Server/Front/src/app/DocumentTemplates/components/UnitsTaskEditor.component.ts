@@ -6,7 +6,11 @@ import { ReactiveFormsModule } from '@angular/forms';
 
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
-import { MatDatepickerModule, MatDatepickerInputEvent } from '@angular/material/datepicker';
+import {
+  MatDatepickerModule,
+  MatDatepickerInputEvent,
+} from '@angular/material/datepicker';
+import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -43,6 +47,7 @@ import { DocTemplateUtils } from '../models/shared.models';
     MatInputModule,
     UnitTaskCardComponent,
   ],
+  providers: [provideNativeDateAdapter()],
   templateUrl: './UnitsTaskEditor.component.html',
   styleUrls: ['./UnitsTaskEditor.component.scss'],
 })
@@ -83,8 +88,7 @@ export class UnitsTaskEditorComponent {
    * Відкриває діалог редагування JSON
    */
   openJsonEditor(): void {
-    const units = this.selectedUnits();
-    const jsonString = JSON.stringify(units, null, 2);
+    const jsonString = this.getDataSetContent(null, 2);
 
     this.dialog.open(JsonEditorDialogComponent, {
       data: {
@@ -347,7 +351,15 @@ export class UnitsTaskEditorComponent {
 
     this.dataSetService.getDataSetById(dataSetId).subscribe({
       next: (dataSet) => {
-        const documentData: DocumentDataSet = JSON.parse(dataSet.dataJson) as DocumentDataSet;
+        let documentData: DocumentDataSet;
+        try {
+          documentData = JSON.parse(dataSet.dataJson) as DocumentDataSet;
+        } catch (error) {
+          const errorMessage = ErrorHandler.handleJsonError(error);
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          return;
+        }
+
         if (!documentData || !documentData.unitsTask) {
           this.snackBar.open('Набір даних не містить інформації про підрозділи', 'Закрити', {
             duration: 5000,
@@ -381,6 +393,23 @@ export class UnitsTaskEditorComponent {
     });
   }
 
+  getDataSetContent(
+    replacer?: (string | number)[] | null | undefined,
+    space?: string | number | undefined
+  ): string
+  {
+    // Формуємо дані для збереження
+    const dataToSave: DocumentDataSet = {
+      documentDate: this.documentDate().toISOString(),
+      documentNumber: this.documentNumber(),
+      unitsTask: this.selectedUnits(),
+      savedAt: new Date().toISOString(),
+    };
+
+    const dataJson = JSON.stringify(dataToSave, replacer, space);
+    return dataJson;
+  }
+
   /**
    * Зберігає вибрані підрозділи як набір даних
    */
@@ -392,15 +421,7 @@ export class UnitsTaskEditorComponent {
       return;
     }
 
-    // Формуємо дані для збереження
-    const dataToSave: DocumentDataSet = {
-      documentDate: this.documentDate().toISOString(),
-      documentNumber: this.documentNumber(),
-      unitsTask: this.selectedUnits(),
-      savedAt: new Date().toISOString(),
-    };
-
-    const dataJson = JSON.stringify(dataToSave, null);
+    const dataJson = this.getDataSetContent();
     // Генеруємо назву на основі дати та номера документа
     const dateStr = this.documentDate().toLocaleDateString('uk-UA');
     const docNum = this.documentNumber();

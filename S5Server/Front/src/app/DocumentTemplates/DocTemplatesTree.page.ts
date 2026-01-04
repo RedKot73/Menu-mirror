@@ -18,10 +18,11 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { DocTemplateComponent } from './components/DocTemplate.component';
 import { DataSetTableComponent } from './components/DataSetTable.component';
 import { TemplateEditorComponent } from './components/TemplateEditor.component';
-import { DataSetEditorComponent } from './components/DataSetEditor.component';
+//import { DataSetEditorComponent } from './components/DataSetEditor.component';
 import { ResultEditorComponent } from './components/ResultEditor.component';
 import { TemplateDto } from '../DocumentTemplates/models/document-template.models';
 import { TemplateDataSetListItem } from '../DocumentTemplates/models/template-dataset.models';
+import { UnitsTaskEditorComponent } from '../DocumentTemplates/components/UnitsTaskEditor.component';
 
 @Component({
   selector: 'app-doc-templates-page',
@@ -32,8 +33,9 @@ import { TemplateDataSetListItem } from '../DocumentTemplates/models/template-da
     DocTemplateComponent,
     DataSetTableComponent,
     TemplateEditorComponent,
-    DataSetEditorComponent,
+    //DataSetEditorComponent,
     ResultEditorComponent,
+    UnitsTaskEditorComponent,
   ],
   styleUrl: './DocTemplatesTree.page.scss',
   templateUrl: './DocTemplatesTree.page.html',
@@ -44,8 +46,10 @@ export class DocTemplatesTree implements AfterViewInit, OnDestroy {
   // ViewChild for container reference
   @ViewChild('containerRef') containerRef!: ElementRef<HTMLElement>;
   @ViewChild('templateEditor') templateEditor?: TemplateEditorComponent;
-  @ViewChild('dataSetEditor') dataSetEditor?: DataSetEditorComponent;
+//  @ViewChild('dataSetEditor') dataSetEditor?: DataSetEditorComponent;
   @ViewChild('resultEditor') resultEditor?: ResultEditorComponent;
+
+  @ViewChild('unitsTaskEditor') unitsTaskEditor!: UnitsTaskEditorComponent;
 
   selectedTemplate = signal<TemplateDto | null>(null);
   selectedDataSet = signal<TemplateDataSetListItem | null>(null);
@@ -244,7 +248,10 @@ export class DocTemplatesTree implements AfterViewInit, OnDestroy {
    * Обработчик выбора набора данных из DataSetTable компонента
    */
   onDataSetSelected(dataSet: TemplateDataSetListItem | null): void {
-    this.selectedDataSet.set(dataSet);
+    if (!dataSet) {
+      return;
+    }
+    this.unitsTaskEditor.loadDataSet(dataSet.id);
   }
 
   /**
@@ -258,7 +265,7 @@ export class DocTemplatesTree implements AfterViewInit, OnDestroy {
 
     // Якщо переходимо на вкладку результату, також оновлюємо дані
     if (index === 2) {
-      const dataSetContent = this.dataSetEditor?.dataJsonControl.value || '';
+      const dataSetContent = this.unitsTaskEditor.getDataSetContent();
       this.dataSetContent.set(dataSetContent);
     }
   }

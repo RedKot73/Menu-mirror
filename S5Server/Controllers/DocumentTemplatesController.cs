@@ -90,17 +90,26 @@ namespace S5Server.Controllers
         {
             if (!ModelState.IsValid)
                 return ValidationProblem(ModelState);
-
+            /*
             if (dto.File is null)//Проверить DefaultDataSetId
                 return Problem(statusCode: 400, title: "Файл шаблона не передано");
             if (dto.File.Length == 0)//Проверить DefaultDataSetId
                 return Problem(statusCode: 400, title: "Файл шаблона порожній");
+            */
 
             try
             {
-                using var ms = new MemoryStream();
-                await dto.File.CopyToAsync(ms, ct);
-                var content = ms.ToArray();
+                byte[] content = [];
+                if (dto.File is null)
+                {
+                    content = Encoding.UTF8.GetBytes("<i>No Content</i>");
+                }
+                else
+                {
+                    using var ms = new MemoryStream();
+                    await dto.File.CopyToAsync(ms, ct);
+                    content = ms.ToArray();
+                }
 
                 var entity = new DocumentTemplate
                 {

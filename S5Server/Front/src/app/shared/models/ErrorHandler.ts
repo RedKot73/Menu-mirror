@@ -34,101 +34,109 @@ const HTTP_STATUS_MESSAGES: Record<number, string> = {
  * Утилітний клас для обробки помилок
  */
 export class ErrorHandler {
-    /**
-     * Обробляє помилку валідації JSON та повертає читабельне повідомлення
-     * @param error - Помилка, яка виникла при парсингу JSON
-     * @returns Форматоване повідомлення про помилку
-     */
-    static handleJsonError(error: unknown): string {
-        if (error instanceof Error) {
-            return `Невалідний JSON формат: ${error.message}`;
-        }
-        return 'Невалідний JSON формат';
+  /**
+   * Обробляє помилку валідації JSON та повертає читабельне повідомлення
+   * @param error - Помилка, яка виникла при парсингу JSON
+   * @returns Форматоване повідомлення про помилку
+   */
+  static handleJsonError(
+    error: unknown,
+    defaultMessage: string = 'Невідома помилка при обробці даних',
+    logError: boolean = true
+  ): string {
+    let message = defaultMessage;
+    if (error instanceof Error) {
+      message = `Невалідний JSON формат: ${error.message}`;
     }
 
-    /**
-     * Обробляє помилку HTTP запиту з детальним аналізом статусів та структури відповіді
-     * @param error - Помилка HTTP запиту
-     * @param defaultMessage - Повідомлення за замовчуванням
-     * @param logError - Чи логувати помилку в консоль (за замовчуванням true)
-     * @returns Форматоване повідомлення про помилку
-     */
-    static handleHttpError(
-        error: unknown, 
-        defaultMessage: string = 'Помилка сервера',
-        logError: boolean = true
-    ): string {
-        if (logError) {
-            console.error('HTTP Error:', error);
-        }
+    if (logError) {
+      console.error('JSON Error:', message);
+    }
+    return message;
+  }
 
-        // Перевіряємо чи це HttpErrorResponse
-        if (error instanceof HttpErrorResponse) {
-            // Клиентська помилка (мережа, CORS тощо)
-            if (error.error instanceof ErrorEvent) {
-                return `Помилка клієнта: ${error.error.message}`;
-            }
-
-            // Серверна помилка - спочатку перевіряємо структуровані дані
-            // RFC 7807 Problem Details (title + detail)
-            if (error.error?.title) {
-                let message = error.error.title;
-                if (error.error.detail) {
-                    message += `: ${error.error.detail}`;
-                }
-                return message;
-            }
-
-            // Простий message у відповіді (пріоритет над загальними повідомленнями статусу)
-            if (error.error?.message) {
-                return error.error.message;
-            }
-
-            // Спеціальні випадки з додатковою інформацією
-            if (error.status === 400 && error.error?.errors) {
-                return 'Невірні дані запиту: ' + JSON.stringify(error.error.errors);
-            }
-
-            // Обробка за HTTP статусом через довідник
-            const statusMessage = HTTP_STATUS_MESSAGES[error.status];
-            
-            if (statusMessage) {
-                // Знайдено стандартне повідомлення для цього статусу
-                return statusMessage;
-            }
-            
-            // Невідомий статус - використовуємо defaultMessage або загальне повідомлення
-            return defaultMessage !== 'Помилка сервера' 
-                ? `${defaultMessage} (код: ${error.status})`
-                : `Помилка сервера: ${error.status}`;
-        }
-
-        // Fallback для інших типів помилок
-        const err = error as { error?: { message?: string }; message?: string };
-        if (err?.error?.message) {
-            return err.error.message;
-        }
-        if (err?.message) {
-            return err.message;
-        }
-
-        return defaultMessage;
+  /**
+   * Обробляє помилку HTTP запиту з детальним аналізом статусів та структури відповіді
+   * @param error - Помилка HTTP запиту
+   * @param defaultMessage - Повідомлення за замовчуванням
+   * @param logError - Чи логувати помилку в консоль (за замовчуванням true)
+   * @returns Форматоване повідомлення про помилку
+   */
+  static handleHttpError(
+    error: unknown,
+    defaultMessage: string = 'Помилка сервера',
+    logError: boolean = true
+  ): string {
+    if (logError) {
+      console.error('HTTP Error:', error);
     }
 
+    // Перевіряємо чи це HttpErrorResponse
+    if (error instanceof HttpErrorResponse) {
+      // Клиентська помилка (мережа, CORS тощо)
+      if (error.error instanceof ErrorEvent) {
+        return `Помилка клієнта: ${error.error.message}`;
+      }
 
-    /**
-     * Обробляє загальну помилку та повертає читабельне повідомлення
-     * @param error - Будь-яка помилка
-     * @param defaultMessage - Повідомлення за замовчуванням
-     * @returns Форматоване повідомлення про помилку
-     */
-    static handleGenericError(error: unknown, defaultMessage: string = 'Виникла помилка'): string {
-        if (error instanceof Error) {
-            return error.message;
+      // Серверна помилка - спочатку перевіряємо структуровані дані
+      // RFC 7807 Problem Details (title + detail)
+      if (error.error?.title) {
+        let message = error.error.title;
+        if (error.error.detail) {
+          message += `: ${error.error.detail}`;
         }
-        if (typeof error === 'string') {
-            return error;
-        }
-        return defaultMessage;
+        return message;
+      }
+
+      // Простий message у відповіді (пріоритет над загальними повідомленнями статусу)
+      if (error.error?.message) {
+        return error.error.message;
+      }
+
+      // Спеціальні випадки з додатковою інформацією
+      if (error.status === 400 && error.error?.errors) {
+        return 'Невірні дані запиту: ' + JSON.stringify(error.error.errors);
+      }
+
+      // Обробка за HTTP статусом через довідник
+      const statusMessage = HTTP_STATUS_MESSAGES[error.status];
+
+      if (statusMessage) {
+        // Знайдено стандартне повідомлення для цього статусу
+        return statusMessage;
+      }
+
+      // Невідомий статус - використовуємо defaultMessage або загальне повідомлення
+      return defaultMessage !== 'Помилка сервера'
+        ? `${defaultMessage} (код: ${error.status})`
+        : `Помилка сервера: ${error.status}`;
     }
+
+    // Fallback для інших типів помилок
+    const err = error as { error?: { message?: string }; message?: string };
+    if (err?.error?.message) {
+      return err.error.message;
+    }
+    if (err?.message) {
+      return err.message;
+    }
+
+    return defaultMessage;
+  }
+
+  /**
+   * Обробляє загальну помилку та повертає читабельне повідомлення
+   * @param error - Будь-яка помилка
+   * @param defaultMessage - Повідомлення за замовчуванням
+   * @returns Форматоване повідомлення про помилку
+   */
+  static handleGenericError(error: unknown, defaultMessage: string = 'Виникла помилка'): string {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    if (typeof error === 'string') {
+      return error;
+    }
+    return defaultMessage;
+  }
 }
