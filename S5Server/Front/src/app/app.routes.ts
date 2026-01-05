@@ -24,7 +24,8 @@ class UsersPage {}
 export const routes: Routes = [
   {
     path: 'test',
-    loadComponent: () => import('../app/test/Test.page').then((m) => m.TestComponent),
+    loadComponent: () =>
+      import('../app/DocumentDataSet/DocumentDataSet.page').then((m) => m.TestComponent),
     title: 'Тестова сторінка',
   },
   {

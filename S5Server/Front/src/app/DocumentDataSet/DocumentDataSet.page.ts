@@ -45,8 +45,8 @@ import { UnitsTaskEditorComponent } from '../DocumentTemplates/components/UnitsT
     UnitsTaskEditorComponent,
   ],
   providers: [provideNativeDateAdapter()],
-  templateUrl: './Test.page.html',
-  styleUrls: ['./Test.page.scss', '../Soldier/Soldier.component.scss'],
+  templateUrl: './DocumentDataSet.page.html',
+  styleUrls: ['./DocumentDataSet.page.scss', '../Soldier/Soldier.component.scss'],
 })
 export class TestComponent implements AfterViewInit, OnDestroy {
   breakpointObserver = inject(BreakpointObserver);
