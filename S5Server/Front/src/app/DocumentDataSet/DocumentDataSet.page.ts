@@ -29,7 +29,7 @@ import { TemplateDataSetListItem } from '../DocumentTemplates/models/template-da
 import { UnitsTaskEditorComponent } from '../DocumentTemplates/components/UnitsTaskEditor.component';
 
 @Component({
-  selector: 'app-test-page',
+  selector: 'app-DocumentDataSet-page',
   imports: [
     CommonModule,
     MatTooltipModule,
@@ -48,7 +48,7 @@ import { UnitsTaskEditorComponent } from '../DocumentTemplates/components/UnitsT
   templateUrl: './DocumentDataSet.page.html',
   styleUrls: ['./DocumentDataSet.page.scss', '../Soldier/Soldier.component.scss'],
 })
-export class TestComponent implements AfterViewInit, OnDestroy {
+export class DocumentDataSetComponent implements AfterViewInit, OnDestroy {
   breakpointObserver = inject(BreakpointObserver);
 
   // --- ViewChild References ---

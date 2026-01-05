@@ -10,7 +10,9 @@ import { MatMenuModule } from '@angular/material/menu';
     <mat-toolbar>
       <button matButton [matMenuTriggerFor]="dictionaries">Довідники</button>
 
-      <button matButton routerLink="/test" routerLinkActive="active-link">Дані документа</button>
+      <button matButton routerLink="/DocumentDataSet" routerLinkActive="active-link">
+        Дані документа
+      </button>
 
       <button matButton routerLink="/templates" routerLinkActive="active-link">
         Шаблони документів

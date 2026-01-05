@@ -23,10 +23,10 @@ class UsersPage {}
 
 export const routes: Routes = [
   {
-    path: 'test',
+    path: 'DocumentDataSet',
     loadComponent: () =>
-      import('../app/DocumentDataSet/DocumentDataSet.page').then((m) => m.TestComponent),
-    title: 'Тестова сторінка',
+      import('../app/DocumentDataSet/DocumentDataSet.page').then((m) => m.DocumentDataSetComponent),
+    title: 'Дані документів',
   },
   {
     path: 'dictArea',
