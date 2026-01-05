@@ -29,7 +29,7 @@ import { TemplateDataSetListItem } from '../DocumentTemplates/models/template-da
 import { UnitsTaskEditorComponent } from '../DocumentTemplates/components/UnitsTaskEditor.component';
 
 @Component({
-  selector: 'app-DocumentDataSet-page',
+  selector: 'app-document-data-set-page',
   imports: [
     CommonModule,
     MatTooltipModule,
