@@ -18,7 +18,6 @@ namespace S5Server.Controllers
         private readonly ILogger<DocumentTemplatesController> _logger;
 
         public TemplateDataSetController(MainDbContext db, 
-            //TemplateRenderer renderer,
             ILogger<DocumentTemplatesController> logger)
         {
             _db = db;
@@ -29,12 +28,11 @@ namespace S5Server.Controllers
         [HttpGet("data-sets")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetAll(/*string id,*/ CancellationToken ct = default)
+        public async Task<IActionResult> GetAll(CancellationToken ct = default)
         {
             try
             {
                 var items = await _set.AsNoTracking()
-                    //.Where(t => t.TemplateId == id)
                     .OrderBy(t => t.Name)
                     .ThenByDescending(t => t.CreatedAtUtc)
                     .Select(t => TemplateDataSetDto.ToDto(t))
@@ -44,13 +42,13 @@ namespace S5Server.Controllers
             }
             catch (OperationCanceledException)
             {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
+                return Problem(statusCode: 499, title: "Скасовано кліентом");
             }
             catch (Exception ex)
             {
                 if (_logger.IsEnabled(LogLevel.Error))
                     _logger.LogError(ex, "Ошибка получения наборов данных");
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+                return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
             }
         }
 
@@ -77,7 +75,6 @@ namespace S5Server.Controllers
 
                 var ds = new TemplateDataSet
                 {
-                    //TemplateId = id,
                     Name = dto.Name.Trim(),
                     DataJson = dto.DataJson,
                     CreatedAtUtc = DateTime.UtcNow
@@ -101,13 +98,13 @@ namespace S5Server.Controllers
             }
             catch (OperationCanceledException)
             {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
+                return Problem(statusCode: 499, title: "Скасовано кліентом");
             }
             catch (Exception ex)
             {
                 if (_logger.IsEnabled(LogLevel.Error))
                     _logger.LogError(ex, "Ошибка создания набора данных");
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+                return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
             }
         }
 
@@ -122,19 +119,19 @@ namespace S5Server.Controllers
                     .AsNoTracking()
                     .FirstOrDefaultAsync(x => x.Id == dataSetId, ct);
                 if (ds == null)
-                    return Problem(statusCode: 404, title: "Не найдено", detail: $"DataSetId={dataSetId}");
+                    return Problem(statusCode: 404, title: "Не знайдено", detail: $"DataSetId={dataSetId}");
 
                 return Ok(TemplateDataSetDto.ToDto(ds));
             }
             catch (OperationCanceledException)
             {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
+                return Problem(statusCode: 499, title: "Скасовано кліентом");
             }
             catch (Exception ex)
             {
                 if (_logger.IsEnabled(LogLevel.Error))
                     _logger.LogError(ex, "Ошибка получения набора данных DataSetId={DataSetId}", dataSetId);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+                return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
             }
         }
 
@@ -144,7 +141,7 @@ namespace S5Server.Controllers
         [HttpGet("data-sets/unit-task/{id}")]
         public async Task<ActionResult<UnitDataSetDto>> GetUnitDataSet(string id, CancellationToken ct = default)
         {
-            var unit = await _db.Units//Query()
+            var unit = await _db.Units
                 .AsNoTracking()
                 .Include(u => u.Parent)
                 .Include(u => u.AssignedUnit)
@@ -154,22 +151,45 @@ namespace S5Server.Controllers
             if (unit is null)
                 return NotFound();
 
-            var soldiers = await _db.Soldiers
+            var sldrsData = _db.Soldiers
+                .AsNoTracking()
+                .Include(s => s.Unit)
+                .Include(s => s.AssignedUnit)
+                .Include(s => s.InvolvedUnit)
+                .Include(s => s.Rank)
+                .Include(s => s.Position)
+                .Include(s => s.State);
+            var soldiers = await sldrsData /* _db.Soldiers
                 .AsNoTracking()
                 .Include(s => s.Unit)
                 .Include(s => s.AssignedUnit)
                 .Include(s => s.OperationalUnit)
                 .Include(s => s.Rank)
                 .Include(s => s.Position)
-                .Include(s => s.State)
+                .Include(s => s.State) */
                 .Where(s => s.UnitId == id)
                 .OrderBy(s => s.Rank.OrderVal)
                 .ThenBy(s => s.LastName)
                 .ThenBy(s => s.FirstName)
                 .Select(s => SoldierDto.ToDto(s))
                 .ToListAsync(ct);
+            var assignedSoldiers = await sldrsData
+                .Where (s => s.AssignedUnitId == id)
+                .OrderBy(s => s.Rank.OrderVal)
+                .ThenBy(s => s.LastName)
+                .ThenBy(s => s.FirstName)
+                .Select(s => SoldierDto.ToDto(s))
+                .ToListAsync(ct);
+            var involvedSoldiers = await sldrsData
+                .Where(s => s.InvolvedUnitId == id)
+                .OrderBy(s => s.Rank.OrderVal)
+                .ThenBy(s => s.LastName)
+                .ThenBy(s => s.FirstName)
+                .Select(s => SoldierDto.ToDto(s))
+                .ToListAsync(ct);
 
-            return Ok(UnitDataSetDto.From(unit, soldiers));
+            return Ok(UnitDataSetDto.From(unit,
+                soldiers, assignedSoldiers, involvedSoldiers));
         }
 
         [HttpPut("data-sets/{dataSetId}")]
@@ -190,7 +210,7 @@ namespace S5Server.Controllers
                     .FirstOrDefaultAsync(x => x.Id == dataSetId, ct);
 
                 if (ds == null)
-                    return Problem(statusCode: 404, title: "Не найдено", detail: $"DataSetId={dataSetId}");
+                    return Problem(statusCode: 404, title: "Не знайдено", detail: $"DataSetId={dataSetId}");
 
                 var publishStateChanged = ds.IsPublished != dto.IsPublished;
 
@@ -227,13 +247,13 @@ namespace S5Server.Controllers
             }
             catch (OperationCanceledException)
             {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
+                return Problem(statusCode: 499, title: "Скасовано кліентом");
             }
             catch (Exception ex)
             {
                 if (_logger.IsEnabled(LogLevel.Error))
                     _logger.LogError(ex, "Ошибка при обновлении набора данных DataSetId={DataSetId}", dataSetId);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+                return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
             }
         }
 
@@ -247,7 +267,7 @@ namespace S5Server.Controllers
                 var ds = await _set
                     .FirstOrDefaultAsync(x => x.Id == dataSetId, ct);
                 if (ds == null)
-                    return Problem(statusCode: 404, title: "Не найдено", detail: $"DataSetId={dataSetId}");
+                    return Problem(statusCode: 404, title: "Не знайдено", detail: $"DataSetId={dataSetId}");
 
                 _set.Remove(ds);
                 await _db.SaveChangesAsync(ct);
@@ -255,13 +275,13 @@ namespace S5Server.Controllers
             }
             catch (OperationCanceledException)
             {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
+                return Problem(statusCode: 499, title: "Скасовано кліентом");
             }
             catch (Exception ex)
             {
                 if (_logger.IsEnabled(LogLevel.Error))
                     _logger.LogError(ex, "Ошибка удаления набора данных DataSetId={DataSetId}", dataSetId);
-                return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+                return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
             }
         }
 
@@ -276,7 +296,7 @@ namespace S5Server.Controllers
                     .AsTracking()
                     .FirstOrDefaultAsync(x => x.Id == id, ct);
                 if (t == null)
-                    return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+                    return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
 
                 t.IsPublished = set_publish;
                 t.PublishedAtUtc = DateTime.UtcNow;
@@ -286,7 +306,7 @@ namespace S5Server.Controllers
             }
             catch (OperationCanceledException)
             {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
+                return Problem(statusCode: 499, title: "Скасовано кліентом");
             }
             catch (Exception ex)
             {

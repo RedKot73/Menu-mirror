@@ -19,7 +19,7 @@ namespace S5Server.Models
         string? ForceType,
         string? UnitTypeId,
         string? UnitType,
-        bool IsOperational,
+        bool IsInvolved,
         int OrderVal,
         string? Comment
     )
@@ -38,7 +38,7 @@ namespace S5Server.Models
                 e.ForceType?.ShortValue,
                 e.UnitTypeId,
                 e.UnitType?.ShortValue,
-                e.IsOperational,
+                e.IsInvolved,
                 e.OrderVal,
                 e.Comment
             );
@@ -52,7 +52,7 @@ namespace S5Server.Models
             e.MilitaryNumber = dto.MilitaryNumber?.Trim();
             e.ForceTypeId = dto.ForceTypeId;
             e.UnitTypeId = dto.UnitTypeId;
-            e.IsOperational = dto.IsOperational;
+            e.IsInvolved = dto.IsInvolved;
             e.OrderVal = dto.OrderVal;
             e.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
         }
@@ -123,10 +123,24 @@ namespace S5Server.Models
         string? UnitType,
         bool IsOperational,
         string? Comment,
-        SoldierDto[] Soldiers
+        /// <summary>
+        /// Особовий склад
+        /// </summary>
+        SoldierDto[] Soldiers,
+        /// <summary>
+        /// Приданий особовий склад
+        /// </summary>
+        SoldierDto[] AssignedSoldiers,
+        /// <summary>
+        /// Задіяний особовий склад - Екіпаж
+        /// </summary>
+        SoldierDto[] InvolvedSoldiers
     )
     {
-        public static UnitDataSetDto From(Unit u, IEnumerable<SoldierDto> soldiers) => new(
+        public static UnitDataSetDto From(Unit u,
+            List<SoldierDto> soldiers,
+            List<SoldierDto> assignedSoldiers,
+            List<SoldierDto> involvedSoldiers) => new(
             u.Id,
             u.ParentId,
             u.Parent?.ShortName,
@@ -134,9 +148,11 @@ namespace S5Server.Models
             u.ShortName,
             u.UnitTypeId,
             u.UnitType?.ShortValue,
-            u.IsOperational,
+            u.IsInvolved,
             u.Comment,
-            [.. soldiers]
+            [.. soldiers],
+            [.. assignedSoldiers],
+            [.. involvedSoldiers]
         );
     }
 
@@ -214,7 +230,6 @@ namespace S5Server.Models
         /// <summary>
         /// Тип підрозділу Бригада, Полк, Батальйон, Рота
         /// </summary>
-        //[ForeignKey(nameof(DictUnitType))]
         public string? UnitTypeId { get; set; }
         /// <summary>
         /// Тип підрозділу Бригада, Полк, Батальйон, Рота
@@ -225,7 +240,17 @@ namespace S5Server.Models
         /// <summary>
         /// True - Оперативний/Тимчасовий підрозділ
         /// </summary>
-        public bool IsOperational { get; set; } = false;
+        public bool IsInvolved { get; set; } = false;
+
+        /// <summary>
+        /// Напрямок ЛБЗ або ППД
+        /// </summary>
+        public string? AreaId { get; set; }
+        /// <summary>
+        /// Напрямок ЛБЗ або ППД
+        /// </summary>
+        [ValidateNever]
+        public DictArea Area { get; set; } = default!;
 
         public string? Comment { get; set; }
 
@@ -260,9 +285,9 @@ namespace S5Server.Models
         public List<Soldier> AssignedSoldiers { get; set; } = default!;
 
         /// <summary>
-        /// Особовий склад оперативного підрозділу
+        /// Задіяний особовий склад - Екіпаж
         /// </summary>
         [NotMapped]
-        public List<Soldier> OperationalSoldiers { get; set; } = default!;
+        public List<Soldier> InvolvedSoldiers { get; set; } = default!;
     }
 }

@@ -71,19 +71,19 @@
     <input
       type="text"
       matInput
-      [formControl]="operationalUnitSearchControl"
-      [matAutocomplete]="operationalUnitAuto"
+      [formControl]="involvedUnitSearchControl"
+      [matAutocomplete]="involvedUnitAuto"
       placeholder="Екіпаж/Група"
     />
     <mat-autocomplete
-      #operationalUnitAuto="matAutocomplete"
-      [displayWith]="displayOperationalUnitFn"
-      (optionSelected)="onOperationalUnitSelected($event)"
+      #involvedUnitAuto="matAutocomplete"
+      [displayWith]="displayInvolvedUnitFn"
+      (optionSelected)="onInvolvedUnitSelected($event)"
     >
       <mat-option [value]="null">Не призначено</mat-option>
-      @if (isLoadingOperationalUnits) {
+      @if (isLoadingInvolvedUnits) {
       <mat-option disabled>Завантаження...</mat-option>
-      } @for (unit of filteredOperationalUnits | async; track unit.id) {
+      } @for (unit of filteredInvolvedUnits | async; track unit.id) {
       <mat-option [value]="unit">{{ unit.value }}</mat-option>
       }
     </mat-autocomplete>

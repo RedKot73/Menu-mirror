@@ -71,10 +71,10 @@ export class SoldierDialogComponent implements OnInit {
   selectedAssignedUnit: LookupDto | null = null;
 
   // Для автокомплита оперативного подразделения
-  operationalUnitSearchControl = new FormControl<LookupDto | string | null>(null);
-  filteredOperationalUnits: Observable<LookupDto[]>;
-  isLoadingOperationalUnits = false;
-  selectedOperationalUnit: LookupDto | null = null;
+  involvedUnitSearchControl = new FormControl<LookupDto | string | null>(null);
+  filteredInvolvedUnits: Observable<LookupDto[]>;
+  isLoadingInvolvedUnits = false;
+  selectedInvolvedUnit: LookupDto | null = null;
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: SoldierDto,
@@ -125,7 +125,7 @@ export class SoldierDialogComponent implements OnInit {
     );
 
     // Настраиваем автокомплит для оперативного подразделения
-    this.filteredOperationalUnits = this.operationalUnitSearchControl.valueChanges.pipe(
+    this.filteredInvolvedUnits = this.involvedUnitSearchControl.valueChanges.pipe(
       startWith(''),
       debounceTime(300),
       distinctUntilChanged(),
@@ -137,10 +137,10 @@ export class SoldierDialogComponent implements OnInit {
             ? value.value
             : '';
         if (searchTerm && searchTerm.length >= 2) {
-          this.isLoadingOperationalUnits = true;
+          this.isLoadingInvolvedUnits = true;
           return this.unitService
             .lookup(searchTerm, 10)
-            .pipe(finalize(() => (this.isLoadingOperationalUnits = false)));
+            .pipe(finalize(() => (this.isLoadingInvolvedUnits = false)));
         }
         return of([]);
       })
@@ -169,14 +169,14 @@ export class SoldierDialogComponent implements OnInit {
       });
     }
 
-    // Если уже есть operationalUnitId, найдем и установим соответствующий объект
-    if (this.data.operationalUnitId) {
-      this.unitService.getById(this.data.operationalUnitId).subscribe((operationalUnit) => {
-        this.selectedOperationalUnit = {
-          id: operationalUnit.id,
-          value: operationalUnit.shortName || operationalUnit.name,
+    // Если уже есть involvedUnitId, найдем и установим соответствующий объект
+    if (this.data.involvedUnitId) {
+      this.unitService.getById(this.data.involvedUnitId).subscribe((involvedUnit) => {
+        this.selectedInvolvedUnit = {
+          id: involvedUnit.id,
+          value: involvedUnit.shortName || involvedUnit.name,
         };
-        this.operationalUnitSearchControl.setValue(this.selectedOperationalUnit);
+        this.involvedUnitSearchControl.setValue(this.selectedInvolvedUnit);
       });
     }
   }
@@ -220,14 +220,14 @@ export class SoldierDialogComponent implements OnInit {
   }
 
   // Методы для автокомплита оперативного подразделения
-  displayOperationalUnitFn = (operationalUnit: LookupDto | null): string => {
-    return operationalUnit ? operationalUnit.value : '';
+  displayInvolvedUnitFn = (involvedUnit: LookupDto | null): string => {
+    return involvedUnit ? involvedUnit.value : '';
   };
 
-  onOperationalUnitSelected(event: { option: { value: LookupDto | null } }) {
+  onInvolvedUnitSelected(event: { option: { value: LookupDto | null } }) {
     const selectedUnit = event.option.value;
-    this.selectedOperationalUnit = selectedUnit;
-    this.data.operationalUnitId = selectedUnit ? selectedUnit.id : undefined;
+    this.selectedInvolvedUnit = selectedUnit;
+    this.data.involvedUnitId = selectedUnit ? selectedUnit.id : undefined;
   }
 
   onArrivedAtChange(event: MatDatepickerInputEvent<Date>) {

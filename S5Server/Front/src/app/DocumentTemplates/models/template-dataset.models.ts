@@ -50,6 +50,8 @@ export interface UnitTaskDto extends UnitDataSetDto {
  * Использует UnitDataSetDto из unit.service для подразделений
  */
 export interface DocumentDataSet {
+  parentDocumentDate: string; // ISO date string
+  parentDocumentNumber: string;
   documentDate: string; // ISO date string
   documentNumber: string;
   unitsTask: UnitTaskDto[];

@@ -13,9 +13,9 @@ export const UnitTag = {
   /** Смотрим на вкладку Приданий ОС */
   AssignedId: 2,
   /** Смотрим на вкладку Оперативний ОС */
-  OperationalId: 4,
+  InvolvedId: 4,
   /** Смотрим на вкладку Все ОС
-   * UnitTag.UnitId | UnitTag.AssignedId | UnitTag.OperationalId
+   * UnitTag.UnitId | UnitTag.AssignedId | UnitTag.InvolvedId
    */
   AllId: 7,
 } as const;

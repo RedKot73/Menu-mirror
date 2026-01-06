@@ -150,8 +150,8 @@ export class SoldiersComponent implements AfterViewInit {
 
     // Определяем какой метод API использовать на основе currentUnitTab
     switch (this.currentUnitTab()) {
-      case UnitTag.OperationalId:
-        this.soldierService.getByOperational(currentUnitId).subscribe((items) => {
+      case UnitTag.InvolvedId:
+        this.soldierService.getByInvolved(currentUnitId).subscribe((items) => {
           this.items.set(items);
         });
         break;
@@ -193,8 +193,8 @@ export class SoldiersComponent implements AfterViewInit {
           departedAt: undefined,
           assignedUnitId: undefined,
           assignedUnitShortName: undefined,
-          operationalUnitId: undefined,
-          operationalUnitShortName: undefined,
+          involvedUnitId: undefined,
+          involvedUnitShortName: undefined,
           rankId: '',
           rankShortValue: '',
           positionId: '',
@@ -216,7 +216,7 @@ export class SoldiersComponent implements AfterViewInit {
             arrivedAt: result.data.arrivedAt,
             departedAt: result.data.departedAt,
             assignedUnitId: result.data.assignedUnitId,
-            operationalUnitId: result.data.operationalUnitId,
+            involvedUnitId: result.data.involvedUnitId,
             rankId: result.data.rankId,
             positionId: result.data.positionId,
             stateId: result.data.stateId,
@@ -327,7 +327,7 @@ export class SoldiersComponent implements AfterViewInit {
       if (confirmed) {
         const operation = isAssignedTab
           ? this.soldierService.assignAssigned(soldier.id, null)
-          : this.soldierService.assignOperational(soldier.id, null);
+          : this.soldierService.assignInvolved(soldier.id, null);
 
         operation.subscribe({
           next: (updated) => {
@@ -390,9 +390,9 @@ export class SoldiersComponent implements AfterViewInit {
         successMessage = 'Придання оновлено';
         operation = this.soldierService.assignAssigned(soldier.id, selectedUnit?.id || null);
         break;
-      case UnitTag.OperationalId:
+      case UnitTag.InvolvedId:
         successMessage = 'Екіпаж/Група оновлено';
-        operation = this.soldierService.assignOperational(soldier.id, selectedUnit?.id || null);
+        operation = this.soldierService.assignInvolved(soldier.id, selectedUnit?.id || null);
         break;
     }
 
@@ -425,8 +425,8 @@ export class SoldiersComponent implements AfterViewInit {
         return soldier.unitShortName || '';
       case UnitTag.AssignedId:
         return soldier.assignedUnitShortName || '';
-      case UnitTag.OperationalId:
-        return soldier.operationalUnitShortName || '';
+      case UnitTag.InvolvedId:
+        return soldier.involvedUnitShortName || '';
       default:
         return '';
     }

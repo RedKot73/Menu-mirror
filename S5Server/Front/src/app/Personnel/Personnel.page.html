@@ -180,20 +180,20 @@
     <ng-container matColumnDef="operationalUnitShortName">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Екіпаж/Група</th>
       <td mat-cell *matCellDef="let soldier" class="operational-unit-cell">
-        @if (isEditing(soldier.id, UnitTag.OperationalId)) {
+        @if (isEditing(soldier.id, UnitTag.InvolvedId)) {
         <div class="edit-mode">
           <mat-form-field appearance="outline" class="inline-field">
             <input
               type="text"
               matInput
-              [formControl]="getControl(soldier, UnitTag.OperationalId)"
-              [matAutocomplete]="operationalAuto"
+              [formControl]="getControl(soldier, UnitTag.InvolvedId)"
+              [matAutocomplete]="involvedAuto"
               placeholder="Не призначено"
             />
             <mat-autocomplete
-              #operationalAuto="matAutocomplete"
+              #involvedAuto="matAutocomplete"
               [displayWith]="displayLookupFn"
-              (optionSelected)="onSelect(soldier, UnitTag.OperationalId, $event)"
+              (optionSelected)="onSelect(soldier, UnitTag.InvolvedId, $event)"
             >
               <mat-option [value]="null">Не призначено</mat-option>
               @if (isLoading(soldier.id)) {
@@ -218,7 +218,7 @@
           <button
             mat-icon-button
             class="edit-btn"
-            (click)="startEditing(soldier, UnitTag.OperationalId)"
+            (click)="startEditing(soldier, UnitTag.InvolvedId)"
             matTooltip="Редагувати"
           >
             <mat-icon>edit</mat-icon>

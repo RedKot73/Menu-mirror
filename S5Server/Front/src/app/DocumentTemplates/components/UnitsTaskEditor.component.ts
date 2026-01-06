@@ -1,4 +1,4 @@
-import { inject, signal, HostListener } from '@angular/core';
+import { inject, signal, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -57,6 +57,11 @@ export class UnitsTaskEditorComponent {
 
   private dataSetService = inject(TemplateDataSetService);
 
+  @ViewChild('parentDateInput') parentDateInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('parentNumberInput') parentNumberInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('dateInput') dateInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('numberInput') numberInput?: ElementRef<HTMLInputElement>;
+
   // --- Selected Units List with DataSets ---
   protected selectedUnits = signal<UnitTaskDto[]>([]);
 
@@ -64,6 +69,9 @@ export class UnitsTaskEditorComponent {
   protected dataSet = signal<TemplateDataSetListItem | null>(null);
 
   // --- Document Info ---
+  protected parentDocumentDate = signal<Date>(new Date());
+  protected parentDocumentNumber = signal<string>('');
+  // Дата документа
   protected documentDate = signal<Date>(new Date());
   protected documentNumber = signal<string>('');
 
@@ -106,18 +114,28 @@ export class UnitsTaskEditorComponent {
   /**
    * Обробник зміни дати документа
    */
+  onParentDocumentDateChange(event: MatDatepickerInputEvent<Date>): void {
+    this.parentDocumentDate.set(event.value || null as any);
+    this.hasUnsavedChanges.set(true);
+  }
+  
   onDocumentDateChange(event: MatDatepickerInputEvent<Date>): void {
-    if (event.value) {
-      this.documentDate.set(event.value);
-    }
+    this.documentDate.set(event.value || null as any);
+    this.hasUnsavedChanges.set(true);
   }
 
   /**
    * Обробник зміни номера документа
    */
+  onParentDocumentNumberChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.parentDocumentNumber.set(input.value);
+    this.hasUnsavedChanges.set(true);
+  }
   onDocumentNumberChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.documentNumber.set(input.value);
+    this.hasUnsavedChanges.set(true);
   }
 
   /**
@@ -371,6 +389,8 @@ export class UnitsTaskEditorComponent {
         this.dataSet.set(dataSet);
 
         // Оновлюємо дату та номер документа
+        this.parentDocumentDate.set(new Date(documentData.parentDocumentDate));
+        this.parentDocumentNumber.set(documentData.parentDocumentNumber);
         this.documentDate.set(new Date(documentData.documentDate));
         this.documentNumber.set(documentData.documentNumber);
 
@@ -396,10 +416,11 @@ export class UnitsTaskEditorComponent {
   getDataSetContent(
     replacer?: (string | number)[] | null | undefined,
     space?: string | number | undefined
-  ): string
-  {
+  ): string {
     // Формуємо дані для збереження
     const dataToSave: DocumentDataSet = {
+      parentDocumentDate: this.parentDocumentDate().toISOString(),
+      parentDocumentNumber: this.parentDocumentNumber(),
       documentDate: this.documentDate().toISOString(),
       documentNumber: this.documentNumber(),
       unitsTask: this.selectedUnits(),
@@ -411,6 +432,23 @@ export class UnitsTaskEditorComponent {
   }
 
   /**
+   * Перевіряє обов'язкове поле та показує помилку
+   */
+  private checkRequiredField(
+    value: string | Date | null | undefined,
+    input: ElementRef<HTMLInputElement> | undefined,
+    errorMessage: string
+  ): boolean {
+    const isEmpty = !value || (typeof value === 'string' && value.trim() === '');
+    
+    if (isEmpty) {
+      this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      this.focusInvalidField(input);
+      return false;
+    }
+    return true;//
+  }
+  /**
    * Зберігає вибрані підрозділи як набір даних
    */
   saveSelectedUnitsAsDataSet(): void {
@@ -421,10 +459,43 @@ export class UnitsTaskEditorComponent {
       return;
     }
 
+    // Перевірка обов'язкових полів
+    if (!this.checkRequiredField(
+      this.parentDocumentDate(),
+      this.parentDateInput,
+      'Заповніть дату документа старшого начальника'
+    )) {
+      return;
+    }
+
+    if (!this.checkRequiredField(
+      this.parentDocumentNumber(),
+      this.parentNumberInput,
+      'Заповніть номер документа старшого начальника'
+    )) {
+      return;
+    }
+
+    if (!this.checkRequiredField(
+      this.documentDate(),
+      this.dateInput,
+      'Заповніть дату документа'
+    )) {
+      return;
+    }
+
+    if (!this.checkRequiredField(
+      this.documentNumber(),
+      this.numberInput,
+      'Заповніть номер документа'
+    )) {
+      return;
+    }
+
     const dataJson = this.getDataSetContent();
     // Генеруємо назву на основі дати та номера документа
     const dateStr = this.documentDate().toLocaleDateString('uk-UA');
-    const docNum = this.documentNumber();
+    const docNum = `${this.parentDocumentNumber()}-${this.documentNumber()}`.trim();
     const dataSetName = docNum || `Дані документа від ${dateStr} № ${docNum}`;
 
     this.isSaving.set(true);
@@ -573,6 +644,18 @@ export class UnitsTaskEditorComponent {
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
     });
+  }
+
+  /**
+   * Фокусує невалідне поле та додає візуальне виділення
+   */
+  private focusInvalidField(inputRef?: ElementRef<HTMLInputElement>): void {
+    if (inputRef?.nativeElement) {
+      setTimeout(() => {
+        inputRef.nativeElement.focus();
+        inputRef.nativeElement.select();
+      }, 100);
+    }
   }
 
   /**

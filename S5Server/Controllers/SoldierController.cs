@@ -108,7 +108,7 @@ namespace S5Server.Controllers
             if (string.IsNullOrWhiteSpace(operationalUnitId))
                 return BadRequest("operationalUnitId обязателен.");
 
-            var q = Query().Where(s => s.OperationalUnitId == operationalUnitId);
+            var q = Query().Where(s => s.InvolvedUnitId == operationalUnitId);
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -202,12 +202,12 @@ namespace S5Server.Controllers
             if (e is null) return NotFound();
 
             var original = (e.FirstName, e.MidleName, e.LastName, e.BirthDate, e.NickName,
-                            e.UnitId, e.AssignedUnitId, e.OperationalUnitId, e.RankId, e.PositionId, e.StateId, e.Comment);
+                            e.UnitId, e.AssignedUnitId, e.InvolvedUnitId, e.RankId, e.PositionId, e.StateId, e.Comment);
 
             SoldierDto.ApplyDto(e, dto);
 
             var changed = (e.FirstName, e.MidleName, e.LastName, e.BirthDate, e.NickName,
-                           e.UnitId, e.AssignedUnitId, e.OperationalUnitId, e.RankId, e.PositionId, e.StateId, e.Comment);
+                           e.UnitId, e.AssignedUnitId, e.InvolvedUnitId, e.RankId, e.PositionId, e.StateId, e.Comment);
 
             if (original == changed)
                 return NoContent();
@@ -239,7 +239,7 @@ namespace S5Server.Controllers
         {
             UnitId, 
             AssignedUnitId, 
-            OperationalUnitId
+            InvolvedUnitId
         }
 
         private async Task<ActionResult<SoldierDto>> SetUnit(
@@ -265,8 +265,8 @@ namespace S5Server.Controllers
                 case UnitKind.AssignedUnitId:
                     e.AssignedUnitId = newUnitId;
                     break;
-                case UnitKind.OperationalUnitId:
-                    e.OperationalUnitId = newUnitId;
+                case UnitKind.InvolvedUnitId:
+                    e.InvolvedUnitId = newUnitId;
                     break;
             }
 
@@ -293,12 +293,12 @@ namespace S5Server.Controllers
         /// <summary>
         /// Придати бійця до Оперативного підрозділу.
         /// </summary>
-        [HttpPost("{id}/assign-operational/{unitId?}")]
-        public Task<ActionResult<SoldierDto>> AssignOperational(
+        [HttpPost("{id}/assign-involved/{unitId?}")]
+        public Task<ActionResult<SoldierDto>> AssignInvolved(
             string id, 
             string? unitId, 
             CancellationToken ct = default)
-            => SetUnit(id, unitId, UnitKind.OperationalUnitId, ct);
+            => SetUnit(id, unitId, UnitKind.InvolvedUnitId, ct);
 
         /// <summary>
         /// Перевести бійця до іншого основного підрозділу.

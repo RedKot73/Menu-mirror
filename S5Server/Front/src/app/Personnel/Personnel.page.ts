@@ -251,9 +251,9 @@ export class PersonnelPage implements AfterViewInit {
         successMessage = 'Придання оновлено';
         operation = this.soldierService.assignAssigned(soldier.id, selectedUnit?.id || null);
         break;
-      case UnitTag.OperationalId:
+      case UnitTag.InvolvedId:
         successMessage = 'Екіпаж/Група оновлено';
-        operation = this.soldierService.assignOperational(soldier.id, selectedUnit?.id || null);
+        operation = this.soldierService.assignInvolved(soldier.id, selectedUnit?.id || null);
         break;
     }
 
@@ -287,8 +287,8 @@ export class PersonnelPage implements AfterViewInit {
         return soldier.unitShortName || '';
       case UnitTag.AssignedId:
         return soldier.assignedUnitShortName || '';
-      case UnitTag.OperationalId:
-        return soldier.operationalUnitShortName || '';
+      case UnitTag.InvolvedId:
+        return soldier.involvedUnitShortName || '';
       default:
         return '';
     }

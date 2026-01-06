@@ -50,13 +50,13 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         }
         catch (OperationCanceledException)
         {
-            return Problem(statusCode: 499, title: "Отмена клиентом");
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
         }
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
                 _logger.LogError(ex, "Ошибка GetAll {Entity}", typeof(TEntity).Name);
-            return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
 
@@ -69,18 +69,18 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         {
             var e = await Query().FirstOrDefaultAsync(x => x.Id == id, ct);
             if (e == null)
-                return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+                return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
             return Ok(ShortDictBase.ToDto(e));
         }
         catch (OperationCanceledException)
         {
-            return Problem(statusCode: 499, title: "Отмена клиентом");
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
         }
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
                 _logger.LogError(ex, "Ошибка Get {Entity} Id={Id}", typeof(TEntity).Name, id);
-            return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
 
@@ -113,7 +113,7 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         }
         catch (OperationCanceledException)
         {
-            return Problem(statusCode: 499, title: "Отмена клиентом");
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
         }
         catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
@@ -140,7 +140,7 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         {
             if (_logger.IsEnabled(LogLevel.Error))
                 _logger.LogError(ex, "Неизвестная ошибка Create {Entity}", typeof(TEntity).Name);
-            return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
 
@@ -161,7 +161,7 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
 
         var e = await _set.AsTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
         if (e == null)
-            return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+            return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
 
         var snapshot = ShortDictBase.ToDto(e);
         ShortDictBase.ApplyDto(e, dto);
@@ -176,7 +176,7 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         }
         catch (OperationCanceledException)
         {
-            return Problem(statusCode: 499, title: "Отмена клиентом");
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
         }
         catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
@@ -204,7 +204,7 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         {
             if (_logger.IsEnabled(LogLevel.Error))
                 _logger.LogError(ex, "Ошибка Update {Entity} Id={Id}", typeof(TEntity).Name, id);
-            return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
 
@@ -217,7 +217,7 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         {
             var e = await _set.FirstOrDefaultAsync(x => x.Id == id, ct);
             if (e == null)
-                return Problem(statusCode: 404, title: "Не найдено", detail: $"Id={id}");
+                return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
 
             _set.Remove(e);
             await _db.SaveChangesAsync(ct);
@@ -225,13 +225,13 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         }
         catch (OperationCanceledException)
         {
-            return Problem(statusCode: 499, title: "Отмена клиентом");
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
         }
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
                 _logger.LogError(ex, "Ошибка Delete {Entity} Id={Id}", typeof(TEntity).Name, id);
-            return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
 
@@ -261,13 +261,13 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         }
         catch (OperationCanceledException)
         {
-            return Problem(statusCode: 499, title: "Отмена клиентом");
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
         }
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
                 _logger.LogError(ex, "Ошибка Lookup {Entity}", typeof(TEntity).Name);
-            return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
 
@@ -286,13 +286,13 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         }
         catch (OperationCanceledException)
         {
-            return Problem(statusCode: 499, title: "Отмена клиентом");
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
         }
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
                 _logger.LogError(ex, "Ошибка при получении sel_list {Entity}", typeof(TEntity).Name);
-            return Problem(statusCode: 500, title: "Внутренняя ошибка сервера");
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
 }

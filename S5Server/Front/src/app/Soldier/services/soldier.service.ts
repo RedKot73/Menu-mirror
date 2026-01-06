@@ -17,8 +17,8 @@ export interface SoldierDto {
   departedAt?: Date;
   assignedUnitId?: string;
   assignedUnitShortName?: string;
-  operationalUnitId?: string;
-  operationalUnitShortName?: string;
+  involvedUnitId?: string;
+  involvedUnitShortName?: string;
   rankId: string;
   rankShortValue: string;
   positionId: string;
@@ -27,7 +27,7 @@ export interface SoldierDto {
   stateValue: string;
   comment?: string;
   changedBy: string;
-  changedAt: Date;
+  validFrom: Date;
 }
 
 export interface SoldierCreateDto {
@@ -40,7 +40,7 @@ export interface SoldierCreateDto {
   arrivedAt: Date;
   departedAt?: Date;
   assignedUnitId?: string;
-  operationalUnitId?: string;
+  involvedUnitId?: string;
   rankId: string;
   positionId: string;
   stateId: string;
@@ -85,7 +85,7 @@ export class SoldierService {
   }
 
   // Получить список по оперативному подразделению
-  getByOperational(
+  getByInvolved(
     operationalUnitId: string,
     search?: string,
     limit?: number
@@ -150,9 +150,9 @@ export class SoldierService {
    * @param unitId Unit.id
    * @returns void
    */
-  assignOperational(id: string, unitId: string | null): Observable<SoldierDto> {
+  assignInvolved(id: string, unitId: string | null): Observable<SoldierDto> {
     const targetId = unitId ?? '';
-    return this.http.post<SoldierDto>(`${this.api}/${id}/assign-operational/${targetId}`, {});
+    return this.http.post<SoldierDto>(`${this.api}/${id}/assign-involved/${targetId}`, {});
   }
 
   /**

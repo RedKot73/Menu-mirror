@@ -55,8 +55,11 @@ export interface UnitDataSetDto {
   shortName: string;
   unitTypeId?: string;
   unitType?: string;
+  isInvolved?: boolean;
   comment?: string;
   soldiers: SoldierDto[];
+  assignedSoldiers: SoldierDto[];
+  involvedSoldiers: SoldierDto[];
 }
 
 export type HttpGetParams = Record<string, string | number | boolean>;

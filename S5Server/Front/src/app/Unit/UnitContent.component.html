@@ -70,7 +70,10 @@
       </mat-expansion-panel-header>
 
       <div class="section-content">
-        <app-page-soldiers [unitId]="unit.id" [currentUnitTab]="unitTag.UnitId"></app-page-soldiers>
+        <app-page-soldiers
+          [unitId]="unit.id"
+          [currentUnitTab]="unitTag.UnitId"
+          ></app-page-soldiers>
       </div>
     </mat-expansion-panel>
     }
@@ -104,7 +107,7 @@
       <div class="section-content">
         <app-page-soldiers
           [unitId]="unit.id"
-          [currentUnitTab]="unitTag.OperationalId"
+          [currentUnitTab]="unitTag.InvolvedId"
         ></app-page-soldiers>
       </div>
     </mat-expansion-panel>

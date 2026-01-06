@@ -82,7 +82,7 @@ namespace S5Server.Controllers
                     u.ForceType != null ? u.ForceType.ShortValue : null,
                     u.UnitTypeId,
                     u.UnitType != null ? u.UnitType.ShortValue : null,
-                    u.IsOperational,
+                    u.IsInvolved,
                     u.OrderVal,
                     u.Comment,
                     _set.Any(c => c.ParentId == u.Id)//поле HasChildren
@@ -150,7 +150,7 @@ namespace S5Server.Controllers
                 UnitTypeId = dto.UnitTypeId,
                 ParentId = dto.ParentId,
                 AssignedUnitId = dto.AssignedUnitId,
-                IsOperational = dto.IsOperational,
+                IsInvolved = dto.IsOperational,
                 OrderVal = dto.OrderVal == 0 ? 1 : dto.OrderVal
             };
 
@@ -380,7 +380,7 @@ namespace S5Server.Controllers
             }
             catch (OperationCanceledException)
             {
-                return Problem(statusCode: 499, title: "Отмена клиентом");
+                return Problem(statusCode: 499, title: "Скасовано кліентом");
             }
             catch (Exception ex)
             {

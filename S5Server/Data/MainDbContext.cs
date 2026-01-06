@@ -1,11 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion; // добавьте наверху
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 using S5Server.Models;
-
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
 
 namespace S5Server.Data
 {
@@ -38,7 +34,7 @@ namespace S5Server.Data
                 entity.Property(e => e.Id).HasColumnType("TEXT(36)");
                 entity.Property(e => e.Value).IsRequired().HasColumnType("TEXT(100)");
                 entity.Property(e => e.Comment).HasColumnType("TEXT");
-                entity.HasIndex(e => e.Value).IsUnique(); // UNIQUE(Value)
+                entity.HasIndex(e => e.Value).IsUnique();
             });
 
             modelBuilder.Entity<DictPosition>(entity =>
@@ -126,6 +122,18 @@ namespace S5Server.Data
                     .HasForeignKey(e => e.DroneTypeId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
+            modelBuilder.Entity<DictUnitTask>(e =>
+            {
+                e.ToTable("dict_unit_task");
+                e.HasKey(e => e.Id);
+                e.Property(e => e.Id).HasColumnType("TEXT(36)");
+                e.Property(e => e.Value).IsRequired().HasColumnType("TEXT(100)");
+                e.Property(e => e.Comment).HasColumnType("TEXT");
+                e.Property(e => e.Amount).IsRequired().HasColumnType("REAL");
+                e.Property(e => e.WithMeans).HasColumnType("INTEGER").HasDefaultValue(0);
+                e.Property(e => e.AtPermanentPoint).HasColumnType("INTEGER").HasDefaultValue(1);
+                e.HasIndex(e => e.Value).IsUnique();
+            });
 
             modelBuilder.Entity<Unit>(entity =>
             {
@@ -141,7 +149,8 @@ namespace S5Server.Data
                 entity.Property(e => e.ShortName).HasColumnType("TEXT(100)");
                 entity.Property(e => e.MilitaryNumber).HasColumnType("TEXT(100)");
                 entity.Property(e => e.OrderVal).HasColumnType("INTEGER");
-                entity.Property(e => e.IsOperational).HasColumnType("INTEGER").HasDefaultValue(0);
+                entity.Property(e => e.IsInvolved).HasColumnType("INTEGER").HasDefaultValue(0);
+                entity.Property(e => e.AreaId).HasColumnType("TEXT(36)");
                 entity.Property(e => e.Comment).HasColumnType("TEXT");
 
                 // Керівний підрозділ
@@ -168,6 +177,10 @@ namespace S5Server.Data
                       .WithMany()
                       .HasForeignKey(u => u.UnitTypeId)
                       .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(u => u.Area)
+                      .WithMany()
+                      .HasForeignKey(u => u.AreaId)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<Soldier>(entity =>
@@ -184,7 +197,7 @@ namespace S5Server.Data
                 entity.Property(e => e.NickName).HasColumnType("TEXT(50)");
                 entity.Property(e => e.UnitId).IsRequired().HasColumnType("TEXT(36)");
                 entity.Property(e => e.AssignedUnitId).HasColumnType("TEXT(36)");
-                entity.Property(e => e.OperationalUnitId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.InvolvedUnitId).HasColumnType("TEXT(36)");
                 entity.Property(e => e.RankId).IsRequired().HasColumnType("TEXT(36)");
                 entity.Property(e => e.PositionId).IsRequired().HasColumnType("TEXT(36)");
                 entity.Property(e => e.StateId).IsRequired().HasColumnType("TEXT(36)");
@@ -205,10 +218,10 @@ namespace S5Server.Data
                       .WithMany(u => u.AssignedSoldiers)
                       .HasForeignKey(s => s.AssignedUnitId)
                       .OnDelete(DeleteBehavior.SetNull);
-                // Включені до оперативного підрозділу
-                entity.HasOne(s => s.OperationalUnit)
-                      .WithMany(u => u.OperationalSoldiers)
-                      .HasForeignKey(s => s.OperationalUnitId)
+                // Задіяні в підрозділі/екіпажі
+                entity.HasOne(s => s.InvolvedUnit)
+                      .WithMany(u => u.InvolvedSoldiers)
+                      .HasForeignKey(s => s.InvolvedUnitId)
                       .OnDelete(DeleteBehavior.SetNull);
 
                 // Звання
@@ -390,7 +403,14 @@ namespace S5Server.Data
         /// Типи БПЛА
         /// </summary>
         public DbSet<DictDroneType> DictDroneTypes { get; set; }
+        /// <summary>
+        /// Модель БПЛА
+        /// </summary>
         public DbSet<DictDroneModel> DictDroneModels { get; set; }
+        /// <summary>
+        /// Завдання підрозділу для використання в документах БР/БД
+        /// </summary>
+        public DbSet<DictUnitTask> DictUnitTasks { get; set; }
 
         /// <summary>
         /// Категория шаблона документа

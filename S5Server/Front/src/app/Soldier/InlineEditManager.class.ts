@@ -7,10 +7,7 @@ import { UnitTag } from './Soldier.constant';
 /**
  * Режими редагування для інлайн-редагування.
  */
-export type EditMode =
-  | typeof UnitTag.UnitId
-  | typeof UnitTag.AssignedId
-  | typeof UnitTag.OperationalId;
+export type EditMode = typeof UnitTag.UnitId | typeof UnitTag.AssignedId | typeof UnitTag.InvolvedId;
 
 export interface RowEditState {
   mode: EditMode;

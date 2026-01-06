@@ -56,8 +56,8 @@ namespace S5Server.Models
                 e.DepartedAt,
                 e.AssignedUnitId,
                 e.AssignedUnit?.ShortName ?? e.AssignedUnit?.Name,
-                e.OperationalUnitId,
-                e.OperationalUnit?.ShortName ?? e.OperationalUnit?.Name,
+                e.InvolvedUnitId,
+                e.InvolvedUnit?.ShortName ?? e.InvolvedUnit?.Name,
                 e.RankId,
                 e.Rank?.ShortValue ?? e.Rank?.Value ?? string.Empty,
                 e.PositionId,
@@ -80,7 +80,7 @@ namespace S5Server.Models
             e.ArrivedAt = dto.ArrivedAt;
             e.DepartedAt = dto.DepartedAt;
             e.AssignedUnitId = dto.AssignedUnitId;
-            e.OperationalUnitId = dto.OperationalUnitId;
+            e.InvolvedUnitId = dto.OperationalUnitId;
             e.RankId = dto.RankId;
             e.PositionId = dto.PositionId;
             e.StateId = dto.StateId;
@@ -119,7 +119,7 @@ namespace S5Server.Models
             ArrivedAt = ArrivedAt,
             DepartedAt = DepartedAt,
             AssignedUnitId = AssignedUnitId,
-            OperationalUnitId = OperationalUnitId,
+            InvolvedUnitId = OperationalUnitId,
             RankId = RankId,
             PositionId = PositionId,
             StateId = StateId,
@@ -190,13 +190,13 @@ namespace S5Server.Models
         public Unit? AssignedUnit { get; set; }
 
         /// <summary>
-        /// Оперативний підрозділ
+        /// Задіяний в підрозділі/екіпажі
         /// </summary>
-        public string? OperationalUnitId { get; set; }
+        public string? InvolvedUnitId { get; set; }
         /// <summary>
-        /// Оперативний підрозділ
+        /// Задіяний в підрозділі/екіпажі
         /// </summary>
-        public Unit? OperationalUnit { get; set; }
+        public Unit? InvolvedUnit { get; set; }
 
         /// <summary>
         /// Звання
