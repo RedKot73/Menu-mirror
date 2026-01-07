@@ -1,4 +1,15 @@
 <div class="task-assignments">
+  <div class="remove-button-container">
+    <button
+      mat-icon-button
+      matTooltip="Видалити зі списку"
+      (click)="onRemoveClick()"
+      class="remove-button"
+    >
+      <mat-icon color="warn">remove_circle</mat-icon>
+    </button>
+  </div>
+
   <div class="task-item">
     <strong>Завдання:</strong>
     <mat-form-field appearance="outline" class="task-select">
@@ -59,14 +70,6 @@
       <mat-icon>groups</mat-icon>
       <span>Екіпаж/Група</span>
       }
-      <button
-        mat-icon-button
-        matTooltip="Видалити зі списку"
-        (click)="onRemoveClick()"
-        class="remove-button"
-      >
-        <mat-icon color="warn">remove_circle</mat-icon>
-      </button>
     </mat-card-title>
 
     <div class="unit-info-grid">
