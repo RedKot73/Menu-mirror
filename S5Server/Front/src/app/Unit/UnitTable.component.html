@@ -42,17 +42,15 @@
     <ng-container matColumnDef="shortName">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Назва</th>
       <td mat-cell *matCellDef="let unit" class="short-name-cell">
-        <button
-          mat-button
-          class="unit-link"
-          (click)="selectUnit(unit)"
-          matTooltip="Переглянути підрозділ"
-        >
-          @if (unit.isOperational) {
-          <mat-icon class="operational-icon" matTooltip="Екіпаж/Група"> groups </mat-icon>
-          }
-          {{ unit.shortName || '-' }}
-        </button>
+          <button mat-button
+                  class="unit-link"
+                  (click)="selectUnit(unit)"
+                  matTooltip="Переглянути підрозділ">
+              @if (unit.isInvolved) {
+              <mat-icon class="operational-icon" matTooltip="Екіпаж/Група"> groups </mat-icon>
+              }
+              {{ unit.shortName || '-' }}
+          </button>
       </td>
     </ng-container>
 
@@ -114,7 +112,7 @@
       mat-row
       *matRowDef="let row; columns: displayedColumns"
       class="unit-row"
-      [class.operational-row]="row.isOperational"
+      [class.operational-row]="row.isInvolved"
     ></tr>
   </table>
 

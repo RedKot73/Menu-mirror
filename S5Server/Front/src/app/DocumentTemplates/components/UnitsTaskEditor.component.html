@@ -120,9 +120,9 @@
     <mat-icon>inbox</mat-icon>
     <p>Список порожній. Додайте підрозділи з дерева.</p>
   </div>
-  } @else { @for (unit of selectedUnits(); track unit.id) {
+  } @else { @for (unitTask of selectedUnits(); track unitTask.id) {
   <app-unit-task-card
-    [unit]="unit"
+    [unitTask]="unitTask"
     (remove)="removeUnitFromSelection($event)"
     (unitChange)="onUnitChange($event)"
   ></app-unit-task-card>

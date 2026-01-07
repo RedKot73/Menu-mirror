@@ -1,3 +1,4 @@
+@if (!isReadOnly()) {
 <div class="action-container">
   <div class="action-buttons">
     <button mat-raised-button color="primary" (click)="reload()">
@@ -12,6 +13,7 @@
     }
   </div>
 </div>
+}
 
 <table
   mat-table
@@ -126,6 +128,7 @@
       <!-- Режим просмотра -->
       <div class="view-mode">
         <span class="unit-text">{{ soldier.unitShortName }}</span>
+        @if (!isReadOnly()) {
         <button
           mat-icon-button
           class="edit-btn"
@@ -134,6 +137,7 @@
         >
           <mat-icon>edit</mat-icon>
         </button>
+        }
       </div>
       }
     </td>
@@ -180,6 +184,7 @@
       <!-- Режим просмотра -->
       <div class="view-mode">
         <span class="unit-text">{{ soldier.assignedUnitShortName || '-' }}</span>
+        @if (!isReadOnly()) {
         <button
           mat-icon-button
           class="edit-btn"
@@ -188,6 +193,7 @@
         >
           <mat-icon>edit</mat-icon>
         </button>
+        }
       </div>
       }
     </td>
@@ -234,6 +240,7 @@
       <!-- Режим просмотра -->
       <div class="view-mode">
         <span class="unit-text">{{ soldier.involvedUnitShortName || '-' }}</span>
+        @if (!isReadOnly()) {
         <button
           mat-icon-button
           class="edit-btn"
@@ -242,6 +249,7 @@
         >
           <mat-icon>edit</mat-icon>
         </button>
+        }
       </div>
       }
     </td>

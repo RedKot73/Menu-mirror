@@ -40,8 +40,11 @@ export interface TemplateDataSetUpdateDto {
 export interface UnitTaskDto extends UnitDataSetDto {
   TaskId: string;
   TaskValue: string;
+  /** Зона виконання завдання */
   AreaId: string;
+  /** Зона виконання завдання */
   AreaValue: string;
+  /** Перелік засобів ураження */
   Means: string[];
 }
 

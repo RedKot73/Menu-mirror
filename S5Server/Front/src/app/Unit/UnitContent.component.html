@@ -5,7 +5,7 @@
     <mat-card-header>
       <mat-card-title class="info-item inline">
         {{ unit.shortName }}
-        @if(unit.isOperational) {
+        @if(unit.isInvolved) {
         <mat-icon>groups</mat-icon>
         <span>Екіпаж/Група</span>
         }
@@ -19,7 +19,7 @@
           <strong>Батьківський:</strong>
           <span>{{ unit.parentShortName }}</span>
         </div>
-        } @if(!unit.isOperational) { @if(unit.militaryNumber){
+        } @if(!unit.isInvolved) { @if(unit.militaryNumber){
         <div class="info-item inline">
           <strong>Військова частина:</strong>
           <span>{{ unit.militaryNumber }}</span>
@@ -59,7 +59,7 @@
   </mat-card>
 
   <mat-accordion class="sections-accordion">
-    @if(!unit.isOperational){
+    @if(!unit.isInvolved){
     <!-- Особовий склад -->
     <mat-expansion-panel class="unit-section-panel">
       <mat-expansion-panel-header>
@@ -71,9 +71,10 @@
 
       <div class="section-content">
         <app-page-soldiers
-          [unitId]="unit.id"
+          [(items)]="soldiers"
           [currentUnitTab]="unitTag.UnitId"
-          ></app-page-soldiers>
+          (reloadRequested)="reloadSoldiers()"
+        ></app-page-soldiers>
       </div>
     </mat-expansion-panel>
     }
@@ -89,8 +90,9 @@
 
       <div class="section-content">
         <app-page-soldiers
-          [unitId]="unit.id"
+          [(items)]="assignedSoldiers"
           [currentUnitTab]="unitTag.AssignedId"
+          (reloadRequested)="reloadAssignedSoldiers()"
         ></app-page-soldiers>
       </div>
     </mat-expansion-panel>
@@ -106,8 +108,9 @@
 
       <div class="section-content">
         <app-page-soldiers
-          [unitId]="unit.id"
+          [(items)]="involvedSoldiers"
           [currentUnitTab]="unitTag.InvolvedId"
+          (reloadRequested)="reloadInvolvedSoldiers()"
         ></app-page-soldiers>
       </div>
     </mat-expansion-panel>

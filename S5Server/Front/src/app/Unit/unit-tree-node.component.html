@@ -33,13 +33,13 @@
       <span class="unit-name">{{ tmpNode.shortName }}</span>
     </button>
     <div class="unit-details">
-      @if (tmpNode.isOperational) {
-      <mat-icon class="operational-icon" matTooltip="Екіпаж/Група">groups</mat-icon>
-      } @if (tmpNode.unitType) {
-      <span class="unit-type">{{ tmpNode.unitType }}</span>
-      } @if (tmpNode.assignedUnitId) {
-      <mat-icon class="assigned-icon" matTooltip="Приданий підрозділ">assignment_ind</mat-icon>
-      }
+        @if (tmpNode.isInvolved) {
+        <mat-icon class="operational-icon" matTooltip="Екіпаж/Група">groups</mat-icon>
+        } @if (tmpNode.unitType) {
+        <span class="unit-type">{{ tmpNode.unitType }}</span>
+        } @if (tmpNode.assignedUnitId) {
+        <mat-icon class="assigned-icon" matTooltip="Приданий підрозділ">assignment_ind</mat-icon>
+        }
     </div>
   </div>
 

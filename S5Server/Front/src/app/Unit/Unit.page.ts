@@ -320,6 +320,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
         parentId: NULL_GUID,
         assignedUnitId: undefined,
         orderVal: 1,
+        isInvolved: false,
         comment: '',
       },
     });
@@ -336,6 +337,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
             parentId: result.parentId,
             assignedUnitId: result.assignedUnitId,
             orderVal: result.orderVal,
+            isInvolved: result.isInvolved,
             comment: result.comment,
           })
           .subscribe({
@@ -375,6 +377,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
         parentId: node.id,
         assignedUnitId: undefined,
         orderVal: 1,
+        isInvolved: false,
         comment: '',
       },
     });
@@ -391,6 +394,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
             parentId: result.parentId,
             assignedUnitId: result.assignedUnitId,
             orderVal: result.orderVal,
+            isInvolved: result.isInvolved,
             comment: result.comment,
           })
           .subscribe({
@@ -432,8 +436,8 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
         parentId: node.id,
         assignedUnitId: undefined,
         orderVal: 1,
+        isInvolved: true,
         comment: '',
-        isOperational: true,
       },
     });
 
@@ -449,8 +453,8 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
             parentId: node.id,
             assignedUnitId: undefined,
             orderVal: result.orderVal,
+            isInvolved: true,
             comment: result.comment,
-            isOperational: true,
           })
           .subscribe({
             next: () => {
@@ -458,7 +462,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
                 this.unitTree.refresh();
               }
               this.onUnitUpdated();
-                this.snackBar.open('Екіпаж/Група успішно створено', 'Закрити', {
+              this.snackBar.open('Екіпаж/Група успішно створено', 'Закрити', {
                 duration: 3000,
               });
             },
@@ -479,8 +483,8 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
    * Редактирует подразделение
    */
   edit(node: UnitTreeNode | UnitDto) {
-    if (node.isOperational) {
-      this.editOperationalUnit(node);
+    if (node.isInvolved) {
+      this.editInvolvedUnit(node);
       return;
     }
     this.editRegularUnit(node);
@@ -525,7 +529,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
   /**
    * Редактирует оперативное подразделение
    */
-  private editOperationalUnit(node: UnitTreeNode | UnitDto) {
+  private editInvolvedUnit(node: UnitTreeNode | UnitDto) {
     const dialogRef = this.dialog.open(OperationalUnitDialogComponent, {
       width: '600px',
       data: { ...node },
@@ -533,7 +537,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        const unit = result as UnitDto; //UnitTreeItemDto;
+        const unit = result as UnitDto; 
         this.unitService.update(unit.id, unit).subscribe({
           next: () => {
             // Обновляем дерево если оно доступно

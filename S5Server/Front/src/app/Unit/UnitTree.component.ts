@@ -249,6 +249,7 @@ export class UnitTreeComponent implements OnInit {
       assignedUnitId: node.assignedUnitId,
       orderVal: node.orderVal,
       comment: node.comment,
+      isInvolved: node.isInvolved,
       hasChildren: node.hasChildren,
     });
   }

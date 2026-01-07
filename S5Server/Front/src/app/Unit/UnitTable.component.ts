@@ -51,7 +51,7 @@ export class UnitTableComponent implements AfterViewInit {
 
   // Inputs
   nodeActionsTemplate = input<TemplateRef<{ $implicit: UnitDto }> | undefined>(undefined);
-  filterMode = signal<'all' | 'regular' | 'operational'>('all');
+  filterMode = signal<'all' | 'regular' | 'involved'>('all');
 
   // State
   units = signal<UnitDto[]>([]);
@@ -67,7 +67,7 @@ export class UnitTableComponent implements AfterViewInit {
     'forceType',
     'unitType',
     //'militaryNumber',
-    //'isOperational',
+    //isInvolved',
   ];
 
   @ViewChild(MatSort) sort!: MatSort;
@@ -80,9 +80,9 @@ export class UnitTableComponent implements AfterViewInit {
 
     switch (mode) {
       case 'regular':
-        return units.filter((u) => !u.isOperational);
-      case 'operational':
-        return units.filter((u) => u.isOperational);
+        return units.filter((u) => !u.isInvolved);
+      case 'involved':
+        return units.filter((u) => u.isInvolved);
       case 'all':
       default:
         return units;

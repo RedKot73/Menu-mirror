@@ -24,6 +24,7 @@ import {
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { UnitTaskDto } from '../models/template-dataset.models';
 import { LookupDto } from '../../shared/models/lookup.models';
@@ -34,6 +35,9 @@ import {
   isProblematicStatus,
   isRecoveryStatus,
 } from '../../Soldier/Soldier.constant';
+import { SoldiersComponent, UnitTag } from '../../Soldier/Soldier.component';
+import { SoldierService, SoldierDto } from '../../Soldier/services/soldier.service';
+import { ErrorHandler } from '../../shared/models/ErrorHandler';
 
 @Component({
   selector: 'app-unit-task-card',
@@ -51,15 +55,18 @@ import {
     MatExpansionModule,
     MatTableModule,
     MatTooltipModule,
+    SoldiersComponent,
   ],
   templateUrl: './UnitTaskCard.component.html',
   styleUrls: ['./UnitTaskCard.component.scss'],
 })
 export class UnitTaskCardComponent implements OnInit, OnDestroy {
+  private soldierService = inject(SoldierService);
   private dictDroneModelService = inject(DictDroneModelService);
+  private snackBar = inject(MatSnackBar);
   private destroy$ = new Subject<void>();
 
-  @Input({ required: true }) unit!: UnitTaskDto;
+  @Input({ required: true }) unitTask!: UnitTaskDto;
   @Output() remove = new EventEmitter<string>();
   @Output() unitChange = new EventEmitter<UnitTaskDto>();
 
@@ -73,6 +80,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
   protected isLoadingDroneModels = false;
 
   // Table Configuration
+  /*
   protected soldiersDisplayedColumns = [
     'fio',
     'nickName',
@@ -84,23 +92,26 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
     'departedAt',
     'comment',
   ];
+  */
 
   // Status check methods
   isCriticalStatus = isCriticalStatus;
   isSevereStatus = isSevereStatus;
   isProblematicStatus = isProblematicStatus;
   isRecoveryStatus = isRecoveryStatus;
+  // UnitTag enum for SoldierComponent
+  unitTag = UnitTag;
 
   ngOnInit(): void {
     // Ініціалізуємо значення FormControl з unit
-    if (this.unit.TaskValue) {
-      this.taskControl.setValue(this.unit.TaskValue);
+    if (this.unitTask.TaskValue) {
+      this.taskControl.setValue(this.unitTask.TaskValue);
     }
-    if (this.unit.AreaValue) {
-      this.areaControl.setValue(this.unit.AreaValue);
+    if (this.unitTask.AreaValue) {
+      this.areaControl.setValue(this.unitTask.AreaValue);
     }
-    if (this.unit.Means && this.unit.Means.length > 0) {
-      const droneModel: LookupDto = { id: '', value: this.unit.Means[0] };
+    if (this.unitTask.Means && this.unitTask.Means.length > 0) {
+      const droneModel: LookupDto = { id: '', value: this.unitTask.Means[0] };
       this.droneModelControl.setValue(droneModel);
     }
 
@@ -127,14 +138,14 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
    * Обробник натискання кнопки видалення
    */
   onRemoveClick(): void {
-    this.remove.emit(this.unit.id);
+    this.remove.emit(this.unitTask.id);
   }
 
   /**
    * Обробник зміни завдання
    */
   private onTaskChange(taskValue: string | null): void {
-    const updatedUnit = { ...this.unit, TaskValue: taskValue || '' };
+    const updatedUnit = { ...this.unitTask, TaskValue: taskValue || '' };
     this.unitChange.emit(updatedUnit);
   }
 
@@ -142,7 +153,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
    * Обробник зміни зони (РСП)
    */
   private onAreaChange(areaValue: string | null): void {
-    const updatedUnit = { ...this.unit, AreaValue: areaValue || '' };
+    const updatedUnit = { ...this.unitTask, AreaValue: areaValue || '' };
     this.unitChange.emit(updatedUnit);
   }
 
@@ -184,7 +195,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
   onDroneModelSelected(event: MatAutocompleteSelectedEvent): void {
     const selectedDroneModel = event.option.value as LookupDto | null;
     const updatedUnit = {
-      ...this.unit,
+      ...this.unitTask,
       Means: selectedDroneModel ? [selectedDroneModel.value] : [],
     };
     this.unitChange.emit(updatedUnit);
@@ -201,8 +212,57 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
     arrived.setHours(0, 0, 0, 0);
 
     const fourteenDaysAgo = new Date(today);
-    fourteenDaysAgo.setDate(today.getDate() - 14);
+    fourteenDaysAgo.setDate(today.getDate() - 1);
 
     return arrived >= fourteenDaysAgo;
+  }
+
+  // Публічні методи для перезавантаження даних (викликаються з дочірнього компонента)
+  reloadSoldiers(): void {
+    if (this.unitTask.id) {
+      this.soldierService.getAll(undefined, this.unitTask.id).subscribe({
+        next: (data: SoldierDto[]) => (this.unitTask.soldiers = data),
+        error: (error) => {
+          console.error('Помилка завантаження особового складу:', error);
+          const errorMessage = ErrorHandler.handleHttpError(
+            error,
+            'Помилка завантаження особового складу'
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
+      });
+    }
+  }
+
+  reloadAssignedSoldiers(): void {
+    if (this.unitTask.id) {
+      this.soldierService.getByAssigned(this.unitTask.id).subscribe({
+        next: (data: SoldierDto[]) => (this.unitTask.assignedSoldiers = data),
+        error: (error) => {
+          console.error('Помилка завантаження приданих:', error);
+          const errorMessage = ErrorHandler.handleHttpError(
+            error,
+            'Помилка завантаження приданих військовослужбовців'
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
+      });
+    }
+  }
+
+  reloadInvolvedSoldiers(): void {
+    if (this.unitTask.id) {
+      this.soldierService.getByInvolved(this.unitTask.id).subscribe({
+        next: (data: SoldierDto[]) => (this.unitTask.involvedSoldiers = data),
+        error: (error) => {
+          console.error('Помилка завантаження оперативних:', error);
+          const errorMessage = ErrorHandler.handleHttpError(
+            error,
+            'Помилка завантаження оперативних військовослужбовців'
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
+      });
+    }
   }
 }

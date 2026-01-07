@@ -1,4 +1,13 @@
-import { Component, inject, ViewChild, AfterViewInit, effect, input } from '@angular/core';
+import {
+  Component,
+  inject,
+  ViewChild,
+  AfterViewInit,
+  effect,
+  input,
+  model,
+  output,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -22,7 +31,7 @@ import { Observable } from 'rxjs';
 import { SoldierDialogComponent } from '../dialogs/SoldierDialog';
 import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
 import { SoldierService, SoldierDto, SoldierCreateDto } from './services/soldier.service';
-import { UnitService /*, UnitDto*/ } from '../Unit/services/unit.service';
+import { UnitService } from '../Unit/services/unit.service';
 import { LookupDto } from '../shared/models/lookup.models';
 import { ErrorHandler } from '../shared/models/ErrorHandler';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -76,24 +85,15 @@ export class SoldiersComponent implements AfterViewInit {
   currentUnitTab = input<number>(UnitTag.UnitId);
   // Input для ID подразделения (единый для всех вкладок)
   unitId = input<string | null>(null);
+  // Режим тільки для читання
+  isReadOnly = input<boolean>(false);
+  // Дані для відображення (двостороння прив'язка)
+  items = model<SoldierDto[]>([]);
+  // Подія для запиту перезавантаження даних батьківським компонентом
+  reloadRequested = output<void>();
 
-  items = this.soldierService.createItemsSignal();
-  //allUnits = signal<UnitDto[]>([]);
   dataSource = new MatTableDataSource<Soldier>([]);
-  displayedColumns = [
-    'menu',
-    'fio',
-    'nickName',
-    'rankShortValue',
-    'positionValue',
-    'stateValue',
-    'unitShortName',
-    'assignedUnitShortName',
-    'operationalUnitShortName',
-    'arrivedAt',
-    'departedAt',
-    'comment',
-  ];
+  displayedColumns: string[] = [];
   dialog = inject(MatDialog);
 
   inlineEdit = new InlineEditManager((mode: EditMode, term: string) =>
@@ -115,58 +115,37 @@ export class SoldiersComponent implements AfterViewInit {
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor() {
+    // Обновляем displayedColumns на основе isReadOnly
     effect(() => {
-      this.dataSource.data = this.items();
+      const baseColumns = [
+        'fio',
+        'nickName',
+        'rankShortValue',
+        'positionValue',
+        'stateValue',
+        'unitShortName',
+        'assignedUnitShortName',
+        'operationalUnitShortName',
+        'arrivedAt',
+        'departedAt',
+        'comment',
+      ];
+
+      this.displayedColumns = this.isReadOnly() ? baseColumns : ['menu', ...baseColumns];
     });
 
-    // Автоматически перезагружаем данные при изменении unitId или currentUnitTab
     effect(() => {
-      const currentUnitId = this.unitId();
-      // Следим за изменением вкладки для перезагрузки данных
-      this.currentUnitTab();
-
-      if (currentUnitId !== null) {
-        this.reload();
-      }
+      this.dataSource.data = this.items();
     });
   }
 
   ngAfterViewInit() {
     this.dataSource.sort = this.sort;
-    // Загружаем начальные данные
-    this.reload();
   }
 
   reload() {
-    const currentUnitId = this.unitId() === '' ? undefined : this.unitId() || undefined;
-
-    if (!currentUnitId) {
-      // Если нет unitId, загружаем все записи
-      this.soldierService.getAll().subscribe((items) => {
-        this.items.set(items);
-      });
-      return;
-    }
-
-    // Определяем какой метод API использовать на основе currentUnitTab
-    switch (this.currentUnitTab()) {
-      case UnitTag.InvolvedId:
-        this.soldierService.getByInvolved(currentUnitId).subscribe((items) => {
-          this.items.set(items);
-        });
-        break;
-      case UnitTag.AssignedId:
-        this.soldierService.getByAssigned(currentUnitId).subscribe((items) => {
-          this.items.set(items);
-        });
-        break;
-      case UnitTag.UnitId:
-      default:
-        this.soldierService.getAll(undefined, currentUnitId).subscribe((items) => {
-          this.items.set(items);
-        });
-        break;
-    }
+    // Уведомляємо батьківський компонент про необхідність перезавантаження
+    this.reloadRequested.emit();
   }
 
   /*
@@ -349,6 +328,10 @@ export class SoldiersComponent implements AfterViewInit {
 
   // === Inline edit helpers (single-mode per row) ===
   isEditing(soldierId: string, mode: EditMode): boolean {
+    // В режимі readonly редагування неможливе
+    if (this.isReadOnly()) {
+      return false;
+    }
     return this.inlineEdit.isMode(soldierId, mode);
   }
 
@@ -415,7 +398,8 @@ export class SoldiersComponent implements AfterViewInit {
   }
 
   private updateRow(updated: SoldierDto) {
-    const next = this.items().map((s) => (s.id === updated.id ? updated : s));
+    const current = this.items();
+    const next = current.map((s) => (s.id === updated.id ? updated : s));
     this.items.set(next);
   }
 

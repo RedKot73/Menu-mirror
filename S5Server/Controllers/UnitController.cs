@@ -150,7 +150,7 @@ namespace S5Server.Controllers
                 UnitTypeId = dto.UnitTypeId,
                 ParentId = dto.ParentId,
                 AssignedUnitId = dto.AssignedUnitId,
-                IsInvolved = dto.IsOperational,
+                IsInvolved = dto.IsInvolved,
                 OrderVal = dto.OrderVal == 0 ? 1 : dto.OrderVal
             };
 

@@ -74,7 +74,7 @@ namespace S5Server.Models
         string? ForceType,
         string? UnitTypeId,
         string? UnitType,
-        bool IsOperational,
+        bool IsInvolved,
         int OrderVal,
         string? Comment,
         bool HasChildren = false
@@ -91,7 +91,7 @@ namespace S5Server.Models
         ForceType,
         UnitTypeId,
         UnitType,
-        IsOperational,
+        IsInvolved,
         OrderVal,
         Comment
     );
@@ -104,7 +104,7 @@ namespace S5Server.Models
         string? MilitaryNumber,
         string? ForceTypeId,
         string? UnitTypeId,
-        bool IsOperational,
+        bool IsInvolved,
         int OrderVal,
         string? Comment
     );
@@ -121,7 +121,7 @@ namespace S5Server.Models
         string ShortName,
         string? UnitTypeId,
         string? UnitType,
-        bool IsOperational,
+        bool IsInvolved,
         string? Comment,
         /// <summary>
         /// Особовий склад

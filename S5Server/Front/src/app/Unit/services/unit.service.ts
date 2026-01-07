@@ -20,11 +20,11 @@ export interface UnitDto {
   unitTypeId?: string;
   unitType?: string;
   orderVal: number;
-  comment?: string;
   /**
    * Оперативний/Тимчасовий підрозділ - Команда
    */
-  isOperational?: boolean;
+  isInvolved: boolean;
+  comment?: string;
 }
 
 export interface UnitTreeItemDto extends UnitDto {
@@ -40,11 +40,11 @@ export interface UnitCreateDto {
   forceTypeId?: string;
   unitTypeId?: string;
   orderVal: number;
-  comment?: string;
   /**
    * Оперативний/Тимчасовий підрозділ - Команда
    */
-  isOperational?: boolean;
+  isInvolved: boolean;
+  comment?: string;
 }
 
 export interface UnitDataSetDto {
@@ -55,10 +55,14 @@ export interface UnitDataSetDto {
   shortName: string;
   unitTypeId?: string;
   unitType?: string;
+  /** Чи залучений підрозділ/екіпаж/група */
   isInvolved?: boolean;
   comment?: string;
+  /** Військовослужбовці підрозділу */
   soldiers: SoldierDto[];
+  /** Придані військовослужбовці */
   assignedSoldiers: SoldierDto[];
+  /** Задіяні військовослужбовці */
   involvedSoldiers: SoldierDto[];
 }
 
