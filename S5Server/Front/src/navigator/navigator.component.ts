@@ -49,6 +49,9 @@ import { MatMenuModule } from '@angular/material/menu';
         >
           Категорії шаблонів документів
         </button>
+        <button mat-menu-item routerLink="/dictUnitTasks" routerLinkActive="active-menu-item">
+          Завдання підрозділів
+        </button>
       </mat-menu>
 
       <mat-menu #dictGeneralInfo="matMenu">

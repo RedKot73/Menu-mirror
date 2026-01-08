@@ -1,4 +1,4 @@
-import { Component, input, output, inject, effect } from '@angular/core';
+import { Component, input, output, inject, effect, computed } from '@angular/core';
 import { signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -41,6 +41,14 @@ export class UnitContentComponent {
   soldiers = signal<SoldierDto[]>([]);
   assignedSoldiers = signal<SoldierDto[]>([]);
   involvedSoldiers = signal<SoldierDto[]>([]);
+
+  // Віртуальне властивість - об'єднаний масив всього особового складу
+  // Автоматично оновлюється при зміні будь-якого з вихідних масивів
+  allSoldiers = computed(() => [
+    ...this.soldiers(),
+    ...this.assignedSoldiers(),
+    ...this.involvedSoldiers(),
+  ]);
 
   constructor() {
     // Завантажуємо дані при зміні підрозділу

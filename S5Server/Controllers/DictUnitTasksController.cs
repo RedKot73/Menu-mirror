@@ -41,12 +41,12 @@ public class DictUnitTasksController : ControllerBase
             if (!string.IsNullOrWhiteSpace(search))
             {
                 search = search.Trim();
-                q = q.Where(x => x.Value.Contains(search));
+                q = q.Where(x => x.Caption.Contains(search) || x.Caption.Contains(search));
             }
 
             var list = await q
-                .OrderBy(x => x.Value)
-                .Select(x => DictUnitTaskDto.ToDto(x))
+                .OrderBy(x => x.Caption)
+                .Select(x => x.ToDto())
                 .ToListAsync(ct);
 
             return Ok(list);
@@ -58,7 +58,7 @@ public class DictUnitTasksController : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Ошибка при получении списка DictUnitTask");
+                _logger.LogError(ex, "Помилка при отриманні списку DictUnitTask");
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -79,7 +79,8 @@ public class DictUnitTasksController : ControllerBase
             var e = await Query().FirstOrDefaultAsync(x => x.Id == id, ct);
             if (e == null)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
-            return Ok(DictUnitTaskDto.ToDto(e));
+            
+            return Ok(e.ToDto());
         }
         catch (OperationCanceledException)
         {
@@ -88,7 +89,7 @@ public class DictUnitTasksController : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Ошибка при получении DictUnitTask Id={Id}", id);
+                _logger.LogError(ex, "Помилка при отриманні DictUnitTask Id={Id}", id);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -107,7 +108,10 @@ public class DictUnitTasksController : ControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        if (string.IsNullOrWhiteSpace(dto.Value))
+        if (string.IsNullOrWhiteSpace(dto.Caption))
+            return BadRequest("Caption не може бути порожнім");
+
+        if (string.IsNullOrWhiteSpace(dto.Caption))
             return BadRequest("Value не може бути порожнім");
 
         if (dto.Amount < 0)
@@ -115,21 +119,13 @@ public class DictUnitTasksController : ControllerBase
 
         try
         {
-            var entity = new DictUnitTask
-            {
-                Id = Guid.NewGuid().ToString("D"),
-                Value = dto.Value.Trim(),
-                Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim(),
-                Amount = dto.Amount,
-                WithMeans = dto.WithMeans,
-                AtPermanentPoint = dto.AtPermanentPoint
-            };
+            var entity = dto.ToEntity();
 
             _set.Add(entity);
             await _db.SaveChangesAsync(ct);
 
             var created = await Query().FirstAsync(x => x.Id == entity.Id, ct);
-            return CreatedAtAction(nameof(Get), new { id = created.Id }, DictUnitTaskDto.ToDto(created));
+            return CreatedAtAction(nameof(Get), new { id = created.Id }, created.ToDto());
         }
         catch (OperationCanceledException)
         {
@@ -138,23 +134,23 @@ public class DictUnitTasksController : ControllerBase
         catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
             if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation(ex, "Конфликт уникальности Value={Value} для DictUnitTask", dto.Value);
+                _logger.LogInformation(ex, "Конфлікт унікальності Caption={Caption} для DictUnitTask", dto.Caption);
             return Problem(
                 statusCode: 409,
-                title: "Конфликт уникальности",
-                detail: $"Завдання \"{dto.Value}\" вже існує",
-                extensions: new Dictionary<string, object?> { ["field"] = "Value", ["value"] = dto.Value });
+                title: "Конфлікт унікальності",
+                detail: $"Завдання \"{dto.Caption}\" вже існує",
+                extensions: new Dictionary<string, object?> { ["field"] = "Caption", ["value"] = dto.Caption });
         }
         catch (DbUpdateConcurrencyException ex)
         {
             if (_logger.IsEnabled(LogLevel.Warning))
-                _logger.LogWarning(ex, "Конкурентный конфликт при создании DictUnitTask");
-            return Problem(statusCode: 409, title: "Конкурентный конфликт");
+                _logger.LogWarning(ex, "Конкурентний конфлікт при створенні DictUnitTask");
+            return Problem(statusCode: 409, title: "Конкурентний конфлікт");
         }
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Неизвестная ошибка при создании DictUnitTask");
+                _logger.LogError(ex, "Помилка при створенні DictUnitTask");
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -175,6 +171,9 @@ public class DictUnitTasksController : ControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
+        if (string.IsNullOrWhiteSpace(dto.Caption))
+            return BadRequest("Caption не може бути порожнім");
+
         if (string.IsNullOrWhiteSpace(dto.Value))
             return BadRequest("Value не може бути порожнім");
 
@@ -187,13 +186,11 @@ public class DictUnitTasksController : ControllerBase
             if (e == null)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
 
-            var snapshot = (e.Value, e.Comment, e.Amount, e.WithMeans, e.AtPermanentPoint);
-            DictUnitTaskDto.ApplyDto(e, dto);
-
-            // Ничего не изменилось
-            if (snapshot == (e.Value, e.Comment, e.Amount, e.WithMeans, e.AtPermanentPoint))
+            // Перевіряємо чи змінились дані
+            if (e.EqualsDto(dto))
                 return NoContent();
 
+            e.ApplyDto(dto);
             await _db.SaveChangesAsync(ct);
             return NoContent();
         }
@@ -204,24 +201,24 @@ public class DictUnitTasksController : ControllerBase
         catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
             if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation(ex, "Конфликт уникальности при обновлении DictUnitTask Id={Id} Value={Value}",
-                    id, dto.Value);
+                _logger.LogInformation(ex, "Конфлікт унікальності при оновленні DictUnitTask Id={Id} Caption={Caption}",
+                    id, dto.Caption);
             return Problem(
                 statusCode: 409,
-                title: "Конфликт уникальности",
-                detail: $"Завдання \"{dto.Value}\" вже існує",
-                extensions: new Dictionary<string, object?> { ["field"] = "Value", ["value"] = dto.Value, ["id"] = id });
+                title: "Конфлікт унікальності",
+                detail: $"Завдання \"{dto.Caption}\" вже існує",
+                extensions: new Dictionary<string, object?> { ["field"] = "Caption", ["value"] = dto.Caption, ["id"] = id });
         }
         catch (DbUpdateConcurrencyException ex)
         {
             if (_logger.IsEnabled(LogLevel.Warning))
-                _logger.LogWarning(ex, "Конкурентный конфликт при обновлении DictUnitTask Id={Id}", id);
-            return Problem(statusCode: 409, title: "Конкурентный конфликт");
+                _logger.LogWarning(ex, "Конкурентний конфлікт при оновленні DictUnitTask Id={Id}", id);
+            return Problem(statusCode: 409, title: "Конкурентний конфлікт");
         }
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Ошибка при обновлении DictUnitTask Id={Id}", id);
+                _logger.LogError(ex, "Помилка при оновленні DictUnitTask Id={Id}", id);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -254,7 +251,7 @@ public class DictUnitTasksController : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Ошибка при удалении DictUnitTask Id={Id}", id);
+                _logger.LogError(ex, "Помилка при видаленні DictUnitTask Id={Id}", id);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -271,22 +268,18 @@ public class DictUnitTasksController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(term))
             return Ok(Array.Empty<object>());
+        
         if (limit is < 1 or > 100) limit = 10;
 
         try
         {
-            var q = Query();
-
-            if (!string.IsNullOrWhiteSpace(term))
-            {
-                term = term.Trim();
-                q = q.Where(t => t.Value.Contains(term));
-            }
-
-            var data = await q
-                .OrderBy(t => t.Value)
+            term = term.Trim();
+            
+            var data = await Query()
+                .Where(t => t.Caption.Contains(term))
+                .OrderBy(t => t.Caption)
                 .Take(limit)
-                .Select(t => new LookupDto(t.Id, t.Value))
+                .Select(t => new LookupDto(t.Id, t.Caption))
                 .ToListAsync(ct);
 
             return Ok(data);
@@ -298,7 +291,7 @@ public class DictUnitTasksController : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Ошибка в lookup DictUnitTask");
+                _logger.LogError(ex, "Помилка в lookup DictUnitTask");
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -314,8 +307,8 @@ public class DictUnitTasksController : ControllerBase
         try
         {
             var data = await Query()
-                .OrderBy(t => t.Value)
-                .Select(t => new LookupDto(t.Id, t.Value))
+                .OrderBy(t => t.Caption)
+                .Select(t => new LookupDto(t.Id, t.Caption))
                 .ToListAsync(ct);
 
             return Ok(data);
@@ -327,7 +320,7 @@ public class DictUnitTasksController : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Ошибка при получении sel_list DictUnitTask");
+                _logger.LogError(ex, "Помилка при отриманні sel_list DictUnitTask");
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }

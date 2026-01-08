@@ -133,7 +133,7 @@ namespace S5Server.Data
                 e.Property(e => e.Amount).IsRequired().HasColumnType("REAL");
                 e.Property(e => e.WithMeans).HasColumnType("INTEGER").HasDefaultValue(0);
                 e.Property(e => e.AtPermanentPoint).HasColumnType("INTEGER").HasDefaultValue(1);
-                e.HasIndex(e => e.Value).IsUnique();
+                e.HasIndex(e => e.Caption).IsUnique();
             });
 
             modelBuilder.Entity<Unit>(entity =>

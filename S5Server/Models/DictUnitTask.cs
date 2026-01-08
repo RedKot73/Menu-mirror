@@ -25,9 +25,25 @@ namespace S5Server.Models
         /// <summary>
         /// True - завдання на ППД
         /// </summary>
-        bool AtPermanentPoint)
+        bool AtPermanentPoint);
+
+    public record DictUnitTaskCreateDto(
+        string Value,
+        string Caption,
+        string? Comment,
+        decimal Amount,
+        bool WithMeans = false,
+        bool AtPermanentPoint = true);
+
+    /// <summary>
+    /// Методи розширення для роботи з DictUnitTask
+    /// </summary>
+    public static class DictUnitTaskExtensions
     {
-        public static DictUnitTaskDto ToDto(DictUnitTask unitTask) =>
+        /// <summary>
+        /// Конвертує DictUnitTask у DTO
+        /// </summary>
+        public static DictUnitTaskDto ToDto(this DictUnitTask unitTask) =>
             new(
                 unitTask.Id,
                 unitTask.Caption,
@@ -37,7 +53,40 @@ namespace S5Server.Models
                 unitTask.WithMeans,
                 unitTask.AtPermanentPoint);
 
-        public static void ApplyDto(DictUnitTask unitTask, DictUnitTaskDto dto)
+        /// <summary>
+        /// Створює новий екземпляр DictUnitTask з DTO
+        /// </summary>
+        public static DictUnitTask ToEntity(this DictUnitTaskDto dto) =>
+            new()
+            {
+                Id = dto.Id,
+                Caption = dto.Caption.Trim(),
+                Value = dto.Value.Trim(),
+                Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim(),
+                Amount = dto.Amount,
+                WithMeans = dto.WithMeans,
+                AtPermanentPoint = dto.AtPermanentPoint
+            };
+
+        /// <summary>
+        /// Створює новий екземпляр DictUnitTask з CreateDTO
+        /// </summary>
+        public static DictUnitTask ToEntity(this DictUnitTaskCreateDto dto) =>
+            new()
+            {
+                Id = Guid.NewGuid().ToString("D"),
+                Caption = dto.Caption.Trim(),
+                Value = dto.Value.Trim(),
+                Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim(),
+                Amount = dto.Amount,
+                WithMeans = dto.WithMeans,
+                AtPermanentPoint = dto.AtPermanentPoint
+            };
+
+        /// <summary>
+        /// Застосовує дані з DTO до існуючої сутності DictUnitTask
+        /// </summary>
+        public static void ApplyDto(this DictUnitTask unitTask, DictUnitTaskDto dto)
         {
             unitTask.Caption = dto.Caption.Trim();
             unitTask.Value = dto.Value.Trim();
@@ -46,15 +95,20 @@ namespace S5Server.Models
             unitTask.WithMeans = dto.WithMeans;
             unitTask.AtPermanentPoint = dto.AtPermanentPoint;
         }
-    }
 
-    public record DictUnitTaskCreateDto(
-        string Value,
-        string Caption,
-        string? Comment,
-        decimal Amount,
-        bool WithMeans = false,
-        bool AtPermanentPoint = true);
+        /// <summary>
+        /// Перевіряє, чи дані в сутності DictUnitTask співпадають з даними в DTO
+        /// </summary>
+        public static bool EqualsDto(this DictUnitTask unitTask, DictUnitTaskDto dto)
+        {
+            return unitTask.Caption == dto.Caption.Trim() &&
+                   unitTask.Value == dto.Value.Trim() &&
+                   unitTask.Comment == (string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim()) &&
+                   unitTask.Amount == dto.Amount &&
+                   unitTask.WithMeans == dto.WithMeans &&
+                   unitTask.AtPermanentPoint == dto.AtPermanentPoint;
+        }
+    }
 
     /// <summary>
     /// Завдання підрозділу для використання в документах БР/БД
@@ -70,7 +124,6 @@ namespace S5Server.Models
         [Key]
         [StringLength(36)]
         public string Id { get; set; } = Guid.NewGuid().ToString("D");
-
 
         /// <summary>
         /// Назва

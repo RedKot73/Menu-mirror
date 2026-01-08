@@ -5,6 +5,7 @@ import { LookupDto } from '../app/shared/models/lookup.models';
 
 export interface DictUnitTaskDto {
   id: string;
+  caption: string;
   value: string;
   comment?: string;
   amount: number;
@@ -13,6 +14,7 @@ export interface DictUnitTaskDto {
 }
 
 export interface DictUnitTaskCreateDto {
+  caption: string;
   value: string;
   comment?: string;
   amount: number;

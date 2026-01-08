@@ -6,10 +6,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
-import {
-  MatDatepickerModule,
-  MatDatepickerInputEvent,
-} from '@angular/material/datepicker';
+import { MatDatepickerModule, MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -115,12 +112,12 @@ export class UnitsTaskEditorComponent {
    * Обробник зміни дати документа
    */
   onParentDocumentDateChange(event: MatDatepickerInputEvent<Date>): void {
-    this.parentDocumentDate.set(event.value || null as any);
+    this.parentDocumentDate.set(event.value || (null as any));
     this.hasUnsavedChanges.set(true);
   }
-  
+
   onDocumentDateChange(event: MatDatepickerInputEvent<Date>): void {
-    this.documentDate.set(event.value || null as any);
+    this.documentDate.set(event.value || (null as any));
     this.hasUnsavedChanges.set(true);
   }
 
@@ -138,161 +135,6 @@ export class UnitsTaskEditorComponent {
     this.hasUnsavedChanges.set(true);
   }
 
-  /**
-   * Ініціалізує автокомпліт для моделі БПЛА для конкретного підрозділу
-   */
-  /*
-  initDroneModelAutocomplete(unitId: string): void {
-    if (!this.droneModelSearchControls.has(unitId)) {
-      const control = new FormControl<LookupDto | string | null>(null);
-      this.droneModelSearchControls.set(unitId, control);
-      this.isLoadingDroneModels.set(unitId, false);
-      this.selectedDroneModels.set(unitId, null);
-
-      const filtered = control.valueChanges.pipe(
-        startWith(''),
-        debounceTime(300),
-        distinctUntilChanged(),
-        switchMap((value) => {
-          const searchTerm =
-            typeof value === 'string'
-              ? value
-              : value && typeof value === 'object' && 'value' in value
-              ? value.value
-              : '';
-          if (searchTerm && searchTerm.length >= 2) {
-            this.isLoadingDroneModels.set(unitId, true);
-            return this.dictDroneModelService
-              .lookup(searchTerm, 10)
-              .pipe(finalize(() => this.isLoadingDroneModels.set(unitId, false)));
-          }
-          return of([]);
-        })
-      );
-      this.filteredDroneModels.set(unitId, filtered);
-    }
-  }
-*/
-  /**
-   * Отримує FormControl для пошуку моделі БПЛА
-   */
-  /*
-  getDroneModelControl(unitId: string): FormControl<LookupDto | string | null> {
-    this.initDroneModelAutocomplete(unitId);
-    return this.droneModelSearchControls.get(unitId)!;
-  }
-*/
-  /**
-   * Отримує Observable для фільтрованих моделей БПЛА
-   */
-  /*
-  getFilteredDroneModels(unitId: string): Observable<LookupDto[]> {
-    this.initDroneModelAutocomplete(unitId);
-    return this.filteredDroneModels.get(unitId)!;
-  }
-*/
-  /**
-   * Перевіряє, чи завантажуються моделі БПЛА
-   */
-  /*
-  isLoadingDroneModel(unitId: string): boolean {
-    return this.isLoadingDroneModels.get(unitId) || false;
-  }
-*/
-  /**
-   * Відображення назви моделі БПЛА в автокомпліті
-   */
-  /*
-  displayDroneModelFn = (droneModel: LookupDto | null): string => {
-    return droneModel ? droneModel.value : '';
-  };
-*/
-  /**
-   * Обробник вибору моделі БПЛА
-   */
-  /*
-  onDroneModelSelected(unitId: string, event: MatAutocompleteSelectedEvent): void {
-    const selectedDroneModel = event.option.value as LookupDto | null;
-    this.selectedDroneModels.set(unitId, selectedDroneModel);
-
-    // Оновлюємо Means в UnitTaskDto
-    const units = this.selectedUnits();
-    const unitIndex = units.findIndex((u) => u.id === unitId);
-    if (unitIndex !== -1) {
-      const updatedUnit = { ...units[unitIndex] };
-      updatedUnit.Means = selectedDroneModel ? [selectedDroneModel.value] : [];
-      units[unitIndex] = updatedUnit;
-      this.selectedUnits.set([...units]);
-      this.hasUnsavedChanges.set(true);
-    }
-  }
-*/
-  /**
-   * Отримує FormControl для вибору завдання
-   */
-  /*
-  getTaskControl(unitId: string): FormControl<string | null> {
-    if (!this.taskSelectionControls.has(unitId)) {
-      const control = new FormControl<string | null>(null);
-      this.taskSelectionControls.set(unitId, control);
-
-      // Підписуємося на зміни
-      control.valueChanges.subscribe((value) => {
-        this.onTaskChange(unitId, value);
-      });
-    }
-    return this.taskSelectionControls.get(unitId)!;
-  }
-*/
-  /**
-   * Отримує FormControl для вибору зони (РСП)
-   */
-  /*
-  getAreaControl(unitId: string): FormControl<string | null> {
-    if (!this.areaSelectionControls.has(unitId)) {
-      const control = new FormControl<string | null>(null);
-      this.areaSelectionControls.set(unitId, control);
-
-      // Підписуємося на зміни
-      control.valueChanges.subscribe((value) => {
-        this.onAreaChange(unitId, value);
-      });
-    }
-    return this.areaSelectionControls.get(unitId)!;
-  }
-*/
-  /**
-   * Обробник зміни завдання
-   */
-  /*
-  private onTaskChange(unitId: string, taskValue: string | null): void {
-    const units = this.selectedUnits();
-    const unitIndex = units.findIndex((u) => u.id === unitId);
-    if (unitIndex !== -1) {
-      const updatedUnit = { ...units[unitIndex] };
-      updatedUnit.TaskValue = taskValue || '';
-      units[unitIndex] = updatedUnit;
-      this.selectedUnits.set([...units]);
-      this.hasUnsavedChanges.set(true);
-    }
-  }
-*/
-  /**
-   * Обробник зміни зони (РСП)
-   */
-  /*
-  private onAreaChange(unitId: string, areaValue: string | null): void {
-    const units = this.selectedUnits();
-    const unitIndex = units.findIndex((u) => u.id === unitId);
-    if (unitIndex !== -1) {
-      const updatedUnit = { ...units[unitIndex] };
-      updatedUnit.AreaValue = areaValue || '';
-      units[unitIndex] = updatedUnit;
-      this.selectedUnits.set([...units]);
-      this.hasUnsavedChanges.set(true);
-    }
-  }
-*/
   /**
    * Перевіряє наявність незбережених змін і запитує підтвердження
    * @returns true якщо можна продовжити, false якщо користувач скасував
@@ -440,14 +282,15 @@ export class UnitsTaskEditorComponent {
     errorMessage: string
   ): boolean {
     const isEmpty = !value || (typeof value === 'string' && value.trim() === '');
-    
+
     if (isEmpty) {
       this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       this.focusInvalidField(input);
       return false;
     }
-    return true;//
+    return true;
   }
+
   /**
    * Зберігає вибрані підрозділи як набір даних
    */
@@ -460,38 +303,70 @@ export class UnitsTaskEditorComponent {
     }
 
     // Перевірка обов'язкових полів
-    if (!this.checkRequiredField(
-      this.parentDocumentDate(),
-      this.parentDateInput,
-      'Заповніть дату документа старшого начальника'
-    )) {
+    if (
+      !this.checkRequiredField(
+        this.parentDocumentDate(),
+        this.parentDateInput,
+        'Заповніть дату документа старшого начальника'
+      )
+    ) {
       return;
     }
 
-    if (!this.checkRequiredField(
-      this.parentDocumentNumber(),
-      this.parentNumberInput,
-      'Заповніть номер документа старшого начальника'
-    )) {
+    if (
+      !this.checkRequiredField(
+        this.parentDocumentNumber(),
+        this.parentNumberInput,
+        'Заповніть номер документа старшого начальника'
+      )
+    ) {
       return;
     }
 
-    if (!this.checkRequiredField(
-      this.documentDate(),
-      this.dateInput,
-      'Заповніть дату документа'
-    )) {
+    if (!this.checkRequiredField(this.documentDate(), this.dateInput, 'Заповніть дату документа')) {
       return;
     }
 
-    if (!this.checkRequiredField(
-      this.documentNumber(),
-      this.numberInput,
-      'Заповніть номер документа'
-    )) {
+    if (
+      !this.checkRequiredField(this.documentNumber(), this.numberInput, 'Заповніть номер документа')
+    ) {
       return;
     }
 
+    // Перевірка обов'язкових полів для кожного підрозділу
+    /*
+    const units = this.selectedUnits();
+    for (let i = 0; i < units.length; i++) {
+      const unit = units[i];
+      
+      if (!unit.TaskValue || unit.TaskValue.trim() === '') {
+        this.snackBar.open(
+          `Підрозділ "${unit.shortName}" (${i + 1}): заповніть завдання`,
+          'Закрити',
+          { duration: 5000 }
+        );
+        return;
+      }
+
+      if (!unit.AreaValue || unit.AreaValue.trim() === '') {
+        this.snackBar.open(
+          `Підрозділ "${unit.shortName}" (${i + 1}): заповніть РСП для екіпажів`,
+          'Закрити',
+          { duration: 5000 }
+        );
+        return;
+      }
+
+      if (!unit.Means || unit.Means.length === 0) {
+        this.snackBar.open(
+          `Підрозділ "${unit.shortName}" (${i + 1}): оберіть засіб (модель БПЛА)`,
+          'Закрити',
+          { duration: 5000 }
+        );
+        return;
+      }
+    }
+*/
     const dataJson = this.getDataSetContent();
     // Генеруємо назву на основі дати та номера документа
     const dateStr = this.documentDate().toLocaleDateString('uk-UA');

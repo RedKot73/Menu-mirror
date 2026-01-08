@@ -84,6 +84,12 @@ export const routes: Routes = [
     title: 'Категорії шаблонів документів',
   },
   {
+    path: 'dictUnitTasks',
+    loadComponent: () =>
+      import('../dictionaries/dictUnitTask.component').then((m) => m.DictUnitTaskComponent),
+    title: 'Завдання підрозділів',
+  },
+  {
     path: 'units',
     title: 'Підрозділи',
     loadComponent: () => import('../app/Unit/Unit.page').then((m) => m.UnitsComponent),
