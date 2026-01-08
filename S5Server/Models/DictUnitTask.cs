@@ -5,33 +5,52 @@ namespace S5Server.Models
 {
     public record DictUnitTaskDto(
         string Id,
+        /// <summary>
+        /// Назва
+        /// </summary>
+        string Caption,
+        /// <summary>
+        /// JSON з описом для різних документів
+        /// </summary>
         string Value,
         string? Comment,
+        /// <summary>
+        /// Сума (грн)
+        /// </summary>
         decimal Amount,
+        /// <summary>
+        /// True - треба вказати засоби (БПЛА)
+        /// </summary>
         bool WithMeans,
+        /// <summary>
+        /// True - завдання на ППД
+        /// </summary>
         bool AtPermanentPoint)
     {
-        public static DictUnitTaskDto ToDto(DictUnitTask e) =>
+        public static DictUnitTaskDto ToDto(DictUnitTask unitTask) =>
             new(
-                e.Id,
-                e.Value,
-                e.Comment,
-                e.Amount,
-                e.WithMeans,
-                e.AtPermanentPoint);
+                unitTask.Id,
+                unitTask.Caption,
+                unitTask.Value,
+                unitTask.Comment,
+                unitTask.Amount,
+                unitTask.WithMeans,
+                unitTask.AtPermanentPoint);
 
-        public static void ApplyDto(DictUnitTask e, DictUnitTaskDto dto)
+        public static void ApplyDto(DictUnitTask unitTask, DictUnitTaskDto dto)
         {
-            e.Value = dto.Value.Trim();
-            e.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
-            e.Amount = dto.Amount;
-            e.WithMeans = dto.WithMeans;
-            e.AtPermanentPoint = dto.AtPermanentPoint;
+            unitTask.Caption = dto.Caption.Trim();
+            unitTask.Value = dto.Value.Trim();
+            unitTask.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
+            unitTask.Amount = dto.Amount;
+            unitTask.WithMeans = dto.WithMeans;
+            unitTask.AtPermanentPoint = dto.AtPermanentPoint;
         }
     }
 
     public record DictUnitTaskCreateDto(
         string Value,
+        string Caption,
         string? Comment,
         decimal Amount,
         bool WithMeans = false,
@@ -52,7 +71,17 @@ namespace S5Server.Models
         [StringLength(36)]
         public string Id { get; set; } = Guid.NewGuid().ToString("D");
 
+
+        /// <summary>
+        /// Назва
+        /// </summary>
         [StringLength(100), Required(ErrorMessage = UIConstant.RequiredMsg)]
+        public string Caption { get; set; } = string.Empty;
+
+        /// <summary>
+        /// JSON з описом для різних документів
+        /// </summary>
+        [Required(ErrorMessage = UIConstant.RequiredMsg)]
         public string Value { get; set; } = string.Empty;
 
         [StringLength(250)]
