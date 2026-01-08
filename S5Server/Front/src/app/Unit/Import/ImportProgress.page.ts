@@ -34,7 +34,7 @@ import { LookupDto } from '../../shared/models/lookup.models';
 import { InlineEditManager, EditMode } from '../../Soldier/InlineEditManager.class';
 import { UnitTag } from '../../Soldier/Soldier.constant';
 
-import { ErrorHandler } from '../../shared/models/ErrorHandler';
+import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
@@ -287,7 +287,7 @@ export class ImportProgressPage implements OnInit, OnDestroy {
             { duration: 5000 }
           );
         } else {
-          const errorMessage = ErrorHandler.handleHttpError(
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
             error,
             'Помилка імпорту особового складу'
           );
@@ -371,7 +371,10 @@ export class ImportProgressPage implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Помилка оновлення підрозділу:', error);
-        const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка оновлення підрозділу');
+        const errorMessage = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Помилка оновлення підрозділу'
+        );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
     });

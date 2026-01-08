@@ -24,7 +24,7 @@ import {
 import { TemplateDataSetService } from '../services/template-dataset.service';
 import { JsonEditorDialogComponent } from '../components/JsonEditorDialog.component';
 import { UnitTaskCardComponent } from './UnitTaskCard.component';
-import { ErrorHandler } from '../../shared/models/ErrorHandler';
+import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 import { TemplateDataSetListItem } from '../models/template-dataset.models';
 import { DocTemplateUtils } from '../models/shared.models';
 
@@ -181,7 +181,7 @@ export class UnitsTaskEditorComponent {
       },
       error: (error) => {
         console.error('Помилка завантаження даних підрозділу:', error);
-        const errorMessage = ErrorHandler.handleHttpError(
+        const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
           'Помилка завантаження даних підрозділу:'
         );
@@ -215,7 +215,7 @@ export class UnitsTaskEditorComponent {
         try {
           documentData = JSON.parse(dataSet.dataJson) as DocumentDataSet;
         } catch (error) {
-          const errorMessage = ErrorHandler.handleJsonError(error);
+          const errorMessage = S5App_ErrorHandler.handleJsonError(error);
           this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           return;
         }
@@ -246,7 +246,7 @@ export class UnitsTaskEditorComponent {
       },
       error: (error) => {
         console.error('Помилка завантаження набору даних:', error);
-        const errorMessage = ErrorHandler.handleHttpError(
+        const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
           'Помилка завантаження набору даних:'
         );
@@ -397,7 +397,7 @@ export class UnitsTaskEditorComponent {
         error: (error) => {
           this.isSaving.set(false);
           console.error('Error updating dataset:', error);
-          const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка оновлення даних');
+          const errorMessage = S5App_ErrorHandler.handleHttpError(error, 'Помилка оновлення даних');
           this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
         },
       });
@@ -433,7 +433,7 @@ export class UnitsTaskEditorComponent {
         error: (error) => {
           this.isSaving.set(false);
           console.error('Error creating dataset:', error);
-          const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка збереження даних');
+          const errorMessage = S5App_ErrorHandler.handleHttpError(error, 'Помилка збереження даних');
           this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
         },
       });
@@ -512,7 +512,7 @@ export class UnitsTaskEditorComponent {
       error: (error) => {
         this.isSaving.set(false);
         console.error('Error changing publish status:', error);
-        const errorMessage = ErrorHandler.handleHttpError(
+        const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
           'Помилка зміни статусу публікації'
         );

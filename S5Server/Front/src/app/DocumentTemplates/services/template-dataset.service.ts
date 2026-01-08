@@ -4,13 +4,13 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 import {
-    TemplateDataSetDto,
-    TemplateDataSetCreateDto,
-    TemplateDataSetUpdateDto,
-    TemplateDataSetUtils,
-    UnitTaskDto
+  TemplateDataSetDto,
+  TemplateDataSetCreateDto,
+  TemplateDataSetUpdateDto,
+  TemplateDataSetUtils,
+  UnitTaskDto,
 } from '../models/template-dataset.models';
-import { ErrorHandler } from '../../shared/models/ErrorHandler';
+import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 
 @Injectable({
   providedIn: 'root',
@@ -28,7 +28,10 @@ export class TemplateDataSetService {
   getDataSets(): Observable<TemplateDataSetDto[]> {
     return this.http.get<TemplateDataSetDto[]>(`${this.baseUrl}/data-sets`).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Не вдалося отримати набори даних');
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося отримати набори даних'
+        );
         return throwError(() => new Error(message));
       })
     );
@@ -38,7 +41,7 @@ export class TemplateDataSetService {
   getUnitDataSet(id: string): Observable<UnitTaskDto> {
     return this.http.get<UnitTaskDto>(`${this.baseUrl}/data-sets/unit-task/${id}`).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(
+        const message = S5App_ErrorHandler.handleHttpError(
           error,
           'Не вдалося отримати набір даних підрозділу'
         );
@@ -63,7 +66,10 @@ export class TemplateDataSetService {
 
     return this.http.post<TemplateDataSetDto>(`${this.baseUrl}/data-sets`, dto).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Не вдалося створити набір даних');
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося створити набір даних'
+        );
         return throwError(() => new Error(message));
       })
     );
@@ -76,7 +82,10 @@ export class TemplateDataSetService {
   getDataSetById(dataSetId: string): Observable<TemplateDataSetDto> {
     return this.http.get<TemplateDataSetDto>(`${this.baseUrl}/data-sets/${dataSetId}`).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Не вдалося отримати набір даних');
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося отримати набір даних'
+        );
         return throwError(() => new Error(message));
       })
     );
@@ -89,7 +98,10 @@ export class TemplateDataSetService {
   deleteDataSet(dataSetId: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/data-sets/${dataSetId}`).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Не вдалося видалити набір даних');
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося видалити набір даних'
+        );
         return throwError(() => new Error(message));
       })
     );
@@ -102,7 +114,7 @@ export class TemplateDataSetService {
   updateDataSet(dataSetId: string, dto: TemplateDataSetUpdateDto): Observable<void> {
     return this.http.put<void>(`${this.baseUrl}/data-sets/${dataSetId}`, dto).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Не вдалося оновити набір даних');
+        const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося оновити набір даних');
         return throwError(() => new Error(message));
       })
     );
@@ -114,7 +126,7 @@ export class TemplateDataSetService {
       .post<void>(`${this.baseUrl}/${id}/publish/${set_publish ? 'true' : 'false'}`, {})
       .pipe(
         catchError((error: HttpErrorResponse) => {
-          const message = ErrorHandler.handleHttpError(
+          const message = S5App_ErrorHandler.handleHttpError(
             error,
             'Не вдалося змінити статус публікації набору даних'
           );

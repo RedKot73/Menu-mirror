@@ -24,7 +24,7 @@ import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
 import { SoldierService, SoldierDto } from '../Soldier/services/soldier.service';
 import { UnitService } from '../Unit/services/unit.service';
 import { LookupDto } from '../shared/models/lookup.models';
-import { ErrorHandler } from '../shared/models/ErrorHandler';
+import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import {
   isCriticalStatus,
@@ -143,7 +143,10 @@ export class PersonnelPage implements AfterViewInit {
           },
           error: (error) => {
             console.error('Помилка створення бійця:', error);
-            const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка створення бійця');
+            const errorMessage = S5App_ErrorHandler.handleHttpError(
+              error,
+              'Помилка створення бійця'
+            );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
         });
@@ -167,7 +170,10 @@ export class PersonnelPage implements AfterViewInit {
           },
           error: (error) => {
             console.error('Помилка оновлення бійця:', error);
-            const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка оновлення бійця');
+            const errorMessage = S5App_ErrorHandler.handleHttpError(
+              error,
+              'Помилка оновлення бійця'
+            );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
         });
@@ -200,7 +206,10 @@ export class PersonnelPage implements AfterViewInit {
           },
           error: (error) => {
             console.error('Помилка видалення бійця:', error);
-            const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка видалення бійця');
+            const errorMessage = S5App_ErrorHandler.handleHttpError(
+              error,
+              'Помилка видалення бійця'
+            );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
         });
@@ -269,7 +278,10 @@ export class PersonnelPage implements AfterViewInit {
       },
       error: (error) => {
         console.error('Помилка оновлення підрозділу:', error);
-        const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка оновлення підрозділу');
+        const errorMessage = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Помилка оновлення підрозділу'
+        );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
     });

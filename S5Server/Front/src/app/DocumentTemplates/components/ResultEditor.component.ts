@@ -11,7 +11,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { Editor, NgxEditorModule, Toolbar } from 'ngx-editor';
 import { saveAs } from 'file-saver';
 
-import { ErrorHandler } from '../../shared/models/ErrorHandler';
+import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 import { HandlebarsTemplateService } from '../services/handlebars-template.service';
 import { DatasetData } from '../models/template.types';
 import { NGX_EDITOR_TOOLBAR /*NGX_EDITOR_TOOLBAR_READONLY*/ } from './ngx-editor.config';
@@ -108,7 +108,7 @@ export class ResultEditorComponent implements OnDestroy {
       try {
         data = JSON.parse(dataSet) as DatasetData;
       } catch (e) {
-        const jsonError = ErrorHandler.handleJsonError(e);
+        const jsonError = S5App_ErrorHandler.handleJsonError(e);
         throw new Error(jsonError);
       }
 
@@ -119,7 +119,7 @@ export class ResultEditorComponent implements OnDestroy {
       this.isProcessing.set(false);
     } catch (error) {
       //console.error('Error processing template:', error);
-      const errorMessage = ErrorHandler.handleGenericError(error, 'Помилка обробки шаблону');
+      const errorMessage = S5App_ErrorHandler.handleGenericError(error, 'Помилка обробки шаблону');
       this.processError.set(errorMessage);
       this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       this.isProcessing.set(false);
@@ -201,7 +201,7 @@ export class ResultEditorComponent implements OnDestroy {
       this.snackBar.open(`Файл ${fileName} збережено!`, 'Закрити', { duration: 3000 });
     } catch (error) {
       console.error('Error exporting to Word:', error);
-      const errorMessage = ErrorHandler.handleGenericError(error, 'Помилка експорту в Word');
+      const errorMessage = S5App_ErrorHandler.handleGenericError(error, 'Помилка експорту в Word');
       this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
     }
   }
@@ -237,7 +237,7 @@ export class ResultEditorComponent implements OnDestroy {
       this.snackBar.open(`Файл ${fileName} збережено!`, 'Закрити', { duration: 3000 });
     } catch (error) {
       console.error('Error exporting to RTF:', error);
-      const errorMessage = ErrorHandler.handleGenericError(error, 'Помилка експорту в RTF');
+      const errorMessage = S5App_ErrorHandler.handleGenericError(error, 'Помилка експорту в RTF');
       this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
     }
   }

@@ -15,7 +15,7 @@ import { ConfirmDialogComponent } from '../app/dialogs/ConfirmDialog.component';
 import { DictDroneModelService, DictDroneModel } from '../ServerService/dictDroneModel.service';
 import { DictDroneTypeService } from '../ServerService/dictDroneType.service';
 import { LookupDto } from '../app/shared/models/lookup.models';
-import { ErrorHandler } from '../app/shared/models/ErrorHandler';
+import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
 
 @Component({
   selector: 'dict-drone-models',
@@ -117,7 +117,7 @@ export class DictDroneModelComponent implements AfterViewInit {
       },
       error: (error) => {
         console.error('Помилка завантаження типів БПЛА:', error);
-        const errorMessage = ErrorHandler.handleHttpError(
+        const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
           'Помилка завантаження типів БПЛА:'
         );
@@ -137,7 +137,7 @@ export class DictDroneModelComponent implements AfterViewInit {
         next: (items) => this.items.set(items as DictDroneModel[]),
         error: (error) => {
           console.error('Помилка завантаження моделей БПЛА:', error);
-          const errorMessage = ErrorHandler.handleHttpError(
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
             error,
             'Помилка завантаження моделей БПЛА:'
           );
@@ -154,7 +154,7 @@ export class DictDroneModelComponent implements AfterViewInit {
       next: (items) => this.items.set(items),
       error: (error) => {
         console.error('Помилка завантаження моделей БПЛА:', error);
-        const errorMessage = ErrorHandler.handleHttpError(
+        const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
           'Помилка завантаження моделей БПЛА:'
         );
@@ -178,7 +178,7 @@ export class DictDroneModelComponent implements AfterViewInit {
           },
           error: (error) => {
             console.error('Помилка створення моделі БПЛА:', error);
-            const errorMessage = ErrorHandler.handleHttpError(
+            const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
               'Помилка створення моделі БПЛА:'
             );
@@ -204,7 +204,7 @@ export class DictDroneModelComponent implements AfterViewInit {
           },
           error: (error) => {
             console.error('Помилка оновлення моделі БПЛА:', error);
-            const errorMessage = ErrorHandler.handleHttpError(
+            const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
               'Помилка оновлення моделі БПЛА:'
             );
@@ -238,7 +238,7 @@ export class DictDroneModelComponent implements AfterViewInit {
           },
           error: (error) => {
             console.error('Помилка видалення моделі БПЛА:', error);
-            const errorMessage = ErrorHandler.handleHttpError(
+            const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
               'Помилка видалення моделі БПЛА:'
             );

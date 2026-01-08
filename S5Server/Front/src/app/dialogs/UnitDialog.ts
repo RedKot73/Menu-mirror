@@ -23,7 +23,7 @@ import { AsyncPipe } from '@angular/common';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { DictForcesTypeService, DictForcesType } from '../../ServerService/dictForcesType.service';
-import { ErrorHandler } from '../shared/models/ErrorHandler';
+import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
 import { UnitDto, UnitService } from '../Unit/services/unit.service';
 import { DictUnitTypeService, DictUnitType } from '../../ServerService/dictUnitType.service';
 import { LookupDto } from '../shared/models/lookup.models';
@@ -161,7 +161,7 @@ export class UnitDialogComponent implements OnInit {
           this.parentSearchControl.setValue(this.selectedParent);
         },
         error: (error) => {
-          const errorMessage = ErrorHandler.handleHttpError(
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
             error,
             'Не вдалося завантажити основний підрозділ'
           );
@@ -178,7 +178,7 @@ export class UnitDialogComponent implements OnInit {
           this.assignedSearchControl.setValue(this.selectedAssigned);
         },
         error: (error) => {
-          const errorMessage = ErrorHandler.handleHttpError(
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
             error,
             'Не вдалося завантажити приданий підрозділ'
           );
@@ -195,7 +195,7 @@ export class UnitDialogComponent implements OnInit {
           this.unitTypeSearchControl.setValue(this.selectedUnitType);
         },
         error: (error) => {
-          const errorMessage = ErrorHandler.handleHttpError(
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
             error,
             'Не вдалося завантажити тип підрозділу'
           );
@@ -212,7 +212,7 @@ export class UnitDialogComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (error) => {
-        const errorMessage = ErrorHandler.handleHttpError(
+        const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
           'Не вдалося завантажити список видів збройних сил'
         );

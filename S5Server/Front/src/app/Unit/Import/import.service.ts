@@ -3,12 +3,12 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { SoldierDto } from '../../Soldier/services/soldier.service';
-import { ErrorHandler } from '../../shared/models/ErrorHandler';
+import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 
 export enum ImportSoldierStatus {
   Inserted = 0,
   Updated = 1,
-  Deleted = 2
+  Deleted = 2,
 }
 
 export interface ImportedSoldierResult {
@@ -67,7 +67,7 @@ export class ImportUnitService {
     form.append('soldiers', file);
     return this.http.post<ImportJobResponse>(`${this.api}/${id}/importSoldiers`, form).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(
+        const message = S5App_ErrorHandler.handleHttpError(
           error,
           'Не вдалося імпортувати особовий склад'
         );
@@ -79,7 +79,7 @@ export class ImportUnitService {
   getLastUnits(): Observable<string[]> {
     return this.http.get<string[]>(`${this.api}/get-last-units`).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(
+        const message = S5App_ErrorHandler.handleHttpError(
           error,
           'Не вдалося отримати останні підрозділи'
         );
@@ -92,7 +92,7 @@ export class ImportUnitService {
     // POST запит з масивом у body
     return this.http.post<ImportUnit[]>(`${this.api}/get-units`, units).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(
+        const message = S5App_ErrorHandler.handleHttpError(
           error,
           'Не вдалося отримати перелік підрозділів'
         );

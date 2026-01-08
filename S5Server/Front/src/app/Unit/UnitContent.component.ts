@@ -9,7 +9,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { UnitDto } from './services/unit.service';
 import { SoldiersComponent, UnitTag } from '../Soldier/Soldier.component';
 import { SoldierService, SoldierDto } from '../Soldier/services/soldier.service';
-import { ErrorHandler } from '../shared/models/ErrorHandler';
+import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
 
 @Component({
   selector: 'unit-content',
@@ -72,7 +72,7 @@ export class UnitContentComponent {
         next: (data: SoldierDto[]) => this.soldiers.set(data),
         error: (error) => {
           console.error('Помилка завантаження особового складу:', error);
-          const errorMessage = ErrorHandler.handleHttpError(
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
             error,
             'Помилка завантаження особового складу'
           );
@@ -89,7 +89,7 @@ export class UnitContentComponent {
         next: (data: SoldierDto[]) => this.assignedSoldiers.set(data),
         error: (error) => {
           console.error('Помилка завантаження приданих:', error);
-          const errorMessage = ErrorHandler.handleHttpError(
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
             error,
             'Помилка завантаження приданих військовослужбовців'
           );
@@ -106,7 +106,7 @@ export class UnitContentComponent {
         next: (data: SoldierDto[]) => this.involvedSoldiers.set(data),
         error: (error) => {
           console.error('Помилка завантаження задіяних:', error);
-          const errorMessage = ErrorHandler.handleHttpError(
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
             error,
             'Помилка завантаження задіяних військовослужбовців'
           );

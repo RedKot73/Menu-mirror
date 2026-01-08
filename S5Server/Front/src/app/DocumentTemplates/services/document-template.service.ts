@@ -3,10 +3,8 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-import {
-  CreateTemplateDto, TemplateDto,
-} from '../models/document-template.models';
-import { ErrorHandler } from '../../shared/models/ErrorHandler';
+import { CreateTemplateDto, TemplateDto } from '../models/document-template.models';
+import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 
 @Injectable({
   providedIn: 'root',
@@ -20,7 +18,7 @@ export class DocumentTemplateService {
   getTemplates(): Observable<TemplateDto[]> {
     return this.http.get<TemplateDto[]>(this.baseUrl).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Помилка сервера шаблонів');
+        const message = S5App_ErrorHandler.handleHttpError(error, 'Помилка сервера шаблонів');
         return throwError(() => new Error(message));
       })
     );
@@ -29,7 +27,7 @@ export class DocumentTemplateService {
   getTemplate(id: string): Observable<TemplateDto> {
     return this.http.get<TemplateDto>(`${this.baseUrl}/${id}`).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Шаблон не знайдено');
+        const message = S5App_ErrorHandler.handleHttpError(error, 'Шаблон не знайдено');
         return throwError(() => new Error(message));
       })
     );
@@ -40,7 +38,7 @@ export class DocumentTemplateService {
 
     return this.http.post<TemplateDto>(this.baseUrl, formData).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Не вдалося створити шаблон');
+        const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося створити шаблон');
         return throwError(() => new Error(message));
       })
     );
@@ -51,7 +49,7 @@ export class DocumentTemplateService {
 
     return this.http.put<void>(`${this.baseUrl}/${id}`, formData).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Не вдалося оновити шаблон');
+        const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося оновити шаблон');
         return throwError(() => new Error(message));
       })
     );
@@ -60,7 +58,7 @@ export class DocumentTemplateService {
   deleteTemplate(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Не вдалося видалити шаблон');
+        const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося видалити шаблон');
         return throwError(() => new Error(message));
       })
     );
@@ -69,7 +67,7 @@ export class DocumentTemplateService {
   publishTemplate(id: string): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/${id}/publish`, {}).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Не вдалося опублікувати шаблон');
+        const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося опублікувати шаблон');
         return throwError(() => new Error(message));
       })
     );
@@ -78,7 +76,10 @@ export class DocumentTemplateService {
   unpublishTemplate(id: string): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/${id}/unpublish`, {}).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Не вдалося зняти публікацію шаблону');
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося зняти публікацію шаблону'
+        );
         return throwError(() => new Error(message));
       })
     );
@@ -93,7 +94,7 @@ export class DocumentTemplateService {
       })
       .pipe(
         catchError((error: HttpErrorResponse) => {
-          const message = ErrorHandler.handleHttpError(
+          const message = S5App_ErrorHandler.handleHttpError(
             error,
             'Не вдалося завантажити файл шаблону'
           );
@@ -114,7 +115,10 @@ export class DocumentTemplateService {
       })
       .pipe(
         catchError((error: HttpErrorResponse) => {
-          const message = ErrorHandler.handleHttpError(error, 'Не вдалося отримати вміст шаблону');
+          const message = S5App_ErrorHandler.handleHttpError(
+            error,
+            'Не вдалося отримати вміст шаблону'
+          );
           return throwError(() => new Error(message));
         })
       );
@@ -136,7 +140,10 @@ export class DocumentTemplateService {
       )
       .pipe(
         catchError((error: HttpErrorResponse) => {
-          const message = ErrorHandler.handleHttpError(error, 'Не вдалося зберегти вміст шаблону');
+          const message = S5App_ErrorHandler.handleHttpError(
+            error,
+            'Не вдалося зберегти вміст шаблону'
+          );
           return throwError(() => new Error(message));
         })
       );

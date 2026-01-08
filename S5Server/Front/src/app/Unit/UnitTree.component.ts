@@ -13,7 +13,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { UnitService, UnitTreeItemDto } from './services/unit.service';
 import { UnitTreeNodeComponent, UnitTreeNode } from './unit-tree-node.component';
 import { NULL_GUID } from './unit.constants';
-import { ErrorHandler } from '../shared/models/ErrorHandler';
+import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
 
 @Component({
   selector: 'unit-tree',
@@ -77,7 +77,7 @@ export class UnitTreeComponent implements OnInit {
       }
     } catch (error) {
       console.error('Помилка завантаження кореневих даних:', error);
-      const errorMessage = ErrorHandler.handleHttpError(
+      const errorMessage = S5App_ErrorHandler.handleHttpError(
         error,
         'Помилка завантаження кореневих даних'
       );
@@ -132,7 +132,7 @@ export class UnitTreeComponent implements OnInit {
       }
     } catch (error) {
       console.error('Помилка завантаження дочірніх елементів:', error);
-      const errorMessage = ErrorHandler.handleHttpError(
+      const errorMessage = S5App_ErrorHandler.handleHttpError(
         error,
         'Помилка завантаження дочірніх елементів'
       );

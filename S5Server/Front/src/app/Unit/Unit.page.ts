@@ -30,7 +30,7 @@ import { UnitTreeNode } from './unit-tree-node.component';
 import { UnitDialogComponent } from '../dialogs/UnitDialog';
 import { OperationalUnitDialogComponent } from '../dialogs/OperationalUnitDialog';
 import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
-import { ErrorHandler } from '../shared/models/ErrorHandler';
+import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { Crew_GUID, NULL_GUID } from './unit.constants';
@@ -350,7 +350,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
             },
             error: (error) => {
               console.error('Помилка створення підрозділу:', error);
-              const errorMessage = ErrorHandler.handleHttpError(
+              const errorMessage = S5App_ErrorHandler.handleHttpError(
                 error,
                 'Помилка створення підрозділу'
               );
@@ -409,7 +409,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
             },
             error: (error) => {
               console.error('Помилка створення дочірнього підрозділу:', error);
-              const errorMessage = ErrorHandler.handleHttpError(
+              const errorMessage = S5App_ErrorHandler.handleHttpError(
                 error,
                 'Помилка створення дочірнього підрозділу'
               );
@@ -468,7 +468,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
             },
             error: (error) => {
               console.error('Помилка створення Екіпаж/Група:', error);
-              const errorMessage = ErrorHandler.handleHttpError(
+              const errorMessage = S5App_ErrorHandler.handleHttpError(
                 error,
                 'Помилка створення Екіпаж/Група'
               );
@@ -515,7 +515,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
           },
           error: (error) => {
             console.error('Помилка оновлення підрозділу:', error);
-            const errorMessage = ErrorHandler.handleHttpError(
+            const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
               'Помилка оновлення підрозділу'
             );
@@ -537,7 +537,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        const unit = result as UnitDto; 
+        const unit = result as UnitDto;
         this.unitService.update(unit.id, unit).subscribe({
           next: () => {
             // Обновляем дерево если оно доступно
@@ -551,7 +551,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
           },
           error: (error) => {
             console.error('Помилка оновлення підрозділу:', error);
-            const errorMessage = ErrorHandler.handleHttpError(
+            const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
               'Помилка оновлення підрозділу'
             );
@@ -608,7 +608,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
           },
           error: (error) => {
             console.error('Помилка видалення підрозділу:', error);
-            const errorMessage = ErrorHandler.handleHttpError(
+            const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
               'Помилка видалення підрозділу'
             );
@@ -632,7 +632,10 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
       },
       error: (error) => {
         console.error('Помилка переміщення підрозділу:', error);
-        const errorMessage = ErrorHandler.handleHttpError(error, 'Помилка переміщення підрозділу');
+        const errorMessage = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Помилка переміщення підрозділу'
+        );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
     });

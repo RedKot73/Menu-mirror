@@ -4,7 +4,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { LookupDto } from '../../shared/models/lookup.models';
 import { SoldierDto } from '../../Soldier/services/soldier.service';
-import { ErrorHandler } from '../../shared/models/ErrorHandler';
+import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 
 export interface UnitDto {
   id: string;
@@ -91,7 +91,7 @@ export class UnitService {
 
     return this.http.get<UnitDto[]>(this.api, { params }).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Не вдалося отримати підрозділи');
+        const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося отримати підрозділи');
         return throwError(() => new Error(message));
       })
     );
@@ -109,7 +109,7 @@ export class UnitService {
 
     return this.http.get<UnitTreeItemDto[]>(this.api, { params }).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(
+        const message = S5App_ErrorHandler.handleHttpError(
           error,
           'Не вдалося отримати елементи дерева підрозділів'
         );
@@ -121,7 +121,7 @@ export class UnitService {
   getById(id: string): Observable<UnitDto> {
     return this.http.get<UnitDto>(`${this.api}/${id}`).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Не вдалося отримати підрозділ');
+        const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося отримати підрозділ');
         return throwError(() => new Error(message));
       })
     );
@@ -130,7 +130,7 @@ export class UnitService {
   create(item: UnitCreateDto): Observable<UnitDto> {
     return this.http.post<UnitDto>(this.api, item).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Не вдалося створити підрозділ');
+        const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося створити підрозділ');
         return throwError(() => new Error(message));
       })
     );
@@ -139,7 +139,7 @@ export class UnitService {
   update(id: string, item: UnitDto): Observable<void> {
     return this.http.put<void>(`${this.api}/${id}`, item).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Не вдалося оновити підрозділ');
+        const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося оновити підрозділ');
         return throwError(() => new Error(message));
       })
     );
@@ -148,7 +148,7 @@ export class UnitService {
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.api}/${id}`).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Не вдалося видалити підрозділ');
+        const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося видалити підрозділ');
         return throwError(() => new Error(message));
       })
     );
@@ -158,7 +158,7 @@ export class UnitService {
   hasChildren(id: string): Observable<boolean> {
     return this.http.get<boolean>(`${this.api}/${id}/has-children`).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(
+        const message = S5App_ErrorHandler.handleHttpError(
           error,
           'Не вдалося перевірити наявність дочірніх підрозділів'
         );
@@ -170,7 +170,7 @@ export class UnitService {
   getChildren(id: string): Observable<UnitDto[]> {
     return this.http.get<UnitDto[]>(`${this.api}/${id}/children`).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(
+        const message = S5App_ErrorHandler.handleHttpError(
           error,
           'Не вдалося отримати дочірні підрозділи'
         );
@@ -182,7 +182,7 @@ export class UnitService {
   hasAssignedUnits(id: string): Observable<boolean> {
     return this.http.get<boolean>(`${this.api}/${id}/has-assigned`).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(
+        const message = S5App_ErrorHandler.handleHttpError(
           error,
           'Не вдалося перевірити наявність приданих підрозділів'
         );
@@ -194,7 +194,7 @@ export class UnitService {
   getAssignedUnits(id: string): Observable<UnitDto[]> {
     return this.http.get<UnitDto[]>(`${this.api}/${id}/assigned`).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(
+        const message = S5App_ErrorHandler.handleHttpError(
           error,
           'Не вдалося отримати придані підрозділи'
         );
@@ -207,7 +207,10 @@ export class UnitService {
   addExistingChild(parentId: string, childId: string): Observable<void> {
     return this.http.post<void>(`${this.api}/${parentId}/add-exists-child/${childId}`, {}).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Не вдалося додати дочірній підрозділ');
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося додати дочірній підрозділ'
+        );
         return throwError(() => new Error(message));
       })
     );
@@ -216,7 +219,7 @@ export class UnitService {
   removeChild(parentId: string, childId: string): Observable<void> {
     return this.http.post<void>(`${this.api}/${parentId}/remove-child/${childId}`, {}).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(
+        const message = S5App_ErrorHandler.handleHttpError(
           error,
           'Не вдалося прибрати дочірній підрозділ'
         );
@@ -229,7 +232,10 @@ export class UnitService {
   addAssignedUnit(unitId: string, assignedId: string): Observable<void> {
     return this.http.post<void>(`${this.api}/${unitId}/add-assigned/${assignedId}`, {}).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Не вдалося додати приданий підрозділ');
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося додати приданий підрозділ'
+        );
         return throwError(() => new Error(message));
       })
     );
@@ -238,7 +244,7 @@ export class UnitService {
   removeAssignedUnit(unitId: string, assignedId: string): Observable<void> {
     return this.http.post<void>(`${this.api}/${unitId}/remove-assigned/${assignedId}`, {}).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(
+        const message = S5App_ErrorHandler.handleHttpError(
           error,
           'Не вдалося прибрати приданий підрозділ'
         );
@@ -254,7 +260,7 @@ export class UnitService {
     const params = { term, limit: limit.toString() };
     return this.http.get<LookupDto[]>(`${this.api}/lookup`, { params }).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Не вдалося завантажити список');
+        const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося завантажити список');
         return throwError(() => new Error(message));
       })
     );
@@ -266,7 +272,7 @@ export class UnitService {
   getSelectList(): Observable<LookupDto[]> {
     return this.http.get<LookupDto[]>(`${this.api}/sel_list`).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = ErrorHandler.handleHttpError(error, 'Не вдалося завантажити список');
+        const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося завантажити список');
         return throwError(() => new Error(message));
       })
     );
@@ -278,7 +284,7 @@ export class UnitService {
       .post<void>(`${this.api}/${id}/moveUpDown/${moveUp ? 'true' : 'false'}`, {})
       .pipe(
         catchError((error: HttpErrorResponse) => {
-          const message = ErrorHandler.handleHttpError(
+          const message = S5App_ErrorHandler.handleHttpError(
             error,
             'Не вдалося змінити порядок підрозділу'
           );

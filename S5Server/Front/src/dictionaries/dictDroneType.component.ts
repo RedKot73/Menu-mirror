@@ -9,7 +9,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ShortDictDialogComponent } from '../app/dialogs/ShortDict-dialog.component';
 import { ConfirmDialogComponent } from '../app/dialogs/ConfirmDialog.component';
 import { DictDroneTypeService, DictDroneType } from '../ServerService/dictDroneType.service';
-import { ErrorHandler } from '../app/shared/models/ErrorHandler';
+import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
 
 @Component({
   selector: 'dict-drone-types',
@@ -81,7 +81,7 @@ export class DictDroneTypeComponent implements AfterViewInit {
       next: (items) => this.items.set(items),
       error: (error) => {
         console.error('Помилка завантаження типів БПЛА:', error);
-        const errorMessage = ErrorHandler.handleHttpError(
+        const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
           'Помилка завантаження типів БПЛА:'
         );
@@ -105,7 +105,7 @@ export class DictDroneTypeComponent implements AfterViewInit {
           },
           error: (error) => {
             console.error('Помилка створення типу БПЛА:', error);
-            const errorMessage = ErrorHandler.handleHttpError(
+            const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
               'Помилка створення типу БПЛА:'
             );
@@ -131,7 +131,7 @@ export class DictDroneTypeComponent implements AfterViewInit {
           },
           error: (error) => {
             console.error('Помилка оновлення типу БПЛА:', error);
-            const errorMessage = ErrorHandler.handleHttpError(
+            const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
               'Помилка оновлення типу БПЛА:'
             );
@@ -165,7 +165,7 @@ export class DictDroneTypeComponent implements AfterViewInit {
           },
           error: (error) => {
             console.error('Помилка видалення типу БПЛА:', error);
-            const errorMessage = ErrorHandler.handleHttpError(
+            const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
               'Помилка видалення типу БПЛА:'
             );
