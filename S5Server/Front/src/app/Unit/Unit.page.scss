@@ -214,3 +214,27 @@
 .hidden {
   display: none !important;
 }
+
+.empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.empty-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state h2 {
+    margin: 0 0 8px 0;
+    font-weight: 400;
+}
+
+.empty-state p {
+    margin: 0 0 24px 0;
+    font-size: 14px;
+}

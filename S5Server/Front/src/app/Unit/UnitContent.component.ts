@@ -31,10 +31,6 @@ export class UnitContentComponent {
 
   // Входные свойства
   selectedUnit = input<UnitDto | null>(null);
-  sidenavOpen = input<boolean>(false);
-
-  // Выходные события
-  showSidenav = output<void>();
   unitTag = UnitTag;
 
   // Дані особового складу для кожної вкладки

@@ -1,4 +1,14 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit,
+  OnDestroy,
+  inject,
+  computed,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Observable, of, Subject } from 'rxjs';
@@ -17,27 +27,19 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import {
   MatAutocompleteModule,
   MatAutocompleteSelectedEvent,
 } from '@angular/material/autocomplete';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatTableModule } from '@angular/material/table';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { UnitTaskDto } from '../models/template-dataset.models';
 import { LookupDto } from '../../shared/models/lookup.models';
 import { DictDroneModelService } from '../../../ServerService/dictDroneModel.service';
-import {
-  isCriticalStatus,
-  isSevereStatus,
-  isProblematicStatus,
-  isRecoveryStatus,
-} from '../../Soldier/Soldier.constant';
-import { SoldiersComponent, UnitTag } from '../../Soldier/Soldier.component';
-import { SoldierService, SoldierDto } from '../../Soldier/services/soldier.service';
-import { ErrorHandler } from '../../shared/models/ErrorHandler';
+import { DictUnitTasksService } from '../../../ServerService/dictUnitTasks.service';
+import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
+import { UnitContentComponent } from '../../Unit/UnitContent.component';
+import { UnitDto } from '../../Unit/services/unit.service';
 
 @Component({
   selector: 'app-unit-task-card',
@@ -52,26 +54,36 @@ import { ErrorHandler } from '../../shared/models/ErrorHandler';
     MatSelectModule,
     MatInputModule,
     MatAutocompleteModule,
-    MatExpansionModule,
-    MatTableModule,
-    MatTooltipModule,
-    SoldiersComponent,
+    UnitContentComponent,
   ],
   templateUrl: './UnitTaskCard.component.html',
   styleUrls: ['./UnitTaskCard.component.scss'],
 })
 export class UnitTaskCardComponent implements OnInit, OnDestroy {
-  private soldierService = inject(SoldierService);
   private dictDroneModelService = inject(DictDroneModelService);
+  private dictUnitTasksService = inject(DictUnitTasksService);
   private snackBar = inject(MatSnackBar);
   private destroy$ = new Subject<void>();
 
-  @Input({ required: true }) unitTask!: UnitTaskDto;
+  // Используем сигнал для реактивного отслеживания изменений unitTask
+  private unitTaskSignal = signal<UnitTaskDto | null>(null);
+
+  // Список завдань з справочника
+  protected unitTasks = signal<LookupDto[]>([]);
+
+  @Input({ required: true })
+  set unitTask(value: UnitTaskDto) {
+    this.unitTaskSignal.set(value);
+  }
+  get unitTask(): UnitTaskDto {
+    return this.unitTaskSignal()!;
+  }
+
   @Output() remove = new EventEmitter<string>();
   @Output() unitChange = new EventEmitter<UnitTaskDto>();
 
   // Form Controls
-  protected taskControl = new FormControl<string | null>(null);
+  protected taskControl = new FormControl<LookupDto | null>(null);
   protected areaControl = new FormControl<string | null>(null);
   protected droneModelControl = new FormControl<LookupDto | string | null>(null);
 
@@ -79,34 +91,44 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
   protected filteredDroneModels$!: Observable<LookupDto[]>;
   protected isLoadingDroneModels = false;
 
-  // Table Configuration
-  /*
-  protected soldiersDisplayedColumns = [
-    'fio',
-    'nickName',
-    'rankShortValue',
-    'positionValue',
-    'stateValue',
-    'assignedUnitShortName',
-    'arrivedAt',
-    'departedAt',
-    'comment',
-  ];
-  */
-
-  // Status check methods
-  isCriticalStatus = isCriticalStatus;
-  isSevereStatus = isSevereStatus;
-  isProblematicStatus = isProblematicStatus;
-  isRecoveryStatus = isRecoveryStatus;
-  // UnitTag enum for SoldierComponent
-  unitTag = UnitTag;
+  // Перетворюємо UnitTaskDto в UnitDto для UnitContent компонента
+  // Используем computed() чтобы избежать создания нового объекта при каждом change detection
+  unitForContent = computed<UnitDto>(() => {
+    const task = this.unitTaskSignal();
+    if (!task) {
+      return {} as UnitDto;
+    }
+    return {
+      ...task,
+      name: task.shortName,
+      orderVal: 0,
+    } as UnitDto;
+  });
 
   ngOnInit(): void {
+    // Завантажуємо список завдань
+    this.dictUnitTasksService.getSelectList().subscribe({
+      next: (tasks) => {
+        this.unitTasks.set(tasks);
+        // Після завантаження списку ініціалізуємо значення taskControl
+        if (this.unitTask.TaskId) {
+          const task = tasks.find((t) => t.id === this.unitTask.TaskId);
+          if (task) {
+            this.taskControl.setValue(task);
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Помилка завантаження завдань:', error);
+        const errorMessage = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Помилка завантаження завдань'
+        );
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      },
+    });
+
     // Ініціалізуємо значення FormControl з unit
-    if (this.unitTask.TaskValue) {
-      this.taskControl.setValue(this.unitTask.TaskValue);
-    }
     if (this.unitTask.AreaValue) {
       this.areaControl.setValue(this.unitTask.AreaValue);
     }
@@ -144,8 +166,12 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
   /**
    * Обробник зміни завдання
    */
-  private onTaskChange(taskValue: string | null): void {
-    const updatedUnit = { ...this.unitTask, TaskValue: taskValue || '' };
+  private onTaskChange(task: LookupDto | null): void {
+    const updatedUnit = {
+      ...this.unitTask,
+      TaskValue: task?.value || '',
+      TaskId: task?.id || '',
+    };
     this.unitChange.emit(updatedUnit);
   }
 
@@ -199,70 +225,5 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
       Means: selectedDroneModel ? [selectedDroneModel.value] : [],
     };
     this.unitChange.emit(updatedUnit);
-  }
-
-  /**
-   * Перевірка дати прибуття (більше 14 днів тому)
-   */
-  isArrivedMoreThan14DaysAgo(arrivedAt: Date): boolean {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const arrived = new Date(arrivedAt);
-    arrived.setHours(0, 0, 0, 0);
-
-    const fourteenDaysAgo = new Date(today);
-    fourteenDaysAgo.setDate(today.getDate() - 1);
-
-    return arrived >= fourteenDaysAgo;
-  }
-
-  // Публічні методи для перезавантаження даних (викликаються з дочірнього компонента)
-  reloadSoldiers(): void {
-    if (this.unitTask.id) {
-      this.soldierService.getAll(undefined, this.unitTask.id).subscribe({
-        next: (data: SoldierDto[]) => (this.unitTask.soldiers = data),
-        error: (error) => {
-          console.error('Помилка завантаження особового складу:', error);
-          const errorMessage = ErrorHandler.handleHttpError(
-            error,
-            'Помилка завантаження особового складу'
-          );
-          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-        },
-      });
-    }
-  }
-
-  reloadAssignedSoldiers(): void {
-    if (this.unitTask.id) {
-      this.soldierService.getByAssigned(this.unitTask.id).subscribe({
-        next: (data: SoldierDto[]) => (this.unitTask.assignedSoldiers = data),
-        error: (error) => {
-          console.error('Помилка завантаження приданих:', error);
-          const errorMessage = ErrorHandler.handleHttpError(
-            error,
-            'Помилка завантаження приданих військовослужбовців'
-          );
-          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-        },
-      });
-    }
-  }
-
-  reloadInvolvedSoldiers(): void {
-    if (this.unitTask.id) {
-      this.soldierService.getByInvolved(this.unitTask.id).subscribe({
-        next: (data: SoldierDto[]) => (this.unitTask.involvedSoldiers = data),
-        error: (error) => {
-          console.error('Помилка завантаження оперативних:', error);
-          const errorMessage = ErrorHandler.handleHttpError(
-            error,
-            'Помилка завантаження оперативних військовослужбовців'
-          );
-          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-        },
-      });
-    }
   }
 }

@@ -334,11 +334,10 @@ export class UnitsTaskEditorComponent {
     }
 
     // Перевірка обов'язкових полів для кожного підрозділу
-    /*
     const units = this.selectedUnits();
     for (let i = 0; i < units.length; i++) {
       const unit = units[i];
-      
+
       if (!unit.TaskValue || unit.TaskValue.trim() === '') {
         this.snackBar.open(
           `Підрозділ "${unit.shortName}" (${i + 1}): заповніть завдання`,
@@ -348,6 +347,7 @@ export class UnitsTaskEditorComponent {
         return;
       }
 
+      /*
       if (!unit.AreaValue || unit.AreaValue.trim() === '') {
         this.snackBar.open(
           `Підрозділ "${unit.shortName}" (${i + 1}): заповніть РСП для екіпажів`,
@@ -365,8 +365,9 @@ export class UnitsTaskEditorComponent {
         );
         return;
       }
+      */
     }
-*/
+
     const dataJson = this.getDataSetContent();
     // Генеруємо назву на основі дати та номера документа
     const dateStr = this.documentDate().toLocaleDateString('uk-UA');
@@ -433,7 +434,10 @@ export class UnitsTaskEditorComponent {
         error: (error) => {
           this.isSaving.set(false);
           console.error('Error creating dataset:', error);
-          const errorMessage = S5App_ErrorHandler.handleHttpError(error, 'Помилка збереження даних');
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
+            error,
+            'Помилка збереження даних'
+          );
           this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
         },
       });

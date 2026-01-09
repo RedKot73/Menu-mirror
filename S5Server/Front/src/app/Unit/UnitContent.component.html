@@ -157,18 +157,5 @@
       </div>
     </mat-expansion-panel>
   </mat-accordion>
-  } @else {
-  <!-- Стан коли нічого не вибрано -->
-  <div class="empty-state">
-    <mat-icon class="empty-icon">account_tree</mat-icon>
-    <h2>Оберіть підрозділ</h2>
-    <p>Виберіть підрозділ у дереві ліворуч для перегляду детальної інформації</p>
-    @if (!sidenavOpen()) {
-    <button mat-raised-button color="primary" (click)="showSidenav.emit()">
-      <mat-icon>menu</mat-icon>
-      Показати дерево підрозділів
-    </button>
-    }
-  </div>
   }
 </div>
