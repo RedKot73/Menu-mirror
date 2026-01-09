@@ -42,16 +42,11 @@
   </div>
 
   <div class="panel content-panel" [style.width.%]="contentPanelWidth()">
-    <mat-tab-group dynamicHeight (selectedIndexChange)="onTabChange($event)">
+    <mat-tab-group (selectedIndexChange)="onTabChange($event)">
       <mat-tab label="Дані документа">
-        <!-- DataSet Editor -->
-    <app-units-task-editor #unitsTaskEditor></app-units-task-editor>
-<!--
-    <app-dataset-editor #dataSetEditor [dataSet]="selectedDataSet()"> </app-dataset-editor>
-      -->
+        <app-units-task-editor #unitsTaskEditor></app-units-task-editor>
       </mat-tab>
       <mat-tab label="Шаблон">
-        <!-- Template Editor -->
         <app-template-editor #templateEditor [template]="selectedTemplate()"> </app-template-editor>
       </mat-tab>
       <mat-tab label="Результат обробки">
