@@ -291,6 +291,7 @@ namespace S5Server.Services
                     }
 
                     var wsPart = (WorksheetPart)wbPart!.GetPartById(sheet.Id!);
+                    if(wsPart.Worksheet is null) continue;
                     var sheetData = wsPart.Worksheet.GetFirstChild<SheetData>();
                     if (sheetData is null) continue;
 
