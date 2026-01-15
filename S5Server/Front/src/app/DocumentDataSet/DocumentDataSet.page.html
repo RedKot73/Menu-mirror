@@ -1,9 +1,6 @@
-<div class="container" #containerRef>
-  <div
-    class="panel nav-panel"
-    [style.width.%]="navPanelWidth()"
-    [class.collapsed]="isNavPanelCollapsed()"
-  >
+<app-master-detail-layout storageKey="documentDataSet">
+  <!-- Left Panel: Дерево підрозділів та Набори даних -->
+  <div leftPanel>
     <mat-tab-group>
       <mat-tab label="Дерево підрозділів">
         <!-- Кастомный шаблон действий узла -->
@@ -44,23 +41,8 @@
     </mat-tab-group>
   </div>
 
-  <div class="splitter" [class.dragging]="isDragging()" (mousedown)="startDrag($event)">
-    <div class="splitter-handle"></div>
-    <div class="splitter-controls">
-      <button
-        class="toggle-btn"
-        (click)="toggleNavPanel()"
-        matTooltip="{{ isNavPanelCollapsed() ? 'Показати управління' : 'Приховати управління' }}"
-        [matTooltipPosition]="'above'"
-      >
-        <span class="arrow" [class.collapsed]="isNavPanelCollapsed()">
-          {{ isNavPanelCollapsed() ? '▶' : '◀' }}
-        </span>
-      </button>
-    </div>
-  </div>
-
-  <div class="panel content-panel" [style.width.%]="contentPanelWidth()">
+  <!-- Right Panel: Дані документа -->
+  <div rightPanel>
     <app-units-task-editor #unitsTaskEditor></app-units-task-editor>
   </div>
-</div>
+</app-master-detail-layout>
