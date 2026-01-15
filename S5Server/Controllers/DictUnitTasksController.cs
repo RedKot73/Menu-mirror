@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using S5Server.Data;
 using S5Server.Models;
 using S5Server.Utils;
+using S5Server.Services;
 
 namespace S5Server.Controllers;
 
@@ -173,10 +174,6 @@ public class DictUnitTasksController : ControllerBase
 
         if (string.IsNullOrWhiteSpace(dto.Caption))
             return BadRequest("Caption не може бути порожнім");
-
-        if (string.IsNullOrWhiteSpace(dto.Value))
-            return BadRequest("Value не може бути порожнім");
-
         if (dto.Amount < 0)
             return BadRequest("Amount не може бути від'ємним");
 
@@ -321,6 +318,95 @@ public class DictUnitTasksController : ControllerBase
         {
             if (_logger.IsEnabled(LogLevel.Error))
                 _logger.LogError(ex, "Помилка при отриманні sel_list DictUnitTask");
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+    /// <summary>
+    /// Отримати елементи завдання (DictUnitTaskItem) для цього завдання
+    /// </summary>
+    [HttpGet("{id}/items")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IEnumerable<DictUnitTaskItemDto>>> GetTaskItems(
+        string id,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            return BadRequest("id обов'язковий");
+
+        try
+        {
+            // Перевіряємо чи існує завдання
+            var taskExists = await _set.AnyAsync(x => x.Id == id, ct);
+            if (!taskExists)
+                return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
+
+            var items = await DictUnitTaskItemsService.GetByUnitTaskId(_db, id, ct);
+            return Ok(items);
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка при отриманні елементів завдання UnitTaskId={Id}", id);
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+    /// <summary>
+    /// Створити новий елемент завдання для цього завдання
+    /// </summary>
+    [HttpPost("{id}/items")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<DictUnitTaskItemDto>> CreateTaskItem(
+        string id,
+        [FromBody] DictUnitTaskItemCreateDto dto,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            return BadRequest("id обов'язковий");
+
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        // Переконуємось що UnitTaskId в dto відповідає id з route
+        if (dto.UnitTaskId != id)
+            return BadRequest("UnitTaskId в DTO повинен відповідати id завдання");
+
+        try
+        {
+            // Перевіряємо чи існує завдання
+            var taskExists = await _set.AnyAsync(x => x.Id == id, ct);
+            if (!taskExists)
+                return Problem(statusCode: 404, title: "Не знайдено", detail: $"Завдання з Id={id} не знайдено");
+
+            // Перевіряємо чи існує категорія шаблону
+            var categoryExists = await _db.DictTemplateCategories
+                .AnyAsync(x => x.Id == dto.TemplateCategoryId, ct);
+            if (!categoryExists)
+                return BadRequest($"Категорія шаблону з ID '{dto.TemplateCategoryId}' не знайдена");
+
+            var created = await DictUnitTaskItemsService.Create(_db, dto, ct);
+            return CreatedAtAction(
+                nameof(DictUnitTaskItemsController.Get), 
+                "DictUnitTaskItems",
+                new { id = created.Id }, 
+                created);
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка при створенні елемента завдання для UnitTaskId={Id}", id);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }

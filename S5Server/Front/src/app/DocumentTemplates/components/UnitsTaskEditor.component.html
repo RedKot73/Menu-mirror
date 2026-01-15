@@ -41,7 +41,6 @@
       />
       <mat-datepicker-toggle matIconSuffix [for]="parentPicker"></mat-datepicker-toggle>
       <mat-datepicker #parentPicker></mat-datepicker>
-      
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="document-field">
@@ -125,6 +124,7 @@
     [unitTask]="unitTask"
     (remove)="removeUnitFromSelection($event)"
     (unitChange)="onUnitChange($event)"
-  ></app-unit-task-card>
+  >
+  </app-unit-task-card>
   } }
 </div>

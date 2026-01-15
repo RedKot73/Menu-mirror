@@ -2,20 +2,21 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LookupDto } from '../app/shared/models/lookup.models';
+import { DictUnitTaskItemDto } from './dictUnitTaskItems.service';
 
 export interface DictUnitTaskDto {
   id: string;
   caption: string;
-  value: string;
   comment?: string;
   amount: number;
   withMeans: boolean;
   atPermanentPoint: boolean;
+  /** Елементи завдання для різних категорій документів */
+  unitTaskItems?: DictUnitTaskItemDto[];
 }
 
 export interface DictUnitTaskCreateDto {
   caption: string;
-  value: string;
   comment?: string;
   amount: number;
   withMeans?: boolean;

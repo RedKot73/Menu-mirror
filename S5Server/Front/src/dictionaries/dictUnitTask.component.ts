@@ -10,9 +10,9 @@ import { CommonModule } from '@angular/common';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 
 import { DictUnitTaskDialogComponent } from '../app/dialogs/DictUnitTask-dialog.component';
-import { JsonKeyValueDialogComponent } from '../app/dialogs/JsonKeyValue-dialog.component';
 import { ConfirmDialogComponent } from '../app/dialogs/ConfirmDialog.component';
 import { DictUnitTasksService, DictUnitTask } from '../ServerService/dictUnitTasks.service';
+import { DictUnitTaskItemsService } from '../ServerService/dictUnitTaskItems.service';
 import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
 
 @Component({
@@ -40,24 +40,6 @@ import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
         <ng-container matColumnDef="caption">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Назва</th>
           <td mat-cell *matCellDef="let item">{{ item.caption }}</td>
-        </ng-container>
-
-        <!-- Value Column -->
-        <ng-container matColumnDef="value">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Опис</th>
-          <td mat-cell *matCellDef="let item" class="value-cell">
-            <div>
-              <div class="value-text">{{ item.value }}</div>
-              <button
-                mat-icon-button
-                color="primary"
-                (click)="openValueEditor(item); $event.stopPropagation()"
-                matTooltip="Редагувати JSON"
-              >
-                <mat-icon>edit_note</mat-icon>
-              </button>
-            </div>
-          </td>
         </ng-container>
 
         <!-- Amount Column -->
@@ -88,6 +70,22 @@ import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
           <td mat-cell *matCellDef="let item">{{ item.comment }}</td>
         </ng-container>
 
+        <!-- Task Items Column -->
+        <ng-container matColumnDef="taskItems">
+          <th mat-header-cell *matHeaderCellDef>Елементи завдання</th>
+          <td mat-cell *matCellDef="let item">
+            <button
+              mat-stroked-button
+              color="primary"
+              (click)="viewTaskItems(item); $event.stopPropagation()"
+              matTooltip="Переглянути елементи (тексти для різних категорій)"
+            >
+              <mat-icon>list</mat-icon>
+              Елементи
+            </button>
+          </td>
+        </ng-container>
+
         <!-- Actions Column -->
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef>Дії</th>
@@ -108,38 +106,24 @@ import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
   `,
   styles: [
     `
-      .value-cell {
-        max-width: 300px;
-        padding: 8px !important;
-      }
-
-      .value-cell > div {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        min-height: 48px;
-      }
-
-      .value-text {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        flex: 1;
+      .dict-page-container {
+        padding: 16px;
       }
     `,
   ],
 })
 export class DictUnitTaskComponent implements AfterViewInit {
   dictUnitTasksService = inject(DictUnitTasksService);
+  dictUnitTaskItemsService = inject(DictUnitTaskItemsService);
   items = this.dictUnitTasksService.createItemsSignal();
   dataSource = new MatTableDataSource<DictUnitTask>([]);
   displayedColumns = [
     'caption',
-    'value',
     'amount',
     'withMeans',
     'atPermanentPoint',
     'comment',
+    'taskItems',
     'actions',
   ];
   dialog = inject(MatDialog);
@@ -177,7 +161,6 @@ export class DictUnitTaskComponent implements AfterViewInit {
       width: '600px',
       data: {
         caption: '',
-        value: '',
         comment: '',
         amount: 0,
         withMeans: false,
@@ -231,37 +214,6 @@ export class DictUnitTaskComponent implements AfterViewInit {
     });
   }
 
-  openValueEditor(unitTask: DictUnitTask) {
-    const dialogRef = this.dialog.open(JsonKeyValueDialogComponent, {
-      width: '800px',
-      data: {
-        jsonString: unitTask.value || '{}',
-        title: `Редагування опису: ${unitTask.caption}`,
-      },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        // Обновляем только поле value
-        const updatedTask = { ...unitTask, value: result };
-        this.dictUnitTasksService.update(updatedTask.id, updatedTask).subscribe({
-          next: () => {
-            this.reload();
-            this.snackBar.open('Опис успішно оновлено', 'Закрити', { duration: 3000 });
-          },
-          error: (error) => {
-            console.error('Помилка оновлення опису:', error);
-            const errorMessage = S5App_ErrorHandler.handleHttpError(
-              error,
-              'Помилка оновлення опису'
-            );
-            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-          },
-        });
-      }
-    });
-  }
-
   delete(unitTask: DictUnitTask) {
     const ref = this.dialog.open(ConfirmDialogComponent, {
       width: '360px',
@@ -294,6 +246,55 @@ export class DictUnitTaskComponent implements AfterViewInit {
           },
         });
       }
+    });
+  }
+
+  viewTaskItems(unitTask: DictUnitTask) {
+    // Завантажуємо елементи завдання
+    this.dictUnitTaskItemsService.getByUnitTask(unitTask.id).subscribe({
+      next: (items) => {
+        if (items.length === 0) {
+          this.snackBar.open(
+            'У цього завдання немає елементів. Створіть їх у відповідному довіднику.',
+            'Закрити',
+            { duration: 5000 }
+          );
+          return;
+        }
+
+        // Формуємо текст для відображення
+        const itemsText = items
+          .map(
+            (item, index) =>
+              `${index + 1}. Категорія: ${
+                item.templateCategory || item.templateCategoryId
+              }\n   Текст: ${item.value}${item.comment ? '\n   Коментар: ' + item.comment : ''}`
+          )
+          .join('\n\n');
+
+        const message = `Завдання: ${unitTask.caption}\n\nЕлементи завдання:\n\n${itemsText}`;
+
+        this.dialog.open(ConfirmDialogComponent, {
+          width: '800px',
+          maxWidth: '95vw',
+          data: {
+            title: 'Елементи завдання',
+            message: message,
+            confirmText: 'Закрити',
+            cancelText: '',
+            color: 'primary',
+            icon: 'info',
+          },
+        });
+      },
+      error: (error) => {
+        console.error('Помилка завантаження елементів завдання:', error);
+        const errorMessage = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Помилка завантаження елементів завдання'
+        );
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      },
     });
   }
 }

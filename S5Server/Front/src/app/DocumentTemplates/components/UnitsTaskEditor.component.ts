@@ -169,7 +169,7 @@ export class UnitsTaskEditorComponent {
         const unitTask: UnitTaskDto = {
           ...unitDataSet,
           TaskId: '',
-          TaskValue: '',
+          TaskItems: [],
           AreaId: '',
           AreaValue: '',
           Means: [],
@@ -338,7 +338,7 @@ export class UnitsTaskEditorComponent {
     for (let i = 0; i < units.length; i++) {
       const unit = units[i];
 
-      if (!unit.TaskValue || unit.TaskValue.trim() === '') {
+      if (!unit.TaskId || !unit.TaskItems || unit.TaskItems.length === 0) {
         this.snackBar.open(
           `Підрозділ "${unit.shortName}" (${i + 1}): заповніть завдання`,
           'Закрити',

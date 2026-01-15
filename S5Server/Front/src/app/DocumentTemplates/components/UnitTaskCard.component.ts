@@ -37,6 +37,7 @@ import { UnitTaskDto } from '../models/template-dataset.models';
 import { LookupDto } from '../../shared/models/lookup.models';
 import { DictDroneModelService } from '../../../ServerService/dictDroneModel.service';
 import { DictUnitTasksService } from '../../../ServerService/dictUnitTasks.service';
+import { DictUnitTaskItemsService } from '../../../ServerService/dictUnitTaskItems.service';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 import { UnitContentComponent } from '../../Unit/UnitContent.component';
 import { UnitDto } from '../../Unit/services/unit.service';
@@ -62,6 +63,7 @@ import { UnitDto } from '../../Unit/services/unit.service';
 export class UnitTaskCardComponent implements OnInit, OnDestroy {
   private dictDroneModelService = inject(DictDroneModelService);
   private dictUnitTasksService = inject(DictUnitTasksService);
+  private dictUnitTaskItemsService = inject(DictUnitTaskItemsService);
   private snackBar = inject(MatSnackBar);
   private destroy$ = new Subject<void>();
 
@@ -167,12 +169,46 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
    * Обробник зміни завдання
    */
   private onTaskChange(task: LookupDto | null): void {
-    const updatedUnit = {
-      ...this.unitTask,
-      TaskValue: task?.value || '',
-      TaskId: task?.id || '',
-    };
-    this.unitChange.emit(updatedUnit);
+    if (!task) {
+      const updatedUnit: UnitTaskDto = {
+        ...this.unitTask,
+        TaskId: '',
+        TaskItems: [],
+      };
+      this.unitChange.emit(updatedUnit);
+      return;
+    }
+
+    // Завантажуємо всі елементи завдання (для різних категорій документів)
+    this.dictUnitTaskItemsService
+      .getByUnitTask(task.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (taskItems) => {
+          const updatedUnit: UnitTaskDto = {
+            ...this.unitTask,
+            TaskId: task.id,
+            TaskItems: taskItems,
+          };
+          this.unitChange.emit(updatedUnit);
+        },
+        error: (error) => {
+          console.error('Помилка завантаження елементів завдання:', error);
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
+            error,
+            'Помилка завантаження елементів завдання'
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+
+          // Встановлюємо порожній масив елементів
+          const updatedUnit: UnitTaskDto = {
+            ...this.unitTask,
+            TaskId: task.id,
+            TaskItems: [],
+          };
+          this.unitChange.emit(updatedUnit);
+        },
+      });
   }
 
   /**

@@ -486,10 +486,10 @@ namespace S5Server.Migrations
                     b.Property<string>("Comment")
                         .HasMaxLength(250)
                         .HasColumnType("TEXT");
-
+                    /*
                     b.Property<string>("DictTemplateCategoryId")
                         .HasColumnType("TEXT(36)");
-
+                    */
                     b.Property<string>("TemplateCategoryId")
                         .IsRequired()
                         .HasMaxLength(36)
@@ -507,7 +507,7 @@ namespace S5Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DictTemplateCategoryId");
+                    //b.HasIndex("DictTemplateCategoryId");
 
                     b.HasIndex("TemplateCategoryId");
 
@@ -1021,10 +1021,11 @@ namespace S5Server.Migrations
 
             modelBuilder.Entity("S5Server.Models.DictUnitTaskItem", b =>
                 {
+                    /*
                     b.HasOne("S5Server.Models.DictTemplateCategory", null)
                         .WithMany("UnitTaskItems")
                         .HasForeignKey("DictTemplateCategoryId");
-
+                    */
                     b.HasOne("S5Server.Models.DictTemplateCategory", "TemplateCategory")
                         .WithMany()
                         .HasForeignKey("TemplateCategoryId")

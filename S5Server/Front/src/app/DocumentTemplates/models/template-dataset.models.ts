@@ -1,5 +1,6 @@
 // Модели для работы с TemplateDataSet API
 
+import { DictUnitTaskItem } from '../../../ServerService/dictUnitTaskItems.service';
 import { UnitDataSetDto } from '../../Unit/services/unit.service';
 
 // DTO для передачи данных TemplateDataSet (соответствует TemplateDataSetDto)
@@ -39,7 +40,8 @@ export interface TemplateDataSetUpdateDto {
 
 export interface UnitTaskDto extends UnitDataSetDto {
   TaskId: string;
-  TaskValue: string;
+  /** Елементи завдання (DictUnitTaskItem) */
+  TaskItems: DictUnitTaskItem[];
   /** Зона виконання завдання */
   AreaId: string;
   /** Зона виконання завдання */

@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+
 namespace S5Server.Models
 {
     public record DictUnitTaskDto(
@@ -9,10 +11,6 @@ namespace S5Server.Models
         /// Назва
         /// </summary>
         string Caption,
-        /// <summary>
-        /// JSON з описом для різних документів
-        /// </summary>
-        string Value,
         string? Comment,
         /// <summary>
         /// Сума (грн)
@@ -28,7 +26,6 @@ namespace S5Server.Models
         bool AtPermanentPoint);
 
     public record DictUnitTaskCreateDto(
-        string Value,
         string Caption,
         string? Comment,
         decimal Amount,
@@ -47,7 +44,6 @@ namespace S5Server.Models
             new(
                 unitTask.Id,
                 unitTask.Caption,
-                unitTask.Value,
                 unitTask.Comment,
                 unitTask.Amount,
                 unitTask.WithMeans,
@@ -61,7 +57,6 @@ namespace S5Server.Models
             {
                 Id = dto.Id,
                 Caption = dto.Caption.Trim(),
-                Value = dto.Value.Trim(),
                 Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim(),
                 Amount = dto.Amount,
                 WithMeans = dto.WithMeans,
@@ -76,7 +71,6 @@ namespace S5Server.Models
             {
                 Id = Guid.NewGuid().ToString("D"),
                 Caption = dto.Caption.Trim(),
-                Value = dto.Value.Trim(),
                 Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim(),
                 Amount = dto.Amount,
                 WithMeans = dto.WithMeans,
@@ -89,7 +83,6 @@ namespace S5Server.Models
         public static void ApplyDto(this DictUnitTask unitTask, DictUnitTaskDto dto)
         {
             unitTask.Caption = dto.Caption.Trim();
-            unitTask.Value = dto.Value.Trim();
             unitTask.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
             unitTask.Amount = dto.Amount;
             unitTask.WithMeans = dto.WithMeans;
@@ -102,7 +95,6 @@ namespace S5Server.Models
         public static bool EqualsDto(this DictUnitTask unitTask, DictUnitTaskDto dto)
         {
             return unitTask.Caption == dto.Caption.Trim() &&
-                   unitTask.Value == dto.Value.Trim() &&
                    unitTask.Comment == (string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim()) &&
                    unitTask.Amount == dto.Amount &&
                    unitTask.WithMeans == dto.WithMeans &&
@@ -131,12 +123,6 @@ namespace S5Server.Models
         [StringLength(100), Required(ErrorMessage = UIConstant.RequiredMsg)]
         public string Caption { get; set; } = string.Empty;
 
-        /// <summary>
-        /// JSON з описом для різних документів
-        /// </summary>
-        [Required(ErrorMessage = UIConstant.RequiredMsg)]
-        public string Value { get; set; } = string.Empty;
-
         [StringLength(250)]
         public string? Comment { get; set; }
 
@@ -155,5 +141,118 @@ namespace S5Server.Models
         /// Завдання на ППД
         /// </summary>
         public bool AtPermanentPoint { get; set; } = true;
+        /// <summary>
+        /// Завдання прив"язані до Категорії шаблона документа
+        /// </summary>
+        [ValidateNever]
+        public List<DictUnitTaskItem> UnitTaskItems { get; set; } = [];
+    }
+
+    public record DictUnitTaskItemDto(
+        string Id,
+        string Value,
+        string? Comment,
+        string TemplateCategoryId,
+        string TemplateCategory,
+        string UnitTaskId);
+
+    public record DictUnitTaskItemCreateDto(
+        string Value,
+        string? Comment,
+        string TemplateCategoryId,
+        string UnitTaskId);
+
+    /// <summary>
+    /// Завдання прив"язане до Категорії шаблона документа
+    /// </summary>
+    [Table("dict_unit_task_item")]
+    public class DictUnitTaskItem : SimpleDictBase, ISimpleDict
+    {
+        /// <summary>
+        /// Категория шаблона документа
+        /// </summary>
+        [StringLength(36), Required]
+        public string TemplateCategoryId { get; set; } = default!;
+        /// <summary>
+        /// Категория шаблона документа
+        /// </summary>
+        [ValidateNever]
+        public DictTemplateCategory TemplateCategory { get; set; } = default!;
+        /// <summary>
+        /// Завдання підрозділу для використання в документах БР/БД
+        /// </summary>
+        [StringLength(36), Required]
+        public string UnitTaskId { get; set; } = default!;
+        /// <summary>
+        /// Завдання підрозділу для використання в документах БР/БД
+        /// </summary>
+        [ValidateNever]
+        public DictUnitTask UnitTask { get; set; } = default!;
+    }
+
+    /// <summary>
+    /// Методи розширення для роботи з DictUnitTaskItem
+    /// </summary>
+    public static class DictUnitTaskItemExtensions
+    {
+        /// <summary>
+        /// Конвертує DictUnitTaskItem у DTO
+        /// </summary>
+        public static DictUnitTaskItemDto ToDto(this DictUnitTaskItem item) =>
+            new(
+                item.Id,
+                item.Value,
+                item.Comment,
+                item.TemplateCategoryId,
+                item.TemplateCategory.Value,
+                item.UnitTaskId);
+
+        /// <summary>
+        /// Створює новий екземпляр DictUnitTaskItem з DTO
+        /// </summary>
+        public static DictUnitTaskItem ToEntity(this DictUnitTaskItemDto dto) =>
+            new()
+            {
+                Id = dto.Id,
+                Value = dto.Value.Trim(),
+                Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim(),
+                TemplateCategoryId = dto.TemplateCategoryId,
+                UnitTaskId = dto.UnitTaskId
+            };
+
+        /// <summary>
+        /// Створює новий екземпляр DictUnitTaskItem з CreateDTO
+        /// </summary>
+        public static DictUnitTaskItem ToEntity(this DictUnitTaskItemCreateDto dto) =>
+            new()
+            {
+                Id = Guid.NewGuid().ToString("D"),
+                Value = dto.Value.Trim(),
+                Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim(),
+                TemplateCategoryId = dto.TemplateCategoryId,
+                UnitTaskId = dto.UnitTaskId
+            };
+
+        /// <summary>
+        /// Застосовує дані з DTO до існуючої сутності DictUnitTaskItem
+        /// </summary>
+        public static void ApplyDto(this DictUnitTaskItem item, DictUnitTaskItemDto dto)
+        {
+            item.Value = dto.Value.Trim();
+            item.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
+            item.TemplateCategoryId = dto.TemplateCategoryId;
+            item.UnitTaskId = dto.UnitTaskId;
+        }
+
+        /// <summary>
+        /// Перевіряє, чи дані в сутності DictUnitTaskItem співпадають з даними в DTO
+        /// </summary>
+        public static bool EqualsDto(this DictUnitTaskItem item, DictUnitTaskItemDto dto)
+        {
+            return item.Value == dto.Value.Trim() &&
+                   item.Comment == (string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim()) &&
+                   item.TemplateCategoryId == dto.TemplateCategoryId &&
+                   item.UnitTaskId == dto.UnitTaskId;
+        }
     }
 }
