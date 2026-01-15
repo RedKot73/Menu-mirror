@@ -1,0 +1,82 @@
+<div class="dict-task-items-container">
+  @if (selectedTask()) {
+    <div class="header">
+      <h3>Елементи завдання: {{ selectedTask()!.value }}</h3>
+      <div class="header-actions">
+        <button mat-raised-button color="primary" (click)="reload()">
+          <mat-icon>refresh</mat-icon>
+          Оновити
+        </button>
+        <button mat-raised-button color="primary" (click)="add()">
+          <mat-icon>add</mat-icon>
+          Додати елемент
+        </button>
+      </div>
+    </div>
+
+    @if (isLoading()) {
+      <div class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Завантаження елементів...</p>
+      </div>
+    } @else if (items().length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">info</mat-icon>
+        <p>У цього завдання немає елементів</p>
+        <p class="empty-hint">Елементи завдання визначають текст для різних категорій документів</p>
+        <button mat-raised-button color="primary" (click)="add()">
+          <mat-icon>add</mat-icon>
+          Створити перший елемент
+        </button>
+      </div>
+    } @else {
+      <div class="table-container">
+        <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z2">
+          <!-- Template Category Column -->
+          <ng-container matColumnDef="templateCategory">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Категорія документа</th>
+            <td mat-cell *matCellDef="let item">
+              {{ item.templateCategory || item.templateCategoryId }}
+            </td>
+          </ng-container>
+
+          <!-- Value Column -->
+          <ng-container matColumnDef="value">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Текст завдання</th>
+            <td mat-cell *matCellDef="let item" class="value-cell">
+              <div class="value-content">{{ item.value }}</div>
+            </td>
+          </ng-container>
+
+          <!-- Comment Column -->
+          <ng-container matColumnDef="comment">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Коментар</th>
+            <td mat-cell *matCellDef="let item">{{ item.comment }}</td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Дії</th>
+            <td mat-cell *matCellDef="let item">
+              <button mat-icon-button color="accent" (click)="edit(item)" matTooltip="Редагувати">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="delete(item)" matTooltip="Видалити">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+    }
+  } @else {
+    <div class="empty-state">
+      <mat-icon class="empty-icon">arrow_back</mat-icon>
+      <p>Виберіть завдання зі списку</p>
+      <p class="empty-hint">Оберіть завдання у лівій панелі, щоб переглянути його елементи</p>
+    </div>
+  }
+</div>

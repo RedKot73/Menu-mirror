@@ -1,0 +1,13 @@
+<div class="page-container">
+  <app-master-detail-layout storageKey="dictUnitTask" [initialNavWidth]="40">
+    <!-- Left Panel: Список завдань -->
+    <div leftPanel class="left-panel-content">
+      <dict-unit-tasks (taskSelected)="onTaskSelected($event)"></dict-unit-tasks>
+    </div>
+
+    <!-- Right Panel: Елементи вибраного завдання -->
+    <div rightPanel class="right-panel-content">
+      <dict-unit-task-items [task]="selectedTask()"></dict-unit-task-items>
+    </div>
+  </app-master-detail-layout>
+</div>

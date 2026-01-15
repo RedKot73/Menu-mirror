@@ -28,7 +28,7 @@ import { DictUnitTaskDto } from '../../ServerService/dictUnitTasks.service';
     <mat-dialog-content class="content">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Назва</mat-label>
-        <input matInput [(ngModel)]="data.caption" required />
+        <input matInput [(ngModel)]="data.value" required />
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
@@ -85,7 +85,7 @@ export class DictUnitTaskDialogComponent {
   }
 
   isValid(): boolean {
-    return !!(this.data.caption?.trim() && this.data.amount !== undefined && this.data.amount >= 0);
+    return !!(this.data.value?.trim() && this.data.amount !== undefined && this.data.amount >= 0);
   }
 
   onCancel(): void {

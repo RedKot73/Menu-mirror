@@ -130,13 +130,12 @@ namespace S5Server.Data
                 e.ToTable("dict_unit_task");
                 e.HasKey(e => e.Id);
                 e.Property(e => e.Id).HasColumnType("TEXT(36)");
-                e.Property(e => e.Caption).IsRequired().HasColumnType("TEXT(100)");
-                //e.Property(e => e.Value).IsRequired().HasColumnType("TEXT");
+                e.Property(e => e.Value).IsRequired().HasColumnType("TEXT(100)");
                 e.Property(e => e.Comment).HasColumnType("TEXT");
                 e.Property(e => e.Amount).IsRequired().HasColumnType("REAL");
                 e.Property(e => e.WithMeans).HasColumnType("INTEGER").HasDefaultValue(0);
                 e.Property(e => e.AtPermanentPoint).HasColumnType("INTEGER").HasDefaultValue(1);
-                e.HasIndex(e => e.Caption).IsUnique();
+                e.HasIndex(e => e.Value).IsUnique();
             });
             modelBuilder.Entity<DictUnitTaskItem>(entity =>
             {

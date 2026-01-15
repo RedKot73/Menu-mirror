@@ -10,7 +10,7 @@ namespace S5Server.Models
         /// <summary>
         /// Назва
         /// </summary>
-        string Caption,
+        string Value,
         string? Comment,
         /// <summary>
         /// Сума (грн)
@@ -26,7 +26,7 @@ namespace S5Server.Models
         bool AtPermanentPoint);
 
     public record DictUnitTaskCreateDto(
-        string Caption,
+        string Value,
         string? Comment,
         decimal Amount,
         bool WithMeans = false,
@@ -43,7 +43,7 @@ namespace S5Server.Models
         public static DictUnitTaskDto ToDto(this DictUnitTask unitTask) =>
             new(
                 unitTask.Id,
-                unitTask.Caption,
+                unitTask.Value,
                 unitTask.Comment,
                 unitTask.Amount,
                 unitTask.WithMeans,
@@ -56,7 +56,7 @@ namespace S5Server.Models
             new()
             {
                 Id = dto.Id,
-                Caption = dto.Caption.Trim(),
+                Value = dto.Value.Trim(),
                 Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim(),
                 Amount = dto.Amount,
                 WithMeans = dto.WithMeans,
@@ -70,7 +70,7 @@ namespace S5Server.Models
             new()
             {
                 Id = Guid.NewGuid().ToString("D"),
-                Caption = dto.Caption.Trim(),
+                Value = dto.Value.Trim(),
                 Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim(),
                 Amount = dto.Amount,
                 WithMeans = dto.WithMeans,
@@ -82,7 +82,7 @@ namespace S5Server.Models
         /// </summary>
         public static void ApplyDto(this DictUnitTask unitTask, DictUnitTaskDto dto)
         {
-            unitTask.Caption = dto.Caption.Trim();
+            unitTask.Value = dto.Value.Trim();
             unitTask.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
             unitTask.Amount = dto.Amount;
             unitTask.WithMeans = dto.WithMeans;
@@ -94,7 +94,7 @@ namespace S5Server.Models
         /// </summary>
         public static bool EqualsDto(this DictUnitTask unitTask, DictUnitTaskDto dto)
         {
-            return unitTask.Caption == dto.Caption.Trim() &&
+            return unitTask.Value == dto.Value.Trim() &&
                    unitTask.Comment == (string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim()) &&
                    unitTask.Amount == dto.Amount &&
                    unitTask.WithMeans == dto.WithMeans &&
@@ -121,7 +121,7 @@ namespace S5Server.Models
         /// Назва
         /// </summary>
         [StringLength(100), Required(ErrorMessage = UIConstant.RequiredMsg)]
-        public string Caption { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
 
         [StringLength(250)]
         public string? Comment { get; set; }

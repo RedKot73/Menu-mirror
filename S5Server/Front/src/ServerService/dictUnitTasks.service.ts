@@ -6,7 +6,7 @@ import { DictUnitTaskItemDto } from './dictUnitTaskItems.service';
 
 export interface DictUnitTaskDto {
   id: string;
-  caption: string;
+  value: string;
   comment?: string;
   amount: number;
   withMeans: boolean;
@@ -16,7 +16,7 @@ export interface DictUnitTaskDto {
 }
 
 export interface DictUnitTaskCreateDto {
-  caption: string;
+  value: string;
   comment?: string;
   amount: number;
   withMeans?: boolean;

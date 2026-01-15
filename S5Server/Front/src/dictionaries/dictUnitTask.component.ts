@@ -1,4 +1,13 @@
-import { Component, inject, ViewChild, AfterViewInit, effect } from '@angular/core';
+import {
+  Component,
+  inject,
+  ViewChild,
+  AfterViewInit,
+  effect,
+  Output,
+  EventEmitter,
+  signal,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -7,12 +16,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 import { DictUnitTaskDialogComponent } from '../app/dialogs/DictUnitTask-dialog.component';
 import { ConfirmDialogComponent } from '../app/dialogs/ConfirmDialog.component';
 import { DictUnitTasksService, DictUnitTask } from '../ServerService/dictUnitTasks.service';
-import { DictUnitTaskItemsService } from '../ServerService/dictUnitTaskItems.service';
 import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
 
 @Component({
@@ -20,112 +31,30 @@ import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatTableModule,
     MatButtonModule,
     MatSortModule,
     MatIconModule,
     MatCheckboxModule,
     MatTooltipModule,
+    MatInputModule,
+    MatFormFieldModule,
   ],
+  templateUrl: './dictUnitTask.component.html',
   styleUrls: ['./dict-page.styles.scss'],
-  template: `
-    <div class="dict-page-container">
-      <h2>Завдання підрозділів</h2>
-      <div class="action-buttons">
-        <button mat-raised-button color="primary" (click)="reload()">Оновити</button>
-        <button mat-raised-button color="primary" (click)="add()">Створити</button>
-      </div>
-      <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
-        <!-- Caption Column -->
-        <ng-container matColumnDef="caption">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Назва</th>
-          <td mat-cell *matCellDef="let item">{{ item.caption }}</td>
-        </ng-container>
-
-        <!-- Amount Column -->
-        <ng-container matColumnDef="amount">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Сума (грн)</th>
-          <td mat-cell *matCellDef="let item">{{ item.amount }}</td>
-        </ng-container>
-
-        <!-- WithMeans Column -->
-        <ng-container matColumnDef="withMeans">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>З засобами</th>
-          <td mat-cell *matCellDef="let item">
-            <mat-checkbox [checked]="item.withMeans" disabled></mat-checkbox>
-          </td>
-        </ng-container>
-
-        <!-- AtPermanentPoint Column -->
-        <ng-container matColumnDef="atPermanentPoint">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>На ППД</th>
-          <td mat-cell *matCellDef="let item">
-            <mat-checkbox [checked]="item.atPermanentPoint" disabled></mat-checkbox>
-          </td>
-        </ng-container>
-
-        <!-- Comment Column -->
-        <ng-container matColumnDef="comment">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Коментар</th>
-          <td mat-cell *matCellDef="let item">{{ item.comment }}</td>
-        </ng-container>
-
-        <!-- Task Items Column -->
-        <ng-container matColumnDef="taskItems">
-          <th mat-header-cell *matHeaderCellDef>Елементи завдання</th>
-          <td mat-cell *matCellDef="let item">
-            <button
-              mat-stroked-button
-              color="primary"
-              (click)="viewTaskItems(item); $event.stopPropagation()"
-              matTooltip="Переглянути елементи (тексти для різних категорій)"
-            >
-              <mat-icon>list</mat-icon>
-              Елементи
-            </button>
-          </td>
-        </ng-container>
-
-        <!-- Actions Column -->
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Дії</th>
-          <td mat-cell *matCellDef="let item">
-            <button mat-icon-button color="accent" (click)="edit(item)">
-              <mat-icon>edit</mat-icon>
-            </button>
-            <button mat-icon-button color="warn" (click)="delete(item)">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-      </table>
-    </div>
-  `,
-  styles: [
-    `
-      .dict-page-container {
-        padding: 16px;
-      }
-    `,
-  ],
 })
 export class DictUnitTaskComponent implements AfterViewInit {
+  @Output() taskSelected = new EventEmitter<DictUnitTask | null>();
+
   dictUnitTasksService = inject(DictUnitTasksService);
-  dictUnitTaskItemsService = inject(DictUnitTaskItemsService);
   items = this.dictUnitTasksService.createItemsSignal();
   dataSource = new MatTableDataSource<DictUnitTask>([]);
-  displayedColumns = [
-    'caption',
-    'amount',
-    'withMeans',
-    'atPermanentPoint',
-    'comment',
-    'taskItems',
-    'actions',
-  ];
+  displayedColumns = ['value', 'amount', 'withMeans', 'atPermanentPoint', 'comment', 'actions'];
+  selectedTaskId = signal<string | null>(null);
+  editingTaskId = signal<string | null>(null);
+  editingField = signal<'amount' | 'withMeans' | 'atPermanentPoint' | null>(null);
+  editingValue = signal<any>(null);
   dialog = inject(MatDialog);
   snackBar = inject(MatSnackBar);
 
@@ -160,7 +89,7 @@ export class DictUnitTaskComponent implements AfterViewInit {
     const dialogRef = this.dialog.open(DictUnitTaskDialogComponent, {
       width: '600px',
       data: {
-        caption: '',
+        value: '',
         comment: '',
         amount: 0,
         withMeans: false,
@@ -221,7 +150,7 @@ export class DictUnitTaskComponent implements AfterViewInit {
       autoFocus: false,
       data: {
         title: 'Видалення запису',
-        message: `Ви впевнені, що хочете видалити завдання "${unitTask.caption}"?`,
+        message: `Ви впевнені, що хочете видалити завдання "${unitTask.value}"?`,
         confirmText: 'Видалити',
         cancelText: 'Відмінити',
         color: 'warn',
@@ -249,52 +178,62 @@ export class DictUnitTaskComponent implements AfterViewInit {
     });
   }
 
-  viewTaskItems(unitTask: DictUnitTask) {
-    // Завантажуємо елементи завдання
-    this.dictUnitTaskItemsService.getByUnitTask(unitTask.id).subscribe({
-      next: (items) => {
-        if (items.length === 0) {
-          this.snackBar.open(
-            'У цього завдання немає елементів. Створіть їх у відповідному довіднику.',
-            'Закрити',
-            { duration: 5000 }
-          );
-          return;
-        }
+  selectTask(task: DictUnitTask) {
+    this.selectedTaskId.set(task.id);
+    this.taskSelected.emit(task);
+  }
 
-        // Формуємо текст для відображення
-        const itemsText = items
-          .map(
-            (item, index) =>
-              `${index + 1}. Категорія: ${
-                item.templateCategory || item.templateCategoryId
-              }\n   Текст: ${item.value}${item.comment ? '\n   Коментар: ' + item.comment : ''}`
-          )
-          .join('\n\n');
+  isEditing(taskId: string, field: 'amount' | 'withMeans' | 'atPermanentPoint'): boolean {
+    return this.editingTaskId() === taskId && this.editingField() === field;
+  }
 
-        const message = `Завдання: ${unitTask.caption}\n\nЕлементи завдання:\n\n${itemsText}`;
+  startEditing(
+    task: DictUnitTask,
+    field: 'amount' | 'withMeans' | 'atPermanentPoint',
+    event: Event
+  ) {
+    event.stopPropagation();
+    this.editingTaskId.set(task.id);
+    this.editingField.set(field);
+    this.editingValue.set(task[field]);
+  }
 
-        this.dialog.open(ConfirmDialogComponent, {
-          width: '800px',
-          maxWidth: '95vw',
-          data: {
-            title: 'Елементи завдання',
-            message: message,
-            confirmText: 'Закрити',
-            cancelText: '',
-            color: 'primary',
-            icon: 'info',
-          },
-        });
+  cancelEditing(event: Event) {
+    event.stopPropagation();
+    this.editingTaskId.set(null);
+    this.editingField.set(null);
+    this.editingValue.set(null);
+  }
+
+  saveFieldChange(
+    task: DictUnitTask,
+    field: 'amount' | 'withMeans' | 'atPermanentPoint',
+    event: Event
+  ) {
+    event.stopPropagation();
+
+    const updatedTask = { ...task, [field]: this.editingValue() };
+
+    this.dictUnitTasksService.update(task.id, updatedTask).subscribe({
+      next: () => {
+        // Оновлюємо значення в таблиці
+        Object.assign(task, { [field]: this.editingValue() });
+        this.snackBar.open('Зміни збережено', 'Закрити', { duration: 2000 });
+        this.cancelEditing(event);
       },
       error: (error) => {
-        console.error('Помилка завантаження елементів завдання:', error);
+        console.error('Помилка оновлення завдання:', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
-          'Помилка завантаження елементів завдання'
+          'Помилка оновлення завдання'
         );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        this.cancelEditing(event);
       },
     });
+  }
+
+  updateEditingValue(value: any) {
+    this.editingValue.set(value);
   }
 }

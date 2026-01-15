@@ -86,7 +86,7 @@ export const routes: Routes = [
   {
     path: 'dictUnitTasks',
     loadComponent: () =>
-      import('../dictionaries/dictUnitTask.component').then((m) => m.DictUnitTaskComponent),
+      import('../dictionaries/dictUnitTask.page').then((m) => m.DictUnitTaskPage),
     title: 'Завдання підрозділів',
   },
   {

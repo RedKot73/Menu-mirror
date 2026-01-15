@@ -1,0 +1,20 @@
+.page-container {
+  height: calc(100vh - 64px);
+  overflow: hidden;
+}
+
+.left-panel-content,
+.right-panel-content {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.left-panel-content {
+  background: #fafafa;
+}
+
+.right-panel-content {
+  background: white;
+}

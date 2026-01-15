@@ -20,5 +20,92 @@
     width: 100%;
     margin-top: 1em;
     margin-bottom: 16px;
+
+    .editable-cell {
+      .view-mode {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .value-text {
+          flex: 1;
+        }
+
+        .edit-btn {
+          opacity: 0;
+          transition: opacity 0.2s;
+          width: 32px;
+          height: 32px;
+
+          mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+          }
+        }
+      }
+
+      &:hover .view-mode .edit-btn {
+        opacity: 1;
+      }
+
+      .edit-mode {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        .inline-input {
+          flex: 1;
+          padding: 4px 8px;
+          border: 1px solid #2196f3;
+          border-radius: 4px;
+          font-size: 14px;
+          background-color: #f5f5f5;
+
+          &:focus {
+            outline: none;
+            border-color: #1976d2;
+          }
+        }
+
+        .save-btn,
+        .cancel-btn {
+          width: 32px;
+          height: 32px;
+          flex-shrink: 0;
+
+          mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+          }
+        }
+
+        .save-btn {
+          color: #4caf50;
+        }
+
+        .cancel-btn {
+          color: #f44336;
+        }
+      }
+    }
+
+    .clickable-row {
+      cursor: pointer;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background-color: #f5f5f5;
+      }
+
+      &.selected {
+        background-color: #e3f2fd;
+
+        &:hover {
+          background-color: #bbdefb;
+        }
+      }
+    }
   }
 }

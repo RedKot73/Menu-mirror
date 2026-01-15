@@ -42,11 +42,11 @@ public class DictUnitTasksController : ControllerBase
             if (!string.IsNullOrWhiteSpace(search))
             {
                 search = search.Trim();
-                q = q.Where(x => x.Caption.Contains(search) || x.Caption.Contains(search));
+                q = q.Where(x => x.Value.Contains(search) || x.Value.Contains(search));
             }
 
             var list = await q
-                .OrderBy(x => x.Caption)
+                .OrderBy(x => x.Value)
                 .Select(x => x.ToDto())
                 .ToListAsync(ct);
 
@@ -109,10 +109,10 @@ public class DictUnitTasksController : ControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        if (string.IsNullOrWhiteSpace(dto.Caption))
+        if (string.IsNullOrWhiteSpace(dto.Value))
             return BadRequest("Caption не може бути порожнім");
 
-        if (string.IsNullOrWhiteSpace(dto.Caption))
+        if (string.IsNullOrWhiteSpace(dto.Value))
             return BadRequest("Value не може бути порожнім");
 
         if (dto.Amount < 0)
@@ -135,12 +135,12 @@ public class DictUnitTasksController : ControllerBase
         catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
             if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation(ex, "Конфлікт унікальності Caption={Caption} для DictUnitTask", dto.Caption);
+                _logger.LogInformation(ex, "Конфлікт унікальності Caption={Caption} для DictUnitTask", dto.Value);
             return Problem(
                 statusCode: 409,
                 title: "Конфлікт унікальності",
-                detail: $"Завдання \"{dto.Caption}\" вже існує",
-                extensions: new Dictionary<string, object?> { ["field"] = "Caption", ["value"] = dto.Caption });
+                detail: $"Завдання \"{dto.Value}\" вже існує",
+                extensions: new Dictionary<string, object?> { ["field"] = "Caption", ["value"] = dto.Value });
         }
         catch (DbUpdateConcurrencyException ex)
         {
@@ -151,7 +151,7 @@ public class DictUnitTasksController : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Помилка при створенні DictUnitTask");
+                _logger.LogError(ex, "Помилка при створенні DictUnitTask\n{ErrorText}", ex.Message);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -172,7 +172,7 @@ public class DictUnitTasksController : ControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        if (string.IsNullOrWhiteSpace(dto.Caption))
+        if (string.IsNullOrWhiteSpace(dto.Value))
             return BadRequest("Caption не може бути порожнім");
         if (dto.Amount < 0)
             return BadRequest("Amount не може бути від'ємним");
@@ -198,13 +198,13 @@ public class DictUnitTasksController : ControllerBase
         catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
             if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation(ex, "Конфлікт унікальності при оновленні DictUnitTask Id={Id} Caption={Caption}",
-                    id, dto.Caption);
+                _logger.LogInformation(ex, "Конфлікт унікальності при оновленні DictUnitTask Id={Id} Value={Value}",
+                    id, dto.Value);
             return Problem(
                 statusCode: 409,
                 title: "Конфлікт унікальності",
-                detail: $"Завдання \"{dto.Caption}\" вже існує",
-                extensions: new Dictionary<string, object?> { ["field"] = "Caption", ["value"] = dto.Caption, ["id"] = id });
+                detail: $"Завдання \"{dto.Value}\" вже існує",
+                extensions: new Dictionary<string, object?> { ["field"] = "Value", ["value"] = dto.Value, ["id"] = id });
         }
         catch (DbUpdateConcurrencyException ex)
         {
@@ -273,10 +273,10 @@ public class DictUnitTasksController : ControllerBase
             term = term.Trim();
             
             var data = await Query()
-                .Where(t => t.Caption.Contains(term))
-                .OrderBy(t => t.Caption)
+                .Where(t => t.Value.Contains(term))
+                .OrderBy(t => t.Value)
                 .Take(limit)
-                .Select(t => new LookupDto(t.Id, t.Caption))
+                .Select(t => new LookupDto(t.Id, t.Value))
                 .ToListAsync(ct);
 
             return Ok(data);
@@ -304,8 +304,8 @@ public class DictUnitTasksController : ControllerBase
         try
         {
             var data = await Query()
-                .OrderBy(t => t.Caption)
-                .Select(t => new LookupDto(t.Id, t.Caption))
+                .OrderBy(t => t.Value)
+                .Select(t => new LookupDto(t.Id, t.Value))
                 .ToListAsync(ct);
 
             return Ok(data);
