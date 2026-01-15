@@ -1,4 +1,4 @@
-import { Component, inject, signal, ViewChild } from '@angular/core';
+import { Component, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 
@@ -23,7 +23,7 @@ import { MasterDetailLayoutComponent } from '../shared/components/MasterDetailLa
     ResultEditorComponent,
     UnitsTaskEditorComponent,
   ],
-  styleUrl: './DocTemplatesTree.page.scss',
+  styleUrls: ['./DocTemplatesTree.page.scss'],
   templateUrl: './DocTemplatesTree.page.html',
 })
 export class DocTemplatesTree {
