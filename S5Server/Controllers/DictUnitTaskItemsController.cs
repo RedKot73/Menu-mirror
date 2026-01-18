@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using S5Server.Data;
 using S5Server.Models;
+using S5Server.Services;
 using S5Server.Utils;
 
 namespace S5Server.Controllers;
@@ -23,8 +25,11 @@ public class DictUnitTaskItemsController : ControllerBase
         _logger = logger;
     }
 
-    private IQueryable<DictUnitTaskItem> Query() => _set.AsNoTracking()
+    private IQueryable<DictUnitTaskItem> Query() => DictUnitTaskItemsService.Query(_set);
+    /*
+        _set.AsNoTracking()
         .Include(x => x.TemplateCategory);
+    */
         //.Include(x => x.UnitTask);
 
     /// <summary>

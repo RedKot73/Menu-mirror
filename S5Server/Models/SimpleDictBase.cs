@@ -8,6 +8,7 @@ namespace S5Server.Models
         [Required, StringLength(100)] string Value,
         string? Comment)
     {
+        /*
         public static SimpleDictDto ToDto(SimpleDictBase simpleDictBase)
         {
             return new SimpleDictDto(
@@ -16,6 +17,7 @@ namespace S5Server.Models
                 simpleDictBase.Comment
             );
         }
+        */
     }
 
     public record SimpleDictCreateDto(
@@ -42,13 +44,14 @@ namespace S5Server.Models
 
         [StringLength(250)]
         public string? Comment { get; set; }
-
+        /*
         public static SimpleDictDto ToDto<T>(T e) where T : SimpleDictBase => new(e.Id, e.Value, e.Comment);
         public static void ApplyDto(SimpleDictBase e, SimpleDictDto dto)
         {
             e.Value = dto.Value.Trim();
             e.Comment = dto.Comment?.Trim();
         }
+        */
     }
 
     public interface IShortDictBase
@@ -73,7 +76,7 @@ namespace S5Server.Models
     {
         [StringLength(50), Required(ErrorMessage = UIConstant.RequiredMsg)]
         public string ShortValue { get; set; } = string.Empty;
-
+        /*
         public static new ShortDictDto ToDto<T>(T e) where T: ShortDictBase  => new(e.Id, e.Value, e.ShortValue, e.Comment);
         public static void ApplyDto(ShortDictBase e, ShortDictDto dto)
         {
@@ -81,6 +84,121 @@ namespace S5Server.Models
             e.ShortValue = dto.ShortValue.Trim();
             e.Comment = dto.Comment?.Trim();
         }
+        */
+    }
 
+    /// <summary>
+    /// Методи розширення для роботи з SimpleDictBase
+    /// </summary>
+    public static class SimpleDictExtensions
+    {
+        /// <summary>
+        /// Конвертує SimpleDictBase у DTO
+        /// </summary>
+        public static SimpleDictDto ToDto(this SimpleDictBase entity) =>
+            new(
+                entity.Id,
+                entity.Value,
+                entity.Comment);
+
+        /// <summary>
+        /// Створює новий екземпляр SimpleDictBase з DTO (використовується для конкретних типів)
+        /// </summary>
+        public static T ToEntity<T>(this SimpleDictDto dto) where T : SimpleDictBase, new() =>
+            new()
+            {
+                Id = dto.Id,
+                Value = dto.Value.Trim(),
+                Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim()
+            };
+
+        /// <summary>
+        /// Створює новий екземпляр SimpleDictBase з CreateDTO
+        /// </summary>
+        public static T ToEntity<T>(this SimpleDictCreateDto dto) where T : SimpleDictBase, new() =>
+            new()
+            {
+                Id = Guid.NewGuid().ToString("D"),
+                Value = dto.Value.Trim(),
+                Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim()
+            };
+
+        /// <summary>
+        /// Застосовує дані з DTO до існуючої сутності SimpleDictBase
+        /// </summary>
+        public static void ApplyDto(this SimpleDictBase entity, SimpleDictDto dto)
+        {
+            entity.Value = dto.Value.Trim();
+            entity.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
+        }
+
+        /// <summary>
+        /// Перевіряє, чи дані в сутності SimpleDictBase співпадають з даними в DTO
+        /// </summary>
+        public static bool EqualsDto(this SimpleDictBase entity, SimpleDictDto dto)
+        {
+            return entity.Value == dto.Value.Trim() &&
+                   entity.Comment == (string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim());
+        }
+    }
+
+    /// <summary>
+    /// Методи розширення для роботи з ShortDictBase
+    /// </summary>
+    public static class ShortDictExtensions
+    {
+        /// <summary>
+        /// Конвертує ShortDictBase у DTO
+        /// </summary>
+        public static ShortDictDto ToDto(this ShortDictBase entity) =>
+            new(
+                entity.Id,
+                entity.Value,
+                entity.ShortValue,
+                entity.Comment);
+
+        /// <summary>
+        /// Створює новий екземпляр ShortDictBase з DTO
+        /// </summary>
+        public static T ToEntity<T>(this ShortDictDto dto) where T : ShortDictBase, new() =>
+            new()
+            {
+                Id = dto.Id,
+                Value = dto.Value.Trim(),
+                ShortValue = dto.ShortValue.Trim(),
+                Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim()
+            };
+
+        /// <summary>
+        /// Створює новий екземпляр ShortDictBase з CreateDTO
+        /// </summary>
+        public static T ToEntity<T>(this ShortDictCreateDto dto) where T : ShortDictBase, new() =>
+            new()
+            {
+                Id = Guid.NewGuid().ToString("D"),
+                Value = dto.Value.Trim(),
+                ShortValue = dto.ShortValue.Trim(),
+                Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim()
+            };
+
+        /// <summary>
+        /// Застосовує дані з DTO до існуючої сутності ShortDictBase
+        /// </summary>
+        public static void ApplyDto(this ShortDictBase entity, ShortDictDto dto)
+        {
+            entity.Value = dto.Value.Trim();
+            entity.ShortValue = dto.ShortValue.Trim();
+            entity.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
+        }
+
+        /// <summary>
+        /// Перевіряє, чи дані в сутності ShortDictBase співпадають з даними в DTO
+        /// </summary>
+        public static bool EqualsDto(this ShortDictBase entity, ShortDictDto dto)
+        {
+            return entity.Value == dto.Value.Trim() &&
+                   entity.ShortValue == dto.ShortValue.Trim() &&
+                   entity.Comment == (string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim());
+        }
     }
 }

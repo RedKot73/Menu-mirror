@@ -7,7 +7,7 @@ namespace S5Server.Services
 {
     public class DictUnitTaskItemsService
     {
-        private static IQueryable<DictUnitTaskItem> Query(DbSet<DictUnitTaskItem> set) => set.AsNoTracking()
+        public static IQueryable<DictUnitTaskItem> Query(DbSet<DictUnitTaskItem> set) => set.AsNoTracking()
             .Include(x => x.TemplateCategory)
             .Include(x => x.UnitTask);
 

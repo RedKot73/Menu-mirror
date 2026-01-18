@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using S5Server.Data;
 
@@ -10,9 +11,11 @@ using S5Server.Data;
 namespace S5Server.Migrations
 {
     [DbContext(typeof(MainDbContext))]
-    partial class MainDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260116134601_AddAreaType")]
+    partial class AddAreaType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.2");
@@ -264,79 +267,6 @@ namespace S5Server.Migrations
                         .IsUnique();
 
                     b.ToTable("dict_area_type", (string)null);
-                });
-
-            modelBuilder.Entity("S5Server.Models.DictCityCategory", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
-
-                    b.Property<string>("Comment")
-                        .HasMaxLength(250)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ShortValue")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ShortValue")
-                        .IsUnique();
-
-                    b.HasIndex("Value")
-                        .IsUnique();
-
-                    b.ToTable("dict_city_category", (string)null);
-                });
-
-            modelBuilder.Entity("S5Server.Models.DictCityCode", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
-
-                    b.Property<string>("CityCategoryId")
-                        .IsRequired()
-                        .HasColumnType("TEXT(36)");
-
-                    b.Property<string>("Level1")
-                        .IsRequired()
-                        .HasColumnType("TEXT(20)");
-
-                    b.Property<string>("Level2")
-                        .IsRequired()
-                        .HasColumnType("TEXT(20)");
-
-                    b.Property<string>("Level3")
-                        .IsRequired()
-                        .HasColumnType("TEXT(20)");
-
-                    b.Property<string>("Level4")
-                        .IsRequired()
-                        .HasColumnType("TEXT(20)");
-
-                    b.Property<string>("LevelExt")
-                        .IsRequired()
-                        .HasColumnType("TEXT(20)");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CityCategoryId");
-
-                    b.ToTable("dict_city_code", (string)null);
                 });
 
             modelBuilder.Entity("S5Server.Models.DictDroneModel", b =>
@@ -1115,17 +1045,6 @@ namespace S5Server.Migrations
                     b.Navigation("AreaType");
                 });
 
-            modelBuilder.Entity("S5Server.Models.DictCityCode", b =>
-                {
-                    b.HasOne("S5Server.Models.DictCityCategory", "CityCategory")
-                        .WithMany("CityCodes")
-                        .HasForeignKey("CityCategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("CityCategory");
-                });
-
             modelBuilder.Entity("S5Server.Models.DictDroneModel", b =>
                 {
                     b.HasOne("S5Server.Models.DictDroneType", "DroneType")
@@ -1281,11 +1200,6 @@ namespace S5Server.Migrations
                     b.Navigation("Areas");
 
                     b.Navigation("UnitTasks");
-                });
-
-            modelBuilder.Entity("S5Server.Models.DictCityCategory", b =>
-                {
-                    b.Navigation("CityCodes");
                 });
 
             modelBuilder.Entity("S5Server.Models.DictDroneType", b =>

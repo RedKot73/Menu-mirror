@@ -35,6 +35,25 @@ namespace S5Server.Data
                 entity.Property(e => e.Value).IsRequired().HasColumnType("TEXT(100)");
                 entity.Property(e => e.Comment).HasColumnType("TEXT");
                 entity.HasIndex(e => e.Value).IsUnique();
+
+                entity.HasOne(e => e.AreaType)
+                    .WithMany(e => e.Areas)
+                    .HasForeignKey(e => e.AreaTypeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            /// <summary>
+            /// Тип Напрямку ЛБЗ
+            /// </summary>
+            modelBuilder.Entity<DictAreaType>(entity =>
+            {
+                entity.ToTable("dict_area_type");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+                entity.Property(e => e.Value).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.ShortValue).IsRequired().HasColumnType("TEXT(50)");
+                entity.Property(e => e.Comment).HasColumnType("TEXT");
+                entity.HasIndex(e => e.Value).IsUnique();
             });
 
             modelBuilder.Entity<DictPosition>(entity =>
@@ -96,11 +115,14 @@ namespace S5Server.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).HasColumnType("TEXT(36)");
                 entity.Property(e => e.Value).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.ShortValue).IsRequired().HasColumnType("TEXT(50)");
                 entity.Property(e => e.Comment).HasColumnType("TEXT");
                 entity.HasIndex(e => e.Value).IsUnique();
+                /*
                 entity.HasMany(e => e.UnitTaskItems)
                 .WithOne(e => e.TemplateCategory)
                 .HasForeignKey(e => e.TemplateCategoryId);
+                */
             });
             modelBuilder.Entity<DictDroneType>(entity =>
             {
@@ -125,17 +147,51 @@ namespace S5Server.Data
                     .HasForeignKey(e => e.DroneTypeId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
-            modelBuilder.Entity<DictUnitTask>(e =>
+
+            modelBuilder.Entity<DictCityCategory>(entity =>
             {
-                e.ToTable("dict_unit_task");
-                e.HasKey(e => e.Id);
-                e.Property(e => e.Id).HasColumnType("TEXT(36)");
-                e.Property(e => e.Value).IsRequired().HasColumnType("TEXT(100)");
-                e.Property(e => e.Comment).HasColumnType("TEXT");
-                e.Property(e => e.Amount).IsRequired().HasColumnType("REAL");
-                e.Property(e => e.WithMeans).HasColumnType("INTEGER").HasDefaultValue(0);
-                e.Property(e => e.AtPermanentPoint).HasColumnType("INTEGER").HasDefaultValue(1);
-                e.HasIndex(e => e.Value).IsUnique();
+                entity.ToTable("dict_city_category");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+                entity.Property(e => e.Value).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.ShortValue).IsRequired().HasColumnType("TEXT(50)");
+                entity.Property(e => e.Comment).HasColumnType("TEXT");
+                entity.HasIndex(e => e.Value).IsUnique();
+                entity.HasIndex(e => e.ShortValue).IsUnique();
+                entity.HasMany(e => e.CityCodes)
+                    .WithOne(e => e.CityCategory)
+                    .HasForeignKey(e => e.CityCategoryId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<DictCityCode>(entity =>
+            {
+                entity.ToTable("dict_city_code");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+                entity.Property(e => e.Level1).IsRequired().HasColumnType("TEXT(20)");
+                entity.Property(e => e.Level2).HasColumnType("TEXT(20)");
+                entity.Property(e => e.Level3).HasColumnType("TEXT(20)");
+                entity.Property(e => e.Level4).HasColumnType("TEXT(20)");
+                entity.Property(e => e.LevelExt).HasColumnType("TEXT(20)");
+                entity.Property(e => e.CityCategoryId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.Value).IsRequired().HasColumnType("TEXT(100)");
+            });
+
+            modelBuilder.Entity<DictUnitTask>(entity =>
+            {
+                entity.ToTable("dict_unit_task");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+                entity.Property(e => e.Value).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.Comment).HasColumnType("TEXT");
+                entity.Property(e => e.Amount).IsRequired().HasColumnType("REAL");
+                entity.Property(e => e.WithMeans).HasColumnType("INTEGER").HasDefaultValue(0);
+                entity.Property(e => e.AreaTypeId).HasColumnType("TEXT(36)");
+                entity.HasIndex(e => e.Value).IsUnique();
+                entity.HasOne(e => e.AreaType)
+                    .WithMany(e => e.UnitTasks)
+                    .HasForeignKey(e => e.AreaTypeId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<DictUnitTaskItem>(entity =>
             {
@@ -368,10 +424,24 @@ namespace S5Server.Data
             });
         }
 
+
+        /// <summary>
+        /// Категорії об'єктів адміністративно-територіальних одиниць
+        /// </summary>
+        public DbSet<DictCityCategory> DictCityCategories { get; set; }
+        /// <summary>
+        /// Запис Кодифікатору адміністративно-територіальних одиниць
+        /// та територій територіальних громад
+        /// </summary>
+        public DbSet<DictCityCode> DictCityCodes { get; set; }
         /// <summary>
         /// Напрямок ЛБЗ
         /// </summary>
         public DbSet<DictArea> DictAreas { get; set; }
+        /// <summary>
+        /// Тип Напрямку ЛБЗ
+        /// </summary>
+        public DbSet<DictAreaType> DictAreaTypes { get; set; }
         /// <summary>
         /// Посада
         /// </summary>

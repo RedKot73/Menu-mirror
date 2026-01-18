@@ -41,7 +41,7 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
 
             var list = await q
                 .OrderBy(x => x.Value)
-                .Select(t => SimpleDictBase.ToDto(t))
+                .Select(t => t.ToDto())
                 .ToListAsync(ct);
 
             return Ok(list);
@@ -53,7 +53,7 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Ошибка при получении списка {Entity}", typeof(TEntity).Name);
+                _logger.LogError(ex, "Помилка при отриманні списку {Entity}", typeof(TEntity).Name);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -68,7 +68,7 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
             var e = await Query().FirstOrDefaultAsync(x => x.Id == id, ct);
             if (e == null)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
-            return Ok(SimpleDictBase.ToDto(e));
+            return Ok(e.ToDto());
         }
         catch (OperationCanceledException)
         {
@@ -77,7 +77,7 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Ошибка при получении {Entity} Id={Id}", typeof(TEntity).Name, id);
+                _logger.LogError(ex, "Помилка при отриманні {Entity} Id={Id}", typeof(TEntity).Name, id);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -92,18 +92,13 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        var entity = new TEntity
-        {
-            Id = Guid.NewGuid().ToString("D"),
-            Value = dto.Value.Trim(),
-            Comment = dto.Comment?.Trim()
-        };
+        var entity = dto.ToEntity<TEntity>();
         _set.Add(entity);
 
         try
         {
             await _db.SaveChangesAsync(ct);
-            return CreatedAtAction(nameof(Get), new { id = entity.Id }, SimpleDictBase.ToDto(entity));
+            return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity.ToDto());
         }
         catch (OperationCanceledException)
         {
@@ -112,23 +107,23 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
             if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation(ex, "Конфликт уникальности Value={Value} для {Entity}", entity.Value, typeof(TEntity).Name);
+                _logger.LogInformation(ex, "Конфлікт унікальності Value={Value} для {Entity}", entity.Value, typeof(TEntity).Name);
             return Problem(
                 statusCode: 409,
-                title: "Конфликт уникальности",
-                detail: $"Значение \"{entity.Value}\" уже существует.",
+                title: "Конфлікт унікальності",
+                detail: $"Значення \"{entity.Value}\" вже існує.",
                 extensions: new Dictionary<string, object?> { ["field"] = "Value", ["value"] = entity.Value });
         }
         catch (DbUpdateConcurrencyException ex)
         {
             if (_logger.IsEnabled(LogLevel.Warning))
-                _logger.LogWarning(ex, "Конкурентный конфликт при создании {Entity}", typeof(TEntity).Name);
-            return Problem(statusCode: 409, title: "Конкурентный конфликт");
+                _logger.LogWarning(ex, "Конкурентний конфлікт при створенні {Entity}", typeof(TEntity).Name);
+            return Problem(statusCode: 409, title: "Конкурентний конфлікт");
         }
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Неизвестная ошибка при создании {Entity}", typeof(TEntity).Name);
+                _logger.LogError(ex, "Невідома помилка при створенні {Entity}", typeof(TEntity).Name);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -150,10 +145,11 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         if (e == null)
             return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
 
-        var snapshot = SimpleDictBase.ToDto(e);
-        SimpleDictBase.ApplyDto(e, dto);
-        if (snapshot == SimpleDictBase.ToDto(e))
+        // Перевіряємо чи змінились дані
+        if (e.EqualsDto(dto))
             return NoContent();
+
+        e.ApplyDto(dto);
 
         try
         {
@@ -167,24 +163,24 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
             if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation(ex, "Конфликт уникальности при обновлении {Entity} Id={Id} Value={Value}",
+                _logger.LogInformation(ex, "Конфлікт унікальності при оновленні {Entity} Id={Id} Value={Value}",
                 typeof(TEntity).Name, id, e.Value);
             return Problem(
                 statusCode: 409,
-                title: "Конфликт уникальности",
-                detail: $"Значение \"{e.Value}\" уже существует.",
+                title: "Конфлікт унікальності",
+                detail: $"Значення \"{e.Value}\" вже існує.",
                 extensions: new Dictionary<string, object?> { ["field"] = "Value", ["value"] = e.Value, ["id"] = id });
         }
         catch (DbUpdateConcurrencyException ex)
         {
             if (_logger.IsEnabled(LogLevel.Warning))
-                _logger.LogWarning(ex, "Конкурентный конфликт при обновлении {Entity} Id={Id}", typeof(TEntity).Name, id);
-            return Problem(statusCode: 409, title: "Конкурентный конфликт");
+                _logger.LogWarning(ex, "Конкурентний конфлікт при оновленні {Entity} Id={Id}", typeof(TEntity).Name, id);
+            return Problem(statusCode: 409, title: "Конкурентний конфлікт");
         }
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Ошибка при обновлении {Entity} Id={Id}", typeof(TEntity).Name, id);
+                _logger.LogError(ex, "Помилка при оновленні {Entity} Id={Id}", typeof(TEntity).Name, id);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -211,7 +207,7 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Ошибка при удалении {Entity} Id={Id}", typeof(TEntity).Name, id);
+                _logger.LogError(ex, "Помилка при видаленні {Entity} Id={Id}", typeof(TEntity).Name, id);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -245,7 +241,7 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Ошибка в lookup {Entity}", typeof(TEntity).Name);
+                _logger.LogError(ex, "Помилка в lookup {Entity}", typeof(TEntity).Name);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -270,7 +266,7 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Ошибка при получении sel_list {Entity}", typeof(TEntity).Name);
+                _logger.LogError(ex, "Помилка при отриманні sel_list {Entity}", typeof(TEntity).Name);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }

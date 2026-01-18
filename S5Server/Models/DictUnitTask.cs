@@ -21,16 +21,20 @@ namespace S5Server.Models
         /// </summary>
         bool WithMeans,
         /// <summary>
-        /// True - завдання на ППД
+        /// Тип Напрямку ЛБЗ
         /// </summary>
-        bool AtPermanentPoint);
+        string AreaTypeId);
 
     public record DictUnitTaskCreateDto(
         string Value,
         string? Comment,
         decimal Amount,
-        bool WithMeans = false,
-        bool AtPermanentPoint = true);
+        /// <summary>
+        /// Тип Напрямку ЛБЗ
+        /// </summary>
+        string AreaTypeId,
+        bool WithMeans = false
+        );
 
     /// <summary>
     /// Методи розширення для роботи з DictUnitTask
@@ -47,7 +51,7 @@ namespace S5Server.Models
                 unitTask.Comment,
                 unitTask.Amount,
                 unitTask.WithMeans,
-                unitTask.AtPermanentPoint);
+                unitTask.AreaTypeId);
 
         /// <summary>
         /// Створює новий екземпляр DictUnitTask з DTO
@@ -60,7 +64,7 @@ namespace S5Server.Models
                 Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim(),
                 Amount = dto.Amount,
                 WithMeans = dto.WithMeans,
-                AtPermanentPoint = dto.AtPermanentPoint
+                AreaTypeId = dto.AreaTypeId
             };
 
         /// <summary>
@@ -74,7 +78,7 @@ namespace S5Server.Models
                 Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim(),
                 Amount = dto.Amount,
                 WithMeans = dto.WithMeans,
-                AtPermanentPoint = dto.AtPermanentPoint
+                AreaTypeId = dto.AreaTypeId
             };
 
         /// <summary>
@@ -86,7 +90,7 @@ namespace S5Server.Models
             unitTask.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
             unitTask.Amount = dto.Amount;
             unitTask.WithMeans = dto.WithMeans;
-            unitTask.AtPermanentPoint = dto.AtPermanentPoint;
+            unitTask.AreaTypeId = dto.AreaTypeId;
         }
 
         /// <summary>
@@ -98,7 +102,7 @@ namespace S5Server.Models
                    unitTask.Comment == (string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim()) &&
                    unitTask.Amount == dto.Amount &&
                    unitTask.WithMeans == dto.WithMeans &&
-                   unitTask.AtPermanentPoint == dto.AtPermanentPoint;
+                   unitTask.AreaTypeId == dto.AreaTypeId;
         }
     }
 
@@ -138,14 +142,26 @@ namespace S5Server.Models
         public bool WithMeans { get; set; } = false;
 
         /// <summary>
-        /// Завдання на ППД
+        /// Тип Напрямку ЛБЗ
         /// </summary>
-        public bool AtPermanentPoint { get; set; } = true;
+        [Required]
+        public string AreaTypeId { get; set; } = default!;
+        /// <summary>
+        /// Тип Напрямку ЛБЗ
+        /// </summary>
+        [ValidateNever]
+        public DictAreaType AreaType { get; set; } = default!;
         /// <summary>
         /// Завдання прив"язані до Категорії шаблона документа
         /// </summary>
         [ValidateNever]
         public List<DictUnitTaskItem> UnitTaskItems { get; set; } = [];
+        //public List<DictUnitTask> UnitTasks { get; set; } = [];
+        /// <summary>
+        /// Напрямки ЛБЗ, відфільтровані по AreaType
+        /// </summary>
+        [ValidateNever, NotMapped]
+        public List<DictArea> Areas { get; set; } = [];
     }
 
     public record DictUnitTaskItemDto(
@@ -163,7 +179,7 @@ namespace S5Server.Models
         string UnitTaskId);
 
     /// <summary>
-    /// Завдання прив"язане до Категорії шаблона документа
+    /// Опис Завдання прив"язаний до Категорії шаблона документа
     /// </summary>
     [Table("dict_unit_task_item")]
     public class DictUnitTaskItem : SimpleDictBase, ISimpleDict

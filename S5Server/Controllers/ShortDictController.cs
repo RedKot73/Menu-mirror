@@ -8,7 +8,7 @@ using S5Server.Utils;
 namespace S5Server.Controllers;
 
 /// <summary>
-/// Generic API контроллер для справочников с ShortValue (без пагинации, без Razor)
+/// Generic API контроллер для довідників з ShortValue (без пагінації, без Razor)
 /// </summary>
 /// ВНИМАНИЕ: [ApiController] на абстрактном классе не применяется к наследникам, им нужен свой атрибут.
 [ApiController]
@@ -28,7 +28,7 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
 
     protected IQueryable<TEntity> Query() => _set.AsNoTracking();
 
-    /// <summary>Полный список (опционально фильтр по подстроке)</summary>
+    /// <summary>Повний перелік (опціонально фільтр по підстроці)</summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<ShortDictDto>>> GetAll(
@@ -43,7 +43,7 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
 
             var list = await q
                 .OrderBy(x => x.Value)
-                .Select(t => ShortDictBase.ToDto(t))
+                .Select(t => t.ToDto())
                 .ToListAsync(ct);
 
             return Ok(list);
@@ -55,7 +55,7 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Ошибка GetAll {Entity}", typeof(TEntity).Name);
+                _logger.LogError(ex, "Помилка GetAll {Entity}", typeof(TEntity).Name);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -70,7 +70,7 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
             var e = await Query().FirstOrDefaultAsync(x => x.Id == id, ct);
             if (e == null)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
-            return Ok(ShortDictBase.ToDto(e));
+            return Ok(e.ToDto());
         }
         catch (OperationCanceledException)
         {
@@ -79,7 +79,7 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Ошибка Get {Entity} Id={Id}", typeof(TEntity).Name, id);
+                _logger.LogError(ex, "Помилка Get {Entity} Id={Id}", typeof(TEntity).Name, id);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -95,21 +95,15 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
         if (dto is null)
-            return Problem(statusCode: 400, title: "Некорректное тело запроса");
+            return Problem(statusCode: 400, title: "Некоректне тіло запиту");
 
-        var entity = new TEntity
-        {
-            Id = Guid.NewGuid().ToString("D"),
-            Value = dto.Value.Trim(),
-            ShortValue = dto.ShortValue.Trim(),
-            Comment = dto.Comment?.Trim()
-        };
+        var entity = dto.ToEntity<TEntity>();
         _set.Add(entity);
 
         try
         {
             await _db.SaveChangesAsync(ct);
-            return CreatedAtAction(nameof(Get), new { id = entity.Id }, ShortDictBase.ToDto(entity));
+            return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity.ToDto());
         }
         catch (OperationCanceledException)
         {
@@ -118,12 +112,12 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
             if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation(ex, "Конфликт уникальности Value={Value} ShortValue={ShortValue} {Entity}",
+                _logger.LogInformation(ex, "Конфлікт унікальності Value={Value} ShortValue={ShortValue} {Entity}",
                 entity.Value, entity.ShortValue, typeof(TEntity).Name);
             return Problem(
                 statusCode: 409,
-                title: "Конфликт уникальности",
-                detail: $"Значение \"{entity.Value}\" уже существует.",
+                title: "Конфлікт унікальності",
+                detail: $"Значення \"{entity.Value}\" вже існує.",
                 extensions: new Dictionary<string, object?>
                 {
                     ["field"] = "Value",
@@ -133,13 +127,13 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         catch (DbUpdateConcurrencyException ex)
         {
             if (_logger.IsEnabled(LogLevel.Warning))
-                _logger.LogWarning(ex, "Конкурентный конфликт Create {Entity}", typeof(TEntity).Name);
-            return Problem(statusCode: 409, title: "Конкурентный конфликт");
+                _logger.LogWarning(ex, "Конкурентний конфлікт Create {Entity}", typeof(TEntity).Name);
+            return Problem(statusCode: 409, title: "Конкурентний конфлікт");
         }
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Неизвестная ошибка Create {Entity}", typeof(TEntity).Name);
+                _logger.LogError(ex, "Невідома помилка Create {Entity}", typeof(TEntity).Name);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -157,17 +151,17 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
         if (dto is null)
-            return Problem(statusCode: 400, title: "Некорректное тело запроса");
+            return Problem(statusCode: 400, title: "Некоректне тіло запиту");
 
         var e = await _set.AsTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
         if (e == null)
             return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
 
-        var snapshot = ShortDictBase.ToDto(e);
-        ShortDictBase.ApplyDto(e, dto);
-
-        if (snapshot == ShortDictBase.ToDto(e))
+        // Перевіряємо чи змінились дані
+        if (e.EqualsDto(dto))
             return NoContent();
+
+        e.ApplyDto(dto);
 
         try
         {
@@ -181,12 +175,12 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
             if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation(ex, "Конфликт уникальности Update {Entity} Id={Id} Value={Value}",
+                _logger.LogInformation(ex, "Конфлікт унікальності Update {Entity} Id={Id} Value={Value}",
                 typeof(TEntity).Name, id, e.Value);
             return Problem(
                 statusCode: 409,
-                title: "Конфликт уникальности",
-                detail: $"Значение \"{e.Value}\" уже существует.",
+                title: "Конфлікт унікальності",
+                detail: $"Значення \"{e.Value}\" вже існує.",
                 extensions: new Dictionary<string, object?>
                 {
                     ["field"] = "Value",
@@ -197,13 +191,13 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         catch (DbUpdateConcurrencyException ex)
         {
             if (_logger.IsEnabled(LogLevel.Warning))
-                _logger.LogWarning(ex, "Конкурентный конфликт Update {Entity} Id={Id}", typeof(TEntity).Name, id);
-            return Problem(statusCode: 409, title: "Конкурентный конфликт");
+                _logger.LogWarning(ex, "Конкурентний конфлікт Update {Entity} Id={Id}", typeof(TEntity).Name, id);
+            return Problem(statusCode: 409, title: "Конкурентний конфлікт");
         }
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Ошибка Update {Entity} Id={Id}", typeof(TEntity).Name, id);
+                _logger.LogError(ex, "Помилка Update {Entity} Id={Id}", typeof(TEntity).Name, id);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -230,12 +224,12 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Ошибка Delete {Entity} Id={Id}", typeof(TEntity).Name, id);
+                _logger.LogError(ex, "Помилка Delete {Entity} Id={Id}", typeof(TEntity).Name, id);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
 
-    /// <summary>Укороченный список для автокомплита</summary>
+    /// <summary>Скорочений список для автокомпліту</summary>
     [HttpGet("lookup")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<LookupDto>>> Lookup(
@@ -250,7 +244,6 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         try
         {
             var data = await Query()
-                //.Where(t => t.Value.Contains(term))
                 .Where(t => t.ShortValue.Contains(term))
                 .OrderBy(t => t.ShortValue)
                 .Take(limit)
@@ -266,7 +259,7 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Ошибка Lookup {Entity}", typeof(TEntity).Name);
+                _logger.LogError(ex, "Помилка Lookup {Entity}", typeof(TEntity).Name);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -291,7 +284,7 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Ошибка при получении sel_list {Entity}", typeof(TEntity).Name);
+                _logger.LogError(ex, "Помилка при отриманні sel_list {Entity}", typeof(TEntity).Name);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }

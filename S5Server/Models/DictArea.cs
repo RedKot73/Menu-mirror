@@ -1,12 +1,22 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+
 namespace S5Server.Models;
 
 /// <summary>
 /// Напрямок ЛБЗ
 /// </summary>
-[Display(Name = Caption)]
 public partial class DictArea : SimpleDictBase, ISimpleDict
 {
-    public const string Caption = "Напрямок ЛБЗ";
+    /// <summary>
+    /// Тип Напрямку ЛБЗ
+    /// </summary>
+    [Required]
+    public string AreaTypeId { get; set; } = default!;
+    /// <summary>
+    /// Тип Напрямку ЛБЗ
+    /// </summary>
+    [ValidateNever]
+    public DictAreaType AreaType { get; set; } = default!;
 }
