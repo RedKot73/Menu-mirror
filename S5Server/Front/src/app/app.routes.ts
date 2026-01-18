@@ -70,6 +70,12 @@ export const routes: Routes = [
     title: 'Категорії об\'єктів адміністративно-територіальних одиниць',
   },
   {
+    path: 'dictCityCodes',
+    loadComponent: () =>
+      import('../dictionaries/dictCityCode.component').then((m) => m.DictCityCodeComponent),
+    title: 'Коди адміністративно-територіальних одиниць',
+  },
+  {
     path: 'dictArea',
     loadComponent: () =>
       import('../dictionaries/dictAreaPage.component').then((m) => m.DictAreaPage),

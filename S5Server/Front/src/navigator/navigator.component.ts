@@ -70,6 +70,9 @@ import { MatMenuModule } from '@angular/material/menu';
         <button mat-menu-item routerLink="/dictCityCategories" routerLinkActive="active-menu-item">
           Категорії об'єктів адміністративно-територіальних одиниць
         </button>
+        <button mat-menu-item routerLink="/dictCityCodes" routerLinkActive="active-menu-item">
+          Коди об'єктів адміністративно-територіальних одиниць
+        </button>
         <button mat-menu-item routerLink="/dictAreaTypes" routerLinkActive="active-menu-item">
           Типи Напрямку ЛБЗ
         </button>

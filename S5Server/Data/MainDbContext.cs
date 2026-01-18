@@ -159,8 +159,8 @@ namespace S5Server.Data
                 entity.HasIndex(e => e.Value).IsUnique();
                 entity.HasIndex(e => e.ShortValue).IsUnique();
                 entity.HasMany(e => e.CityCodes)
-                    .WithOne(e => e.CityCategory)
-                    .HasForeignKey(e => e.CityCategoryId)
+                    .WithOne(e => e.Category)
+                    .HasForeignKey(e => e.CategoryId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<DictCityCode>(entity =>
@@ -173,7 +173,7 @@ namespace S5Server.Data
                 entity.Property(e => e.Level3).HasColumnType("TEXT(20)");
                 entity.Property(e => e.Level4).HasColumnType("TEXT(20)");
                 entity.Property(e => e.LevelExt).HasColumnType("TEXT(20)");
-                entity.Property(e => e.CityCategoryId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.CategoryId).HasColumnType("TEXT(36)");
                 entity.Property(e => e.Value).IsRequired().HasColumnType("TEXT(100)");
             });
 
