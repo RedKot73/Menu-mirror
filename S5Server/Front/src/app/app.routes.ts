@@ -1,19 +1,6 @@
 import { Routes } from '@angular/router';
 import { Component } from '@angular/core';
 
-// Simple standalone stub components for each route
-@Component({
-  selector: 'app-page-orders',
-  standalone: true,
-  template: '<h2>Розпорядження</h2><p>Сторінка "Розпорядження" (заглушка)</p>',
-})
-class OrdersPage {}
-@Component({
-  selector: 'app-page-reports',
-  standalone: true,
-  template: '<h2>Донесення</h2><p>Сторінка "Донесення" (заглушка)</p>',
-})
-class ReportsPage {}
 @Component({
   selector: 'app-page-users',
   standalone: true,
@@ -27,12 +14,6 @@ export const routes: Routes = [
     loadComponent: () =>
       import('../app/DocumentDataSet/DocumentDataSet.page').then((m) => m.DocumentDataSetComponent),
     title: 'Дані документів',
-  },
-  {
-    path: 'dictArea',
-    loadComponent: () =>
-      import('../dictionaries/dictAreaPage.component').then((m) => m.dictAreaPage),
-    title: 'Напрямок ЛБЗ',
   },
   {
     path: 'dictDroneTypes',
@@ -55,18 +36,19 @@ export const routes: Routes = [
   {
     path: 'dictPosition',
     loadComponent: () =>
-      import('../dictionaries/dictPosition.component').then((m) => m.dictPosition),
+      import('../dictionaries/dictPosition.component').then((m) => m.DictPositionComponent),
     title: 'Посади',
   },
   {
     path: 'dictRanks',
-    loadComponent: () => import('../dictionaries/dictRanks.component').then((m) => m.dictRanks),
+    loadComponent: () =>
+      import('../dictionaries/dictRanks.component').then((m) => m.DictRanksComponent),
     title: 'Військові звання',
   },
   {
     path: 'dictSoldierStates',
     loadComponent: () =>
-      import('../dictionaries/dictSoldierStates.component').then((m) => m.dictSoldierStates),
+      import('../dictionaries/dictSoldierStates.component').then((m) => m.DictSoldierStatesComponent),
     title: 'Статуси особового складу',
   },
   {
@@ -74,6 +56,18 @@ export const routes: Routes = [
     loadComponent: () =>
       import('../dictionaries/dictUnitTypes.component').then((m) => m.DictUnitTypesComponent),
     title: 'Типи підрозділів',
+  },
+  {
+    path: 'dictAreaTypes',
+    loadComponent: () =>
+      import('../dictionaries/dictAreaType.component').then((m) => m.DictAreaTypeComponent),
+    title: 'Типи Напрямку ЛБЗ',
+  },
+  {
+    path: 'dictArea',
+    loadComponent: () =>
+      import('../dictionaries/dictAreaPage.component').then((m) => m.DictAreaPage),
+    title: 'Напрямок ЛБЗ',
   },
   {
     path: 'dictTemplateCategories',
@@ -111,8 +105,6 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./DocumentTemplates/DocTemplatesTree.page').then((m) => m.DocTemplatesTree),
   },
-  { path: 'orders', title: 'Розпорядження', component: OrdersPage },
-  { path: 'reports', title: 'Донесення', component: ReportsPage },
   { path: 'users', title: 'Користувачі', component: UsersPage },
   {
     path: 'login',

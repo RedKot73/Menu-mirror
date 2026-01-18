@@ -51,7 +51,7 @@ export type DictArea = SimpleDictDto;
     </div>
   `,
 })
-export class dictPosition implements AfterViewInit {
+export class DictPositionComponent implements AfterViewInit {
   readonly api = '/api/dict-positions';
   dictService = inject(SimpleDictService);
   items = this.dictService.createItemsSignal(this.api);

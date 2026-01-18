@@ -8,7 +8,7 @@ using S5Server.Utils;
 namespace S5Server.Controllers;
 
 /// <summary>
-/// Generic API контроллер для простых справочников (без пагинации, без Razor)
+/// Generic API контроллер для простих довідників (без пагинації, без Razor)
 /// </summary>
 /// ВНИМАНИЕ: [ApiController] не наследуется — добавлять в дочерние контроллеры!
 public abstract class SimpleDictApiController<TEntity> : ControllerBase
@@ -129,11 +129,11 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Update(string id,
+    public async Task<ActionResult<SimpleDictDto>> Update(string id,
         [FromBody] SimpleDictDto dto,
         CancellationToken ct = default)
     {
@@ -147,14 +147,14 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
 
         // Перевіряємо чи змінились дані
         if (e.EqualsDto(dto))
-            return NoContent();
+            return Ok(e.ToDto());
 
         e.ApplyDto(dto);
 
         try
         {
             await _db.SaveChangesAsync(ct);
-            return NoContent();
+            return Ok(e.ToDto());
         }
         catch (OperationCanceledException)
         {

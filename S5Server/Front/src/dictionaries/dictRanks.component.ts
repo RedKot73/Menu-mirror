@@ -70,7 +70,7 @@ import { DictRankService, DictRank } from '../ServerService/dictRanks.service';
     </div>
   `,
 })
-export class dictRanks implements AfterViewInit {
+export class DictRanksComponent implements AfterViewInit {
   dictService = inject(DictRankService);
   items = this.dictService.createItemsSignal();
   dataSource = new MatTableDataSource<DictRank>([]);

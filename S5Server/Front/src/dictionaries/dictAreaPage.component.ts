@@ -52,7 +52,7 @@ export type DictArea = SimpleDictDto;
   `,
   imports: [MatTableModule, MatButtonModule, MatSortModule, MatIconModule],
 })
-export class dictAreaPage implements AfterViewInit {
+export class DictAreaPage implements AfterViewInit {
   readonly api = '/api/dict-areas';
   dictService = inject(SimpleDictService);
   items = this.dictService.createItemsSignal(this.api);

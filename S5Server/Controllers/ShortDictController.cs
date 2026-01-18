@@ -139,11 +139,11 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Update(
+    public async Task<ActionResult<ShortDictDto>> Update(
         string id,
         [FromBody] ShortDictDto dto,
         CancellationToken ct = default)
@@ -153,20 +153,20 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         if (dto is null)
             return Problem(statusCode: 400, title: "Некоректне тіло запиту");
 
-        var e = await _set.AsTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
-        if (e == null)
+        var entity = await _set.AsTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
+        if (entity == null)
             return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
 
         // Перевіряємо чи змінились дані
-        if (e.EqualsDto(dto))
-            return NoContent();
+        if (entity.EqualsDto(dto))
+            return Ok(entity.ToDto());
 
-        e.ApplyDto(dto);
+        entity.ApplyDto(dto);
 
         try
         {
             await _db.SaveChangesAsync(ct);
-            return NoContent();
+            return Ok(entity.ToDto());
         }
         catch (OperationCanceledException)
         {
@@ -176,15 +176,15 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
         {
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation(ex, "Конфлікт унікальності Update {Entity} Id={Id} Value={Value}",
-                typeof(TEntity).Name, id, e.Value);
+                typeof(TEntity).Name, id, entity.Value);
             return Problem(
                 statusCode: 409,
                 title: "Конфлікт унікальності",
-                detail: $"Значення \"{e.Value}\" вже існує.",
+                detail: $"Значення \"{entity.Value}\" вже існує.",
                 extensions: new Dictionary<string, object?>
                 {
                     ["field"] = "Value",
-                    ["value"] = e.Value,
+                    ["value"] = entity.Value,
                     ["id"] = id
                 });
         }

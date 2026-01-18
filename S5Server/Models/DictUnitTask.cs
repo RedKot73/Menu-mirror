@@ -156,7 +156,6 @@ namespace S5Server.Models
         /// </summary>
         [ValidateNever]
         public List<DictUnitTaskItem> UnitTaskItems { get; set; } = [];
-        //public List<DictUnitTask> UnitTasks { get; set; } = [];
         /// <summary>
         /// Напрямки ЛБЗ, відфільтровані по AreaType
         /// </summary>

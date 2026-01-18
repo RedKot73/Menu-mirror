@@ -33,9 +33,6 @@ import { MatMenuModule } from '@angular/material/menu';
       </mat-menu>
 
       <mat-menu #dictDroneForces="matMenu">
-        <button mat-menu-item routerLink="/dictArea" routerLinkActive="active-menu-item">
-          Напрямок ЛБЗ
-        </button>
         <button mat-menu-item routerLink="/dictDroneTypes" routerLinkActive="active-menu-item">
           Типи БПЛА
         </button>
@@ -69,6 +66,12 @@ import { MatMenuModule } from '@angular/material/menu';
         </button>
         <button mat-menu-item routerLink="/dictRanks" routerLinkActive="active-menu-item">
           Військові звання
+        </button>
+        <button mat-menu-item routerLink="/dictAreaTypes" routerLinkActive="active-menu-item">
+          Типи Напрямку ЛБЗ
+        </button>
+        <button mat-menu-item routerLink="/dictArea" routerLinkActive="active-menu-item">
+          Напрямок ЛБЗ
         </button>
       </mat-menu>
     </mat-toolbar>

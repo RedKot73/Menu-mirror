@@ -51,7 +51,7 @@ export type DictArea = SimpleDictDto;
     </div>
   `,
 })
-export class dictSoldierStates implements AfterViewInit {
+export class DictSoldierStatesComponent implements AfterViewInit {
   readonly api = '/api/dict-soldier-states';
   dictService = inject(SimpleDictService);
   items = this.dictService.createItemsSignal(this.api);
