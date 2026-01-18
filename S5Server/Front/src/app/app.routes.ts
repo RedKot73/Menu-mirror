@@ -64,6 +64,12 @@ export const routes: Routes = [
     title: 'Типи Напрямку ЛБЗ',
   },
   {
+    path: 'dictCityCategories',
+    loadComponent: () =>
+      import('../dictionaries/dictCityCategory.component').then((m) => m.DictCityCategoryComponent),
+    title: 'Категорії об\'єктів адміністративно-територіальних одиниць',
+  },
+  {
     path: 'dictArea',
     loadComponent: () =>
       import('../dictionaries/dictAreaPage.component').then((m) => m.DictAreaPage),

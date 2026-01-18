@@ -67,6 +67,9 @@ import { MatMenuModule } from '@angular/material/menu';
         <button mat-menu-item routerLink="/dictRanks" routerLinkActive="active-menu-item">
           Військові звання
         </button>
+        <button mat-menu-item routerLink="/dictCityCategories" routerLinkActive="active-menu-item">
+          Категорії об'єктів адміністративно-територіальних одиниць
+        </button>
         <button mat-menu-item routerLink="/dictAreaTypes" routerLinkActive="active-menu-item">
           Типи Напрямку ЛБЗ
         </button>

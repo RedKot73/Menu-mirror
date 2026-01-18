@@ -3,20 +3,20 @@ import { Observable } from 'rxjs';
 import { LookupDto } from '../app/shared/models/lookup.models';
 import { ShortDictService, ShortDictDto } from './shortDict.service';
 
-export type DictAreaType = ShortDictDto;
+export type DictCityCategory = ShortDictDto;
 
 @Injectable({
   providedIn: 'root',
 })
-export class DictAreaTypeService {
-  readonly api = '/api/dict-area-types';
+export class DictCityCategoryService {
+  readonly api = '/api/dict-city-categories';
   private shortDictService = inject(ShortDictService);
 
-  createItemsSignal(): WritableSignal<DictAreaType[]> {
+  createItemsSignal(): WritableSignal<DictCityCategory[]> {
     return this.shortDictService.createItemsSignal(this.api);
   }
 
-  getAll(): Observable<DictAreaType[]> {
+  getAll(): Observable<DictCityCategory[]> {
     return this.shortDictService.getAll(this.api);
   }
 
@@ -24,16 +24,16 @@ export class DictAreaTypeService {
     return this.shortDictService.lookup(this.api, term, limit);
   }
 
-  getById(id: string): Observable<DictAreaType> {
+  getById(id: string): Observable<DictCityCategory> {
     return this.shortDictService.get(this.api, id);
   }
 
-  create(item: Omit<DictAreaType, 'id'>): Observable<DictAreaType> {
+  create(item: Omit<DictCityCategory, 'id'>): Observable<DictCityCategory> {
     return this.shortDictService.create(this.api, item);
   }
 
-  update(id: string, item: Omit<DictAreaType, 'id'>): Observable<DictAreaType> {
-    return this.shortDictService.update(this.api, id, item) as Observable<DictAreaType>;
+  update(id: string, item: Omit<DictCityCategory, 'id'>): Observable<DictCityCategory> {
+    return this.shortDictService.update(this.api, id, item) as Observable<DictCityCategory>;
   }
 
   delete(id: string): Observable<object> {
