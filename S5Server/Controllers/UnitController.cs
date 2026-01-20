@@ -719,7 +719,7 @@ namespace S5Server.Controllers
             catch (Exception ex)
             {
                 if (_logger.IsEnabled(LogLevel.Error))
-                    _logger.LogError(ex, "Помилка при імпорті солдат для Unit Id={Id}", unitId);
+                    _logger.LogError(ex, "Помилка при імпорті солдат для Unit Id={Id}\n{Msg}", unitId, ex.Message);
                 return Problem(statusCode: 500, title: "Внутрішня помилка сервера", detail: ex.Message);
             }
         }

@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild, AfterViewInit, effect } from '@angular/core';
+import { Component, inject, ViewChild, AfterViewInit, effect, ElementRef } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -17,6 +17,7 @@ import {
 } from '../ServerService/dictCityCode.service';
 import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
 import { DictCityCodeDialogComponent } from '../app/dialogs/DictCityCode-dialog.component';
+import { ImportCityCodesDialogComponent } from '../app/dialogs/ImportCityCodes-dialog.component';
 
 @Component({
   selector: 'dict-city-codes',
@@ -32,6 +33,15 @@ import { DictCityCodeDialogComponent } from '../app/dialogs/DictCityCode-dialog.
   styleUrls: ['./dict-page.styles.scss'],
   template: `
     <div class="dict-page-container">
+      <!-- Прихований input для вибору файлу -->
+      <input
+        #fileInput
+        type="file"
+        accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        style="display: none"
+        (change)="onFileSelected($event)"
+      />
+
       <h2>Кодифікатор адміністративно-територіальних одиниць</h2>
       <div class="action-buttons">
         <mat-form-field appearance="outline" style="width: 300px; margin-right: 16px;">
@@ -43,8 +53,18 @@ import { DictCityCodeDialogComponent } from '../app/dialogs/DictCityCode-dialog.
             placeholder="Введіть назву для пошуку"
           />
         </mat-form-field>
-        <button mat-raised-button color="primary" (click)="reload()">Оновити</button>
-        <button mat-raised-button color="primary" (click)="add()">Створити</button>
+        <button mat-raised-button color="primary" (click)="reload()">
+          <mat-icon>refresh</mat-icon>
+          Оновити
+        </button>
+        <button mat-raised-button color="primary" (click)="add()">
+          <mat-icon>add</mat-icon>
+          Створити
+        </button>
+        <button mat-raised-button color="accent" (click)="openFileDialog()">
+          <mat-icon>upload_file</mat-icon>
+          Імпортувати
+        </button>
       </div>
       <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
         <!-- Level1 Column -->
@@ -107,6 +127,7 @@ export class DictCityCodeComponent implements AfterViewInit {
   private searchTimeout: number | undefined;
 
   @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   constructor() {
     effect(() => {
@@ -239,5 +260,51 @@ export class DictCityCodeComponent implements AfterViewInit {
         });
       }
     });
+  }
+
+  /**
+   * Відкриває діалог вибору файлу для імпорту
+   */
+  openFileDialog() {
+    if (this.fileInput) {
+      this.fileInput.nativeElement.click();
+    }
+  }
+
+  /**
+   * Обробка вибору файлу для імпорту
+   */
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    // Перевірка розширення файлу
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext !== 'xlsx') {
+      this.snackBar.open('Підтримується тільки формат .xlsx', 'Закрити', { duration: 5000 });
+      input.value = '';
+      return;
+    }
+
+    // Відкриваємо діалог імпорту з прогресом
+    const dialogRef = this.dialog.open(ImportCityCodesDialogComponent, {
+      width: '500px',
+      disableClose: true,
+      data: file,
+    });
+
+    dialogRef.afterClosed().subscribe((success: boolean) => {
+      if (success) {
+        this.reload();
+        this.snackBar.open('Імпорт успішно завершено', 'Закрити', { duration: 3000 });
+      }
+    });
+
+    // Очищаємо input для можливості повторного вибору того ж файлу
+    input.value = '';
   }
 }

@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+using System.Threading.Channels;
+
 using S5Server.Data;
 using S5Server.Models;
+using S5Server.Services;
 using S5Server.Utils;
 
 namespace S5Server.Controllers;
@@ -17,6 +20,10 @@ public class DictCityCodesController : ControllerBase
     private readonly MainDbContext _db;
     private readonly DbSet<DictCityCode> _set;
     private readonly ILogger<DictCityCodesController> _logger;
+    private readonly System.Text.Json.JsonSerializerOptions JSONOpt = new()
+    {
+        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+    };
 
     public DictCityCodesController(MainDbContext db, ILogger<DictCityCodesController> logger)
     {
@@ -65,6 +72,7 @@ public class DictCityCodesController : ControllerBase
                 .ThenBy(x => x.Level3)
                 .ThenBy(x => x.Level4)
                 .ThenBy(x => x.Value)
+                .Take(100)
                 .Select(x => x.ToDto())
                 .ToListAsync(ct);
 
@@ -435,4 +443,84 @@ public class DictCityCodesController : ControllerBase
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
+
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(50_000_000)]
+    [HttpPost("importCityCodes")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status423Locked)]
+    public async Task<IActionResult> ImportCityCodes(
+        [FromForm] IFormFile file,
+        CancellationToken ct = default)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest("Файл відсутній або порожній");
+
+        var ext = Path.GetExtension(file.FileName);
+        if (!string.Equals(ext, ".xlsx", StringComparison.OrdinalIgnoreCase))
+            return BadRequest("Підтримується тільки формат .xlsx");
+
+        try
+        {
+            (bool started, CityCodesProgressStatus status, string? error) = Services.ImportCityCodes.TryStartBackground(file, ct);
+            if (!started)
+                return Problem(statusCode: 423, title: error ?? "Імпорт заблоковано");
+
+            return Accepted(new
+            {
+                started,
+                status,
+                error,
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка при імпорті\n{Msg}", ex.Message);
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера", detail: ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Прогрес імпорту кодів міст (SSE)
+    /// </summary>
+    [HttpGet("imports/stream")]
+    public async Task GetImportStream(CancellationToken ct)
+    {
+        Response.Headers.CacheControl = "no-cache";
+        Response.Headers.ContentType = "text/event-stream";
+        Response.Headers["X-Accel-Buffering"] = "no";
+
+        var channel = Channel.CreateUnbounded<string>();
+        void Handler(ImportCityCodesProgress p)
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(p, JSONOpt);
+            channel.Writer.TryWrite($"data: {json}\n\n");
+        }
+        
+        Services.ImportCityCodes.Progress += Handler;
+        try
+        {
+            await foreach (var msg in channel.Reader.ReadAllAsync(ct))
+            {
+                await Response.WriteAsync(msg, ct);
+                await Response.Body.FlushAsync(ct);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // client disconnected
+        }
+        finally
+        {
+            Services.ImportCityCodes.Progress -= Handler;
+        }
+    }
+
 }

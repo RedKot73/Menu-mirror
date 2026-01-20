@@ -32,6 +32,25 @@ export interface CityCodeFilter {
   level3?: string;
 }
 
+export enum CityCodesProgressStatus {
+  Start = 0,
+  Done = 1,
+  Failed = 2,
+}
+
+export interface ImportCityCodesProgress {
+  status: CityCodesProgressStatus;
+  processed: number;
+  total: number;
+  message?: string;
+}
+
+export interface ImportCityCodesResponse {
+  started: boolean;
+  status: CityCodesProgressStatus;
+  error?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -107,5 +126,43 @@ export class DictCityCodeService {
 
   getByLevel1(level1: string): Observable<CityCodeDto[]> {
     return this.http.get<CityCodeDto[]>(`${this.api}/by-level1/${level1}`);
+  }
+
+  /**
+   * Імпорт записів кодифікатора з xlsx файлу
+   */
+  importCityCodes(file: File): Observable<ImportCityCodesResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<ImportCityCodesResponse>(`${this.api}/importCityCodes`, formData);
+  }
+
+  /**
+   * Підписка на Server-Sent Events для моніторингу прогресу імпорту
+   */
+  subscribeToImportProgress(): Observable<ImportCityCodesProgress> {
+    return new Observable<ImportCityCodesProgress>((observer) => {
+      const eventSource = new EventSource(`${this.api}/imports/stream`);
+
+      eventSource.onmessage = (event) => {
+        try {
+          const progress: ImportCityCodesProgress = JSON.parse(event.data);
+          observer.next(progress);
+        } catch (error) {
+          console.error('Помилка парсингу SSE події:', error);
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        console.error('SSE connection error:', error);
+        eventSource.close();
+        observer.error(error);
+      };
+
+      // Cleanup при відписці
+      return () => {
+        eventSource.close();
+      };
+    });
   }
 }

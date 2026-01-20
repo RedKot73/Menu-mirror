@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+using DocumentFormat.OpenXml.Spreadsheet;
+
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace S5Server.Models
@@ -11,6 +13,7 @@ namespace S5Server.Models
     /// </summary>
     public record CityCodeCreateDto
     {
+        public string? ParentId;
         /// <summary>
         /// Автономна Республіка Крим, області, міста, що мають спеціальний статус
         /// </summary>
@@ -88,7 +91,6 @@ namespace S5Server.Models
         public List<DictCityCode> CityCodes { get; set; } = [];
     }
 
-
     /// <summary>
     /// Запис Кодифікатору адміністративно-територіальних одиниць
     /// та територій територіальних громад
@@ -96,9 +98,16 @@ namespace S5Server.Models
     [Table("dict_city_code")]
     public class DictCityCode
     {
+        public const string RootCityCode = "UA00000000000000000";
+
         [Key]
         [StringLength(36)]
         public string Id { get; set; } = string.Empty;//Guid.NewGuid().ToString("D");
+        [StringLength(36)]
+        public string? ParentId { get; set; }
+        [ValidateNever]
+        public DictCityCode Parent { get; set; } = default!;
+
         /// <summary>
         /// Автономна Республіка Крим, області, міста, що мають спеціальний статус
         /// </summary>
@@ -157,6 +166,8 @@ namespace S5Server.Models
 
         [StringLength(100), Required(ErrorMessage = UIConstant.RequiredMsg)]
         public string Value { get; set; } = string.Empty;
+        [NotMapped]
+        public List<DictCityCode> Childs { get; set; } = [];
     }
 
     /// <summary>
@@ -171,6 +182,7 @@ namespace S5Server.Models
             new()
             {
                 Id = cityCode.Id,
+                ParentId = cityCode.ParentId,
                 Level1 = cityCode.Level1,
                 Level2 = cityCode.Level2,
                 Level3 = cityCode.Level3,
@@ -187,6 +199,7 @@ namespace S5Server.Models
             new()
             {
                 Id = dto.Id,
+                ParentId = dto.ParentId,
                 Level1 = dto.Level1.Trim(),
                 Level2 = dto.Level2.Trim(),
                 Level3 = dto.Level3.Trim(),
@@ -195,6 +208,48 @@ namespace S5Server.Models
                 CategoryId = dto.CategoryId,
                 Value = dto.Value.Trim()
             };
+
+        /// <summary>
+        /// Визначає ID та ParentID для запису кодифікатора
+        /// </summary>
+        /// <param name="keys">Масив рівнів [Root, Level1, Level2, Level3, Level4, LevelExt]. 
+        /// УВАГА: keys[0] буде перезаписаний на RootCityCode</param>
+        public static (string Id, string ParentId) GetCityCodeKeys(string level1,
+            string level2,
+            string level3,
+            string level4,
+            string levelExt)
+        {
+            var keys = new[] { DictCityCode.RootCityCode, level1, level2, level3, level4, levelExt };
+            // Знаходимо індекс найнижчого непустого рівня
+            int currentIndex = -1;
+            for (int i = keys.Length - 1; i >= 1; i--) // Починаємо з кінця, пропускаємо Root
+            {
+                if (!string.IsNullOrEmpty(keys[i]))
+                {
+                    currentIndex = i;
+                    break;
+                }
+            }
+
+            if (currentIndex == -1)
+                throw new Exception($"Ключі відсутні");
+
+            // ID - це значення поточного рівня
+            var id = keys[currentIndex];
+
+            // ParentId - це значення попереднього непустого рівня
+            var parentId = keys[0]; // За замовчуванням Root
+            for (int i = currentIndex - 1; i >= 0; i--)
+            {
+                if (!string.IsNullOrEmpty(keys[i]))
+                {
+                    parentId = keys[i];
+                    break;
+                }
+            }
+            return (id, parentId);
+        }
 
         /// <summary>
         /// Створює новий екземпляр DictCityCode з CreateDTO
@@ -206,16 +261,12 @@ namespace S5Server.Models
             var level3 = dto.Level3.Trim();
             var level4 = dto.Level4.Trim();
             var levelExt = dto.LevelExt.Trim();
-            // ID формується з найнижчого непустого рівня (пріоритет: LevelExt > Level4 > Level3 > Level2 > Level1)
-            var id = !string.IsNullOrEmpty(levelExt) ? levelExt :
-                     !string.IsNullOrEmpty(level4) ? level4 :
-                     !string.IsNullOrEmpty(level3) ? level3 :
-                     !string.IsNullOrEmpty(level2) ? level2 :
-                     level1;
+            var (id, parentId) = GetCityCodeKeys(level1, level2, level3, level4, levelExt);
 
             return new DictCityCode()
             {
                 Id = id,
+                ParentId = parentId,
                 Level1 = level1,
                 Level2 = level2,
                 Level3 = level3,
@@ -231,6 +282,7 @@ namespace S5Server.Models
         /// </summary>
         public static void ApplyDto(this DictCityCode cityCode, CityCodeDto dto)
         {
+            cityCode.ParentId = dto.ParentId?.Trim();
             cityCode.Level1 = dto.Level1.Trim();
             cityCode.Level2 = dto.Level2.Trim();
             cityCode.Level3 = dto.Level3.Trim();
@@ -245,7 +297,8 @@ namespace S5Server.Models
         /// </summary>
         public static bool EqualsDto(this DictCityCode cityCode, CityCodeDto dto)
         {
-            return cityCode.Level1 == dto.Level1.Trim() &&
+            return cityCode.ParentId == dto.ParentId?.Trim() &&
+                   cityCode.Level1 == dto.Level1.Trim() &&
                    cityCode.Level2 == dto.Level2.Trim() &&
                    cityCode.Level3 == dto.Level3.Trim() &&
                    cityCode.Level4 == dto.Level4.Trim() &&

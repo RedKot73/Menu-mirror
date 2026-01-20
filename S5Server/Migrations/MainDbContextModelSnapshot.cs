@@ -327,6 +327,10 @@ namespace S5Server.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT(20)");
 
+                    b.Property<string>("ParentId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -335,6 +339,8 @@ namespace S5Server.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("ParentId");
 
                     b.ToTable("dict_city_code", (string)null);
                 });
@@ -1123,7 +1129,14 @@ namespace S5Server.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("S5Server.Models.DictCityCode", "Parent")
+                        .WithMany("Childs")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.Navigation("Category");
+
+                    b.Navigation("Parent");
                 });
 
             modelBuilder.Entity("S5Server.Models.DictDroneModel", b =>
@@ -1286,6 +1299,11 @@ namespace S5Server.Migrations
             modelBuilder.Entity("S5Server.Models.DictCityCategory", b =>
                 {
                     b.Navigation("CityCodes");
+                });
+
+            modelBuilder.Entity("S5Server.Models.DictCityCode", b =>
+                {
+                    b.Navigation("Childs");
                 });
 
             modelBuilder.Entity("S5Server.Models.DictDroneType", b =>

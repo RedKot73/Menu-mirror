@@ -112,8 +112,12 @@ try
 
     // Конфигурация сервиса импорта с фабрикой контекста
     var dbFactory = app.Services.GetRequiredService<IDbContextFactory<MainDbContext>>();
+    // Конфигурация сервиса импорта Особового складу
     var importSldrsLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("ImportSoldiers");
     ImportSoldiers.Configure(dbFactory, importSldrsLogger);
+    // Конфигурация сервиса импорта ТГР/Областей/Населених пунктів
+    var importCityCodesLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("ImportCityCodes");
+    ImportCityCodes.Configure(dbFactory, importCityCodesLogger);
 
     // Configure the HTTP request pipeline.
     //app.UseHttpsRedirection();

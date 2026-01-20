@@ -167,7 +167,8 @@ namespace S5Server.Data
             {
                 entity.ToTable("dict_city_code");
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+                entity.Property(e => e.Id).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.ParentId).HasColumnType("TEXT(36)");
                 entity.Property(e => e.Level1).IsRequired().HasColumnType("TEXT(20)");
                 entity.Property(e => e.Level2).HasColumnType("TEXT(20)");
                 entity.Property(e => e.Level3).HasColumnType("TEXT(20)");
@@ -175,6 +176,10 @@ namespace S5Server.Data
                 entity.Property(e => e.LevelExt).HasColumnType("TEXT(20)");
                 entity.Property(e => e.CategoryId).HasColumnType("TEXT(36)");
                 entity.Property(e => e.Value).IsRequired().HasColumnType("TEXT(100)");
+                entity.HasOne(e => e.Parent)
+                    .WithMany(e => e.Childs)
+                    .HasForeignKey(e => e.ParentId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<DictUnitTask>(entity =>
