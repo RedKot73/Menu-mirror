@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 using S5Server.Data;
 using S5Server.Models;
+using S5Server.Utils;
 
 namespace S5Server.Services
 {
@@ -110,7 +111,7 @@ namespace S5Server.Services
                 var dictCityCategories = await db.DictCityCategories
                     .AsNoTracking()
                     .ToDictionaryAsync(
-                        r => r.ShortValue,
+                        r => r.CodeId,//ShortValue,
                         r => r.Id,
                         StringComparer.OrdinalIgnoreCase, // Case-insensitive
                         ct
@@ -152,7 +153,7 @@ namespace S5Server.Services
                     Level3 = string.Empty,
                     Level4 = string.Empty,
                     LevelExt = string.Empty,
-                    CategoryId = "65ea01b0-3996-4ecc-ac11-b05716887a01",
+                    CategoryId = ControllerFunctions.NullGuid,
                     Value = "---"
                 };
                 db.DictCityCodes.Add(root);

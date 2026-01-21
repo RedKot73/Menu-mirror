@@ -8,16 +8,6 @@ namespace S5Server.Models
         [Required, StringLength(100)] string Value,
         string? Comment)
     {
-        /*
-        public static SimpleDictDto ToDto(SimpleDictBase simpleDictBase)
-        {
-            return new SimpleDictDto(
-                simpleDictBase.Id,
-                simpleDictBase.Value,
-                simpleDictBase.Comment
-            );
-        }
-        */
     }
 
     public record SimpleDictCreateDto(
@@ -44,14 +34,6 @@ namespace S5Server.Models
 
         [StringLength(250)]
         public string? Comment { get; set; }
-        /*
-        public static SimpleDictDto ToDto<T>(T e) where T : SimpleDictBase => new(e.Id, e.Value, e.Comment);
-        public static void ApplyDto(SimpleDictBase e, SimpleDictDto dto)
-        {
-            e.Value = dto.Value.Trim();
-            e.Comment = dto.Comment?.Trim();
-        }
-        */
     }
 
     public interface IShortDictBase
@@ -76,15 +58,6 @@ namespace S5Server.Models
     {
         [StringLength(50), Required(ErrorMessage = UIConstant.RequiredMsg)]
         public string ShortValue { get; set; } = string.Empty;
-        /*
-        public static new ShortDictDto ToDto<T>(T e) where T: ShortDictBase  => new(e.Id, e.Value, e.ShortValue, e.Comment);
-        public static void ApplyDto(ShortDictBase e, ShortDictDto dto)
-        {
-            e.Value = dto.Value.Trim();
-            e.ShortValue = dto.ShortValue.Trim();
-            e.Comment = dto.Comment?.Trim();
-        }
-        */
     }
 
     /// <summary>

@@ -13,7 +13,7 @@ namespace S5Server.Models
     /// </summary>
     public record CityCodeCreateDto
     {
-        public string? ParentId;
+        public string? ParentId { get; set; }
         /// <summary>
         /// Автономна Республіка Крим, області, міста, що мають спеціальний статус
         /// </summary>
@@ -87,6 +87,8 @@ namespace S5Server.Models
     [Table("dict_city_category")]
     public class DictCityCategory : ShortDictBase, IShortDictBase
     {
+        [StringLength(1), Required(ErrorMessage = UIConstant.RequiredMsg)]
+        public string CodeId { get; set; } = string.Empty;
         [NotMapped]
         public List<DictCityCode> CityCodes { get; set; } = [];
     }
@@ -189,6 +191,7 @@ namespace S5Server.Models
                 Level4 = cityCode.Level4,
                 LevelExt = cityCode.LevelExt,
                 CategoryId = cityCode.CategoryId,
+                Category = cityCode.Category.Value,
                 Value = cityCode.Value
             };
 

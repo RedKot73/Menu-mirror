@@ -5,16 +5,19 @@ import { LookupDto } from '../app/shared/models/lookup.models';
 
 export interface CityCodeDto {
   id: string;
+  parentId: string;
   level1: string;
   level2: string;
   level3: string;
   level4: string;
   levelExt: string;
   categoryId: string;
+  category: string;
   value: string;
 }
 
 export interface CityCodeCreateDto {
+  parentId: string;
   level1: string;
   level2: string;
   level3: string;

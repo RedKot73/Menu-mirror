@@ -272,6 +272,11 @@ namespace S5Server.Migrations
                         .HasMaxLength(36)
                         .HasColumnType("TEXT(36)");
 
+                    b.Property<string>("CodeId")
+                        .IsRequired()
+                        .HasMaxLength(1)
+                        .HasColumnType("TEXT(1)");
+
                     b.Property<string>("Comment")
                         .HasMaxLength(250)
                         .HasColumnType("TEXT");

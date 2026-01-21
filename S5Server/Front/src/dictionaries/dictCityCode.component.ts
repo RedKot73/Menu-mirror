@@ -67,6 +67,12 @@ import { ImportCityCodesDialogComponent } from '../app/dialogs/ImportCityCodes-d
         </button>
       </div>
       <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+        <!-- ParentId Column -->
+        <ng-container matColumnDef="parentId">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Батьківський</th>
+          <td mat-cell *matCellDef="let item">{{ item.parentId }}</td>
+        </ng-container>
+
         <!-- Level1 Column -->
         <ng-container matColumnDef="level1">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Рівень 1</th>
@@ -87,10 +93,10 @@ import { ImportCityCodesDialogComponent } from '../app/dialogs/ImportCityCodes-d
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Рівень 4</th>
           <td mat-cell *matCellDef="let item">{{ item.level4 }}</td>
         </ng-container>
-        <!-- CategoryId Column -->
-        <ng-container matColumnDef="categoryId">
+        <!-- Category Column -->
+        <ng-container matColumnDef="category">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Категорія</th>
-          <td mat-cell *matCellDef="let item">{{ item.categoryId }}</td>
+          <td mat-cell *matCellDef="let item">{{ item.category }}</td>
         </ng-container>
         <!-- Value Column -->
         <ng-container matColumnDef="value">
@@ -120,7 +126,7 @@ export class DictCityCodeComponent implements AfterViewInit {
   dictCityCodeService = inject(DictCityCodeService);
   items = this.dictCityCodeService.createItemsSignal();
   dataSource = new MatTableDataSource<CityCodeDto>([]);
-  displayedColumns = ['level1', 'level2', 'level3', 'level4', 'categoryId', 'value', 'actions'];
+  displayedColumns = ['parentId', 'level1', 'level2', 'level3', 'level4', 'category', 'value', 'actions'];
   dialog = inject(MatDialog);
   snackBar = inject(MatSnackBar);
   searchTerm = '';

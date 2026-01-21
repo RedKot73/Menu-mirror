@@ -153,6 +153,7 @@ namespace S5Server.Data
                 entity.ToTable("dict_city_category");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+                entity.Property(e => e.CodeId).IsRequired().HasColumnType("TEXT(1)");
                 entity.Property(e => e.Value).IsRequired().HasColumnType("TEXT(100)");
                 entity.Property(e => e.ShortValue).IsRequired().HasColumnType("TEXT(50)");
                 entity.Property(e => e.Comment).HasColumnType("TEXT");
