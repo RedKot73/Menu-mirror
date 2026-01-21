@@ -101,39 +101,30 @@ namespace S5Server.Services
 
         public static async Task DoImport(byte[] sourceData, CancellationToken ct = default)
         {
+            var processed = 0;
             try
             {
                 ArgumentNullException.ThrowIfNull(_dbFactory,
-                    "IDbContextFactory<MainDbContext> не сконфигурован. Вызовите ImportSoldiers.ConfigureDbFactory(...) при старте приложения.");
+                    "IDbContextFactory<MainDbContext> не сконфігуровано");
 
                 await using var db = await _dbFactory.CreateDbContextAsync(ct);
-                // Кэшируем справочники в память
+                
+                // Кешуємо категорії
                 var dictCityCategories = await db.DictCityCategories
                     .AsNoTracking()
-                    .ToDictionaryAsync(
-                        r => r.CodeId,//ShortValue,
-                        r => r.Id,
-                        StringComparer.OrdinalIgnoreCase, // Case-insensitive
-                        ct
-                    );
+                    .ToDictionaryAsync(r => r.CodeId, r => r.Id, StringComparer.OrdinalIgnoreCase, ct);
 
                 using var ms = new MemoryStream(sourceData, writable: false);
-                ms.Position = 0;
-
                 using var doc = SpreadsheetDocument.Open(ms, false);
-                var wbPart = doc.WorkbookPart;
-                var sheets = (wbPart?.Workbook?.Sheets) ?? throw new Exception("Відсутні сторінки для імпорту");
-                var sheet = sheets.OfType<Sheet>().FirstOrDefault() ?? throw new Exception("Відсутні сторінки для імпорту");
+                
+                var wbPart = doc.WorkbookPart ?? throw new Exception("Відсутні сторінки");
+                var sheets = wbPart.Workbook?.Sheets ?? throw new Exception("Відсутні сторінки");
+                var sheet = sheets.OfType<Sheet>().FirstOrDefault() ?? throw new Exception("Відсутні сторінки");
                 var wsPart = (WorksheetPart)wbPart.GetPartById(sheet.Id!);
-                var sheetData = wsPart.Worksheet?.GetFirstChild<SheetData>() ?? throw new Exception("Порожня сторінка для імпорту");
+                var sheetData = wsPart.Worksheet?.GetFirstChild<SheetData>() ?? throw new Exception("Порожня сторінка");
 
-                // Проверка отмены перед началом обработки листа
                 ct.ThrowIfCancellationRequested();
 
-                /*
-                var rows = sheetData.Elements<Row>().Skip(1)
-                    .Where(t => t.ChildElements.Count > 1).ToList();
-                */
                 var rows = sheetData.Elements<Row>()
                     .SkipWhile(row =>
                     {
@@ -141,9 +132,11 @@ namespace S5Server.Services
                         return !firstCell.StartsWith("UA01", StringComparison.OrdinalIgnoreCase);
                     })
                     .ToList();
+                    
                 var total = rows.Count;
-                Report(new ImportCityCodesProgress(_Status, 0, 0, "Починаю обробку даних"));
+                Report(new ImportCityCodesProgress(_Status, 0, total, "Починаю обробку даних"));
 
+                // Створюємо Root
                 var root = new DictCityCode
                 {
                     Id = DictCityCode.RootCityCode,
@@ -157,84 +150,126 @@ namespace S5Server.Services
                     Value = "---"
                 };
                 db.DictCityCodes.Add(root);
-                await db.SaveChangesAsync(ct);
 
-                var processed = 0;
+                // 🚀 Збираємо всі записи в пам'яті
+                var entities = new List<DictCityCode>(total);
+                var errors = new List<string>();
+
                 foreach (var row in rows)
                 {
-                    // Проверка отмены перед обработкой строки
                     ct.ThrowIfCancellationRequested();
 
-                    var level1 = GetCellValue(doc, GetCell(row, "A"));
-                    var level2 = GetCellValue(doc, GetCell(row, "B"));
-                    var level3 = GetCellValue(doc, GetCell(row, "C"));
-                    var level4 = GetCellValue(doc, GetCell(row, "D"));
-                    var levelExt = GetCellValue(doc, GetCell(row, "E"));
-                    var category = GetCellValue(doc, GetCell(row, "F"));
-                    var value = GetCellValue(doc, GetCell(row, "G"));
+                    try
+                    {
+                        var level1 = GetCellValue(doc, GetCell(row, "A"));
+                        var level2 = GetCellValue(doc, GetCell(row, "B"));
+                        var level3 = GetCellValue(doc, GetCell(row, "C"));
+                        var level4 = GetCellValue(doc, GetCell(row, "D"));
+                        var levelExt = GetCellValue(doc, GetCell(row, "E"));
+                        var category = GetCellValue(doc, GetCell(row, "F"));
+                        var value = GetCellValue(doc, GetCell(row, "G"));
 
-                    // Якщо всі поля порожні - це кінець даних, зупиняємо обробку
-                    if (string.IsNullOrWhiteSpace(level1) &&
-                        string.IsNullOrWhiteSpace(level2) &&
-                        string.IsNullOrWhiteSpace(level3) &&
-                        string.IsNullOrWhiteSpace(level4) &&
-                        string.IsNullOrWhiteSpace(levelExt) &&
-                        string.IsNullOrWhiteSpace(value))
-                    {
-                        //_logger?.LogInformation("Досягнуто кінця даних на рядку {Row}", row.RowIndex);
-                        break; // Зупиняємо обробку
-                    }
-                    // Валідація обов'язкових полів (якщо рядок не порожній)
-                    if (string.IsNullOrWhiteSpace(level1))
-                    {
-                        throw new Exception($"Пропущено рядок {row.RowIndex}: відсутній Level1");
-                    }
-                    if (string.IsNullOrWhiteSpace(value))
-                    {
-                        throw new Exception($"Пропущено рядок {row.RowIndex}: : відсутнє значення");
-                    }
-                    if (!dictCityCategories.TryGetValue(category, out var categoryId))
-                        throw new Exception($"Рядок {row.RowIndex}: невідома категорія '{category}'");
+                        // Перевірка на кінець даних
+                        if (string.IsNullOrWhiteSpace(level1) &&
+                            string.IsNullOrWhiteSpace(level2) &&
+                            string.IsNullOrWhiteSpace(level3) &&
+                            string.IsNullOrWhiteSpace(level4) &&
+                            string.IsNullOrWhiteSpace(levelExt) &&
+                            string.IsNullOrWhiteSpace(value))
+                        {
+                            break;
+                        }
 
-                    var (id, parentId) = DictCityCodeExtensions.GetCityCodeKeys(level1, level2, level3, level4, levelExt);
-                    var entity = new DictCityCode
-                    {
-                        Id = id,
-                        ParentId = parentId,
-                        Level1 = level1,
-                        Level2 = level2,
-                        Level3 = level3,
-                        Level4 = level4,
-                        LevelExt = levelExt,
-                        CategoryId = categoryId,
-                        Value = value
-                    };
-                    db.DictCityCodes.Add(entity);
-                    await db.SaveChangesAsync(ct);
+                        // Валідація
+                        if (string.IsNullOrWhiteSpace(level1))
+                        {
+                            errors.Add($"Рядок {row.RowIndex}: відсутній Level1");
+                            continue;
+                        }
+                        if (string.IsNullOrWhiteSpace(value))
+                        {
+                            errors.Add($"Рядок {row.RowIndex}: відсутнє значення");
+                            continue;
+                        }
 
-                    processed++;
-                    if(processed % 50 == 0) 
+                        if (!dictCityCategories.TryGetValue(category, out var categoryId))
+                        {
+                            errors.Add($"Рядок {row.RowIndex}: невідома категорія '{category}'");
+                            continue;
+                        }
+
+                        var (id, parentId) = DictCityCodeExtensions.GetCityCodeKeys(
+                            level1, level2, level3, level4, levelExt);
+
+                        entities.Add(new DictCityCode
+                        {
+                            Id = id,
+                            ParentId = parentId,
+                            Level1 = level1,
+                            Level2 = level2,
+                            Level3 = level3,
+                            Level4 = level4,
+                            LevelExt = levelExt,
+                            CategoryId = categoryId,
+                            Value = value
+                        });
+
+                        processed++;
+
+                        // Проміжний звіт кожні 500 записів
+                        if (processed % 500 == 0)
+                        {
+                            Report(new ImportCityCodesProgress(_Status, processed, total,
+                                $"Оброблено {processed} з {total} записів"));
+                        }
+                    }
+                    catch (Exception ex)
                     {
-                        Report(new ImportCityCodesProgress(_Status, processed, total, "Триває обробка даних"));
+                        errors.Add($"Рядок {row.RowIndex}: {ex.Message}");
                     }
                 }
 
-                // Фінальний звіт з реальною кількістю
+                // Логування помилок
+                if (errors.Count != 0)
+                {
+                    var errorMsg = $"Знайдено {errors.Count} помилок:\n" + 
+                                  string.Join("\n", errors.Take(10));
+                    if (errors.Count > 10)
+                        errorMsg += $"\n... та ще {errors.Count - 10} помилок";
+                    
+                    _logger?.LogWarning("Помилки під час парсингу:\n{Errors}", errorMsg);
+                }
+
+                // 🚀 ОДИН batch insert для всіх записів
+                Report(new ImportCityCodesProgress(_Status, processed, total,
+                    "Збереження даних в базу..."));
+                
+                db.DictCityCodes.AddRange(entities);
+                await db.SaveChangesAsync(ct);
+
+                var finalMsg = errors.Count != 0
+                    ? $"Імпортовано {processed} з {total} записів. Пропущено {errors.Count} з помилками."
+                    : $"Успішно імпортовано {processed} записів";
+
                 lock (_sync)
                 {
                     _Status = CityCodesProgressStatus.Done;
-                    Report(new ImportCityCodesProgress(_Status, processed, total,
-                        $"Імпорт завершено успішно. Оброблено {processed} записів"));
+                    Report(new ImportCityCodesProgress(_Status, processed, total, finalMsg));
                 }
+
+                if (_logger?.IsEnabled(LogLevel.Information) == true)
+                    _logger?.LogInformation("Імпорт завершено: {Count} записів", processed);
             }
             catch (Exception ex)
             {
                 if (_logger?.IsEnabled(LogLevel.Error) == true)
-                    _logger.LogError(ex, "Помилка імпорту DictCityCode\n{Msg}", ex.Message);
+                    _logger.LogError(ex, "Помилка імпорту DictCityCode: {Message}", ex.Message);
+                
                 lock (_sync)
                 {
                     _Status = CityCodesProgressStatus.Failed;
-                    Report(new ImportCityCodesProgress(_Status, 0, 0, "Помилка імпорту\nПодробиці у журналі серверу"));
+                    Report(new ImportCityCodesProgress(_Status, processed, 0,
+                        "Помилка імпорту\nПодробиці у журналі серверу"));
                 }
             }
         }
