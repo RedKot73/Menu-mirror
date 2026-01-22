@@ -168,15 +168,49 @@ namespace S5Server.Data
             {
                 entity.ToTable("dict_city_code");
                 entity.HasKey(e => e.Id);
+                
                 entity.Property(e => e.Id).IsRequired().HasColumnType("TEXT(36)");
                 entity.Property(e => e.ParentId).HasColumnType("TEXT(36)");
-                entity.Property(e => e.Level1).IsRequired().HasColumnType("TEXT(20)");
-                entity.Property(e => e.Level2).HasColumnType("TEXT(20)");
-                entity.Property(e => e.Level3).HasColumnType("TEXT(20)");
-                entity.Property(e => e.Level4).HasColumnType("TEXT(20)");
-                entity.Property(e => e.LevelExt).HasColumnType("TEXT(20)");
+                entity.Property(e => e.Level1Id).IsRequired().HasColumnType("TEXT(20)");
+                entity.Property(e => e.Level2Id).HasColumnType("TEXT(20)");
+                entity.Property(e => e.Level3Id).HasColumnType("TEXT(20)");
+                entity.Property(e => e.Level4Id).HasColumnType("TEXT(20)");
+                entity.Property(e => e.LevelExtId).HasColumnType("TEXT(20)");
                 entity.Property(e => e.CategoryId).HasColumnType("TEXT(36)");
                 entity.Property(e => e.Value).IsRequired().HasColumnType("TEXT(100)");
+
+                // ✅ ВИПРАВЛЕНІ Foreign Keys (Level1, Level2... а не Id!)
+                entity.HasOne(e => e.Level1)
+                    .WithMany()  // ✅ Без параметра, бо Level1Values має [NotMapped]
+                    .HasForeignKey(e => e.Level1Id)
+                    .HasPrincipalKey(e => e.Id)
+                    .OnDelete(DeleteBehavior.Restrict);
+                    
+                entity.HasOne(e => e.Level2)
+                    .WithMany()
+                    .HasForeignKey(e => e.Level2Id)
+                    .HasPrincipalKey(e => e.Id)
+                    .OnDelete(DeleteBehavior.Restrict);
+                    
+                entity.HasOne(e => e.Level3)
+                    .WithMany()
+                    .HasForeignKey(e => e.Level3Id)
+                    .HasPrincipalKey(e => e.Id)
+                    .OnDelete(DeleteBehavior.Restrict);
+                
+                entity.HasOne(e => e.Level4)
+                    .WithMany()
+                    .HasForeignKey(e => e.Level4Id)
+                    .HasPrincipalKey(e => e.Id)
+                    .OnDelete(DeleteBehavior.Restrict);
+                
+                entity.HasOne(e => e.LevelExt)
+                    .WithMany()
+                    .HasForeignKey(e => e.LevelExtId)
+                    .HasPrincipalKey(e => e.Id)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // ✅ Ієрархія Parent → Childs
                 entity.HasOne(e => e.Parent)
                     .WithMany(e => e.Childs)
                     .HasForeignKey(e => e.ParentId)

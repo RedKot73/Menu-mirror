@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 using DocumentFormat.OpenXml.Spreadsheet;
 
@@ -18,24 +19,50 @@ namespace S5Server.Models
         /// Автономна Республіка Крим, області, міста, що мають спеціальний статус
         /// </summary>
         [Required]
+        public string Level1Id { get; set; } = string.Empty;
+        /// <summary>
+        /// Автономна Республіка Крим, області, міста, що мають спеціальний статус
+        /// </summary>
         public string Level1 { get; set; } = string.Empty;
+
         /// <summary>
         /// райони в областях та Автономній Республіці Крим
         /// </summary>
-        public string Level2 { get; set; } = string.Empty;
+        public string? Level2Id { get; set; }
+        /// <summary>
+        /// райони в областях та Автономній Республіці Крим
+        /// </summary>
+        public string? Level2 { get; set; }
+
         /// <summary>
         /// території територіальних громад в областях,
         /// територіальні громади Автономної Республіки Крим
         /// </summary>
-        public string Level3 { get; set; } = string.Empty;
+        public string? Level3Id { get; set; }
+        /// <summary>
+        /// території територіальних громад в областях,
+        /// територіальні громади Автономної Республіки Крим
+        /// </summary>
+        public string? Level3 { get; set; }
+
         /// <summary>
         /// міста, селища міського типу, села, селища (населені пункти)
         /// </summary>
-        public string Level4 { get; set; } = string.Empty;
+        public string? Level4Id { get; set; }
+        /// <summary>
+        /// міста, селища міського типу, села, селища (населені пункти)
+        /// </summary>
+        public string? Level4 { get; set; }
+
         /// <summary>
         /// райони в містах (в тому числі, в містах, що мають спеціальний статус)
         /// </summary>
-        public string LevelExt { get; set; } = string.Empty;
+        public string? LevelExtId { get; set; }
+        /// <summary>
+        /// райони в містах (в тому числі, в містах, що мають спеціальний статус)
+        /// </summary>
+        public string? LevelExt { get; set; }
+
         /// <summary>
         /// Категорія об’єкта
         /// «О» – Автономна Республіка Крим, області
@@ -114,25 +141,84 @@ namespace S5Server.Models
         /// Автономна Республіка Крим, області, міста, що мають спеціальний статус
         /// </summary>
         [Required]
-        public string Level1 { get; set; } = string.Empty;
+        public string Level1Id { get; set; } = string.Empty;
+        /// <summary>
+        /// Автономна Республіка Крим, області, міста, що мають спеціальний статус
+        /// </summary>
+        [ValidateNever]
+        public DictCityCode Level1 { get; set; } = default!;
+        /// <summary>
+        /// Автономна Республіка Крим, області, міста, що мають спеціальний статус
+        /// </summary>
+        /*
+        [NotMapped, JsonIgnore]
+        public IReadOnlyList<DictCityCode> Levels1 { get; set; } = [];
+        */
+
         /// <summary>
         /// райони в областях та Автономній Республіці Крим
         /// </summary>
-        public string Level2 { get; set; } = string.Empty;
+        public string? Level2Id { get; set; }
+        /// <summary>
+        /// райони в областях та Автономній Республіці Крим
+        /// </summary>
+        [ValidateNever]
+        public DictCityCode? Level2 { get; set; }
+        /*
+        [NotMapped, JsonIgnore]
+        public IReadOnlyList<DictCityCode> Levels2 { get; set; } = [];
+        */
         /// <summary>
         /// території територіальних громад в областях,
         /// територіальні громади Автономної Республіки Крим
         /// </summary>
-        public string Level3 { get; set; } = string.Empty;
+        public string? Level3Id { get; set; }
+        /// <summary>
+        /// території територіальних громад в областях,
+        /// територіальні громади Автономної Республіки Крим
+        /// </summary>
+        [ValidateNever]
+        public DictCityCode? Level3 { get; set; }
+        /// <summary>
+        /// території територіальних громад в областях,
+        /// територіальні громади Автономної Республіки Крим
+        /// </summary>
+        /*
+        [NotMapped, JsonIgnore]
+        public IReadOnlyList<DictCityCode> Levels3 { get; set; } = [];
+        */
         /// <summary>
         /// міста, селища міського типу, села, селища (населені пункти)
         /// </summary>
-        public string Level4 { get; set; } = string.Empty;
+        public string? Level4Id { get; set; }
+        /// <summary>
+        /// міста, селища міського типу, села, селища (населені пункти)
+        /// </summary>
+        [ValidateNever]
+        public DictCityCode? Level4 { get; set; }
+        /// <summary>
+        /// міста, селища міського типу, села, селища (населені пункти)
+        /// </summary>
+        /*
+        [NotMapped, JsonIgnore]
+        public IReadOnlyList<DictCityCode> Levels4 { get; set; } = [];
+        */
         /// <summary>
         /// райони в містах (в тому числі, в містах, що мають спеціальний статус)
         /// </summary>
-        public string LevelExt { get; set; } = string.Empty;
-
+        public string? LevelExtId { get; set; }
+        /// <summary>
+        /// райони в містах (в тому числі, в містах, що мають спеціальний статус)
+        /// </summary>
+        [ValidateNever]
+        public DictCityCode? LevelExt { get; set; }
+        /// <summary>
+        /// райони в містах (в тому числі, в містах, що мають спеціальний статус)
+        /// </summary>
+        /*
+        [NotMapped, JsonIgnore]
+        public IReadOnlyList<DictCityCode> LevelsExt { get; set; } = [];
+        */
         /// <summary>
         /// Категорія об’єкта
         /// «О» – Автономна Республіка Крим, області
@@ -185,11 +271,16 @@ namespace S5Server.Models
             {
                 Id = cityCode.Id,
                 ParentId = cityCode.ParentId,
-                Level1 = cityCode.Level1,
-                Level2 = cityCode.Level2,
-                Level3 = cityCode.Level3,
-                Level4 = cityCode.Level4,
-                LevelExt = cityCode.LevelExt,
+                Level1Id = cityCode.Level1Id,
+                Level1 = cityCode.Level1.Value,
+                Level2Id = cityCode.Level2Id,
+                Level2 = cityCode.Level2?.Value,
+                Level3Id = cityCode.Level3Id,
+                Level3 = cityCode.Level3?.Value,
+                Level4Id = cityCode.Level4Id,
+                Level4 = cityCode.Level4?.Value,
+                LevelExtId = cityCode.LevelExtId,
+                LevelExt = cityCode.LevelExt?.Value,
                 CategoryId = cityCode.CategoryId,
                 Category = cityCode.Category.Value,
                 Value = cityCode.Value
@@ -203,11 +294,11 @@ namespace S5Server.Models
             {
                 Id = dto.Id,
                 ParentId = dto.ParentId,
-                Level1 = dto.Level1.Trim(),
-                Level2 = dto.Level2.Trim(),
-                Level3 = dto.Level3.Trim(),
-                Level4 = dto.Level4.Trim(),
-                LevelExt = dto.LevelExt.Trim(),
+                Level1Id = dto.Level1Id.Trim(),
+                Level2Id = dto.Level2Id?.Trim(),
+                Level3Id = dto.Level3Id?.Trim(),
+                Level4Id = dto.Level4Id?.Trim(),
+                LevelExtId = dto.LevelExtId?.Trim(),
                 CategoryId = dto.CategoryId,
                 Value = dto.Value.Trim()
             };
@@ -217,11 +308,11 @@ namespace S5Server.Models
         /// </summary>
         /// <param name="keys">Масив рівнів [Root, Level1, Level2, Level3, Level4, LevelExt]. 
         /// УВАГА: keys[0] буде перезаписаний на RootCityCode</param>
-        public static (string Id, string ParentId) GetCityCodeKeys(string level1,
-            string level2,
-            string level3,
-            string level4,
-            string levelExt)
+        public static (string? Id, string? ParentId) GetCityCodeKeys(string level1,
+            string? level2,
+            string? level3,
+            string? level4,
+            string? levelExt)
         {
             var keys = new[] { DictCityCode.RootCityCode, level1, level2, level3, level4, levelExt };
             // Знаходимо індекс найнижчого непустого рівня
@@ -259,22 +350,24 @@ namespace S5Server.Models
         /// </summary>
         public static DictCityCode ToEntity(this CityCodeCreateDto dto)
         {
-            var level1 = dto.Level1.Trim();
-            var level2 = dto.Level2.Trim();
-            var level3 = dto.Level3.Trim();
-            var level4 = dto.Level4.Trim();
-            var levelExt = dto.LevelExt.Trim();
-            var (id, parentId) = GetCityCodeKeys(level1, level2, level3, level4, levelExt);
+            var level1Id = dto.Level1Id.Trim();
+            var level2Id = dto.Level2Id?.Trim();
+            var level3Id = dto.Level3Id?.Trim();
+            var level4Id = dto.Level4Id?.Trim();
+            var levelExtId = dto.LevelExtId?.Trim();
+            var (id, parentId) = GetCityCodeKeys(level1Id, level2Id, level3Id, level4Id, levelExtId);
+            ArgumentNullException.ThrowIfNull(id, "Відсутній основний ключ");
+
 
             return new DictCityCode()
             {
                 Id = id,
                 ParentId = parentId,
-                Level1 = level1,
-                Level2 = level2,
-                Level3 = level3,
-                Level4 = level4,
-                LevelExt = levelExt,
+                Level1Id = level1Id,
+                Level2Id = level2Id,
+                Level3Id = level3Id,
+                Level4Id = level4Id,
+                LevelExtId = levelExtId,
                 CategoryId = dto.CategoryId,
                 Value = dto.Value.Trim()
             };
@@ -286,11 +379,11 @@ namespace S5Server.Models
         public static void ApplyDto(this DictCityCode cityCode, CityCodeDto dto)
         {
             cityCode.ParentId = dto.ParentId?.Trim();
-            cityCode.Level1 = dto.Level1.Trim();
-            cityCode.Level2 = dto.Level2.Trim();
-            cityCode.Level3 = dto.Level3.Trim();
-            cityCode.Level4 = dto.Level4.Trim();
-            cityCode.LevelExt = dto.LevelExt.Trim();
+            cityCode.Level1Id = dto.Level1Id.Trim();
+            cityCode.Level2Id = dto.Level2Id?.Trim();
+            cityCode.Level3Id = dto.Level3Id?.Trim();
+            cityCode.Level4Id = dto.Level4Id?.Trim();
+            cityCode.LevelExtId = dto.LevelExtId?.Trim();
             cityCode.CategoryId = dto.CategoryId;
             cityCode.Value = dto.Value.Trim();
         }
@@ -301,11 +394,11 @@ namespace S5Server.Models
         public static bool EqualsDto(this DictCityCode cityCode, CityCodeDto dto)
         {
             return cityCode.ParentId == dto.ParentId?.Trim() &&
-                   cityCode.Level1 == dto.Level1.Trim() &&
-                   cityCode.Level2 == dto.Level2.Trim() &&
-                   cityCode.Level3 == dto.Level3.Trim() &&
-                   cityCode.Level4 == dto.Level4.Trim() &&
-                   cityCode.LevelExt == dto.LevelExt.Trim() &&
+                   cityCode.Level1Id == dto.Level1Id?.Trim() &&
+                   cityCode.Level2Id == dto.Level2Id?.Trim() &&
+                   cityCode.Level3Id == dto.Level3Id?.Trim() &&
+                   cityCode.Level4Id == dto.Level4Id?.Trim() &&
+                   cityCode.LevelExtId == dto.LevelExtId?.Trim() &&
                    cityCode.CategoryId == dto.CategoryId &&
                    cityCode.Value == dto.Value.Trim();
         }

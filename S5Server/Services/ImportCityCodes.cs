@@ -80,11 +80,11 @@ namespace S5Server.Services
                 .FirstOrDefault(c => string.Equals(c.CellReference?.Value,
                 $"{col}{idx}", StringComparison.OrdinalIgnoreCase));
         }
-        private static string GetCellValue(SpreadsheetDocument doc, Cell? cell)
+        private static string? GetCellValue(SpreadsheetDocument doc, Cell? cell)
         {
-            if (cell is null) return string.Empty;
+            if (cell is null) return null;
 
-            var value = cell.InnerText ?? string.Empty;
+            var value = cell.InnerText ?? null;
 
             // Обробка SharedStringTable
             if (cell.DataType?.Value == CellValues.SharedString)
@@ -96,7 +96,8 @@ namespace S5Server.Services
                 }
             }
 
-            return value.Trim();
+            var trimmed = value?.Trim();
+            return string.IsNullOrEmpty(trimmed) ? null : trimmed;
         }
 
         public static async Task DoImport(byte[] sourceData, CancellationToken ct = default)
@@ -129,38 +130,45 @@ namespace S5Server.Services
                     .SkipWhile(row =>
                     {
                         var firstCell = GetCellValue(doc, GetCell(row, "A"));
-                        return !firstCell.StartsWith("UA01", StringComparison.OrdinalIgnoreCase);
+                        return !firstCell?.StartsWith("UA01", StringComparison.OrdinalIgnoreCase) ?? true;
                     })
                     .ToList();
                     
                 var total = rows.Count;
-                Report(new ImportCityCodesProgress(_Status, 0, total, "Починаю обробку даних"));
 
+                Report(new ImportCityCodesProgress(_Status, 0, total, "Видаляю старі данні"));
+                _ = await db.DictCityCodes.ExecuteDeleteAsync(ct);
+
+                Report(new ImportCityCodesProgress(_Status, 0, total, "Починаю обробку даних"));
                 // Створюємо Root
                 var root = new DictCityCode
                 {
                     Id = DictCityCode.RootCityCode,
                     ParentId = null,
-                    Level1 = DictCityCode.RootCityCode,
-                    Level2 = string.Empty,
-                    Level3 = string.Empty,
-                    Level4 = string.Empty,
-                    LevelExt = string.Empty,
+                    Level1Id = DictCityCode.RootCityCode,
+                    Level2Id = null,
+                    Level3Id = null,
+                    Level4Id = null,
+                    LevelExtId = null,
                     CategoryId = ControllerFunctions.NullGuid,
                     Value = "---"
                 };
                 db.DictCityCodes.Add(root);
+                await db.SaveChangesAsync(ct);
 
                 // 🚀 Збираємо всі записи в пам'яті
+                /*
                 var entities = new List<DictCityCode>(total);
                 var errors = new List<string>();
+                */
 
                 foreach (var row in rows)
                 {
                     ct.ThrowIfCancellationRequested();
-
+                    /*
                     try
                     {
+                    */
                         var level1 = GetCellValue(doc, GetCell(row, "A"));
                         var level2 = GetCellValue(doc, GetCell(row, "B"));
                         var level3 = GetCellValue(doc, GetCell(row, "C"));
@@ -183,37 +191,58 @@ namespace S5Server.Services
                         // Валідація
                         if (string.IsNullOrWhiteSpace(level1))
                         {
+                            throw new Exception($"Рядок {row.RowIndex}: відсутній Level1");
+                            /*
                             errors.Add($"Рядок {row.RowIndex}: відсутній Level1");
                             continue;
+                            */
                         }
                         if (string.IsNullOrWhiteSpace(value))
                         {
+                            throw new Exception($"Рядок {row.RowIndex}: відсутнє значення");
+                            /*
                             errors.Add($"Рядок {row.RowIndex}: відсутнє значення");
                             continue;
+                            */
                         }
-
+                        if (string.IsNullOrWhiteSpace(category))
+                        {
+                            throw new Exception($"Рядок {row.RowIndex}: відсутня категорія");
+                            /*
+                            errors.Add($"Рядок {row.RowIndex}: відсутня категорія");
+                            continue;
+                            */
+                        }
                         if (!dictCityCategories.TryGetValue(category, out var categoryId))
                         {
+                            throw new Exception($"Рядок {row.RowIndex}: невідома категорія '{category}'");
+                            /*
                             errors.Add($"Рядок {row.RowIndex}: невідома категорія '{category}'");
                             continue;
+                            */
                         }
 
                         var (id, parentId) = DictCityCodeExtensions.GetCityCodeKeys(
                             level1, level2, level3, level4, levelExt);
+                        ArgumentNullException.ThrowIfNull(id, "Відсутній основний ключ");
 
-                        entities.Add(new DictCityCode
+                        var entity = new DictCityCode
                         {
                             Id = id,
                             ParentId = parentId,
-                            Level1 = level1,
-                            Level2 = level2,
-                            Level3 = level3,
-                            Level4 = level4,
-                            LevelExt = levelExt,
+                            Level1Id = level1,
+                            Level2Id = level2,
+                            Level3Id = level3,
+                            Level4Id = level4,
+                            LevelExtId = levelExt,
                             CategoryId = categoryId,
                             Value = value
-                        });
-
+                        };
+                        db.DictCityCodes.Add(entity);
+                        await db.SaveChangesAsync(ct);
+                        /*
+                        entities.Add(entity);
+                        */
                         processed++;
 
                         // Проміжний звіт кожні 500 записів
@@ -222,14 +251,17 @@ namespace S5Server.Services
                             Report(new ImportCityCodesProgress(_Status, processed, total,
                                 $"Оброблено {processed} з {total} записів"));
                         }
+                    /*
                     }
                     catch (Exception ex)
                     {
                         errors.Add($"Рядок {row.RowIndex}: {ex.Message}");
                     }
+                    */
                 }
 
                 // Логування помилок
+                /*
                 if (errors.Count != 0)
                 {
                     var errorMsg = $"Знайдено {errors.Count} помилок:\n" + 
@@ -243,18 +275,18 @@ namespace S5Server.Services
                 // 🚀 ОДИН batch insert для всіх записів
                 Report(new ImportCityCodesProgress(_Status, processed, total,
                     "Збереження даних в базу..."));
-                
                 db.DictCityCodes.AddRange(entities);
                 await db.SaveChangesAsync(ct);
 
                 var finalMsg = errors.Count != 0
                     ? $"Імпортовано {processed} з {total} записів. Пропущено {errors.Count} з помилками."
                     : $"Успішно імпортовано {processed} записів";
+                */
 
                 lock (_sync)
                 {
                     _Status = CityCodesProgressStatus.Done;
-                    Report(new ImportCityCodesProgress(_Status, processed, total, finalMsg));
+                    Report(new ImportCityCodesProgress(_Status, processed, total, "Імпорт завершено"));
                 }
 
                 if (_logger?.IsEnabled(LogLevel.Information) == true)

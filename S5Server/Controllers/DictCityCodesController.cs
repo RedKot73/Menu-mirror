@@ -51,22 +51,30 @@ public class DictCityCodesController : ControllerBase
             if (page < 1) page = 1;
             if (pageSize < 1 || pageSize > 1000) pageSize = 100;
 
-            var q = Query();
+            var q = _set.AsNoTracking();//Query();
 
             if (!string.IsNullOrWhiteSpace(search))
                 q = q.Where(x => x.Value.Contains(search));
             // Загальна кількість записів після фільтрації
-            var totalCount = await q.CountAsync(ct);
+            var totalCount = await q
+                .CountAsync(ct);
 
             // Отримуємо дані з пагінацією
             var list = await q
-                .OrderBy(x => x.Level1)
-                .ThenBy(x => x.Level2)
-                .ThenBy(x => x.Level3)
-                .ThenBy(x => x.Level4)
-                .ThenBy(x => x.Value)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .Include(t => t.Level1)
+                .Include(t => t.Level2)
+                .Include(t => t.Level3)
+                .Include(t => t.Level4)
+                .Include(t => t.LevelExt)
+                .Include(x => x.Category)
+                .OrderBy(x => x.Level1.Value)
+                .ThenBy(x => x.Level2 != null ? x.Level2.Value : null)
+                .ThenBy(x => x.Level3 != null ? x.Level3.Value : null)
+                .ThenBy(x => x.Level4 != null ? x.Level4.Value : null)
+                .ThenBy(x => x.LevelExt != null ? x.LevelExt.Value : null)
+                .ThenBy(x => x.Value)
                 .Select(x => x.ToDto())
                 .ToListAsync(ct);
 
@@ -426,8 +434,8 @@ public class DictCityCodesController : ControllerBase
         try
         {
             var items = await Query()
-                .Where(x => x.Level1 == level1)
-                .OrderBy(x => x.Level2)
+                .Where(x => x.Level1Id == level1)
+                .OrderBy(x => x.Level2Id)
                 .ThenBy(x => x.Value)
                 .Select(x => x.ToDto())
                 .ToListAsync(ct);

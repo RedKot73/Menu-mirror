@@ -312,24 +312,20 @@ namespace S5Server.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT(36)");
 
-                    b.Property<string>("Level1")
+                    b.Property<string>("Level1Id")
                         .IsRequired()
                         .HasColumnType("TEXT(20)");
 
-                    b.Property<string>("Level2")
-                        .IsRequired()
+                    b.Property<string>("Level2Id")
                         .HasColumnType("TEXT(20)");
 
-                    b.Property<string>("Level3")
-                        .IsRequired()
+                    b.Property<string>("Level3Id")
                         .HasColumnType("TEXT(20)");
 
-                    b.Property<string>("Level4")
-                        .IsRequired()
+                    b.Property<string>("Level4Id")
                         .HasColumnType("TEXT(20)");
 
-                    b.Property<string>("LevelExt")
-                        .IsRequired()
+                    b.Property<string>("LevelExtId")
                         .HasColumnType("TEXT(20)");
 
                     b.Property<string>("ParentId")
@@ -344,6 +340,16 @@ namespace S5Server.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("Level1Id");
+
+                    b.HasIndex("Level2Id");
+
+                    b.HasIndex("Level3Id");
+
+                    b.HasIndex("Level4Id");
+
+                    b.HasIndex("LevelExtId");
 
                     b.HasIndex("ParentId");
 
@@ -1134,12 +1140,48 @@ namespace S5Server.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("S5Server.Models.DictCityCode", "Level1")
+                        .WithMany()
+                        .HasForeignKey("Level1Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("S5Server.Models.DictCityCode", "Level2")
+                        .WithMany()
+                        .HasForeignKey("Level2Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("S5Server.Models.DictCityCode", "Level3")
+                        .WithMany()
+                        .HasForeignKey("Level3Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("S5Server.Models.DictCityCode", "Level4")
+                        .WithMany()
+                        .HasForeignKey("Level4Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("S5Server.Models.DictCityCode", "LevelExt")
+                        .WithMany()
+                        .HasForeignKey("LevelExtId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("S5Server.Models.DictCityCode", "Parent")
                         .WithMany("Childs")
                         .HasForeignKey("ParentId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Category");
+
+                    b.Navigation("Level1");
+
+                    b.Navigation("Level2");
+
+                    b.Navigation("Level3");
+
+                    b.Navigation("Level4");
+
+                    b.Navigation("LevelExt");
 
                     b.Navigation("Parent");
                 });
