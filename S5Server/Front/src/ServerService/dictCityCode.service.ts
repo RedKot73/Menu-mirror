@@ -29,10 +29,18 @@ export interface CityCodeCreateDto {
 
 export interface CityCodeFilter {
   search?: string;
-  cityCategoryId?: string;
-  level1?: string;
-  level2?: string;
-  level3?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface PagedResult<T> {
+  items: T[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
 }
 
 export enum CityCodesProgressStatus {
@@ -65,26 +73,20 @@ export class DictCityCodeService {
     return signal<CityCodeDto[]>([]);
   }
 
-  getAll(filter?: CityCodeFilter): Observable<CityCodeDto[]> {
+  getAll(filter?: CityCodeFilter): Observable<PagedResult<CityCodeDto>> {
     let params = new HttpParams();
 
     if (filter?.search) {
       params = params.set('search', filter.search);
     }
-    if (filter?.cityCategoryId) {
-      params = params.set('cityCategoryId', filter.cityCategoryId);
+    if (filter?.page) {
+      params = params.set('page', filter.page.toString());
     }
-    if (filter?.level1) {
-      params = params.set('level1', filter.level1);
-    }
-    if (filter?.level2) {
-      params = params.set('level2', filter.level2);
-    }
-    if (filter?.level3) {
-      params = params.set('level3', filter.level3);
+    if (filter?.pageSize) {
+      params = params.set('pageSize', filter.pageSize.toString());
     }
 
-    return this.http.get<CityCodeDto[]>(this.api, { params });
+    return this.http.get<PagedResult<CityCodeDto>>(this.api, { params });
   }
 
   getById(id: string): Observable<CityCodeDto> {

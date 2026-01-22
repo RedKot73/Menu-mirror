@@ -35,48 +35,50 @@ public class DictCityCodesController : ControllerBase
     private IQueryable<DictCityCode> Query() => _set.AsNoTracking().Include(x => x.Category);
 
     /// <summary>
-    /// Отримати список записів кодифікатора з можливістю фільтрації
+    /// Отримати список записів кодифікатора з можливістю фільтрації та пагінацією
     /// </summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<CityCodeDto>>> GetAll(
+    public async Task<ActionResult<PagedResult<CityCodeDto>>> GetAll(
         [FromQuery] string? search,
-        [FromQuery] string? cityCategoryId,
-        [FromQuery] string? level1,
-        [FromQuery] string? level2,
-        [FromQuery] string? level3,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 100,
         CancellationToken ct = default)
     {
         try
         {
+            // Валідація параметрів пагінації
+            if (page < 1) page = 1;
+            if (pageSize < 1 || pageSize > 1000) pageSize = 100;
+
             var q = Query();
 
             if (!string.IsNullOrWhiteSpace(search))
                 q = q.Where(x => x.Value.Contains(search));
+            // Загальна кількість записів після фільтрації
+            var totalCount = await q.CountAsync(ct);
 
-            if (!string.IsNullOrWhiteSpace(cityCategoryId))
-                q = q.Where(x => x.CategoryId == cityCategoryId);
-
-            if (!string.IsNullOrWhiteSpace(level1))
-                q = q.Where(x => x.Level1 == level1);
-
-            if (!string.IsNullOrWhiteSpace(level2))
-                q = q.Where(x => x.Level2 == level2);
-
-            if (!string.IsNullOrWhiteSpace(level3))
-                q = q.Where(x => x.Level3 == level3);
-
+            // Отримуємо дані з пагінацією
             var list = await q
                 .OrderBy(x => x.Level1)
                 .ThenBy(x => x.Level2)
                 .ThenBy(x => x.Level3)
                 .ThenBy(x => x.Level4)
                 .ThenBy(x => x.Value)
-                .Take(100)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(x => x.ToDto())
                 .ToListAsync(ct);
 
-            return Ok(list);
+            var result = new PagedResult<CityCodeDto>(
+                list,
+                totalCount,
+                page,
+                pageSize,
+                (int)Math.Ceiling(totalCount / (double)pageSize)
+            );
+
+            return Ok(result);
         }
         catch (OperationCanceledException)
         {

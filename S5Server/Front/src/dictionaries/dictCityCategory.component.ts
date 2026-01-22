@@ -13,49 +13,75 @@ import {
   DictCityCategory,
 } from '../ServerService/dictCityCategory.service';
 import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
+import { VerticalLayoutComponent } from '../app/shared/components/VerticalLayout.component';
 
 @Component({
   selector: 'dict-city-categories',
-  imports: [MatTableModule, MatButtonModule, MatSortModule, MatIconModule],
+  imports: [MatTableModule, MatButtonModule, MatSortModule, MatIconModule, VerticalLayoutComponent],
   styleUrls: ['./dict-page.styles.scss'],
-  template: `
-    <div class="dict-page-container">
-      <h2>Категорії об'єктів адміністративно-територіальних одиниць</h2>
-      <div class="action-buttons">
-        <button mat-raised-button color="primary" (click)="reload()">Оновити</button>
-        <button mat-raised-button color="primary" (click)="add()">Створити</button>
-      </div>
-      <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
-        <!-- Value Column -->
-        <ng-container matColumnDef="value">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Значення</th>
-          <td mat-cell *matCellDef="let item">{{ item.value }}</td>
-        </ng-container>
-        <ng-container matColumnDef="shortValue">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Скорочення</th>
-          <td mat-cell *matCellDef="let item">{{ item.shortValue }}</td>
-        </ng-container>
-        <!-- Comment Column -->
-        <ng-container matColumnDef="comment">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Коментар</th>
-          <td mat-cell *matCellDef="let item">{{ item.comment }}</td>
-        </ng-container>
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Дії</th>
-          <td mat-cell *matCellDef="let item">
-            <button mat-icon-button color="accent" (click)="edit(item)">
-              <mat-icon>edit</mat-icon>
-            </button>
-            <button mat-icon-button color="warn" (click)="delete(item)">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </td>
-        </ng-container>
+  styles: [
+    `
+      :host {
+        display: block;
+        height: 100%;
+      }
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-      </table>
-    </div>
+      table {
+        width: 100%;
+      }
+    `,
+  ],
+  template: `
+    <app-vertical-layout>
+      <!-- Action Panel (Top) -->
+      <div actionPanel>
+        <h2>Категорії об'єктів адміністративно-територіальних одиниць</h2>
+        <div class="action-buttons">
+          <button mat-raised-button color="primary" (click)="reload()">
+            <mat-icon>refresh</mat-icon>
+            Оновити
+          </button>
+          <button mat-raised-button color="primary" (click)="add()">
+            <mat-icon>add</mat-icon>
+            Створити
+          </button>
+        </div>
+      </div>
+
+      <!-- Content Panel (Main) -->
+      <div contentPanel>
+        <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+          <!-- Value Column -->
+          <ng-container matColumnDef="value">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Значення</th>
+            <td mat-cell *matCellDef="let item">{{ item.value }}</td>
+          </ng-container>
+          <ng-container matColumnDef="shortValue">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Скорочення</th>
+            <td mat-cell *matCellDef="let item">{{ item.shortValue }}</td>
+          </ng-container>
+          <!-- Comment Column -->
+          <ng-container matColumnDef="comment">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Коментар</th>
+            <td mat-cell *matCellDef="let item">{{ item.comment }}</td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Дії</th>
+            <td mat-cell *matCellDef="let item">
+              <button mat-icon-button color="accent" (click)="edit(item)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="delete(item)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+    </app-vertical-layout>
   `,
 })
 export class DictCityCategoryComponent implements AfterViewInit {
@@ -76,6 +102,7 @@ export class DictCityCategoryComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     this.dataSource.sort = this.sort;
+    this.reload();
   }
 
   reload() {
