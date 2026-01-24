@@ -212,7 +212,7 @@ namespace S5Server.Data
 
                 // ✅ Ієрархія Parent → Childs
                 entity.HasOne(e => e.Parent)
-                    .WithMany(e => e.Childs)
+                    .WithMany(e => e.Children)
                     .HasForeignKey(e => e.ParentId)
                     .OnDelete(DeleteBehavior.Cascade);
             });

@@ -19,6 +19,9 @@ namespace S5Server.Models
         string? ForceType,
         string? UnitTypeId,
         string? UnitType,
+        /// <summary>
+        /// True - Оперативний/Тимчасовий підрозділ
+        /// </summary>
         bool IsInvolved,
         int OrderVal,
         string? Comment
@@ -74,6 +77,9 @@ namespace S5Server.Models
         string? ForceType,
         string? UnitTypeId,
         string? UnitType,
+        /// <summary>
+        /// True - Оперативний/Тимчасовий підрозділ
+        /// </summary>
         bool IsInvolved,
         int OrderVal,
         string? Comment,
@@ -104,6 +110,9 @@ namespace S5Server.Models
         string? MilitaryNumber,
         string? ForceTypeId,
         string? UnitTypeId,
+        /// <summary>
+        /// True - Оперативний/Тимчасовий підрозділ
+        /// </summary>
         bool IsInvolved,
         int OrderVal,
         string? Comment
@@ -121,6 +130,9 @@ namespace S5Server.Models
         string ShortName,
         string? UnitTypeId,
         string? UnitType,
+        /// <summary>
+        /// True - Оперативний/Тимчасовий підрозділ
+        /// </summary>
         bool IsInvolved,
         string? Comment,
         /// <summary>

@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
 
 using DocumentFormat.OpenXml.Spreadsheet;
 
@@ -95,6 +94,7 @@ namespace S5Server.Models
     {
         [Required]
         public string Id { get; set; } = default!;
+        public bool HasChildren = false;
     }
 
     /// <summary>
@@ -255,7 +255,9 @@ namespace S5Server.Models
         [StringLength(100), Required(ErrorMessage = UIConstant.RequiredMsg)]
         public string Value { get; set; } = string.Empty;
         [NotMapped]
-        public List<DictCityCode> Childs { get; set; } = [];
+        public bool HasChildren { get; set; } = false;
+        [NotMapped]
+        public List<DictCityCode> Children { get; set; } = [];
     }
 
     /// <summary>
@@ -283,7 +285,8 @@ namespace S5Server.Models
                 LevelExt = cityCode.LevelExt?.Value,
                 CategoryId = cityCode.CategoryId,
                 Category = cityCode.Category.Value,
-                Value = cityCode.Value
+                Value = cityCode.Value,
+                HasChildren = cityCode.HasChildren
             };
 
         /// <summary>
