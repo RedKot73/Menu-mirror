@@ -48,7 +48,9 @@ export const routes: Routes = [
   {
     path: 'dictSoldierStates',
     loadComponent: () =>
-      import('../dictionaries/dictSoldierStates.component').then((m) => m.DictSoldierStatesComponent),
+      import('../dictionaries/dictSoldierStates.component').then(
+        (m) => m.DictSoldierStatesComponent,
+      ),
     title: 'Статуси особового складу',
   },
   {
@@ -67,13 +69,19 @@ export const routes: Routes = [
     path: 'dictCityCategories',
     loadComponent: () =>
       import('../dictionaries/dictCityCategory.component').then((m) => m.DictCityCategoryComponent),
-    title: 'Категорії об\'єктів адміністративно-територіальних одиниць',
+    title: "Категорії об'єктів адміністративно-територіальних одиниць",
   },
   {
     path: 'dictCityCodes',
     loadComponent: () =>
       import('../dictionaries/dictCityCode.component').then((m) => m.DictCityCodeComponent),
     title: 'Коди адміністративно-територіальних одиниць',
+  },
+  {
+    path: 'dictCityCodesTree',
+    loadComponent: () =>
+      import('../dictionaries/CityCode/CityCodeTree.component').then((m) => m.CityCodeTreeComponent),
+    title: 'Дерево кодів адміністративно-територіальних одиниць',
   },
   {
     path: 'dictArea',
@@ -85,7 +93,7 @@ export const routes: Routes = [
     path: 'dictTemplateCategories',
     loadComponent: () =>
       import('../dictionaries/dictTemplateCategories.component').then(
-        (m) => m.DictTemplateCategoriesComponent
+        (m) => m.DictTemplateCategoriesComponent,
       ),
     title: 'Категорії шаблонів документів',
   },

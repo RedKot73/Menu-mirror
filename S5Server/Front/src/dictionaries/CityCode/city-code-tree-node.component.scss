@@ -1,0 +1,89 @@
+.node-content {
+    display: flex;
+    align-items: center;
+    padding: 8px 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+    }
+}
+
+.toggle-button {
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.leaf-spacer {
+    width: 48px; /* Ширина кнопки toggle + margin для листових вузлів */
+    flex-shrink: 0;
+}
+
+.city-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.city-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    text-align: left;
+    width: 100%;
+    
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+    }
+}
+
+.city-name {
+    font-weight: 500;
+    color: #333;
+    flex: 1;
+}
+
+.city-details {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #666;
+    padding-left: 8px;
+}
+
+.city-category {
+    padding: 2px 6px;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border-radius: 3px;
+    font-weight: 500;
+}
+
+.city-id {
+    color: #999;
+    font-family: 'Courier New', monospace;
+}
+
+.node-actions {
+    display: flex;
+    gap: 4px;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.leaf-node {
+    .city-name {
+        color: #555;
+    }
+}
