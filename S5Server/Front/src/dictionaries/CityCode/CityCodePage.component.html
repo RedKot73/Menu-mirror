@@ -1,3 +1,12 @@
+<!-- Прихований input для вибору файлу -->
+<input
+  #fileInput
+  type="file"
+  accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  style="display: none"
+  (change)="onFileSelected($event)"
+/>
+
 <app-vertical-layout>
   <!-- Action Panel (Top) -->
   <div actionPanel>
@@ -29,6 +38,11 @@
       <button mat-raised-button color="primary" (click)="onRefresh()">
         <mat-icon>refresh</mat-icon>
         Оновити
+      </button>
+
+      <button mat-raised-button color="accent" (click)="openFileDialog()">
+        <mat-icon>upload_file</mat-icon>
+        Імпортувати
       </button>
 
       <mat-button-toggle-group

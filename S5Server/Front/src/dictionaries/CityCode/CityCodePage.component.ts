@@ -1,4 +1,4 @@
-import { Component, signal, ViewChild } from '@angular/core';
+import { Component, signal, ViewChild, ElementRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,11 +6,15 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormsModule } from '@angular/forms';
 
 import { VerticalLayoutComponent } from '../../app/shared/components/VerticalLayout.component';
 import { DictCityCodeComponent } from './dictCityCode.component';
 import { CityCodeTreeComponent } from './CityCodeTree.component';
+import { DictCityCodeService } from '../../ServerService/dictCityCode.service';
+import { ImportCityCodesDialogComponent } from '../../app/dialogs/ImportCityCodes-dialog.component';
 
 type ViewMode = 'table' | 'tree';
 
@@ -36,6 +40,11 @@ type ViewMode = 'table' | 'tree';
 export class CityCodePageComponent {
   @ViewChild(DictCityCodeComponent) tableComponent!: DictCityCodeComponent;
   @ViewChild(CityCodeTreeComponent) treeComponent!: CityCodeTreeComponent;
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+
+  dialog = inject(MatDialog);
+  snackBar = inject(MatSnackBar);
+  dictCityCodeService = inject(DictCityCodeService);
 
   viewMode = signal<ViewMode>(this.getSavedViewMode());
   searchTerm = signal('');
@@ -73,6 +82,57 @@ export class CityCodePageComponent {
   clearSearch() {
     this.searchTerm.set('');
     this.onSearch();
+  }
+
+  /**
+   * Відкриває діалог вибору файлу для імпорту
+   */
+  openFileDialog() {
+    if (this.fileInput) {
+      this.fileInput.nativeElement.click();
+    }
+  }
+
+  /**
+   * Обробка вибору файлу для імпорту
+   */
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    // Перевірка розширення файлу
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext !== 'xlsx') {
+      this.snackBar.open('Підтримується тільки формат .xlsx', 'Закрити', { duration: 5000 });
+      input.value = '';
+      return;
+    }
+
+    // Відкриваємо діалог імпорту з прогресом
+    const dialogRef = this.dialog.open(ImportCityCodesDialogComponent, {
+      width: '500px',
+      disableClose: true,
+      data: file,
+    });
+
+    dialogRef.afterClosed().subscribe((success: boolean) => {
+      if (success) {
+        // Оновлюємо дані в активному компоненті
+        if (this.viewMode() === 'table' && this.tableComponent) {
+          this.tableComponent.reload();
+        } else if (this.viewMode() === 'tree' && this.treeComponent) {
+          this.treeComponent.refresh();
+        }
+        this.snackBar.open('Імпорт успішно завершено', 'Закрити', { duration: 3000 });
+      }
+    });
+
+    // Очищаємо input для можливості повторного вибору того ж файлу
+    input.value = '';
   }
 
   private getSavedViewMode(): ViewMode {
