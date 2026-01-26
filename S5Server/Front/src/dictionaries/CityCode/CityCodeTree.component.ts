@@ -14,6 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { CityCodeTreeService, CityCodeTreeNodeDto } from '../../ServerService/cityCodeTree.service';
 import { CityCodeTreeNodeComponent, CityCodeTreeNode } from './city-code-tree-node.component';
 import { S5App_ErrorHandler } from '../../app/shared/models/ErrorHandler';
+import { VerticalLayoutComponent } from '../../app/shared/components/VerticalLayout.component';
 
 @Component({
   selector: 'dict-city-code-tree',
@@ -28,6 +29,7 @@ import { S5App_ErrorHandler } from '../../app/shared/models/ErrorHandler';
     MatInputModule,
     FormsModule,
     CityCodeTreeNodeComponent,
+    VerticalLayoutComponent,
   ],
   templateUrl: './CityCodeTree.component.html',
   styleUrls: ['./CityCodeTree.component.scss'],

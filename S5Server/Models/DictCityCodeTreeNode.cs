@@ -5,11 +5,11 @@
     /// та територій територіальних громад
     /// Для представлення кодифікатору у вигляді дерева
     /// </summary>
-    public class CityCodeTreeNode
+    public class DictCityCodeTreeNode
     {
         public string Id { get; set; } = default!;
         public string? ParentId { get; set; }
-        public CityCodeTreeNode? Parent { get; set; }
+        public DictCityCodeTreeNode? Parent { get; set; }
         
         /// <summary>
         /// Категорія об'єкта
@@ -34,7 +34,7 @@
         
         public string Value { get; set; } = string.Empty;
         public bool HasChildren { get; set; } = false;
-        public List<CityCodeTreeNode> Children { get; set; } = [];
+        public List<DictCityCodeTreeNode> Children { get; set; } = [];
     }
 
     /// <summary>
@@ -59,7 +59,7 @@
         /// <summary>
         /// Конвертує CityCodeTreeNode у DTO для відправки клієнту
         /// </summary>
-        public static CityCodeTreeNodeDto ToDto(this CityCodeTreeNode node) =>
+        public static CityCodeTreeNodeDto ToDto(this DictCityCodeTreeNode node) =>
             new()
             {
                 Id = node.Id,
@@ -74,7 +74,7 @@
         /// <summary>
         /// Конвертує DTO у CityCodeTreeNode
         /// </summary>
-        public static CityCodeTreeNode ToEntity(this CityCodeTreeNodeDto dto) =>
+        public static DictCityCodeTreeNode ToEntity(this CityCodeTreeNodeDto dto) =>
             new()
             {
                 Id = dto.Id,
@@ -88,7 +88,7 @@
         /// <summary>
         /// Конвертує DictCityCode у CityCodeTreeNode
         /// </summary>
-        public static CityCodeTreeNode ToTreeNode(this DictCityCode cityCode) =>
+        public static DictCityCodeTreeNode ToTreeNode(this DictCityCode cityCode) =>
             new()
             {
                 Id = cityCode.Id,
@@ -101,62 +101,23 @@
             };
 
         /// <summary>
-        /// Будує дерево з плоского списку DictCityCode
-        /// </summary>
-        /// <param name="codes">Плоский список записів кодифікатора</param>
-        /// <param name="rootParentId">Id батьківського елемента для кореня дерева (null для верхнього рівня)</param>
-        /// <returns>Список кореневих вузлів дерева</returns>
-        public static List<CityCodeTreeNode> BuildTree(
-            this IEnumerable<DictCityCode> codes,
-            string? rootParentId = null)
-        {
-            var codesList = codes.ToList();
-            var lookup = codesList.ToLookup(x => x.ParentId ?? string.Empty);
-
-            CityCodeTreeNode BuildNode(DictCityCode code)
-            {
-                var children = lookup[code.Id]
-                    .Select(BuildNode)
-                    .OrderBy(n => n.Value)
-                    .ToList();
-
-                return new CityCodeTreeNode
-                {
-                    Id = code.Id,
-                    ParentId = code.ParentId,
-                    CategoryId = code.CategoryId,
-                    Category = code.Category,
-                    Value = code.Value,
-                    HasChildren = children.Count > 0,
-                    Children = children
-                };
-            }
-
-            var rootKey = rootParentId ?? string.Empty;
-            return lookup[rootKey]
-                .Select(BuildNode)
-                .OrderBy(n => n.Value)
-                .ToList();
-        }
-
-        /// <summary>
         /// Будує дерево з вказаною максимальною глибиною (для ледачого завантаження)
         /// </summary>
         /// <param name="codes">Плоский список записів</param>
         /// <param name="rootParentId">Id батьківського елемента</param>
         /// <param name="maxDepth">Максимальна глибина дерева (0 = без обмежень)</param>
         /// <returns>Список кореневих вузлів</returns>
-        public static List<CityCodeTreeNode> BuildTree(
+        public static List<DictCityCodeTreeNode> BuildTree(
             this IEnumerable<DictCityCode> codes,
-            string? rootParentId,
-            int maxDepth)
+            string? rootParentId = DictCityCode.RootCityCode,
+            int maxDepth = 1)
         {
             if (maxDepth < 0) maxDepth = 0;
 
             var codesList = codes.ToList();
             var lookup = codesList.ToLookup(x => x.ParentId ?? string.Empty);
 
-            CityCodeTreeNode BuildNode(DictCityCode code, int currentDepth)
+            DictCityCodeTreeNode BuildNode(DictCityCode code, int currentDepth)
             {
                 var shouldLoadChildren = maxDepth == 0 || currentDepth < maxDepth;
                 var children = shouldLoadChildren
@@ -166,7 +127,7 @@
                         .ToList()
                     : [];
 
-                return new CityCodeTreeNode
+                return new DictCityCodeTreeNode
                 {
                     Id = code.Id,
                     ParentId = code.ParentId,
@@ -188,7 +149,7 @@
         /// <summary>
         /// Знаходить вузол у дереві за ID
         /// </summary>
-        public static CityCodeTreeNode? FindNode(this CityCodeTreeNode node, string id)
+        public static DictCityCodeTreeNode? FindNode(this DictCityCodeTreeNode node, string id)
         {
             if (node.Id == id)
                 return node;
@@ -206,8 +167,8 @@
         /// <summary>
         /// Знаходить вузол у списку дерев за ID
         /// </summary>
-        public static CityCodeTreeNode? FindNode(
-            this IEnumerable<CityCodeTreeNode> nodes,
+        public static DictCityCodeTreeNode? FindNode(
+            this IEnumerable<DictCityCodeTreeNode> nodes,
             string id)
         {
             foreach (var node in nodes)
@@ -224,13 +185,13 @@
         /// Отримує шлях від кореня до вузла (breadcrumb)
         /// </summary>
         /// <returns>Список вузлів від кореня до шуканого вузла</returns>
-        public static List<CityCodeTreeNode> GetPath(
-            this IEnumerable<CityCodeTreeNode> nodes,
+        public static List<DictCityCodeTreeNode> GetPath(
+            this IEnumerable<DictCityCodeTreeNode> nodes,
             string id)
         {
-            var path = new List<CityCodeTreeNode>();
+            var path = new List<DictCityCodeTreeNode>();
 
-            bool FindPath(CityCodeTreeNode node)
+            bool FindPath(DictCityCodeTreeNode node)
             {
                 path.Add(node);
 
@@ -259,9 +220,9 @@
         /// <summary>
         /// Перетворює дерево у плоский список (всі вузли)
         /// </summary>
-        public static List<CityCodeTreeNode> Flatten(this CityCodeTreeNode node)
+        public static List<DictCityCodeTreeNode> Flatten(this DictCityCodeTreeNode node)
         {
-            var result = new List<CityCodeTreeNode> { node };
+            var result = new List<DictCityCodeTreeNode> { node };
             
             foreach (var child in node.Children)
             {
@@ -274,8 +235,8 @@
         /// <summary>
         /// Перетворює список дерев у плоский список
         /// </summary>
-        public static List<CityCodeTreeNode> Flatten(
-            this IEnumerable<CityCodeTreeNode> nodes)
+        public static List<DictCityCodeTreeNode> Flatten(
+            this IEnumerable<DictCityCodeTreeNode> nodes)
         {
             return nodes.SelectMany(n => n.Flatten()).ToList();
         }
@@ -283,11 +244,11 @@
         /// <summary>
         /// Фільтрує дерево за умовою (залишає тільки вузли, які відповідають умові та їх предків)
         /// </summary>
-        public static List<CityCodeTreeNode> Filter(
-            this IEnumerable<CityCodeTreeNode> nodes,
-            Func<CityCodeTreeNode, bool> predicate)
+        public static List<DictCityCodeTreeNode> Filter(
+            this IEnumerable<DictCityCodeTreeNode> nodes,
+            Func<DictCityCodeTreeNode, bool> predicate)
         {
-            var result = new List<CityCodeTreeNode>();
+            var result = new List<DictCityCodeTreeNode>();
 
             foreach (var node in nodes)
             {
@@ -299,20 +260,20 @@
             return result;
         }
 
-        private static CityCodeTreeNode? FilterNode(
-            CityCodeTreeNode node,
-            Func<CityCodeTreeNode, bool> predicate)
+        private static DictCityCodeTreeNode? FilterNode(
+            DictCityCodeTreeNode node,
+            Func<DictCityCodeTreeNode, bool> predicate)
         {
             var filteredChildren = node.Children
                 .Select(c => FilterNode(c, predicate))
                 .Where(c => c != null)
-                .Cast<CityCodeTreeNode>()
+                .Cast<DictCityCodeTreeNode>()
                 .ToList();
 
             // Включаємо вузол, якщо він відповідає умові АБО має відфільтровані дочірні
             if (predicate(node) || filteredChildren.Count > 0)
             {
-                return new CityCodeTreeNode
+                return new DictCityCodeTreeNode
                 {
                     Id = node.Id,
                     ParentId = node.ParentId,
@@ -330,7 +291,7 @@
         /// <summary>
         /// Підраховує загальну кількість вузлів у дереві
         /// </summary>
-        public static int CountNodes(this CityCodeTreeNode node)
+        public static int CountNodes(this DictCityCodeTreeNode node)
         {
             return 1 + node.Children.Sum(c => c.CountNodes());
         }
@@ -338,7 +299,7 @@
         /// <summary>
         /// Підраховує загальну кількість вузлів у всіх деревах
         /// </summary>
-        public static int CountNodes(this IEnumerable<CityCodeTreeNode> nodes)
+        public static int CountNodes(this IEnumerable<DictCityCodeTreeNode> nodes)
         {
             return nodes.Sum(n => n.CountNodes());
         }
@@ -346,7 +307,7 @@
         /// <summary>
         /// Отримує максимальну глибину дерева
         /// </summary>
-        public static int GetMaxDepth(this CityCodeTreeNode node)
+        public static int GetMaxDepth(this DictCityCodeTreeNode node)
         {
             if (node.Children.Count == 0)
                 return 1;
@@ -357,7 +318,7 @@
         /// <summary>
         /// Отримує максимальну глибину серед всіх дерев
         /// </summary>
-        public static int GetMaxDepth(this IEnumerable<CityCodeTreeNode> nodes)
+        public static int GetMaxDepth(this IEnumerable<DictCityCodeTreeNode> nodes)
         {
             return nodes.Any() ? nodes.Max(n => n.GetMaxDepth()) : 0;
         }

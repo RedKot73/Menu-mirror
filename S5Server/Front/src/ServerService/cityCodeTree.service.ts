@@ -41,7 +41,7 @@ export interface CityCodeTreeNodeContext {
 })
 export class CityCodeTreeService {
   private http = inject(HttpClient);
-  private readonly api = '/api/city-code-tree';
+  private readonly api = '/api/dict-city-code-tree';
 
   /**
    * Отримати повне дерево кодифікатора або піддерево з вказаного вузла
@@ -133,7 +133,7 @@ export class CityCodeTreeService {
     id: string,
     includeParents: boolean = true,
     includeChildren: boolean = true,
-    childrenDepth: number = 1
+    childrenDepth: number = 1,
   ): Observable<CityCodeTreeNodeContext> {
     const params = new HttpParams()
       .set('includeParents', includeParents.toString())

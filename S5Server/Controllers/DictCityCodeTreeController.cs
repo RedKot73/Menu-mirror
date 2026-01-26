@@ -9,15 +9,17 @@ namespace S5Server.Controllers;
 /// Контролер для роботи з деревом кодифікатора адміністративно-територіальних одиниць
 /// </summary>
 [ApiController]
-[Route("api/city-code-tree")]
-public class CityCodeTreeController : ControllerBase
+[Route("api/dict-city-code-tree")]
+public class DictCityCodeTreeController : ControllerBase
 {
     private readonly MainDbContext _db;
-    private readonly ILogger<CityCodeTreeController> _logger;
+    private readonly DbSet<DictCityCode> _set;
+    private readonly ILogger<DictCityCodeTreeController> _logger;
 
-    public CityCodeTreeController(MainDbContext db, ILogger<CityCodeTreeController> logger)
+    public DictCityCodeTreeController(MainDbContext db, ILogger<DictCityCodeTreeController> logger)
     {
         _db = db;
+        _set = _db.DictCityCodes;
         _logger = logger;
     }
 
@@ -31,14 +33,14 @@ public class CityCodeTreeController : ControllerBase
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<CityCodeTreeNodeDto>>> GetTree(
-        [FromQuery] string? parentId,
-        [FromQuery] int maxDepth = 0,
+        [FromQuery] string? parentId = DictCityCode.RootCityCode,
+        [FromQuery] int maxDepth = 1,
         CancellationToken ct = default)
     {
         try
         {
             // Завантажуємо всі записи з категоріями
-            var cityCodes = await _db.DictCityCodes
+            var cityCodes = await _set
                 .AsNoTracking()
                 .Include(x => x.Category)
                 .ToListAsync(ct);
@@ -76,7 +78,7 @@ public class CityCodeTreeController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CityCodeTreeNodeDto>> GetSubtree(
         string id,
-        [FromQuery] int maxDepth = 0,
+        [FromQuery] int maxDepth = 1,
         CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(id))
@@ -85,12 +87,12 @@ public class CityCodeTreeController : ControllerBase
         try
         {
             // Перевіряємо існування вузла
-            var exists = await _db.DictCityCodes.AnyAsync(x => x.Id == id, ct);
+            var exists = await _set.AnyAsync(x => x.Id == id, ct);
             if (!exists)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
 
             // Завантажуємо всі записи
-            var cityCodes = await _db.DictCityCodes
+            var cityCodes = await _set
                 .AsNoTracking()
                 .Include(x => x.Category)
                 .ToListAsync(ct);
@@ -138,18 +140,18 @@ public class CityCodeTreeController : ControllerBase
         try
         {
             // Перевіряємо існування
-            var exists = await _db.DictCityCodes.AnyAsync(x => x.Id == id, ct);
+            var exists = await _set.AnyAsync(x => x.Id == id, ct);
             if (!exists)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
 
             // Завантажуємо всі записи
-            var cityCodes = await _db.DictCityCodes
+            var cityCodes = await _set
                 .AsNoTracking()
                 .Include(x => x.Category)
                 .ToListAsync(ct);
 
             // Будуємо повне дерево
-            var tree = cityCodes.BuildTree();
+            var tree = cityCodes.BuildTree(maxDepth: 0);
 
             // Знаходимо шлях
             var path = tree.GetPath(id);
@@ -191,7 +193,7 @@ public class CityCodeTreeController : ControllerBase
         try
         {
             // Завантажуємо всі записи
-            var query = _db.DictCityCodes
+            var query = _set
                 .AsNoTracking()
                 .Include(x => x.Category)
                 .AsQueryable();
@@ -203,7 +205,7 @@ public class CityCodeTreeController : ControllerBase
             var cityCodes = await query.ToListAsync(ct);
 
             // Будуємо повне дерево
-            var tree = cityCodes.BuildTree();
+            var tree = cityCodes.BuildTree(maxDepth: 0);
 
             // Фільтруємо дерево
             var searchLower = search.ToLower();
@@ -233,19 +235,19 @@ public class CityCodeTreeController : ControllerBase
     [HttpGet("flat")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<CityCodeTreeNodeDto>>> GetFlat(
-        [FromQuery] string? parentId,
+        [FromQuery] string? parentId = DictCityCode.RootCityCode,
         CancellationToken ct = default)
     {
         try
         {
             // Завантажуємо всі записи
-            var cityCodes = await _db.DictCityCodes
+            var cityCodes = await _set
                 .AsNoTracking()
                 .Include(x => x.Category)
                 .ToListAsync(ct);
 
             // Будуємо дерево
-            var tree = cityCodes.BuildTree(parentId);
+            var tree = cityCodes.BuildTree(parentId, maxDepth: 0);
 
             // Перетворюємо в плоский список
             var flat = tree.Flatten();
@@ -273,19 +275,19 @@ public class CityCodeTreeController : ControllerBase
     [HttpGet("stats")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<object>> GetStats(
-        [FromQuery] string? parentId,
+        [FromQuery] string? parentId = DictCityCode.RootCityCode,
         CancellationToken ct = default)
     {
         try
         {
             // Завантажуємо всі записи
-            var cityCodes = await _db.DictCityCodes
+            var cityCodes = await _set
                 .AsNoTracking()
                 .Include(x => x.Category)
                 .ToListAsync(ct);
 
             // Будуємо дерево
-            var tree = cityCodes.BuildTree(parentId);
+            var tree = cityCodes.BuildTree(parentId, maxDepth: 0);
 
             // Підраховуємо статистику
             var totalNodes = tree.CountNodes();
@@ -347,18 +349,18 @@ public class CityCodeTreeController : ControllerBase
         try
         {
             // Перевіряємо існування
-            var exists = await _db.DictCityCodes.AnyAsync(x => x.Id == id, ct);
+            var exists = await _set.AnyAsync(x => x.Id == id, ct);
             if (!exists)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
 
             // Завантажуємо всі записи
-            var cityCodes = await _db.DictCityCodes
+            var cityCodes = await _set
                 .AsNoTracking()
                 .Include(x => x.Category)
                 .ToListAsync(ct);
 
             // Будуємо дерево
-            var fullTree = cityCodes.BuildTree();
+            var fullTree = cityCodes.BuildTree(maxDepth: 0);
 
             // Знаходимо вузол
             var node = fullTree.FindNode(id);
@@ -375,7 +377,7 @@ public class CityCodeTreeController : ControllerBase
                 Children = includeChildren
                     ? (childrenDepth > 0 
                         ? cityCodes.BuildTree(id, childrenDepth).Select(n => n.ToDto()).ToList()
-                        : cityCodes.BuildTree(id).Select(n => n.ToDto()).ToList())
+                        : cityCodes.BuildTree(id, maxDepth: 0).Select(n => n.ToDto()).ToList())
                     : null
             };
 

@@ -1,48 +1,30 @@
 // ===== COMPONENT HOST =====
 :host {
-  display: flex;
-  flex-direction: column;
+  display: block;
   height: 100%;
-  overflow: hidden;
 }
 
-.tree-container {
-  flex: 1;
-  min-height: 0;
+h2 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.action-buttons {
   display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding: 8px;
-}
-
-.search-bar {
-  flex-shrink: 0;
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.search-field {
-  flex: 1;
-  min-width: 300px;
-}
-
-.tree-actions {
-  display: flex;
-  gap: 4px;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .loading-container {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 40px;
   gap: 16px;
+  height: 100%;
 
   span {
     color: #666;
@@ -52,8 +34,7 @@
 
 .city-code-tree {
   background: transparent;
-  flex: 1;
-  overflow: auto;
+  width: 100%;
 
   .mat-tree-node {
     min-height: 48px;

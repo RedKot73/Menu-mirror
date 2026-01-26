@@ -18,16 +18,16 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 
-import { ConfirmDialogComponent } from '../app/dialogs/ConfirmDialog.component';
+import { ConfirmDialogComponent } from '../../app/dialogs/ConfirmDialog.component';
 import {
   DictCityCodeService,
   CityCodeDto,
   CityCodeFilter,
-} from '../ServerService/dictCityCode.service';
-import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
-import { DictCityCodeDialogComponent } from '../app/dialogs/DictCityCode-dialog.component';
-import { ImportCityCodesDialogComponent } from '../app/dialogs/ImportCityCodes-dialog.component';
-import { VerticalLayoutComponent } from '../app/shared/components/VerticalLayout.component';
+} from '../../ServerService/dictCityCode.service';
+import { S5App_ErrorHandler } from '../../app/shared/models/ErrorHandler';
+import { DictCityCodeDialogComponent } from '../../app/dialogs/DictCityCode-dialog.component';
+import { ImportCityCodesDialogComponent } from '../../app/dialogs/ImportCityCodes-dialog.component';
+import { VerticalLayoutComponent } from '../../app/shared/components/VerticalLayout.component';
 
 @Component({
   selector: 'dict-city-codes',
@@ -42,7 +42,7 @@ import { VerticalLayoutComponent } from '../app/shared/components/VerticalLayout
     FormsModule,
     VerticalLayoutComponent,
   ],
-  styleUrls: ['./dict-page.styles.scss'],
+  styleUrls: ['../dict-page.styles.scss'],
   styles: [
     `
       :host {
@@ -245,7 +245,7 @@ export class DictCityCodeComponent implements AfterViewInit {
         console.error('Помилка завантаження кодифікатора:', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
-          'Помилка завантаження кодифікатора:'
+          'Помилка завантаження кодифікатора:',
         );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
@@ -277,7 +277,7 @@ export class DictCityCodeComponent implements AfterViewInit {
             console.error('Помилка створення запису:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка створення запису:'
+              'Помилка створення запису:',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
@@ -303,7 +303,7 @@ export class DictCityCodeComponent implements AfterViewInit {
             console.error('Помилка оновлення запису:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка оновлення запису:'
+              'Помилка оновлення запису:',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
@@ -337,7 +337,7 @@ export class DictCityCodeComponent implements AfterViewInit {
             console.error('Помилка видалення запису:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка видалення запису:'
+              'Помилка видалення запису:',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
