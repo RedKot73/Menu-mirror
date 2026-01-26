@@ -1,0 +1,59 @@
+<app-vertical-layout>
+  <!-- Action Panel (Top) -->
+  <div actionPanel>
+    <h2>Кодифікатор адміністративно-територіальних одиниць</h2>
+    <div class="action-buttons">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Пошук</mat-label>
+        <input
+          matInput
+          [(ngModel)]="searchTerm"
+          (keyup.enter)="onSearch()"
+          placeholder="Введіть назву для пошуку"
+        />
+        <button mat-icon-button matSuffix (click)="onSearch()" [attr.aria-label]="'Пошук'">
+          <mat-icon>search</mat-icon>
+        </button>
+        @if (searchTerm()) {
+          <button
+            mat-icon-button
+            matSuffix
+            (click)="clearSearch()"
+            [attr.aria-label]="'Очистити пошук'"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" (click)="onRefresh()">
+        <mat-icon>refresh</mat-icon>
+        Оновити
+      </button>
+
+      <mat-button-toggle-group
+        [value]="viewMode()"
+        (change)="onViewModeChange($event.value)"
+        class="view-toggle"
+      >
+        <mat-button-toggle value="table" matTooltip="Табличне представлення">
+          <mat-icon>view_list</mat-icon>
+        </mat-button-toggle>
+        <mat-button-toggle value="tree" matTooltip="Деревоподібне представлення">
+          <mat-icon>account_tree</mat-icon>
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+  </div>
+
+  <!-- Content Panel (Main) -->
+  <div contentPanel>
+    @if (viewMode() === 'table') {
+      <!-- Табличне представлення -->
+      <dict-city-codes></dict-city-codes>
+    } @else {
+      <!-- Деревоподібне представлення -->
+      <dict-city-code-tree></dict-city-code-tree>
+    }
+  </div>
+</app-vertical-layout>

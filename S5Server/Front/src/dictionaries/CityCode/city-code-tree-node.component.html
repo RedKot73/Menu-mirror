@@ -31,13 +31,18 @@
       [attr.aria-label]="'Вибрати ' + tmpNode.value"
     >
       <span class="city-name">{{ tmpNode.value }}</span>
+        @if (tmpNode.category) {
+        <span class="city-category" [title]="tmpNode.category">{{ tmpNode.category }}</span>
+        }
     </button>
+        <!-- 
     <div class="city-details">
         @if (tmpNode.category) {
         <span class="city-category" [title]="tmpNode.category">{{ tmpNode.category }}</span>
         }
         <span class="city-id" [title]="'ID: ' + tmpNode.id">{{ tmpNode.id }}</span>
     </div>
+        -->
   </div>
 
   @if (nodeActionsTemplate()) {

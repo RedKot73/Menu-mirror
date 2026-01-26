@@ -9,10 +9,11 @@ import { MatMenuModule } from '@angular/material/menu';
   template: `
     <mat-toolbar>
       <button matButton [matMenuTriggerFor]="dictionaries">Довідники</button>
+<!--      
       <button matButton routerLink="/dictCityCodesTree" routerLinkActive="active-link">
         Адмін-тер. одиниці
       </button>
-
+-->
       <button matButton routerLink="/DocumentDataSet" routerLinkActive="active-link">
         Дані документа
       </button>
@@ -74,7 +75,7 @@ import { MatMenuModule } from '@angular/material/menu';
           Категорії об'єктів адміністративно-територіальних одиниць
         </button>
         <button mat-menu-item routerLink="/dictCityCodes" routerLinkActive="active-menu-item">
-          Коди об'єктів адміністративно-територіальних одиниць
+          Кодифікатор об'єктів адміністративно-територіальних одиниць
         </button>
         <button mat-menu-item routerLink="/dictAreaTypes" routerLinkActive="active-menu-item">
           Типи Напрямку ЛБЗ

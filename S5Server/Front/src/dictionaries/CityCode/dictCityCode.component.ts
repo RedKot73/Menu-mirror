@@ -6,6 +6,7 @@ import {
   effect,
   ElementRef,
   signal,
+//  input,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -27,7 +28,7 @@ import {
 import { S5App_ErrorHandler } from '../../app/shared/models/ErrorHandler';
 import { DictCityCodeDialogComponent } from '../../app/dialogs/DictCityCode-dialog.component';
 import { ImportCityCodesDialogComponent } from '../../app/dialogs/ImportCityCodes-dialog.component';
-import { VerticalLayoutComponent } from '../../app/shared/components/VerticalLayout.component';
+//import { VerticalLayoutComponent } from '../../app/shared/components/VerticalLayout.component';
 
 @Component({
   selector: 'dict-city-codes',
@@ -40,8 +41,9 @@ import { VerticalLayoutComponent } from '../../app/shared/components/VerticalLay
     MatFormFieldModule,
     MatInputModule,
     FormsModule,
-    VerticalLayoutComponent,
+//    VerticalLayoutComponent,
   ],
+  templateUrl: './dictCityCode.component.html',
   styleUrls: ['../dict-page.styles.scss'],
   styles: [
     `
@@ -58,128 +60,18 @@ import { VerticalLayoutComponent } from '../../app/shared/components/VerticalLay
       }
     `,
   ],
-  template: `
-    <!-- Прихований input для вибору файлу -->
-    <input
-      #fileInput
-      type="file"
-      accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      style="display: none"
-      (change)="onFileSelected($event)"
-    />
-
-    <app-vertical-layout>
-      <!-- Action Panel (Top) -->
-      <div actionPanel>
-        <h2>Кодифікатор адміністративно-територіальних одиниць</h2>
-        <div class="action-buttons">
-          <mat-form-field appearance="outline" style="width: 300px; margin-right: 16px;">
-            <mat-label>Пошук</mat-label>
-            <input
-              matInput
-              [(ngModel)]="searchTerm"
-              (ngModelChange)="onSearchChange()"
-              placeholder="Введіть назву для пошуку"
-            />
-          </mat-form-field>
-          <button mat-raised-button color="primary" (click)="reload()">
-            <mat-icon>refresh</mat-icon>
-            Оновити
-          </button>
-          <button mat-raised-button color="primary" (click)="add()">
-            <mat-icon>add</mat-icon>
-            Створити
-          </button>
-          <button mat-raised-button color="accent" (click)="openFileDialog()">
-            <mat-icon>upload_file</mat-icon>
-            Імпортувати
-          </button>
-        </div>
-      </div>
-
-      <!-- Content Panel (Main) -->
-      <div contentPanel>
-        <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
-          <!-- ParentId Column -->
-          <ng-container matColumnDef="parentId">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Батьківський</th>
-            <td mat-cell *matCellDef="let item">{{ item.parentId }}</td>
-          </ng-container>
-
-          <!-- Level1 Column -->
-          <ng-container matColumnDef="level1">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Рівень 1</th>
-            <td mat-cell *matCellDef="let item">{{ item.level1 }}</td>
-          </ng-container>
-          <!-- Level2 Column -->
-          <ng-container matColumnDef="level2">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Рівень 2</th>
-            <td mat-cell *matCellDef="let item">{{ item.level2 }}</td>
-          </ng-container>
-          <!-- Level3 Column -->
-          <ng-container matColumnDef="level3">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Рівень 3</th>
-            <td mat-cell *matCellDef="let item">{{ item.level3 }}</td>
-          </ng-container>
-          <!-- Level4 Column -->
-          <ng-container matColumnDef="level4">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Рівень 4</th>
-            <td mat-cell *matCellDef="let item">{{ item.level4 }}</td>
-          </ng-container>
-          <!-- Category Column -->
-          <ng-container matColumnDef="category">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Категорія</th>
-            <td mat-cell *matCellDef="let item">{{ item.category }}</td>
-          </ng-container>
-          <!-- Value Column -->
-          <ng-container matColumnDef="value">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Назва</th>
-            <td mat-cell *matCellDef="let item">{{ item.value }}</td>
-          </ng-container>
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Дії</th>
-            <td mat-cell *matCellDef="let item">
-              <button mat-icon-button color="accent" (click)="edit(item)">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button color="warn" (click)="delete(item)">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-        </table>
-      </div>
-
-      <!-- Bottom Panel -->
-      <mat-paginator
-        bottomPanel
-        #paginator
-        class="paginator"
-        [length]="totalCount()"
-        [pageSize]="pageSize()"
-        [pageSizeOptions]="[10, 25, 50, 100, 200]"
-        [pageIndex]="pageIndex()"
-        (page)="onPageChange($event)"
-        showFirstLastButtons
-      >
-      </mat-paginator>
-    </app-vertical-layout>
-  `,
 })
 export class DictCityCodeComponent implements AfterViewInit {
   dictCityCodeService = inject(DictCityCodeService);
   items = this.dictCityCodeService.createItemsSignal();
   dataSource = new MatTableDataSource<CityCodeDto>([]);
   displayedColumns = [
-    'parentId',
+    //'parentId',
     'level1',
     'level2',
     'level3',
     'level4',
+    'levelExt',
     'category',
     'value',
     'actions',

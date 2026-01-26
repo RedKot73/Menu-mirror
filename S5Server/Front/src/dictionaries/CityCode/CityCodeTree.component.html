@@ -1,70 +1,26 @@
-<app-vertical-layout>
-  <!-- Action Panel (Top) -->
-  <div actionPanel>
-    <h2>Дерево кодифікатора адміністративно-територіальних одиниць</h2>
-    @if (showSearch()) {
-      <div class="action-buttons">
-        <mat-form-field appearance="outline" style="width: 300px; margin-right: 16px">
-          <mat-label>Пошук</mat-label>
-          <input
-            matInput
-            [(ngModel)]="searchText"
-            (keyup.enter)="onSearch()"
-            placeholder="Введіть назву для пошуку..."
-          />
-          <button mat-icon-button matSuffix (click)="onSearch()" [attr.aria-label]="'Пошук'">
-            <mat-icon>search</mat-icon>
-          </button>
-          @if (searchText()) {
-            <button
-              mat-icon-button
-              matSuffix
-              (click)="clearSearch()"
-              [attr.aria-label]="'Очистити пошук'"
-            >
-              <mat-icon>close</mat-icon>
-            </button>
-          }
-        </mat-form-field>
-        <button mat-icon-button (click)="expandAll()" matTooltip="Розгорнути всі">
-          <mat-icon>unfold_more</mat-icon>
-        </button>
-        <button mat-icon-button (click)="collapseAll()" matTooltip="Згорнути всі">
-          <mat-icon>unfold_less</mat-icon>
-        </button>
-        <button mat-icon-button (click)="refresh()" matTooltip="Оновити">
-          <mat-icon>refresh</mat-icon>
-        </button>
-      </div>
-    }
+<!-- Embedded mode -->
+@if (loading()) {
+  <div class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <span>Завантаження дерева кодифікатора...</span>
   </div>
-
-  <!-- Content Panel (Main) -->
-  <div contentPanel>
-    @if (loading()) {
-      <div class="loading-container">
-        <mat-spinner diameter="40"></mat-spinner>
-        <span>Завантаження дерева кодифікатора...</span>
-      </div>
-    } @else {
-      <mat-tree
-        [dataSource]="dataSource"
-        [childrenAccessor]="childrenAccessor"
-        [expansionKey]="expansionKey"
-        class="city-code-tree"
+} @else {
+  <mat-tree
+    [dataSource]="dataSource"
+    [childrenAccessor]="childrenAccessor"
+    [expansionKey]="expansionKey"
+    class="city-code-tree"
+  >
+    <!-- Універсальний вузол дерева -->
+    <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle class="tree-node">
+      <dict-city-code-tree-node
+        [node]="node"
+        [isExpanded]="expansionModel.isSelected(node.id)"
+        [nodeActionsTemplate]="nodeActionsTemplate()"
+        (toggleNode)="toggleNode($event)"
+        (selectNode)="selectNode($event)"
       >
-        <!-- Універсальний вузол дерева -->
-        <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle class="tree-node">
-          <dict-city-code-tree-node
-            [node]="node"
-            [isExpanded]="expansionModel.isSelected(node.id)"
-            [nodeActionsTemplate]="nodeActionsTemplate()"
-            (toggleNode)="toggleNode($event)"
-            (selectNode)="selectNode($event)"
-          >
-          </dict-city-code-tree-node>
-        </mat-tree-node>
-      </mat-tree>
-    }
-  </div>
-</app-vertical-layout>
+      </dict-city-code-tree-node>
+    </mat-tree-node>
+  </mat-tree>
+}

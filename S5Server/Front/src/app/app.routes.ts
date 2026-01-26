@@ -74,11 +74,12 @@ export const routes: Routes = [
   {
     path: 'dictCityCodes',
     loadComponent: () =>
-      import('../dictionaries/CityCode/dictCityCode.component').then(
-        (m) => m.DictCityCodeComponent,
+      import('../dictionaries/CityCode/CityCodePage.component').then(
+        (m) => m.CityCodePageComponent,
       ),
-    title: 'Коди адміністративно-територіальних одиниць',
+    title: 'Кодифікатор адміністративно-територіальних одиниць',
   },
+  /*
   {
     path: 'dictCityCodesTree',
     loadComponent: () =>
@@ -87,6 +88,7 @@ export const routes: Routes = [
       ),
     title: 'Дерево кодів адміністративно-територіальних одиниць',
   },
+  */
   {
     path: 'dictArea',
     loadComponent: () =>

@@ -14,7 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { CityCodeTreeService, CityCodeTreeNodeDto } from '../../ServerService/cityCodeTree.service';
 import { CityCodeTreeNodeComponent, CityCodeTreeNode } from './city-code-tree-node.component';
 import { S5App_ErrorHandler } from '../../app/shared/models/ErrorHandler';
-import { VerticalLayoutComponent } from '../../app/shared/components/VerticalLayout.component';
+//import { VerticalLayoutComponent } from '../../app/shared/components/VerticalLayout.component';
 
 @Component({
   selector: 'dict-city-code-tree',
@@ -29,7 +29,7 @@ import { VerticalLayoutComponent } from '../../app/shared/components/VerticalLay
     MatInputModule,
     FormsModule,
     CityCodeTreeNodeComponent,
-    VerticalLayoutComponent,
+    //VerticalLayoutComponent,
   ],
   templateUrl: './CityCodeTree.component.html',
   styleUrls: ['./CityCodeTree.component.scss'],
@@ -43,7 +43,6 @@ export class CityCodeTreeComponent implements OnInit {
 
   // Inputs для налаштування
   maxDepth = input<number>(0); // 0 = без обмежень
-  showSearch = input<boolean>(true);
 
   // Output для вибору вузла
   nodeSelected = output<CityCodeTreeNodeDto>();
