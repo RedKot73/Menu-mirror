@@ -95,10 +95,10 @@ export class DictAreaTypeComponent implements AfterViewInit {
     this.dictAreaTypeService.getAll().subscribe({
       next: (items) => this.items.set(items),
       error: (error) => {
-        console.error('Помилка завантаження типів напрямку ЛБЗ:', error);
+        console.error('Помилка завантаження районів виконання завдань (РВЗ):', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
-          'Помилка завантаження типів напрямку ЛБЗ:',
+          'Помилка завантаження районів виконання завдань (РВЗ):',
         );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
@@ -116,13 +116,13 @@ export class DictAreaTypeComponent implements AfterViewInit {
         this.dictAreaTypeService.create(result).subscribe({
           next: () => {
             this.reload();
-            this.snackBar.open('Тип напрямку ЛБЗ успішно створено', 'Закрити', { duration: 3000 });
+            this.snackBar.open('Район виконання завдань (РВЗ) успішно створено', 'Закрити', { duration: 3000 });
           },
           error: (error) => {
-            console.error('Помилка створення типу напрямку ЛБЗ:', error);
+            console.error('Помилка створення району виконання завдань (РВЗ):', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка створення типу напрямку ЛБЗ:',
+              'Помилка створення району виконання завдань (РВЗ):',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
@@ -142,13 +142,13 @@ export class DictAreaTypeComponent implements AfterViewInit {
         this.dictAreaTypeService.update(result.id, result).subscribe({
           next: () => {
             this.reload();
-            this.snackBar.open('Тип напрямку ЛБЗ успішно оновлено', 'Закрити', { duration: 3000 });
+            this.snackBar.open('Район виконання завдань (РВЗ) успішно оновлено', 'Закрити', { duration: 3000 });
           },
           error: (error) => {
-            console.error('Помилка оновлення типу напрямку ЛБЗ:', error);
+            console.error('Помилка оновлення району виконання завдань (РВЗ):', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка оновлення типу напрямку ЛБЗ:',
+              'Помилка оновлення району виконання завдань (РВЗ):',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
@@ -176,13 +176,13 @@ export class DictAreaTypeComponent implements AfterViewInit {
         this.dictAreaTypeService.delete(areaType.id).subscribe({
           next: () => {
             this.reload();
-            this.snackBar.open('Тип напрямку ЛБЗ успішно видалено', 'Закрити', { duration: 3000 });
+            this.snackBar.open('Район виконання завдань (РВЗ) успішно видалено', 'Закрити', { duration: 3000 });
           },
           error: (error) => {
-            console.error('Помилка видалення типу напрямку ЛБЗ:', error);
+            console.error('Помилка видалення району виконання завдань (РВЗ):', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка видалення типу напрямку ЛБЗ:',
+              'Помилка видалення району виконання завдань (РВЗ):',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
