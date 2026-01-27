@@ -10,7 +10,10 @@ export interface DictUnitTaskDto {
   comment?: string;
   amount: number;
   withMeans: boolean;
-  atPermanentPoint: boolean;
+  /** Тип Напрямку ЛБЗ */
+  areaTypeId: string;
+  /** Тип Напрямку ЛБЗ */
+  areaType: string;
   /** Елементи завдання для різних категорій документів */
   unitTaskItems?: DictUnitTaskItemDto[];
 }
@@ -20,7 +23,8 @@ export interface DictUnitTaskCreateDto {
   comment?: string;
   amount: number;
   withMeans?: boolean;
-  atPermanentPoint?: boolean;
+  /** Тип Напрямку ЛБЗ */
+  areaTypeId: string;
 }
 
 export type DictUnitTask = DictUnitTaskDto;

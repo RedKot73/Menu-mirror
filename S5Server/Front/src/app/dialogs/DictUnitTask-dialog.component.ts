@@ -6,8 +6,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { DictUnitTaskDto } from '../../ServerService/dictUnitTasks.service';
+import { DictAreaTypeService, DictAreaType } from '../../ServerService/dictAreaType.service';
 
 @Component({
   selector: 'app-dict-unit-task-dialog',
@@ -20,6 +22,7 @@ import { DictUnitTaskDto } from '../../ServerService/dictUnitTasks.service';
     MatInputModule,
     MatButtonModule,
     MatCheckboxModule,
+    MatSelectModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./DialogShared.scss'],
@@ -45,11 +48,16 @@ import { DictUnitTaskDto } from '../../ServerService/dictUnitTasks.service';
         <mat-checkbox [(ngModel)]="data.withMeans">
           Використовуються засоби ураження (БПЛА)
         </mat-checkbox>
-
-        <mat-checkbox [(ngModel)]="data.atPermanentPoint">
-          Завдання на ППД (постійному пункті дислокації)
-        </mat-checkbox>
       </div>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Тип Напрямку ЛБЗ/Тип РВЗ</mat-label>
+        <mat-select [(ngModel)]="data.areaTypeId" required>
+          <mat-option *ngFor="let areaType of areaTypes" [value]="areaType.id">
+            {{ areaType.value }} ({{ areaType.shortValue }})
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions align="end" class="actions">
       <button mat-button (click)="onCancel()">Скасувати</button>
@@ -70,22 +78,39 @@ import { DictUnitTaskDto } from '../../ServerService/dictUnitTasks.service';
 })
 export class DictUnitTaskDialogComponent {
   private snackBar = inject(MatSnackBar);
+  private dictAreaTypeService = inject(DictAreaTypeService);
+  areaTypes: DictAreaType[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<DictUnitTaskDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: Partial<DictUnitTaskDto>
+    @Inject(MAT_DIALOG_DATA) public data: Partial<DictUnitTaskDto>,
   ) {
     // Установка значений по умолчанию
     if (this.data.withMeans === undefined) {
       this.data.withMeans = false;
     }
-    if (this.data.atPermanentPoint === undefined) {
-      this.data.atPermanentPoint = true;
-    }
+
+    // Загружаем справочник areaTypes
+    this.loadAreaTypes();
+  }
+
+  loadAreaTypes() {
+    this.dictAreaTypeService.getAll().subscribe({
+      next: (types) => (this.areaTypes = types),
+      error: (error) => {
+        console.error('Помилка завантаження типів РВЗ:', error);
+        this.snackBar.open('Помилка завантаження типів РВЗ', 'Закрити', { duration: 5000 });
+      },
+    });
   }
 
   isValid(): boolean {
-    return !!(this.data.value?.trim() && this.data.amount !== undefined && this.data.amount >= 0);
+    return !!(
+      this.data.value?.trim() &&
+      this.data.amount !== undefined &&
+      this.data.amount >= 0 &&
+      this.data.areaTypeId?.trim()
+    );
   }
 
   onCancel(): void {

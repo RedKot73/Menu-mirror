@@ -114,22 +114,28 @@
         </td>
       </ng-container>
 
-      <!-- AtPermanentPoint Column -->
-      <ng-container matColumnDef="atPermanentPoint">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>На ППД</th>
+      <!-- AreaType Column -->
+      <ng-container matColumnDef="areaType">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Тип РВЗ</th>
         <td mat-cell *matCellDef="let item" class="editable-cell">
-          @if (isEditing(item.id, 'atPermanentPoint')) {
+          @if (isEditing(item.id, 'areaTypeId')) {
             <!-- Режим редагування -->
             <div class="edit-mode">
-              <mat-checkbox
-                [checked]="editingValue()"
-                (change)="updateEditingValue($event.checked)"
-                (click)="$event.stopPropagation()"
-              ></mat-checkbox>
+              <mat-form-field appearance="outline" class="inline-select">
+                <mat-select
+                  [(ngModel)]="editingValue"
+                  (ngModelChange)="updateEditingValue($event)"
+                  (click)="$event.stopPropagation()"
+                >
+                  <mat-option *ngFor="let areaType of areaTypes()" [value]="areaType.id">
+                    {{ areaType.shortValue }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
               <button
                 mat-icon-button
                 class="save-btn"
-                (click)="saveFieldChange(item, 'atPermanentPoint', $event)"
+                (click)="saveFieldChange(item, 'areaTypeId', $event)"
                 matTooltip="Зберегти"
               >
                 <mat-icon>check</mat-icon>
@@ -146,11 +152,13 @@
           } @else {
             <!-- Режим перегляду -->
             <div class="view-mode">
-              <mat-checkbox [checked]="item.atPermanentPoint" disabled></mat-checkbox>
+              <span class="value-text">{{
+                item.areaType || getAreaTypeShortValue(item.areaTypeId)
+              }}</span>
               <button
                 mat-icon-button
                 class="edit-btn"
-                (click)="startEditing(item, 'atPermanentPoint', $event)"
+                (click)="startEditing(item, 'areaTypeId', $event)"
                 matTooltip="Редагувати"
               >
                 <mat-icon>edit</mat-icon>

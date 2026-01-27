@@ -20,10 +20,12 @@ import { FormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 
 import { DictUnitTaskDialogComponent } from '../../app/dialogs/DictUnitTask-dialog.component';
 import { ConfirmDialogComponent } from '../../app/dialogs/ConfirmDialog.component';
 import { DictUnitTasksService, DictUnitTask } from '../../ServerService/dictUnitTasks.service';
+import { DictAreaTypeService, DictAreaType } from '../../ServerService/dictAreaType.service';
 import { S5App_ErrorHandler } from '../../app/shared/models/ErrorHandler';
 import { VerticalLayoutComponent } from '../../app/shared/components/VerticalLayout.component';
 
@@ -41,6 +43,7 @@ import { VerticalLayoutComponent } from '../../app/shared/components/VerticalLay
     MatTooltipModule,
     MatInputModule,
     MatFormFieldModule,
+    MatSelectModule,
     VerticalLayoutComponent,
   ],
   templateUrl: './dictUnitTask.component.html',
@@ -55,6 +58,15 @@ import { VerticalLayoutComponent } from '../../app/shared/components/VerticalLay
       table {
         width: 100%;
       }
+
+      .inline-select {
+        width: 150px;
+        font-size: 14px;
+      }
+
+      .inline-select ::ng-deep .mat-mdc-form-field-infix {
+        min-height: 40px;
+      }
     `,
   ],
 })
@@ -62,12 +74,14 @@ export class DictUnitTaskComponent implements AfterViewInit {
   @Output() taskSelected = new EventEmitter<DictUnitTask | null>();
 
   dictUnitTasksService = inject(DictUnitTasksService);
+  dictAreaTypeService = inject(DictAreaTypeService);
   items = this.dictUnitTasksService.createItemsSignal();
+  areaTypes = signal<DictAreaType[]>([]);
   dataSource = new MatTableDataSource<DictUnitTask>([]);
-  displayedColumns = ['value', 'amount', 'withMeans', 'atPermanentPoint', 'comment', 'actions'];
+  displayedColumns = ['value', 'amount', 'withMeans', 'areaType', 'comment', 'actions'];
   selectedTaskId = signal<string | null>(null);
   editingTaskId = signal<string | null>(null);
-  editingField = signal<'amount' | 'withMeans' | 'atPermanentPoint' | null>(null);
+  editingField = signal<'amount' | 'withMeans' | 'areaTypeId' | null>(null);
   editingValue = signal<any>(null);
   dialog = inject(MatDialog);
   snackBar = inject(MatSnackBar);
@@ -82,7 +96,22 @@ export class DictUnitTaskComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     this.dataSource.sort = this.sort;
+    this.loadAreaTypes();
     this.reload();
+  }
+
+  loadAreaTypes() {
+    this.dictAreaTypeService.getAll().subscribe({
+      next: (types) => this.areaTypes.set(types),
+      error: (error) => {
+        console.error('Помилка завантаження типів РВЗ:', error);
+        const errorMessage = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Помилка завантаження типів РВЗ',
+        );
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      },
+    });
   }
 
   reload() {
@@ -107,7 +136,7 @@ export class DictUnitTaskComponent implements AfterViewInit {
         comment: '',
         amount: 0,
         withMeans: false,
-        atPermanentPoint: true,
+        areaTypeId: '',
       },
     });
 
@@ -197,19 +226,25 @@ export class DictUnitTaskComponent implements AfterViewInit {
     this.taskSelected.emit(task);
   }
 
-  isEditing(taskId: string, field: 'amount' | 'withMeans' | 'atPermanentPoint'): boolean {
+  getAreaTypeShortValue(areaTypeId: string): string {
+    const areaType = this.areaTypes().find((at) => at.id === areaTypeId);
+    return areaType?.shortValue || '';
+  }
+
+  isEditing(taskId: string, field: 'amount' | 'withMeans' | 'areaTypeId'): boolean {
     return this.editingTaskId() === taskId && this.editingField() === field;
   }
 
-  startEditing(
-    task: DictUnitTask,
-    field: 'amount' | 'withMeans' | 'atPermanentPoint',
-    event: Event,
-  ) {
+  startEditing(task: DictUnitTask, field: 'amount' | 'withMeans' | 'areaTypeId', event: Event) {
     event.stopPropagation();
     this.editingTaskId.set(task.id);
     this.editingField.set(field);
-    this.editingValue.set(task[field]);
+    // Для areaTypeId сохраняем значение areaTypeId
+    if (field === 'areaTypeId') {
+      this.editingValue.set(task.areaTypeId);
+    } else {
+      this.editingValue.set(task[field]);
+    }
   }
 
   cancelEditing(event: Event) {
@@ -219,19 +254,24 @@ export class DictUnitTaskComponent implements AfterViewInit {
     this.editingValue.set(null);
   }
 
-  saveFieldChange(
-    task: DictUnitTask,
-    field: 'amount' | 'withMeans' | 'atPermanentPoint',
-    event: Event,
-  ) {
+  saveFieldChange(task: DictUnitTask, field: 'amount' | 'withMeans' | 'areaTypeId', event: Event) {
     event.stopPropagation();
 
-    const updatedTask = { ...task, [field]: this.editingValue() };
+    const updatedTask: DictUnitTask = { ...task, [field]: this.editingValue() };
 
     this.dictUnitTasksService.update(task.id, updatedTask).subscribe({
       next: () => {
         // Оновлюємо значення в таблиці
-        Object.assign(task, { [field]: this.editingValue() });
+        if (field === 'areaTypeId') {
+          task.areaTypeId = this.editingValue();
+          // Оновлюємо також shortValue
+          const areaType = this.areaTypes().find((at) => at.id === this.editingValue());
+          if (areaType) {
+            task.areaType = areaType.shortValue;
+          }
+        } else {
+          Object.assign(task, { [field]: this.editingValue() });
+        }
         this.snackBar.open('Зміни збережено', 'Закрити', { duration: 2000 });
         this.cancelEditing(event);
       },
