@@ -9,14 +9,14 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
-import {
+import {//
   DictUnitTaskItemsService,
   DictUnitTaskItemDto,
-} from '../ServerService/dictUnitTaskItems.service';
-import { DictUnitTaskDto } from '../ServerService/dictUnitTasks.service';
-import { ConfirmDialogComponent } from '../app/dialogs/ConfirmDialog.component';
-import { DictUnitTaskItemDialogComponent } from '../app/dialogs/DictUnitTaskItem-dialog.component';
-import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
+} from '../../ServerService/dictUnitTaskItems.service';
+import { DictUnitTaskDto } from '../../ServerService/dictUnitTasks.service';
+import { ConfirmDialogComponent } from '../../app/dialogs/ConfirmDialog.component';
+import { DictUnitTaskItemDialogComponent } from '../../app/dialogs/DictUnitTaskItem-dialog.component';
+import { S5App_ErrorHandler } from '../../app/shared/models/ErrorHandler';
 
 @Component({
   selector: 'dict-unit-task-items',

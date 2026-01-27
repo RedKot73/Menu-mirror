@@ -46,6 +46,7 @@ public class DictUnitTasksController : ControllerBase
             }
 
             var list = await q
+                .Include(t => t.AreaType)
                 .OrderBy(x => x.Value)
                 .Select(x => x.ToDto())
                 .ToListAsync(ct);
@@ -77,7 +78,9 @@ public class DictUnitTasksController : ControllerBase
 
         try
         {
-            var e = await Query().FirstOrDefaultAsync(x => x.Id == id, ct);
+            var e = await Query()
+                .Include(t => t.AreaType)
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (e == null)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
             

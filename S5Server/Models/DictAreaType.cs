@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 namespace S5Server.Models
 {
     /// <summary>
-    /// Тип Напрямку ЛБЗ
+    /// Тип Напрямку ЛБЗ: ППД,РВЗ,ТПУ,ПУ,РВБД,БРО
     /// </summary>
     [Table("dict_area_type")]
     public class DictAreaType : ShortDictBase, IShortDictBase

@@ -21,10 +21,11 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 
-import { DictUnitTaskDialogComponent } from '../app/dialogs/DictUnitTask-dialog.component';
-import { ConfirmDialogComponent } from '../app/dialogs/ConfirmDialog.component';
-import { DictUnitTasksService, DictUnitTask } from '../ServerService/dictUnitTasks.service';
-import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
+import { DictUnitTaskDialogComponent } from '../../app/dialogs/DictUnitTask-dialog.component';
+import { ConfirmDialogComponent } from '../../app/dialogs/ConfirmDialog.component';
+import { DictUnitTasksService, DictUnitTask } from '../../ServerService/dictUnitTasks.service';
+import { S5App_ErrorHandler } from '../../app/shared/models/ErrorHandler';
+import { VerticalLayoutComponent } from '../../app/shared/components/VerticalLayout.component';
 
 @Component({
   selector: 'dict-unit-tasks',
@@ -40,9 +41,22 @@ import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
     MatTooltipModule,
     MatInputModule,
     MatFormFieldModule,
+    VerticalLayoutComponent,
   ],
   templateUrl: './dictUnitTask.component.html',
-  styleUrls: ['./dict-page.styles.scss'],
+  styleUrls: ['../dict-page.styles.scss'],
+  styles: [
+    `
+      :host {
+        display: block;
+        height: 100%;
+      }
+
+      table {
+        width: 100%;
+      }
+    `,
+  ],
 })
 export class DictUnitTaskComponent implements AfterViewInit {
   @Output() taskSelected = new EventEmitter<DictUnitTask | null>();
@@ -78,7 +92,7 @@ export class DictUnitTaskComponent implements AfterViewInit {
         console.error('Помилка завантаження завдань підрозділів:', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
-          'Помилка завантаження завдань підрозділів'
+          'Помилка завантаження завдань підрозділів',
         );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
@@ -108,7 +122,7 @@ export class DictUnitTaskComponent implements AfterViewInit {
             console.error('Помилка створення завдання:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка створення завдання'
+              'Помилка створення завдання',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
@@ -134,7 +148,7 @@ export class DictUnitTaskComponent implements AfterViewInit {
             console.error('Помилка оновлення завдання:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка оновлення завдання'
+              'Помилка оновлення завдання',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
@@ -169,7 +183,7 @@ export class DictUnitTaskComponent implements AfterViewInit {
             console.error('Помилка видалення завдання:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка видалення завдання'
+              'Помилка видалення завдання',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
@@ -190,7 +204,7 @@ export class DictUnitTaskComponent implements AfterViewInit {
   startEditing(
     task: DictUnitTask,
     field: 'amount' | 'withMeans' | 'atPermanentPoint',
-    event: Event
+    event: Event,
   ) {
     event.stopPropagation();
     this.editingTaskId.set(task.id);
@@ -208,7 +222,7 @@ export class DictUnitTaskComponent implements AfterViewInit {
   saveFieldChange(
     task: DictUnitTask,
     field: 'amount' | 'withMeans' | 'atPermanentPoint',
-    event: Event
+    event: Event,
   ) {
     event.stopPropagation();
 
@@ -225,7 +239,7 @@ export class DictUnitTaskComponent implements AfterViewInit {
         console.error('Помилка оновлення завдання:', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
-          'Помилка оновлення завдання'
+          'Помилка оновлення завдання',
         );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
         this.cancelEditing(event);

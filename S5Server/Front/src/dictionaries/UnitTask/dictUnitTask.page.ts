@@ -1,9 +1,11 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MasterDetailLayoutComponent } from '../app/shared/components/MasterDetailLayout.component';
+import {
+  MasterDetailLayoutComponent
+ } from '../../app/shared/components/MasterDetailLayout.component';
 import { DictUnitTaskComponent } from './dictUnitTask.component';
 import { DictUnitTaskItemsComponent } from './dictUnitTaskItems.component';
-import { DictUnitTaskDto } from '../ServerService/dictUnitTasks.service';
+import { DictUnitTaskDto } from '../../ServerService/dictUnitTasks.service';
 
 @Component({
   selector: 'dict-unit-task-page',

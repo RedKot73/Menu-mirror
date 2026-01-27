@@ -23,7 +23,11 @@ namespace S5Server.Models
         /// <summary>
         /// Тип Напрямку ЛБЗ
         /// </summary>
-        string AreaTypeId);
+        string AreaTypeId,
+        /// <summary>
+        /// Тип Напрямку ЛБЗ
+        /// </summary>
+        string AreaType);
 
     public record DictUnitTaskCreateDto(
         string Value,
@@ -51,7 +55,8 @@ namespace S5Server.Models
                 unitTask.Comment,
                 unitTask.Amount,
                 unitTask.WithMeans,
-                unitTask.AreaTypeId);
+                unitTask.AreaTypeId,
+                unitTask.AreaType.ShortValue);
 
         /// <summary>
         /// Створює новий екземпляр DictUnitTask з DTO
