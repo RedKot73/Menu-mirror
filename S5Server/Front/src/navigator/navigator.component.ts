@@ -9,7 +9,7 @@ import { MatMenuModule } from '@angular/material/menu';
   template: `
     <mat-toolbar>
       <button matButton [matMenuTriggerFor]="dictionaries">Довідники</button>
-<!--      
+      <!--      
       <button matButton routerLink="/dictCityCodesTree" routerLinkActive="active-link">
         Адмін-тер. одиниці
       </button>
@@ -78,10 +78,10 @@ import { MatMenuModule } from '@angular/material/menu';
           Кодифікатор об'єктів адміністративно-територіальних одиниць
         </button>
         <button mat-menu-item routerLink="/dictAreaTypes" routerLinkActive="active-menu-item">
-          Типи Напрямку ЛБЗ
+          Типи району виконання завдань (РВЗ)
         </button>
         <button mat-menu-item routerLink="/dictArea" routerLinkActive="active-menu-item">
-          Напрямок ЛБЗ
+          Райони виконання завдань (РВЗ)
         </button>
       </mat-menu>
     </mat-toolbar>
@@ -96,7 +96,7 @@ import { MatMenuModule } from '@angular/material/menu';
       color: white !important;
       font-weight: bold !important;
       border-radius: 4px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
 
     .active-link:hover {

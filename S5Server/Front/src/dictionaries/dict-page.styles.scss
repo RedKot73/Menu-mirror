@@ -1,3 +1,13 @@
+// Общие стили для компонентов справочников
+:host {
+  display: block;
+  height: 100%;
+}
+
+table {
+  width: 100%;
+}
+
 .dict-page-container {
   height: calc(100vh - 64px);
   overflow-y: auto;

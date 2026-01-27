@@ -8,54 +8,66 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { ShortDictDialogComponent } from '../app/dialogs/ShortDict-dialog.component';
 import { ConfirmDialogComponent } from '../app/dialogs/ConfirmDialog.component';
-import {
-  /*DictAreaTypeService,*/ DictAreaType,
-  DictAreaTypeService,
-} from '../ServerService/dictAreaType.service';
+import { DictAreaType, DictAreaTypeService } from '../ServerService/dictAreaType.service';
 import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
+import { VerticalLayoutComponent } from '../app/shared/components/VerticalLayout.component';
 
 @Component({
   selector: 'dict-area-types',
-  imports: [MatTableModule, MatButtonModule, MatSortModule, MatIconModule],
+  standalone: true,
+  imports: [MatTableModule, MatButtonModule, MatSortModule, MatIconModule, VerticalLayoutComponent],
   styleUrls: ['./dict-page.styles.scss'],
   template: `
-    <div class="dict-page-container">
-      <h2>Типи Напрямку ЛБЗ</h2>
-      <div class="action-buttons">
-        <button mat-raised-button color="primary" (click)="reload()">Оновити</button>
-        <button mat-raised-button color="primary" (click)="add()">Створити</button>
+    <app-vertical-layout>
+      <!-- Action Panel (Top) -->
+      <div actionPanel>
+        <h2>Типи Району виконання завдань (РВЗ)</h2>
+        <div class="action-buttons">
+          <button mat-raised-button color="primary" (click)="reload()">
+            <mat-icon>refresh</mat-icon>
+            Оновити
+          </button>
+          <button mat-raised-button color="primary" (click)="add()">
+            <mat-icon>add</mat-icon>
+            Створити
+          </button>
+        </div>
       </div>
-      <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
-        <!-- Value Column -->
-        <ng-container matColumnDef="value">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Значення</th>
-          <td mat-cell *matCellDef="let item">{{ item.value }}</td>
-        </ng-container>
-        <ng-container matColumnDef="shortValue">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Скорочення</th>
-          <td mat-cell *matCellDef="let item">{{ item.shortValue }}</td>
-        </ng-container>
-        <!-- Comment Column -->
-        <ng-container matColumnDef="comment">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Коментар</th>
-          <td mat-cell *matCellDef="let item">{{ item.comment }}</td>
-        </ng-container>
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Дії</th>
-          <td mat-cell *matCellDef="let item">
-            <button mat-icon-button color="accent" (click)="edit(item)">
-              <mat-icon>edit</mat-icon>
-            </button>
-            <button mat-icon-button color="warn" (click)="delete(item)">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </td>
-        </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-      </table>
-    </div>
+      <!-- Content Panel (Main) -->
+      <div contentPanel>
+        <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+          <!-- Value Column -->
+          <ng-container matColumnDef="value">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Значення</th>
+            <td mat-cell *matCellDef="let item">{{ item.value }}</td>
+          </ng-container>
+          <ng-container matColumnDef="shortValue">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Скорочення</th>
+            <td mat-cell *matCellDef="let item">{{ item.shortValue }}</td>
+          </ng-container>
+          <!-- Comment Column -->
+          <ng-container matColumnDef="comment">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Коментар</th>
+            <td mat-cell *matCellDef="let item">{{ item.comment }}</td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Дії</th>
+            <td mat-cell *matCellDef="let item">
+              <button mat-icon-button color="accent" (click)="edit(item)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="delete(item)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+    </app-vertical-layout>
   `,
 })
 export class DictAreaTypeComponent implements AfterViewInit {
@@ -76,6 +88,7 @@ export class DictAreaTypeComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     this.dataSource.sort = this.sort;
+    this.reload();
   }
 
   reload() {
@@ -85,7 +98,7 @@ export class DictAreaTypeComponent implements AfterViewInit {
         console.error('Помилка завантаження типів напрямку ЛБЗ:', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
-          'Помилка завантаження типів напрямку ЛБЗ:'
+          'Помилка завантаження типів напрямку ЛБЗ:',
         );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
@@ -109,7 +122,7 @@ export class DictAreaTypeComponent implements AfterViewInit {
             console.error('Помилка створення типу напрямку ЛБЗ:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка створення типу напрямку ЛБЗ:'
+              'Помилка створення типу напрямку ЛБЗ:',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
@@ -135,7 +148,7 @@ export class DictAreaTypeComponent implements AfterViewInit {
             console.error('Помилка оновлення типу напрямку ЛБЗ:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка оновлення типу напрямку ЛБЗ:'
+              'Помилка оновлення типу напрямку ЛБЗ:',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
@@ -169,7 +182,7 @@ export class DictAreaTypeComponent implements AfterViewInit {
             console.error('Помилка видалення типу напрямку ЛБЗ:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка видалення типу напрямку ЛБЗ:'
+              'Помилка видалення типу напрямку ЛБЗ:',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },

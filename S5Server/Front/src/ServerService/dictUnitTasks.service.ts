@@ -10,9 +10,9 @@ export interface DictUnitTaskDto {
   comment?: string;
   amount: number;
   withMeans: boolean;
-  /** Тип Напрямку ЛБЗ */
+  /** Тип району виконання завдань (РВЗ) */
   areaTypeId: string;
-  /** Тип Напрямку ЛБЗ */
+  /** Тип району виконання завдань (РВЗ) */
   areaType: string;
   /** Елементи завдання для різних категорій документів */
   unitTaskItems?: DictUnitTaskItemDto[];
@@ -23,7 +23,7 @@ export interface DictUnitTaskCreateDto {
   comment?: string;
   amount: number;
   withMeans?: boolean;
-  /** Тип Напрямку ЛБЗ */
+  /** Тип району виконання завдань (РВЗ) */
   areaTypeId: string;
 }
 
