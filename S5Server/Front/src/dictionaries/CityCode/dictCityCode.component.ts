@@ -5,28 +5,25 @@ import {
   AfterViewInit,
   effect,
   signal,
-  //  input,
+  output,
+  input,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 
-import { ConfirmDialogComponent } from '../../app/dialogs/ConfirmDialog.component';
 import {
   DictCityCodeService,
   CityCodeDto,
   CityCodeFilter,
 } from '../../ServerService/dictCityCode.service';
 import { S5App_ErrorHandler } from '../../app/shared/models/ErrorHandler';
-import { DictCityCodeDialogComponent } from '../../app/dialogs/DictCityCode-dialog.component';
-//import { VerticalLayoutComponent } from '../../app/shared/components/VerticalLayout.component';
 
 @Component({
   selector: 'dict-city-codes',
@@ -39,7 +36,6 @@ import { DictCityCodeDialogComponent } from '../../app/dialogs/DictCityCode-dial
     MatFormFieldModule,
     MatInputModule,
     FormsModule,
-    //    VerticalLayoutComponent,
   ],
   templateUrl: './dictCityCode.component.html',
   styleUrls: ['../dict-page.styles.scss'],
@@ -56,6 +52,12 @@ import { DictCityCodeDialogComponent } from '../../app/dialogs/DictCityCode-dial
       .paginator {
         min-height: 128px;
       }
+      .selectable-row {
+        cursor: pointer;
+      }
+      .selectable-row:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+      }
     `,
   ],
 })
@@ -63,6 +65,13 @@ export class DictCityCodeComponent implements AfterViewInit {
   dictCityCodeService = inject(DictCityCodeService);
   items = this.dictCityCodeService.createItemsSignal();
   dataSource = new MatTableDataSource<CityCodeDto>([]);
+
+  // Input: режим выбора (скрывает кнопки действий, разрешает выбор)
+  selectionMode = input<boolean>(false);
+
+  // Output: событие выбора записи
+  itemSelected = output<CityCodeDto>();
+
   displayedColumns = [
     //'parentId',
     'level1',
@@ -72,9 +81,7 @@ export class DictCityCodeComponent implements AfterViewInit {
     'levelExt',
     'category',
     'value',
-    'actions',
   ];
-  dialog = inject(MatDialog);
   snackBar = inject(MatSnackBar);
   searchTerm = '';
   private searchTimeout: number | undefined;
@@ -114,6 +121,10 @@ export class DictCityCodeComponent implements AfterViewInit {
     this.reload();
   }
 
+  selectItem(item: CityCodeDto) {
+    this.itemSelected.emit(item);
+  }
+
   reload() {
     const filter: CityCodeFilter = {
       page: this.pageIndex() + 1,
@@ -138,100 +149,6 @@ export class DictCityCodeComponent implements AfterViewInit {
         );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
-    });
-  }
-
-  add() {
-    const dialogRef = this.dialog.open(DictCityCodeDialogComponent, {
-      width: '600px',
-      data: {
-        level1: '',
-        level2: '',
-        level3: '',
-        level4: '',
-        levelExt: '',
-        categoryId: '',
-        value: '',
-      },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.dictCityCodeService.create(result).subscribe({
-          next: () => {
-            this.reload();
-            this.snackBar.open('Запис успішно створено', 'Закрити', { duration: 3000 });
-          },
-          error: (error) => {
-            console.error('Помилка створення запису:', error);
-            const errorMessage = S5App_ErrorHandler.handleHttpError(
-              error,
-              'Помилка створення запису:',
-            );
-            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-          },
-        });
-      }
-    });
-  }
-
-  edit(cityCode: CityCodeDto) {
-    const dialogRef = this.dialog.open(DictCityCodeDialogComponent, {
-      width: '600px',
-      data: { ...cityCode },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.dictCityCodeService.update(result.id, result).subscribe({
-          next: () => {
-            this.reload();
-            this.snackBar.open('Запис успішно оновлено', 'Закрити', { duration: 3000 });
-          },
-          error: (error) => {
-            console.error('Помилка оновлення запису:', error);
-            const errorMessage = S5App_ErrorHandler.handleHttpError(
-              error,
-              'Помилка оновлення запису:',
-            );
-            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-          },
-        });
-      }
-    });
-  }
-
-  delete(cityCode: CityCodeDto) {
-    const ref = this.dialog.open(ConfirmDialogComponent, {
-      width: '360px',
-      maxWidth: '95vw',
-      autoFocus: false,
-      data: {
-        title: 'Видалення запису',
-        message: `Ви впевнені, що хочете видалити запис "${cityCode.value}"?`,
-        confirmText: 'Видалити',
-        cancelText: 'Відмінити',
-        color: 'warn',
-        icon: 'warning',
-      },
-    });
-    ref.afterClosed().subscribe((confirmed) => {
-      if (confirmed) {
-        this.dictCityCodeService.delete(cityCode.id).subscribe({
-          next: () => {
-            this.reload();
-            this.snackBar.open('Запис успішно видалено', 'Закрити', { duration: 3000 });
-          },
-          error: (error) => {
-            console.error('Помилка видалення запису:', error);
-            const errorMessage = S5App_ErrorHandler.handleHttpError(
-              error,
-              'Помилка видалення запису:',
-            );
-            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-          },
-        });
-      }
     });
   }
 }

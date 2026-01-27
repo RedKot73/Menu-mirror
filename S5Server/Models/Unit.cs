@@ -23,6 +23,10 @@ namespace S5Server.Models
         /// True - Оперативний/Тимчасовий підрозділ
         /// </summary>
         bool IsInvolved,
+        /*
+        string? PersistentLocationId,
+        string? PersistentLocation,
+        */
         int OrderVal,
         string? Comment
     )
@@ -263,7 +267,10 @@ namespace S5Server.Models
         /// </summary>
         [ValidateNever]
         public DictArea Area { get; set; } = default!;
-
+        /*
+        string? PersistentLocationId,
+        string? PersistentLocation,
+        */
         public string? Comment { get; set; }
 
         /// <summary>
