@@ -34,12 +34,20 @@ namespace S5Server.Data
                 entity.Property(e => e.Id).HasColumnType("TEXT(36)");
                 entity.Property(e => e.Value).IsRequired().HasColumnType("TEXT(100)");
                 entity.Property(e => e.Comment).HasColumnType("TEXT");
+                entity.Property(e => e.AreaTypeId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.CityCodeId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.Coords).HasColumnType("TEXT");
+
                 entity.HasIndex(e => e.Value).IsUnique();
 
                 entity.HasOne(e => e.AreaType)
                     .WithMany(e => e.Areas)
                     .HasForeignKey(e => e.AreaTypeId)
                     .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.CityCode)
+                    .WithMany()
+                    .HasForeignKey(e => e.CityCodeId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             /// <summary>

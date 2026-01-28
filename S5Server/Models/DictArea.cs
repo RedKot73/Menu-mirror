@@ -21,7 +21,19 @@ public record DictAreaDto(
     /// <summary>
     /// Тип Району виконання завдань (РВЗ)
     /// </summary>
-    string AreaType);
+    string AreaType,
+    /// <summary>
+    /// Кодифікатор адмін-територіальних одиниць (ID)
+    /// </summary>
+    string? CityCodeId,
+    /// <summary>
+    /// Кодифікатор адмін-територіальних одиниць (назва)
+    /// </summary>
+    string? CityCode,
+    /// <summary>
+    /// Координати/Перелік координат РВЗ
+    /// </summary>
+    string? Coords);
 
 /// <summary>
 /// DTO для створення Району виконання завдань (РВЗ)
@@ -32,7 +44,15 @@ public record DictAreaCreateDto(
     /// <summary>
     /// Тип Району виконання завдань (РВЗ)
     /// </summary>
-    string AreaTypeId);
+    string AreaTypeId,
+    /// <summary>
+    /// Кодифікатор адмін-територіальних одиниць (опціонально)
+    /// </summary>
+    string? CityCodeId,
+    /// <summary>
+    /// Координати/Перелік координат РВЗ
+    /// </summary>
+    string? Coords);
 
 /// <summary>
 /// Район виконання завдань (РВЗ)
@@ -51,6 +71,24 @@ public partial class DictArea : SimpleDictBase, ISimpleDict
     /// </summary>
     [ValidateNever]
     public DictAreaType AreaType { get; set; } = default!;
+
+    /// <summary>
+    /// Запис Кодифікатору адміністративно-територіальних одиниць
+    /// та територій територіальних громад
+    /// </summary>
+    public string? CityCodeId { get; set; }
+    
+    /// <summary>
+    /// Запис Кодифікатору адміністративно-територіальних одиниць
+    /// та територій територіальних громад
+    /// </summary>
+    [ValidateNever]
+    public DictCityCode? CityCode { get; set; }
+
+    /// <summary>
+    /// Координати/Перелік координат Району виконання завдань (РВЗ)
+    /// </summary>
+    public string? Coords { get; set; }
 }
 
 /// <summary>
@@ -67,7 +105,10 @@ public static class DictAreaExtensions
             area.Value,
             area.Comment,
             area.AreaTypeId,
-            area.AreaType?.ShortValue ?? area.AreaType?.Value ?? string.Empty);
+            area.AreaType?.ShortValue ?? area.AreaType?.Value ?? string.Empty,
+            area.CityCodeId,
+            area.CityCode?.Value,
+            area.Coords);
 
     /// <summary>
     /// Створює новий екземпляр DictArea з DTO
@@ -78,7 +119,9 @@ public static class DictAreaExtensions
             Id = dto.Id,
             Value = dto.Value.Trim(),
             Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim(),
-            AreaTypeId = dto.AreaTypeId
+            AreaTypeId = dto.AreaTypeId,
+            CityCodeId = dto.CityCodeId,
+            Coords = string.IsNullOrWhiteSpace(dto.Coords) ? null : dto.Coords.Trim()
         };
 
     /// <summary>
@@ -90,7 +133,9 @@ public static class DictAreaExtensions
             Id = Guid.NewGuid().ToString("D"),
             Value = dto.Value.Trim(),
             Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim(),
-            AreaTypeId = dto.AreaTypeId
+            AreaTypeId = dto.AreaTypeId,
+            CityCodeId = dto.CityCodeId,
+            Coords = string.IsNullOrWhiteSpace(dto.Coords) ? null : dto.Coords.Trim()
         };
 
     /// <summary>
@@ -101,6 +146,8 @@ public static class DictAreaExtensions
         area.Value = dto.Value.Trim();
         area.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
         area.AreaTypeId = dto.AreaTypeId;
+        area.CityCodeId = dto.CityCodeId;
+        area.Coords = string.IsNullOrWhiteSpace(dto.Coords) ? null : dto.Coords.Trim();
     }
 
     /// <summary>
@@ -110,6 +157,13 @@ public static class DictAreaExtensions
     {
         return area.Value == dto.Value.Trim() &&
                area.Comment == (string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim()) &&
-               area.AreaTypeId == dto.AreaTypeId;
+               area.AreaTypeId == dto.AreaTypeId &&
+               area.CityCodeId == dto.CityCodeId &&
+               area.Coords == (string.IsNullOrWhiteSpace(dto.Coords) ? null : dto.Coords.Trim());
+    }
+
+    public static LookupDto ToLookupDto(this DictArea area)
+    {
+        return new LookupDto(area.Id, area.Value);
     }
 }

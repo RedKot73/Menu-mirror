@@ -11,6 +11,12 @@ export interface DictAreaDto {
   areaTypeId: string;
   /** Тип Району виконання завдань (РВЗ) */
   areaType: string;
+  /** Кодифікатор адмін-територіальних одиниць (ID) */
+  cityCodeId?: string;
+  /** Кодифікатор адмін-територіальних одиниць (назва) */
+  cityCode?: string;
+  /** Координати/Перелік координат РВЗ */
+  coords?: string;
 }
 
 export interface DictAreaCreateDto {
@@ -18,6 +24,10 @@ export interface DictAreaCreateDto {
   comment?: string;
   /** Тип Району виконання завдань (РВЗ) */
   areaTypeId: string;
+  /** Кодифікатор адмін-територіальних одиниць (опціонально) */
+  cityCodeId?: string;
+  /** Координати/Перелік координат РВЗ */
+  coords?: string;
 }
 
 export type DictArea = DictAreaDto;
@@ -33,13 +43,16 @@ export class DictAreasService {
     return signal<DictArea[]>([]);
   }
 
-  getAll(search?: string, areaTypeId?: string): Observable<DictArea[]> {
+  getAll(search?: string, areaTypeId?: string, cityCodeId?: string): Observable<DictArea[]> {
     const params: Record<string, string> = {};
     if (search) {
       params['search'] = search;
     }
     if (areaTypeId) {
       params['areaTypeId'] = areaTypeId;
+    }
+    if (cityCodeId) {
+      params['cityCodeId'] = cityCodeId;
     }
     return this.http.get<DictArea[]>(this.api, { params });
   }
@@ -81,5 +94,10 @@ export class DictAreasService {
   // Отримати райони за типом РВЗ
   getByAreaType(areaTypeId: string): Observable<DictArea[]> {
     return this.http.get<DictArea[]>(`${this.api}/by-area-type/${areaTypeId}`);
+  }
+
+  // Отримати райони за кодифікатором
+  getByCityCode(cityCodeId: string): Observable<DictArea[]> {
+    return this.http.get<DictArea[]>(`${this.api}/by-city-code/${cityCodeId}`);
   }
 }

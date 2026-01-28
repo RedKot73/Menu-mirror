@@ -219,8 +219,14 @@ namespace S5Server.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT(36)");
 
+                    b.Property<string>("CityCodeId")
+                        .HasColumnType("TEXT(36)");
+
                     b.Property<string>("Comment")
                         .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Coords")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Value")
@@ -231,6 +237,8 @@ namespace S5Server.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AreaTypeId");
+
+                    b.HasIndex("CityCodeId");
 
                     b.HasIndex("Value")
                         .IsUnique();
@@ -1129,7 +1137,14 @@ namespace S5Server.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("S5Server.Models.DictCityCode", "CityCode")
+                        .WithMany()
+                        .HasForeignKey("CityCodeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("AreaType");
+
+                    b.Navigation("CityCode");
                 });
 
             modelBuilder.Entity("S5Server.Models.DictCityCode", b =>
@@ -1167,7 +1182,7 @@ namespace S5Server.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("S5Server.Models.DictCityCode", "Parent")
-                        .WithMany("Childs")
+                        .WithMany("Children")
                         .HasForeignKey("ParentId")
                         .OnDelete(DeleteBehavior.Cascade);
 
@@ -1350,7 +1365,7 @@ namespace S5Server.Migrations
 
             modelBuilder.Entity("S5Server.Models.DictCityCode", b =>
                 {
-                    b.Navigation("Childs");
+                    b.Navigation("Children");
                 });
 
             modelBuilder.Entity("S5Server.Models.DictDroneType", b =>

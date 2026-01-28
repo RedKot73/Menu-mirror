@@ -17,6 +17,16 @@ import { VerticalLayoutComponent } from '../app/shared/components/VerticalLayout
   standalone: true,
   imports: [MatTableModule, MatButtonModule, MatSortModule, MatIconModule, VerticalLayoutComponent],
   styleUrls: ['./dict-page.styles.scss'],
+  styles: [
+    `
+      .coords-column {
+        max-width: 150px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        line-height: 1.4;
+      }
+    `,
+  ],
   template: `
     <app-vertical-layout>
       <!-- Action Panel (Top) -->
@@ -49,6 +59,17 @@ import { VerticalLayoutComponent } from '../app/shared/components/VerticalLayout
             <td mat-cell *matCellDef="let item">{{ item.areaType }}</td>
           </ng-container>
 
+          <!-- CityCode Column -->
+          <ng-container matColumnDef="cityCode">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Кодифікатор</th>
+            <td mat-cell *matCellDef="let item">{{ item.cityCode }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="coords">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Координати</th>
+            <td mat-cell *matCellDef="let item" class="coords-column">{{ item.coords }}</td>
+          </ng-container>
+
           <!-- Comment Column -->
           <ng-container matColumnDef="comment">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Коментар</th>
@@ -79,7 +100,7 @@ export class DictAreaPage implements AfterViewInit {
   dictAreasService = inject(DictAreasService);
   items = this.dictAreasService.createItemsSignal();
   dataSource = new MatTableDataSource<DictArea>([]);
-  displayedColumns = ['value', 'areaType', 'comment', 'actions'];
+  displayedColumns = ['value', 'areaType', 'cityCode', 'coords', 'comment', 'actions'];
   dialog = inject(MatDialog);
   snackBar = inject(MatSnackBar);
 
@@ -117,6 +138,8 @@ export class DictAreaPage implements AfterViewInit {
         value: '',
         comment: '',
         areaTypeId: '',
+        cityCodeId: '',
+        coords: '',
       },
     });
 

@@ -1,14 +1,22 @@
-import { ChangeDetectionStrategy, Component, Inject, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Inject, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import {
+  MatDialogModule,
+  MAT_DIALOG_DATA,
+  MatDialogRef,
+  MatDialog,
+} from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
+import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { DictAreaDto } from '../../ServerService/dictAreas.service';
 import { DictAreaTypeService, DictAreaType } from '../../ServerService/dictAreaType.service';
+import { DictCityCodeDialogComponent } from './DictCityCode-dialog.component';
+import { CityCodeDto } from '../../ServerService/dictCityCode.service';
 
 @Component({
   selector: 'app-dict-area-dialog',
@@ -21,6 +29,7 @@ import { DictAreaTypeService, DictAreaType } from '../../ServerService/dictAreaT
     MatInputModule,
     MatButtonModule,
     MatSelectModule,
+    MatIconModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./DialogShared.scss'],
@@ -35,10 +44,35 @@ import { DictAreaTypeService, DictAreaType } from '../../ServerService/dictAreaT
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Тип РВЗ</mat-label>
         <mat-select [(ngModel)]="data.areaTypeId" required>
-          <mat-option *ngFor="let areaType of areaTypes" [value]="areaType.id">
-            {{ areaType.value }} ({{ areaType.shortValue }})
-          </mat-option>
+          @for (areaType of areaTypes(); track areaType.id) {
+            <mat-option [value]="areaType.id">
+              {{ areaType.value }} ({{ areaType.shortValue }})
+            </mat-option>
+          }
         </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Кодифікатор адмін-територіальних одиниць</mat-label>
+        <input
+          matInput
+          [value]="cityCodeValue()"
+          readonly
+          placeholder="Натисніть кнопку для вибору..."
+        />
+        <button mat-icon-button matSuffix (click)="openCityCodeDialog()" type="button">
+          <mat-icon>search</mat-icon>
+        </button>
+        @if (data.cityCodeId) {
+          <button mat-icon-button matSuffix (click)="clearCityCode()" type="button">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Координати РВЗ</mat-label>
+        <textarea matInput [(ngModel)]="data.coords" rows="3"></textarea>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
@@ -57,23 +91,53 @@ import { DictAreaTypeService, DictAreaType } from '../../ServerService/dictAreaT
 export class DictAreaDialogComponent {
   private snackBar = inject(MatSnackBar);
   private dictAreaTypeService = inject(DictAreaTypeService);
-  areaTypes: DictAreaType[] = [];
+  private dialog = inject(MatDialog);
+
+  areaTypes = signal<DictAreaType[]>([]);
+  cityCodeValue = signal<string>('');
 
   constructor(
     public dialogRef: MatDialogRef<DictAreaDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: Partial<DictAreaDto>,
   ) {
     this.loadAreaTypes();
+
+    // Инициализируем signal значением из data
+    if (this.data.cityCode) {
+      this.cityCodeValue.set(this.data.cityCode);
+    }
   }
 
   loadAreaTypes() {
     this.dictAreaTypeService.getAll().subscribe({
-      next: (types) => (this.areaTypes = types),
+      next: (types) => this.areaTypes.set(types),
       error: (error) => {
         console.error('Помилка завантаження типів РВЗ:', error);
         this.snackBar.open('Помилка завантаження типів РВЗ', 'Закрити', { duration: 5000 });
       },
     });
+  }
+
+  openCityCodeDialog() {
+    const dialogRef = this.dialog.open(DictCityCodeDialogComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+    });
+
+    dialogRef.afterClosed().subscribe((result: CityCodeDto | undefined) => {
+      if (result) {
+        this.data.cityCodeId = result.id;
+        this.data.cityCode = result.value;
+        this.cityCodeValue.set(result.value);
+      }
+    });
+  }
+
+  clearCityCode() {
+    this.data.cityCodeId = undefined;
+    this.data.cityCode = undefined;
+    this.cityCodeValue.set('');
   }
 
   isValid(): boolean {

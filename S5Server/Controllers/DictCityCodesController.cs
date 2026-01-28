@@ -334,7 +334,7 @@ public class DictCityCodesController : ControllerBase
                 .Where(x => x.Value.Contains(term))
                 .OrderBy(x => x.Value)
                 .Take(limit)
-                .Select(x => new LookupDto(x.Id, x.Value))
+                .Select(x => new LookupDto(x.Id, $"{x.Value} {x.Category.ShortValue}"))
                 .ToListAsync(ct);
 
             return Ok(data);
