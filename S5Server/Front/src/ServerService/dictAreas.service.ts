@@ -3,6 +3,17 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LookupDto } from '../app/shared/models/lookup.models';
 
+/** Інформація про кодифікатор адміністративно-територіальних одиниць */
+export interface CityCodeInfo {
+  cityCodeId?: string;
+  cityCode?: string;
+  level1?: string;      // Область
+  level2?: string;      // Район
+  level3?: string;      // Громада
+  level4?: string;      // Населений пункт
+  levelExt?: string;    // Район у місті
+}
+
 export interface DictAreaDto {
   id: string;
   value: string;
@@ -11,12 +22,10 @@ export interface DictAreaDto {
   areaTypeId: string;
   /** Тип Району виконання завдань (РВЗ) */
   areaType: string;
-  /** Кодифікатор адмін-територіальних одиниць (ID) */
-  cityCodeId?: string;
-  /** Кодифікатор адмін-територіальних одиниць (назва) */
-  cityCode?: string;
   /** Координати/Перелік координат РВЗ */
   coords?: string;
+  /** Інформація про кодифікатор */
+  cityCodeInfo?: CityCodeInfo;
 }
 
 export interface DictAreaCreateDto {
@@ -99,5 +108,28 @@ export class DictAreasService {
   // Отримати райони за кодифікатором
   getByCityCode(cityCodeId: string): Observable<DictArea[]> {
     return this.http.get<DictArea[]>(`${this.api}/by-city-code/${cityCodeId}`);
+  }
+
+  buildCityCodeDisplayValue(info: CityCodeInfo): string {
+    if(!info) {
+      return '';
+    }
+    const parts = [];
+    if (info.level4) {
+      parts.push(info.level4);
+    }
+    if (info.level3) {
+      parts.push(info.level3);
+    }
+    if (info.level2) {
+      parts.push(info.level2);
+    }
+    if (info.level1) {
+      parts.push(info.level1);
+    }
+    if (info.levelExt) {
+      parts.push(`(Район: ${info.levelExt})`);
+    }
+    return parts.length > 0 ? parts.join(', ') : info.cityCode || '';
   }
 }

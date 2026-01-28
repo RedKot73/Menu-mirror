@@ -8,7 +8,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { DictAreaDialogComponent } from '../app/dialogs/DictArea-dialog.component';
 import { ConfirmDialogComponent } from '../app/dialogs/ConfirmDialog.component';
-import { DictAreasService, DictArea } from '../ServerService/dictAreas.service';
+import { DictAreasService, DictArea, CityCodeInfo } from '../ServerService/dictAreas.service';
 import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
 import { VerticalLayoutComponent } from '../app/shared/components/VerticalLayout.component';
 
@@ -62,7 +62,7 @@ import { VerticalLayoutComponent } from '../app/shared/components/VerticalLayout
           <!-- CityCode Column -->
           <ng-container matColumnDef="cityCode">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Кодифікатор</th>
-            <td mat-cell *matCellDef="let item">{{ item.cityCode }}</td>
+            <td mat-cell *matCellDef="let item">{{ getCityCodeDisplay(item.cityCodeInfo) }}</td>
           </ng-container>
 
           <ng-container matColumnDef="coords">
@@ -129,6 +129,10 @@ export class DictAreaPage implements AfterViewInit {
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
     });
+  }
+
+  getCityCodeDisplay(cityCodeInfo: CityCodeInfo): string {
+    return this.dictAreasService.buildCityCodeDisplayValue(cityCodeInfo);
   }
 
   add() {

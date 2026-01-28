@@ -13,7 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { DictAreaDto } from '../../ServerService/dictAreas.service';
+import { CityCodeInfo, DictAreaDto, DictAreasService } from '../../ServerService/dictAreas.service';
 import { DictAreaTypeService, DictAreaType } from '../../ServerService/dictAreaType.service';
 import { DictCityCodeDialogComponent } from './DictCityCode-dialog.component';
 import { CityCodeDto } from '../../ServerService/dictCityCode.service';
@@ -63,7 +63,7 @@ import { CityCodeDto } from '../../ServerService/dictCityCode.service';
         <button mat-icon-button matSuffix (click)="openCityCodeDialog()" type="button">
           <mat-icon>search</mat-icon>
         </button>
-        @if (data.cityCodeId) {
+        @if (data.cityCodeInfo?.cityCodeId) {
           <button mat-icon-button matSuffix (click)="clearCityCode()" type="button">
             <mat-icon>close</mat-icon>
           </button>
@@ -91,6 +91,7 @@ import { CityCodeDto } from '../../ServerService/dictCityCode.service';
 export class DictAreaDialogComponent {
   private snackBar = inject(MatSnackBar);
   private dictAreaTypeService = inject(DictAreaTypeService);
+  private dictAreasService = inject(DictAreasService);
   private dialog = inject(MatDialog);
 
   areaTypes = signal<DictAreaType[]>([]);
@@ -102,9 +103,11 @@ export class DictAreaDialogComponent {
   ) {
     this.loadAreaTypes();
 
-    // Инициализируем signal значением из data
-    if (this.data.cityCode) {
-      this.cityCodeValue.set(this.data.cityCode);
+    // Ініціалізуємо signal значенням з cityCodeInfo
+    if (this.data.cityCodeInfo?.cityCode) {
+      this.cityCodeValue.set(
+        this.dictAreasService.buildCityCodeDisplayValue(this.data.cityCodeInfo),
+      );
     }
   }
 
@@ -127,16 +130,23 @@ export class DictAreaDialogComponent {
 
     dialogRef.afterClosed().subscribe((result: CityCodeDto | undefined) => {
       if (result) {
-        this.data.cityCodeId = result.id;
-        this.data.cityCode = result.value;
+        // Створюємо cityCodeInfo з вибраного CityCodeDto
+        this.data.cityCodeInfo = {
+          cityCodeId: result.id,
+          cityCode: result.value,
+          level1: result.level1, // Поки використовуємо доступні дані
+          level2: result.level2,
+          level3: result.level3,
+          level4: result.level4,
+          levelExt: result.levelExt,
+        };
         this.cityCodeValue.set(result.value);
       }
     });
   }
 
   clearCityCode() {
-    this.data.cityCodeId = undefined;
-    this.data.cityCode = undefined;
+    this.data.cityCodeInfo = undefined;
     this.cityCodeValue.set('');
   }
 
