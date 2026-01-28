@@ -5,6 +5,54 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 namespace S5Server.Models;
 
 /// <summary>
+/// Інформація про кодифікатор адміністративно-територіальних одиниць
+/// </summary>
+public record CityCodeInfo(
+    string? CityCodeId,
+    string? CityCode,
+    /// <summary>
+    /// Область
+    /// </summary>
+    string? Level1,
+    /// <summary>
+    /// Обл.
+    /// </summary>
+    string? Level1Cat,
+    /// <summary>
+    /// Район
+    /// </summary>
+    string? Level2,
+    /// <summary>
+    /// Р-н
+    /// </summary>
+    string? Level2Cat,
+    /// <summary>
+    /// Громада
+    /// </summary>
+    string? Level3,
+    /// <summary>
+    /// ТГР
+    /// </summary>
+    string? Level3Cat,
+    /// <summary>
+    /// Населений пункт
+    /// </summary>
+    string? Level4,
+    /// <summary>
+    /// місто
+    /// </summary>
+    string? Level4Cat,
+    /// <summary>
+    /// Район у місті
+    /// </summary>
+    string? LevelExt,
+    /// <summary>
+    /// р-н міста
+    /// </summary>
+    string? LevelExtCat
+    );   
+
+/// <summary>
 /// DTO для Району виконання завдань (РВЗ)
 /// </summary>
 public record DictAreaDto(
@@ -23,17 +71,10 @@ public record DictAreaDto(
     /// </summary>
     string AreaType,
     /// <summary>
-    /// Кодифікатор адмін-територіальних одиниць (ID)
-    /// </summary>
-    string? CityCodeId,
-    /// <summary>
-    /// Кодифікатор адмін-територіальних одиниць (назва)
-    /// </summary>
-    string? CityCode,
-    /// <summary>
     /// Координати/Перелік координат РВЗ
     /// </summary>
-    string? Coords);
+    string? Coords,
+    CityCodeInfo? CityCodeInfo);  // ✅ Вкладений record
 
 /// <summary>
 /// DTO для створення Району виконання завдань (РВЗ)
@@ -106,9 +147,24 @@ public static class DictAreaExtensions
             area.Comment,
             area.AreaTypeId,
             area.AreaType?.ShortValue ?? area.AreaType?.Value ?? string.Empty,
-            area.CityCodeId,
-            area.CityCode?.Value,
-            area.Coords);
+            area.Coords,
+            // ✅ Створюємо вкладений record
+            area.CityCode != null
+                ? new CityCodeInfo(
+                    area.CityCodeId,
+                    area.CityCode.Value,
+                    area.CityCode.Level1?.Value,
+                    area.CityCode.Level1?.Category.ShortValue,
+                    area.CityCode.Level2?.Value,
+                    area.CityCode.Level2?.Category.ShortValue,
+                    area.CityCode.Level3?.Value,
+                    area.CityCode.Level3?.Category.ShortValue,
+                    area.CityCode.Level4?.Value,
+                    area.CityCode.Level4?.Category.ShortValue,
+                    area.CityCode.LevelExt?.Value,
+                    area.CityCode.LevelExt?.Category.ShortValue
+                    )
+                : null);
 
     /// <summary>
     /// Створює новий екземпляр DictArea з DTO
@@ -120,7 +176,7 @@ public static class DictAreaExtensions
             Value = dto.Value.Trim(),
             Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim(),
             AreaTypeId = dto.AreaTypeId,
-            CityCodeId = dto.CityCodeId,
+            CityCodeId = dto.CityCodeInfo?.CityCodeId,
             Coords = string.IsNullOrWhiteSpace(dto.Coords) ? null : dto.Coords.Trim()
         };
 
@@ -146,7 +202,7 @@ public static class DictAreaExtensions
         area.Value = dto.Value.Trim();
         area.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim();
         area.AreaTypeId = dto.AreaTypeId;
-        area.CityCodeId = dto.CityCodeId;
+        area.CityCodeId = dto.CityCodeInfo?.CityCodeId;
         area.Coords = string.IsNullOrWhiteSpace(dto.Coords) ? null : dto.Coords.Trim();
     }
 
@@ -158,7 +214,7 @@ public static class DictAreaExtensions
         return area.Value == dto.Value.Trim() &&
                area.Comment == (string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim()) &&
                area.AreaTypeId == dto.AreaTypeId &&
-               area.CityCodeId == dto.CityCodeId &&
+               area.CityCodeId == dto.CityCodeInfo?.CityCodeId &&
                area.Coords == (string.IsNullOrWhiteSpace(dto.Coords) ? null : dto.Coords.Trim());
     }
 

@@ -7,11 +7,16 @@ import { LookupDto } from '../app/shared/models/lookup.models';
 export interface CityCodeInfo {
   cityCodeId?: string;
   cityCode?: string;
-  level1?: string;      // Область
-  level2?: string;      // Район
-  level3?: string;      // Громада
-  level4?: string;      // Населений пункт
-  levelExt?: string;    // Район у місті
+  level1?: string; // Область
+  level1Cat?: string; // Обл.
+  level2?: string; // Район
+  level2Cat?: string; // Р-н
+  level3?: string; // Громада
+  level3Cat?: string; // ТГР
+  level4?: string; // Населений пункт
+  level4Cat?: string; // місто, село, смт
+  levelExt?: string; // Район у місті
+  levelExtCat?: string; // р-н міста
 }
 
 export interface DictAreaDto {
@@ -111,24 +116,26 @@ export class DictAreasService {
   }
 
   buildCityCodeDisplayValue(info: CityCodeInfo): string {
-    if(!info) {
+    if (!info) {
       return '';
     }
     const parts = [];
     if (info.level4) {
-      parts.push(info.level4);
+      parts.push(info.level4Cat ? `${info.level4} ${info.level4Cat}` : info.level4);
     }
     if (info.level3) {
-      parts.push(info.level3);
+      parts.push(info.level3Cat ? `${info.level3} ${info.level3Cat}` : info.level3);
     }
     if (info.level2) {
-      parts.push(info.level2);
+      parts.push(info.level2Cat ? `${info.level2} ${info.level2Cat}` : info.level2);
     }
     if (info.level1) {
-      parts.push(info.level1);
+      parts.push(info.level1Cat ? `${info.level1} ${info.level1Cat}` : info.level1);
     }
     if (info.levelExt) {
-      parts.push(`(Район: ${info.levelExt})`);
+      parts.push(
+        info.levelExtCat ? `${info.levelExt} ${info.levelExtCat}` : `Район: ${info.levelExt}`,
+      );
     }
     return parts.length > 0 ? parts.join(', ') : info.cityCode || '';
   }

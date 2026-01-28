@@ -134,13 +134,20 @@ export class DictAreaDialogComponent {
         this.data.cityCodeInfo = {
           cityCodeId: result.id,
           cityCode: result.value,
-          level1: result.level1, // Поки використовуємо доступні дані
+          level1: result.level1,
+          level1Cat: result.category,
           level2: result.level2,
+          level2Cat: undefined,
           level3: result.level3,
+          level3Cat: undefined,
           level4: result.level4,
+          level4Cat: undefined,
           levelExt: result.levelExt,
+          levelExtCat: undefined,
         };
-        this.cityCodeValue.set(result.value);
+        this.cityCodeValue.set(
+          this.dictAreasService.buildCityCodeDisplayValue(this.data.cityCodeInfo),
+        );
       }
     });
   }
