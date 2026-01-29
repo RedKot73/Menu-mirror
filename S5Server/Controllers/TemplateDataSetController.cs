@@ -159,14 +159,7 @@ namespace S5Server.Controllers
                 .Include(s => s.Rank)
                 .Include(s => s.Position)
                 .Include(s => s.State);
-            var soldiers = await sldrsData /* _db.Soldiers
-                .AsNoTracking()
-                .Include(s => s.Unit)
-                .Include(s => s.AssignedUnit)
-                .Include(s => s.OperationalUnit)
-                .Include(s => s.Rank)
-                .Include(s => s.Position)
-                .Include(s => s.State) */
+            var soldiers = await sldrsData 
                 .Where(s => s.UnitId == id)
                 .OrderBy(s => s.Rank.OrderVal)
                 .ThenBy(s => s.LastName)

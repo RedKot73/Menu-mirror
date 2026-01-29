@@ -1023,9 +1023,6 @@ namespace S5Server.Migrations
                         .HasMaxLength(36)
                         .HasColumnType("TEXT(36)");
 
-                    b.Property<string>("AreaId")
-                        .HasColumnType("TEXT(36)");
-
                     b.Property<string>("AssignedUnitId")
                         .HasColumnType("TEXT(36)");
 
@@ -1055,6 +1052,9 @@ namespace S5Server.Migrations
                     b.Property<string>("ParentId")
                         .HasColumnType("TEXT(36)");
 
+                    b.Property<string>("PersistentLocationId")
+                        .HasColumnType("TEXT(36)");
+
                     b.Property<string>("ShortName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1065,13 +1065,13 @@ namespace S5Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AreaId");
-
                     b.HasIndex("AssignedUnitId");
 
                     b.HasIndex("ForceTypeId");
 
                     b.HasIndex("ParentId");
+
+                    b.HasIndex("PersistentLocationId");
 
                     b.HasIndex("UnitTypeId");
 
@@ -1315,11 +1315,6 @@ namespace S5Server.Migrations
 
             modelBuilder.Entity("S5Server.Models.Unit", b =>
                 {
-                    b.HasOne("S5Server.Models.DictArea", "Area")
-                        .WithMany()
-                        .HasForeignKey("AreaId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("S5Server.Models.Unit", "AssignedUnit")
                         .WithMany("AssignedUnits")
                         .HasForeignKey("AssignedUnitId")
@@ -1335,18 +1330,23 @@ namespace S5Server.Migrations
                         .HasForeignKey("ParentId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("S5Server.Models.DictArea", "PersistentLocation")
+                        .WithMany()
+                        .HasForeignKey("PersistentLocationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("S5Server.Models.DictUnitType", "UnitType")
                         .WithMany()
                         .HasForeignKey("UnitTypeId")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Area");
 
                     b.Navigation("AssignedUnit");
 
                     b.Navigation("ForceType");
 
                     b.Navigation("Parent");
+
+                    b.Navigation("PersistentLocation");
 
                     b.Navigation("UnitType");
                 });

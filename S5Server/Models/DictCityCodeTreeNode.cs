@@ -140,10 +140,9 @@
             }
 
             var rootKey = rootParentId ?? string.Empty;
-            return lookup[rootKey]
+            return [.. lookup[rootKey]
                 .Select(c => BuildNode(c, 1))
-                .OrderBy(n => n.Value)
-                .ToList();
+                .OrderBy(n => n.Value)];
         }
 
         /// <summary>
@@ -238,7 +237,7 @@
         public static List<DictCityCodeTreeNode> Flatten(
             this IEnumerable<DictCityCodeTreeNode> nodes)
         {
-            return nodes.SelectMany(n => n.Flatten()).ToList();
+            return [.. nodes.SelectMany(n => n.Flatten())];
         }
 
         /// <summary>

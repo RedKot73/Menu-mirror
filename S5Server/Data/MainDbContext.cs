@@ -279,7 +279,7 @@ namespace S5Server.Data
                 entity.Property(e => e.MilitaryNumber).HasColumnType("TEXT(100)");
                 entity.Property(e => e.OrderVal).HasColumnType("INTEGER");
                 entity.Property(e => e.IsInvolved).HasColumnType("INTEGER").HasDefaultValue(0);
-                entity.Property(e => e.AreaId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.PersistentLocationId).HasColumnType("TEXT(36)");
                 entity.Property(e => e.Comment).HasColumnType("TEXT");
 
                 // Керівний підрозділ
@@ -306,9 +306,9 @@ namespace S5Server.Data
                       .WithMany()
                       .HasForeignKey(u => u.UnitTypeId)
                       .OnDelete(DeleteBehavior.Restrict);
-                entity.HasOne(u => u.Area)
+                entity.HasOne(u => u.PersistentLocation)
                       .WithMany()
-                      .HasForeignKey(u => u.AreaId)
+                      .HasForeignKey(u => u.PersistentLocationId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
 

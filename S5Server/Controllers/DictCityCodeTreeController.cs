@@ -377,7 +377,7 @@ public class DictCityCodeTreeController : ControllerBase
                 Children = includeChildren
                     ? (childrenDepth > 0 
                         ? cityCodes.BuildTree(id, childrenDepth).Select(n => n.ToDto()).ToList()
-                        : cityCodes.BuildTree(id, maxDepth: 0).Select(n => n.ToDto()).ToList())
+                        : [.. cityCodes.BuildTree(id, maxDepth: 0).Select(n => n.ToDto())])
                     : null
             };
 
