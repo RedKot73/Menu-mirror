@@ -82,7 +82,7 @@ export class DictUnitTaskComponent implements AfterViewInit {
   selectedTaskId = signal<string | null>(null);
   editingTaskId = signal<string | null>(null);
   editingField = signal<'amount' | 'withMeans' | 'areaTypeId' | null>(null);
-  editingValue = signal<any>(null);
+  editingValue = signal<string | number | boolean | undefined>(undefined);
   dialog = inject(MatDialog);
   snackBar = inject(MatSnackBar);
 
@@ -251,7 +251,7 @@ export class DictUnitTaskComponent implements AfterViewInit {
     event.stopPropagation();
     this.editingTaskId.set(null);
     this.editingField.set(null);
-    this.editingValue.set(null);
+    this.editingValue.set(undefined);
   }
 
   saveFieldChange(task: DictUnitTask, field: 'amount' | 'withMeans' | 'areaTypeId', event: Event) {
@@ -263,7 +263,7 @@ export class DictUnitTaskComponent implements AfterViewInit {
       next: () => {
         // Оновлюємо значення в таблиці
         if (field === 'areaTypeId') {
-          task.areaTypeId = this.editingValue();
+          task.areaTypeId = this.editingValue() as string;
           // Оновлюємо також shortValue
           const areaType = this.areaTypes().find((at) => at.id === this.editingValue());
           if (areaType) {
@@ -287,7 +287,7 @@ export class DictUnitTaskComponent implements AfterViewInit {
     });
   }
 
-  updateEditingValue(value: any) {
+  updateEditingValue(value: string | number | boolean) {
     this.editingValue.set(value);
   }
 }
