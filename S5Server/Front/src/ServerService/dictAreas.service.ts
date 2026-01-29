@@ -2,22 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LookupDto } from '../app/shared/models/lookup.models';
-
-/** Інформація про кодифікатор адміністративно-територіальних одиниць */
-export interface CityCodeInfo {
-  cityCodeId?: string;
-  cityCode?: string;
-  level1?: string; // Область
-  level1Cat?: string; // Обл.
-  level2?: string; // Район
-  level2Cat?: string; // Р-н
-  level3?: string; // Громада
-  level3Cat?: string; // ТГР
-  level4?: string; // Населений пункт
-  level4Cat?: string; // місто, село, смт
-  levelExt?: string; // Район у місті
-  levelExtCat?: string; // р-н міста
-}
+import { CityCodeInfo } from '../ServerService/dictCityCode.service';
 
 export interface DictAreaDto {
   id: string;

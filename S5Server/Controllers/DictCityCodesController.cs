@@ -133,6 +133,46 @@ public class DictCityCodesController : ControllerBase
         }
     }
 
+    [HttpGet("get-citycode-info/{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<CityCodeDto>> GetCityCodeInfo(string id, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            return BadRequest("id обов'язковий");
+
+        try
+        {
+            var e = await _set.AsNoTracking()
+                .Include(t => t.Level1)
+                .ThenInclude(t => t.Category)
+                .Include(t => t.Level2)
+                .ThenInclude(t => t!.Category)
+                .Include(t => t.Level3)
+                .ThenInclude(t => t!.Category)
+                .Include(t => t.Level4)
+                .ThenInclude(t => t!.Category)
+                .Include(t => t.LevelExt)
+                .ThenInclude(t => t!.Category)
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
+            if (e == null)
+                return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
+
+            return Ok(e.ToCityCodeInfo());
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка при отриманні DictCityCode Id={Id}", id);
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+
     /// <summary>
     /// Створити новий запис кодифікатора
     /// </summary>

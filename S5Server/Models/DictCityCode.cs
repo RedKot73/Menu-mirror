@@ -96,6 +96,54 @@ namespace S5Server.Models
         public string Id { get; set; } = default!;
         public bool HasChildren = false;
     }
+    /// <summary>
+    /// Інформація про кодифікатор адміністративно-територіальних одиниць
+    /// з описом рівнів
+    /// </summary>
+    public record CityCodeInfo(
+        string? CityCodeId,
+        string? CityCode,
+        /// <summary>
+        /// Область
+        /// </summary>
+        string? Level1,
+        /// <summary>
+        /// Обл.
+        /// </summary>
+        string? Level1Cat,
+        /// <summary>
+        /// Район
+        /// </summary>
+        string? Level2,
+        /// <summary>
+        /// Р-н
+        /// </summary>
+        string? Level2Cat,
+        /// <summary>
+        /// Громада
+        /// </summary>
+        string? Level3,
+        /// <summary>
+        /// ТГР
+        /// </summary>
+        string? Level3Cat,
+        /// <summary>
+        /// Населений пункт
+        /// </summary>
+        string? Level4,
+        /// <summary>
+        /// місто
+        /// </summary>
+        string? Level4Cat,
+        /// <summary>
+        /// Район у місті
+        /// </summary>
+        string? LevelExt,
+        /// <summary>
+        /// р-н міста
+        /// </summary>
+        string? LevelExtCat
+        );
 
     /// <summary>
     /// Категорія об’єкта
@@ -288,6 +336,22 @@ namespace S5Server.Models
                 Value = cityCode.Value,
                 HasChildren = cityCode.HasChildren
             };
+
+        public static CityCodeInfo ToCityCodeInfo(this DictCityCode cityCode) =>
+            new(
+                cityCode.Id,
+                cityCode.Value,
+                cityCode.Level1?.Value,
+                cityCode.Level1?.Category.ShortValue,
+                cityCode.Level2?.Value,
+                cityCode.Level2?.Category.ShortValue,
+                cityCode.Level3?.Value,
+                cityCode.Level3?.Category.ShortValue,
+                cityCode.Level4?.Value,
+                cityCode.Level4?.Category.ShortValue,
+                cityCode.LevelExt?.Value,
+                cityCode.LevelExt?.Category.ShortValue
+                );
 
         /// <summary>
         /// Створює новий екземпляр DictCityCode з DTO

@@ -27,6 +27,23 @@ export interface CityCodeCreateDto {
   value: string;
 }
 
+/** Інформація про кодифікатор адміністративно-територіальних одиниць */
+export interface CityCodeInfo {
+  cityCodeId?: string;
+  cityCode?: string;
+  level1?: string; // Область
+  level1Cat?: string; // Обл.
+  level2?: string; // Район
+  level2Cat?: string; // Р-н
+  level3?: string; // Громада
+  level3Cat?: string; // ТГР
+  level4?: string; // Населений пункт
+  level4Cat?: string; // місто, село, смт
+  levelExt?: string; // Район у місті
+  levelExtCat?: string; // р-н міста
+}
+
+
 export interface CityCodeFilter {
   search?: string;
   page?: number;
@@ -91,6 +108,10 @@ export class DictCityCodeService {
 
   getById(id: string): Observable<CityCodeDto> {
     return this.http.get<CityCodeDto>(`${this.api}/${id}`);
+  }
+
+  getCityCodeInfo(id: string): Observable<CityCodeInfo> {
+    return this.http.get<CityCodeInfo>(`${this.api}/get-citycode-info/${id}`);
   }
 
   create(item: CityCodeCreateDto): Observable<CityCodeDto> {

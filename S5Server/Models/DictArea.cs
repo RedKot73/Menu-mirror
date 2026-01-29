@@ -5,54 +5,6 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 namespace S5Server.Models;
 
 /// <summary>
-/// Інформація про кодифікатор адміністративно-територіальних одиниць
-/// </summary>
-public record CityCodeInfo(
-    string? CityCodeId,
-    string? CityCode,
-    /// <summary>
-    /// Область
-    /// </summary>
-    string? Level1,
-    /// <summary>
-    /// Обл.
-    /// </summary>
-    string? Level1Cat,
-    /// <summary>
-    /// Район
-    /// </summary>
-    string? Level2,
-    /// <summary>
-    /// Р-н
-    /// </summary>
-    string? Level2Cat,
-    /// <summary>
-    /// Громада
-    /// </summary>
-    string? Level3,
-    /// <summary>
-    /// ТГР
-    /// </summary>
-    string? Level3Cat,
-    /// <summary>
-    /// Населений пункт
-    /// </summary>
-    string? Level4,
-    /// <summary>
-    /// місто
-    /// </summary>
-    string? Level4Cat,
-    /// <summary>
-    /// Район у місті
-    /// </summary>
-    string? LevelExt,
-    /// <summary>
-    /// р-н міста
-    /// </summary>
-    string? LevelExtCat
-    );   
-
-/// <summary>
 /// DTO для Району виконання завдань (РВЗ)
 /// </summary>
 public record DictAreaDto(
@@ -149,22 +101,7 @@ public static class DictAreaExtensions
             area.AreaType?.ShortValue ?? area.AreaType?.Value ?? string.Empty,
             area.Coords,
             // ✅ Створюємо вкладений record
-            area.CityCode != null
-                ? new CityCodeInfo(
-                    area.CityCodeId,
-                    area.CityCode.Value,
-                    area.CityCode.Level1?.Value,
-                    area.CityCode.Level1?.Category.ShortValue,
-                    area.CityCode.Level2?.Value,
-                    area.CityCode.Level2?.Category.ShortValue,
-                    area.CityCode.Level3?.Value,
-                    area.CityCode.Level3?.Category.ShortValue,
-                    area.CityCode.Level4?.Value,
-                    area.CityCode.Level4?.Category.ShortValue,
-                    area.CityCode.LevelExt?.Value,
-                    area.CityCode.LevelExt?.Category.ShortValue
-                    )
-                : null);
+            area.CityCode?.ToCityCodeInfo());
 
     /// <summary>
     /// Створює новий екземпляр DictArea з DTO

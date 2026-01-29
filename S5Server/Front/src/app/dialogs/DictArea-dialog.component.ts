@@ -13,10 +13,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { CityCodeInfo, DictAreaDto, DictAreasService } from '../../ServerService/dictAreas.service';
+import { DictAreaDto, DictAreasService } from '../../ServerService/dictAreas.service';
 import { DictAreaTypeService, DictAreaType } from '../../ServerService/dictAreaType.service';
 import { DictCityCodeDialogComponent } from './DictCityCode-dialog.component';
-import { CityCodeDto } from '../../ServerService/dictCityCode.service';
+import { CityCodeDto, DictCityCodeService } from '../../ServerService/dictCityCode.service';
+import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
 
 @Component({
   selector: 'app-dict-area-dialog',
@@ -90,6 +91,7 @@ import { CityCodeDto } from '../../ServerService/dictCityCode.service';
 })
 export class DictAreaDialogComponent {
   private snackBar = inject(MatSnackBar);
+  private dictCityCodeService = inject(DictCityCodeService);
   private dictAreaTypeService = inject(DictAreaTypeService);
   private dictAreasService = inject(DictAreasService);
   private dialog = inject(MatDialog);
@@ -131,23 +133,24 @@ export class DictAreaDialogComponent {
     dialogRef.afterClosed().subscribe((result: CityCodeDto | undefined) => {
       if (result) {
         // Створюємо cityCodeInfo з вибраного CityCodeDto
-        this.data.cityCodeInfo = {
-          cityCodeId: result.id,
-          cityCode: result.value,
-          level1: result.level1,
-          level1Cat: result.category,
-          level2: result.level2,
-          level2Cat: undefined,
-          level3: result.level3,
-          level3Cat: undefined,
-          level4: result.level4,
-          level4Cat: undefined,
-          levelExt: result.levelExt,
-          levelExtCat: undefined,
-        };
-        this.cityCodeValue.set(
-          this.dictAreasService.buildCityCodeDisplayValue(this.data.cityCodeInfo),
-        );
+        this.dictCityCodeService.getCityCodeInfo(result.id).subscribe({
+          next: (item) => {
+            if (item) {
+              this.data.cityCodeInfo = item;
+              this.cityCodeValue.set(
+                this.dictAreasService.buildCityCodeDisplayValue(this.data.cityCodeInfo),
+              );
+            }
+          },
+          error: (error) => {
+            console.error('Помилка завантаження кодифікатора:', error);
+            const errorMessage = S5App_ErrorHandler.handleHttpError(
+              error,
+              'Помилка завантаження кодифікатора',
+            );
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          },
+        });
       }
     });
   }
