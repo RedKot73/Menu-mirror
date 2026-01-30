@@ -191,9 +191,8 @@
       <tr
         mat-row
         *matRowDef="let row; columns: displayedColumns"
-        class="clickable-row"
-        [class.selected]="row.id === selectedTaskId()"
         (click)="selectTask(row)"
+        [class.selected]="row.id === selectedTaskId()"
       ></tr>
     </table>
   </div>

@@ -66,10 +66,10 @@ export class UnitsTaskEditorComponent {
   protected dataSet = signal<TemplateDataSetListItem | null>(null);
 
   // --- Document Info ---
-  protected parentDocumentDate = signal<Date>(new Date());
+  protected parentDocumentDate = signal<Date | null>(new Date());
   protected parentDocumentNumber = signal<string>('');
   // Дата документа
-  protected documentDate = signal<Date>(new Date());
+  protected documentDate = signal<Date | null>(new Date());
   protected documentNumber = signal<string>('');
 
   // --- Save State ---
@@ -112,12 +112,12 @@ export class UnitsTaskEditorComponent {
    * Обробник зміни дати документа
    */
   onParentDocumentDateChange(event: MatDatepickerInputEvent<Date>): void {
-    this.parentDocumentDate.set(event.value || (null as any));
+    this.parentDocumentDate.set(event.value || null);
     this.hasUnsavedChanges.set(true);
   }
 
   onDocumentDateChange(event: MatDatepickerInputEvent<Date>): void {
-    this.documentDate.set(event.value || (null as any));
+    this.documentDate.set(event.value || null);
     this.hasUnsavedChanges.set(true);
   }
 
@@ -261,9 +261,9 @@ export class UnitsTaskEditorComponent {
   ): string {
     // Формуємо дані для збереження
     const dataToSave: DocumentDataSet = {
-      parentDocumentDate: this.parentDocumentDate().toISOString(),
+      parentDocumentDate: this.parentDocumentDate()?.toISOString() || '',
       parentDocumentNumber: this.parentDocumentNumber(),
-      documentDate: this.documentDate().toISOString(),
+      documentDate: this.documentDate()?.toISOString() || '',
       documentNumber: this.documentNumber(),
       unitsTask: this.selectedUnits(),
       savedAt: new Date().toISOString(),
@@ -370,7 +370,7 @@ export class UnitsTaskEditorComponent {
 
     const dataJson = this.getDataSetContent();
     // Генеруємо назву на основі дати та номера документа
-    const dateStr = this.documentDate().toLocaleDateString('uk-UA');
+    const dateStr = this.documentDate()?.toLocaleDateString('uk-UA') || '';
     const docNum = `${this.parentDocumentNumber()}-${this.documentNumber()}`.trim();
     const dataSetName = docNum || `Дані документа від ${dateStr} № ${docNum}`;
 
