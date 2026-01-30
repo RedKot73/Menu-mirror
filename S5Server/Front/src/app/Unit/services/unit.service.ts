@@ -24,6 +24,14 @@ export interface UnitDto {
    * Оперативний/Тимчасовий підрозділ - Команда
    */
   isInvolved: boolean;
+  /**
+   * ППД (Пункт постійної дислокації) - ID кодифікатора
+   */
+  persistentLocationId?: string;
+  /**
+   * ППД (Пункт постійної дислокації) - відображуване значення
+   */
+  persistentLocation?: string;
   comment?: string;
 }
 
@@ -44,6 +52,10 @@ export interface UnitCreateDto {
    * Оперативний/Тимчасовий підрозділ - Команда
    */
   isInvolved: boolean;
+  /**
+   * ППД (Пункт постійної дислокації) - ID кодифікатора
+   */
+  persistentLocationId?: string;
   comment?: string;
 }
 
@@ -93,7 +105,7 @@ export class UnitService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося отримати підрозділи');
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -111,10 +123,10 @@ export class UnitService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
-          'Не вдалося отримати елементи дерева підрозділів'
+          'Не вдалося отримати елементи дерева підрозділів',
         );
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -123,7 +135,7 @@ export class UnitService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося отримати підрозділ');
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -132,7 +144,7 @@ export class UnitService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося створити підрозділ');
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -141,7 +153,7 @@ export class UnitService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося оновити підрозділ');
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -150,7 +162,7 @@ export class UnitService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося видалити підрозділ');
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -160,10 +172,10 @@ export class UnitService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
-          'Не вдалося перевірити наявність дочірніх підрозділів'
+          'Не вдалося перевірити наявність дочірніх підрозділів',
         );
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -172,10 +184,10 @@ export class UnitService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
-          'Не вдалося отримати дочірні підрозділи'
+          'Не вдалося отримати дочірні підрозділи',
         );
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -184,10 +196,10 @@ export class UnitService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
-          'Не вдалося перевірити наявність приданих підрозділів'
+          'Не вдалося перевірити наявність приданих підрозділів',
         );
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -196,10 +208,10 @@ export class UnitService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
-          'Не вдалося отримати придані підрозділи'
+          'Не вдалося отримати придані підрозділи',
         );
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -209,10 +221,10 @@ export class UnitService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
-          'Не вдалося додати дочірній підрозділ'
+          'Не вдалося додати дочірній підрозділ',
         );
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -221,10 +233,10 @@ export class UnitService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
-          'Не вдалося прибрати дочірній підрозділ'
+          'Не вдалося прибрати дочірній підрозділ',
         );
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -234,10 +246,10 @@ export class UnitService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
-          'Не вдалося додати приданий підрозділ'
+          'Не вдалося додати приданий підрозділ',
         );
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -246,10 +258,10 @@ export class UnitService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
-          'Не вдалося прибрати приданий підрозділ'
+          'Не вдалося прибрати приданий підрозділ',
         );
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -262,7 +274,7 @@ export class UnitService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося завантажити список');
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -274,7 +286,7 @@ export class UnitService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося завантажити список');
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -286,10 +298,10 @@ export class UnitService {
         catchError((error: HttpErrorResponse) => {
           const message = S5App_ErrorHandler.handleHttpError(
             error,
-            'Не вдалося змінити порядок підрозділу'
+            'Не вдалося змінити порядок підрозділу',
           );
           return throwError(() => new Error(message));
-        })
+        }),
       );
   }
 }

@@ -1,161 +1,171 @@
 <div class="main-content">
   @if (selectedUnit(); as unit) {
-  <!-- Детальная информация о подразделении -->
-  <mat-card class="unit-details-card">
-    <mat-card-header>
-      <mat-card-title class="info-item inline">
-        {{ unit.shortName }}
-        @if(unit.isInvolved) {
-        <mat-icon>groups</mat-icon>
-        <span>Екіпаж/Група</span>
-        }
-      </mat-card-title>
-    </mat-card-header>
+    <!-- Детальная информация о подразделении -->
+    <mat-card class="unit-details-card">
+      <mat-card-header>
+        <mat-card-title class="info-item inline">
+          {{ unit.shortName }}
+          @if (unit.isInvolved) {
+            <mat-icon>groups</mat-icon>
+            <span>Екіпаж/Група</span>
+          }
+        </mat-card-title>
+      </mat-card-header>
 
-    <mat-card-content>
-      <div class="unit-info-grid">
-        @if (unit.parentShortName) {
-        <div class="info-item inline">
-          <strong>Батьківський:</strong>
-          <span>{{ unit.parentShortName }}</span>
+      <mat-card-content>
+        <div class="unit-info-grid">
+          @if (unit.parentShortName) {
+            <div class="info-item inline">
+              <strong>Батьківський:</strong>
+              <span>{{ unit.parentShortName }}</span>
+            </div>
+          }
+          @if (!unit.isInvolved) {
+            @if (unit.militaryNumber) {
+              <div class="info-item inline">
+                <strong>Військова частина:</strong>
+                <span>{{ unit.militaryNumber }}</span>
+              </div>
+            }
+
+            <div class="info-item inline">
+              <strong>Тип сил:</strong>
+              <span>{{ unit.forceType || 'Не вказано' }}</span>
+            </div>
+
+            <div class="info-item inline">
+              <strong>Тип підрозділу:</strong>
+              <span>{{ unit.unitType || 'Не вказано' }}</span>
+            </div>
+
+            @if (unit.assignedShortName) {
+              <div class="info-item inline">
+                <strong>Приданий до:</strong>
+                <span>{{ unit.assignedShortName }}</span>
+              </div>
+            }
+          }
+
+          @if (unit.persistentLocation) {
+            <div class="info-item inline">
+              <strong>ППД:</strong>
+              <span>{{ unit.persistentLocation }}</span>
+            </div>
+          }
+
+          <div class="info-item inline">
+            <strong>Порядок:</strong>
+            <span>{{ unit.orderVal }}</span>
+          </div>
+
+          @if (unit.comment) {
+            <div class="info-item full-width comment">
+              <strong>Коментар:</strong>
+              <span>{{ unit.comment }}</span>
+            </div>
+          }
         </div>
-        } @if(!unit.isInvolved) { @if(unit.militaryNumber){
-        <div class="info-item inline">
-          <strong>Військова частина:</strong>
-          <span>{{ unit.militaryNumber }}</span>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-accordion class="sections-accordion">
+      @if (!unit.isInvolved) {
+        <!-- Особовий склад -->
+        <mat-expansion-panel class="unit-section-panel">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon color="primary">group</mat-icon>
+              Особовий склад
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+
+          <div class="section-content">
+            <app-page-soldiers
+              [(items)]="soldiers"
+              [currentUnitTab]="unitTag.UnitId"
+              (reloadRequested)="reloadSoldiers()"
+            ></app-page-soldiers>
+          </div>
+        </mat-expansion-panel>
+      }
+
+      <!-- Придані військовослужбовці -->
+      <mat-expansion-panel class="unit-section-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon color="accent">assignment_ind</mat-icon>
+            Придані військовослужбовці
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="section-content">
+          <app-page-soldiers
+            [(items)]="assignedSoldiers"
+            [currentUnitTab]="unitTag.AssignedId"
+            (reloadRequested)="reloadAssignedSoldiers()"
+          ></app-page-soldiers>
         </div>
-        }
+      </mat-expansion-panel>
 
-        <div class="info-item inline">
-          <strong>Тип сил:</strong>
-          <span>{{ unit.forceType || 'Не вказано' }}</span>
+      <!-- Оперативні військовослужбовці -->
+      <mat-expansion-panel class="unit-section-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon color="accent">groups</mat-icon>
+            Задіяні військовослужбовці
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="section-content">
+          <app-page-soldiers
+            [(items)]="involvedSoldiers"
+            [currentUnitTab]="unitTag.InvolvedId"
+            (reloadRequested)="reloadInvolvedSoldiers()"
+          ></app-page-soldiers>
         </div>
+      </mat-expansion-panel>
 
-        <div class="info-item inline">
-          <strong>Тип підрозділу:</strong>
-          <span>{{ unit.unitType || 'Не вказано' }}</span>
+      <!-- Дополнительные секции с expansion panels -->
+      <mat-expansion-panel class="unit-section-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon color="primary">gavel</mat-icon>
+            Бойові розпорядження
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="section-content">
+          <p class="todo-placeholder">[TODO: Тут буде список бойових розпоряджень підрозділу]</p>
         </div>
+      </mat-expansion-panel>
 
-        @if (unit.assignedShortName) {
-        <div class="info-item inline">
-          <strong>Приданий до:</strong>
-          <span>{{ unit.assignedShortName }}</span>
+      <mat-expansion-panel class="unit-section-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon color="primary">send</mat-icon>
+            Бойові донесення
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="section-content">
+          <p class="todo-placeholder">[TODO: Тут буде список бойових донесень підрозділу]</p>
         </div>
-        } }
+      </mat-expansion-panel>
 
-        <div class="info-item inline">
-          <strong>Порядок:</strong>
-          <span>{{ unit.orderVal }}</span>
+      <mat-expansion-panel class="unit-section-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon color="primary">info</mat-icon>
+            Додаткова інформація
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="section-content">
+          <p class="todo-placeholder">
+            [TODO: Ця секція зарезервована для майбутніх даних, які ще не визначені.]
+          </p>
         </div>
-
-        @if (unit.comment) {
-        <div class="info-item full-width comment">
-          <strong>Коментар:</strong>
-          <span>{{ unit.comment }}</span>
-        </div>
-        }
-      </div>
-    </mat-card-content>
-  </mat-card>
-
-  <mat-accordion class="sections-accordion">
-    @if(!unit.isInvolved){
-    <!-- Особовий склад -->
-    <mat-expansion-panel class="unit-section-panel">
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          <mat-icon color="primary">group</mat-icon>
-          Особовий склад
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-
-      <div class="section-content">
-        <app-page-soldiers
-          [(items)]="soldiers"
-          [currentUnitTab]="unitTag.UnitId"
-          (reloadRequested)="reloadSoldiers()"
-        ></app-page-soldiers>
-      </div>
-    </mat-expansion-panel>
-    }
-
-    <!-- Придані військовослужбовці -->
-    <mat-expansion-panel class="unit-section-panel">
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          <mat-icon color="accent">assignment_ind</mat-icon>
-          Придані військовослужбовці
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-
-      <div class="section-content">
-        <app-page-soldiers
-          [(items)]="assignedSoldiers"
-          [currentUnitTab]="unitTag.AssignedId"
-          (reloadRequested)="reloadAssignedSoldiers()"
-        ></app-page-soldiers>
-      </div>
-    </mat-expansion-panel>
-
-    <!-- Оперативні військовослужбовці -->
-    <mat-expansion-panel class="unit-section-panel">
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          <mat-icon color="accent">groups</mat-icon>
-          Задіяні військовослужбовці
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-
-      <div class="section-content">
-        <app-page-soldiers
-          [(items)]="involvedSoldiers"
-          [currentUnitTab]="unitTag.InvolvedId"
-          (reloadRequested)="reloadInvolvedSoldiers()"
-        ></app-page-soldiers>
-      </div>
-    </mat-expansion-panel>
-
-    <!-- Дополнительные секции с expansion panels -->
-    <mat-expansion-panel class="unit-section-panel">
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          <mat-icon color="primary">gavel</mat-icon>
-          Бойові розпорядження
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-
-      <div class="section-content">
-        <p class="todo-placeholder">[TODO: Тут буде список бойових розпоряджень підрозділу]</p>
-      </div>
-    </mat-expansion-panel>
-
-    <mat-expansion-panel class="unit-section-panel">
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          <mat-icon color="primary">send</mat-icon>
-          Бойові донесення
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-
-      <div class="section-content">
-        <p class="todo-placeholder">[TODO: Тут буде список бойових донесень підрозділу]</p>
-      </div>
-    </mat-expansion-panel>
-
-    <mat-expansion-panel class="unit-section-panel">
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          <mat-icon color="primary">info</mat-icon>
-          Додаткова інформація
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-
-      <div class="section-content">
-        <p class="todo-placeholder">
-          [TODO: Ця секція зарезервована для майбутніх даних, які ще не визначені.]
-        </p>
-      </div>
-    </mat-expansion-panel>
-  </mat-accordion>
+      </mat-expansion-panel>
+    </mat-accordion>
   }
 </div>

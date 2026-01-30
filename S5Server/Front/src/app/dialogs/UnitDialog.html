@@ -31,9 +31,10 @@
     >
       <mat-option [value]="null">Без підпорядкування</mat-option>
       @if (isLoadingParents) {
-      <mat-option disabled>Завантаження...</mat-option>
-      } @for (unit of filteredParentUnits | async; track unit.id) {
-      <mat-option [value]="unit">{{ unit.value }}</mat-option>
+        <mat-option disabled>Завантаження...</mat-option>
+      }
+      @for (unit of filteredParentUnits | async; track unit.id) {
+        <mat-option [value]="unit">{{ unit.value }}</mat-option>
       }
     </mat-autocomplete>
   </mat-form-field>
@@ -54,9 +55,10 @@
     >
       <mat-option [value]="null">Не приданий</mat-option>
       @if (isLoadingAssigned) {
-      <mat-option disabled>Завантаження...</mat-option>
-      } @for (unit of filteredAssignedUnits | async; track unit.id) {
-      <mat-option [value]="unit">{{ unit.value }}</mat-option>
+        <mat-option disabled>Завантаження...</mat-option>
+      }
+      @for (unit of filteredAssignedUnits | async; track unit.id) {
+        <mat-option [value]="unit">{{ unit.value }}</mat-option>
       }
     </mat-autocomplete>
   </mat-form-field>
@@ -66,7 +68,7 @@
     <mat-select [(ngModel)]="data.forceTypeId">
       <mat-option [value]="null">Відсутній</mat-option>
       @for (force of dictForcesTypes; track force.id) {
-      <mat-option [value]="force.id">{{ force.value }}</mat-option>
+        <mat-option [value]="force.id">{{ force.value }}</mat-option>
       }
     </mat-select>
   </mat-form-field>
@@ -87,9 +89,10 @@
     >
       <mat-option [value]="null">Відсутній</mat-option>
       @if (isLoadingUnitTypes) {
-      <mat-option disabled>Завантаження...</mat-option>
-      } @for (unitType of filteredUnitTypes | async; track unitType.id) {
-      <mat-option [value]="unitType">{{ unitType.value }}</mat-option>
+        <mat-option disabled>Завантаження...</mat-option>
+      }
+      @for (unitType of filteredUnitTypes | async; track unitType.id) {
+        <mat-option [value]="unitType">{{ unitType.value }}</mat-option>
       }
     </mat-autocomplete>
   </mat-form-field>
@@ -97,6 +100,30 @@
   <mat-form-field appearance="outline" floatLabel="always">
     <mat-label>Порядок сортування</mat-label>
     <input matInput [(ngModel)]="data.orderVal" type="number" required />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Пункт постійної дислокації (ППД)</mat-label>
+    <input
+      type="text"
+      matInput
+      [formControl]="persistentLocationSearchControl"
+      [matAutocomplete]="persistentLocationAuto"
+      placeholder="Населений пункт"
+    />
+    <mat-autocomplete
+      #persistentLocationAuto="matAutocomplete"
+      [displayWith]="displayPersistentLocationFn"
+      (optionSelected)="onPersistentLocationSelected($event)"
+    >
+      <mat-option [value]="null">Не вказано</mat-option>
+      @if (isLoadingPersistentLocations) {
+        <mat-option disabled>Завантаження...</mat-option>
+      }
+      @for (location of filteredPersistentLocations | async; track location.id) {
+        <mat-option [value]="location">{{ location.value }}</mat-option>
+      }
+    </mat-autocomplete>
   </mat-form-field>
 
   <mat-form-field appearance="outline" floatLabel="always">

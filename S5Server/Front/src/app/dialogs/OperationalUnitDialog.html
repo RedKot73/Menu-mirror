@@ -11,6 +11,30 @@
   </mat-form-field>
 
   <mat-form-field appearance="outline" floatLabel="always">
+    <mat-label>Пункт постійної дислокації (ППД)</mat-label>
+    <input
+      type="text"
+      matInput
+      [formControl]="persistentLocationSearchControl"
+      [matAutocomplete]="persistentLocationAuto"
+      placeholder="Населений пункт"
+    />
+    <mat-autocomplete
+      #persistentLocationAuto="matAutocomplete"
+      [displayWith]="displayPersistentLocationFn"
+      (optionSelected)="onPersistentLocationSelected($event)"
+    >
+      <mat-option [value]="null">Не вказано</mat-option>
+      @if (isLoadingPersistentLocations) {
+        <mat-option disabled>Завантаження...</mat-option>
+      }
+      @for (location of filteredPersistentLocations | async; track location.id) {
+        <mat-option [value]="location">{{ location.value }}</mat-option>
+      }
+    </mat-autocomplete>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" floatLabel="always">
     <mat-label>Коментар</mat-label>
     <textarea matInput [(ngModel)]="data.comment" rows="3"></textarea>
   </mat-form-field>

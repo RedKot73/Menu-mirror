@@ -26,7 +26,9 @@ import { DictForcesTypeService, DictForcesType } from '../../ServerService/dictF
 import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
 import { UnitDto, UnitService } from '../Unit/services/unit.service';
 import { DictUnitTypeService, DictUnitType } from '../../ServerService/dictUnitType.service';
+import { DictAreasService } from '../../ServerService/dictAreas.service';
 import { LookupDto } from '../shared/models/lookup.models';
+import { PPD_AREA_TYPE_GUID } from '../Unit/unit.constants';
 
 @Component({
   selector: 'unit-dialog',
@@ -50,6 +52,7 @@ export class UnitDialogComponent implements OnInit {
   private unitService = inject(UnitService);
   private dictForcesTypeService = inject(DictForcesTypeService);
   private dictUnitTypeService = inject(DictUnitTypeService);
+  private dictAreasService = inject(DictAreasService);
   private cdr = inject(ChangeDetectorRef);
   private snackBar = inject(MatSnackBar);
 
@@ -73,9 +76,15 @@ export class UnitDialogComponent implements OnInit {
   isLoadingUnitTypes = false;
   selectedUnitType: LookupDto | null = null;
 
+  // Для автокомплита пункту постійної дислокації (ППД)
+  persistentLocationSearchControl = new FormControl<LookupDto | string | null>(null);
+  filteredPersistentLocations: Observable<LookupDto[]>;
+  isLoadingPersistentLocations = false;
+  selectedPersistentLocation: LookupDto | null = null;
+
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: UnitDto,
-    private ref: MatDialogRef<UnitDialogComponent>
+    private ref: MatDialogRef<UnitDialogComponent>,
   ) {
     // Инициализируем значения по умолчанию
     if (!data.orderVal) {
@@ -92,8 +101,8 @@ export class UnitDialogComponent implements OnInit {
           typeof value === 'string'
             ? value
             : value && typeof value === 'object' && 'value' in value
-            ? value.value
-            : '';
+              ? value.value
+              : '';
         if (searchTerm && searchTerm.length >= 2) {
           this.isLoadingParents = true;
           return this.unitService
@@ -101,7 +110,7 @@ export class UnitDialogComponent implements OnInit {
             .pipe(finalize(() => (this.isLoadingParents = false)));
         }
         return of([]);
-      })
+      }),
     );
 
     // Настраиваем автокомплит для приданного подразделения
@@ -114,8 +123,8 @@ export class UnitDialogComponent implements OnInit {
           typeof value === 'string'
             ? value
             : value && typeof value === 'object' && 'value' in value
-            ? value.value
-            : '';
+              ? value.value
+              : '';
         if (searchTerm && searchTerm.length >= 2) {
           this.isLoadingAssigned = true;
           return this.unitService
@@ -123,7 +132,7 @@ export class UnitDialogComponent implements OnInit {
             .pipe(finalize(() => (this.isLoadingAssigned = false)));
         }
         return of([]);
-      })
+      }),
     );
 
     // Настраиваем автокомплит для типа подразделения
@@ -136,8 +145,8 @@ export class UnitDialogComponent implements OnInit {
           typeof value === 'string'
             ? value
             : value && typeof value === 'object' && 'value' in value
-            ? value.value
-            : '';
+              ? value.value
+              : '';
         if (searchTerm && searchTerm.length >= 2) {
           this.isLoadingUnitTypes = true;
           return this.dictUnitTypeService
@@ -145,7 +154,30 @@ export class UnitDialogComponent implements OnInit {
             .pipe(finalize(() => (this.isLoadingUnitTypes = false)));
         }
         return of([]);
-      })
+      }),
+    );
+
+    // Настраиваем автокомплит для пункту постійної дислокації (ППД)
+    this.filteredPersistentLocations = this.persistentLocationSearchControl.valueChanges.pipe(
+      startWith(''),
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap((value) => {
+        const searchTerm =
+          typeof value === 'string'
+            ? value
+            : value && typeof value === 'object' && 'value' in value
+              ? value.value
+              : '';
+        if (searchTerm && searchTerm.length >= 2) {
+          this.isLoadingPersistentLocations = true;
+          // Фільтруємо тільки записи з типом "ППД"
+          return this.dictAreasService
+            .lookup(searchTerm, PPD_AREA_TYPE_GUID, 10)
+            .pipe(finalize(() => (this.isLoadingPersistentLocations = false)));
+        }
+        return of([]);
+      }),
     );
   }
 
@@ -163,7 +195,7 @@ export class UnitDialogComponent implements OnInit {
         error: (error) => {
           const errorMessage = S5App_ErrorHandler.handleHttpError(
             error,
-            'Не вдалося завантажити основний підрозділ'
+            'Не вдалося завантажити основний підрозділ',
           );
           this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
         },
@@ -180,7 +212,7 @@ export class UnitDialogComponent implements OnInit {
         error: (error) => {
           const errorMessage = S5App_ErrorHandler.handleHttpError(
             error,
-            'Не вдалося завантажити приданий підрозділ'
+            'Не вдалося завантажити приданий підрозділ',
           );
           this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
         },
@@ -197,7 +229,24 @@ export class UnitDialogComponent implements OnInit {
         error: (error) => {
           const errorMessage = S5App_ErrorHandler.handleHttpError(
             error,
-            'Не вдалося завантажити тип підрозділу'
+            'Не вдалося завантажити тип підрозділу',
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
+      });
+    }
+
+    // Якщо вже є persistentLocationId, завантажимо та встановимо відповідний об'єкт
+    if (this.data.persistentLocationId) {
+      this.dictAreasService.getById(this.data.persistentLocationId).subscribe({
+        next: (area) => {
+          this.selectedPersistentLocation = { id: area.id, value: area.value };
+          this.persistentLocationSearchControl.setValue(this.selectedPersistentLocation);
+        },
+        error: (error) => {
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
+            error,
+            'Не вдалося завантажити пункт постійної дислокації',
           );
           this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
         },
@@ -214,7 +263,7 @@ export class UnitDialogComponent implements OnInit {
       error: (error) => {
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
-          'Не вдалося завантажити список видів збройних сил'
+          'Не вдалося завантажити список видів збройних сил',
         );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
@@ -252,6 +301,17 @@ export class UnitDialogComponent implements OnInit {
     const selectedType = event.option.value as LookupDto | null;
     this.selectedUnitType = selectedType;
     this.data.unitTypeId = selectedType ? selectedType.id : undefined;
+  }
+
+  // Методи для автокомпліту пункту постійної дислокації
+  displayPersistentLocationFn = (location: LookupDto | null): string => {
+    return location ? location.value : '';
+  };
+
+  onPersistentLocationSelected(event: MatAutocompleteSelectedEvent) {
+    const selectedLocation = event.option.value as LookupDto | null;
+    this.selectedPersistentLocation = selectedLocation;
+    this.data.persistentLocationId = selectedLocation ? selectedLocation.id : undefined;
   }
 
   onCancel() {
