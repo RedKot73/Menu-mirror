@@ -24,12 +24,9 @@
     <strong>РСП для екіпажів:</strong>
     <mat-form-field appearance="outline" class="task-select">
       <mat-select placeholder="Оберіть РСП" [formControl]="areaControl">
-        <mat-option value="reserve">півд.-сх. ГУЛЯЙПОЛЕ - 102 обр ТрО</mat-option>
-        <mat-option value="combat">півд. ГУЛЯЙПОЛЕ - 102 обр ТрО</mat-option>
-        <mat-option value="recon">ГУЛЯЙПОЛЕ - 102 обр ТрО</mat-option>
-        <mat-option value="engineer">сх. ГУЛЯЙПОЛЕ - 102 обр ТрО</mat-option>
-        <mat-option value="guard">ВИСОКЕ - 102 обр ТрО</mat-option>
-        <mat-option value="notUsed">зах. МАЛИНІВКА - 102 обр ТрО</mat-option>
+        @for (area of areas(); track area.id) {
+          <mat-option [value]="area">{{ area.value }}</mat-option>
+        }
       </mat-select>
     </mat-form-field>
   </div>
@@ -50,9 +47,10 @@
       >
         <mat-option [value]="null">Не вибрано</mat-option>
         @if (isLoadingDroneModels) {
-        <mat-option disabled>Завантаження...</mat-option>
-        } @for (model of filteredDroneModels$ | async; track model.id) {
-        <mat-option [value]="model">{{ model.value }}</mat-option>
+          <mat-option disabled>Завантаження...</mat-option>
+        }
+        @for (model of filteredDroneModels$ | async; track model.id) {
+          <mat-option [value]="model">{{ model.value }}</mat-option>
         }
       </mat-autocomplete>
     </mat-form-field>

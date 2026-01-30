@@ -38,6 +38,7 @@ import { LookupDto } from '../../shared/models/lookup.models';
 import { DictDroneModelService } from '../../../ServerService/dictDroneModel.service';
 import { DictUnitTasksService } from '../../../ServerService/dictUnitTasks.service';
 import { DictUnitTaskItemsService } from '../../../ServerService/dictUnitTaskItems.service';
+import { DictAreasService, DictArea } from '../../../ServerService/dictAreas.service';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 import { UnitContentComponent } from '../../Unit/UnitContent.component';
 import { UnitDto } from '../../Unit/services/unit.service';
@@ -64,6 +65,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
   private dictDroneModelService = inject(DictDroneModelService);
   private dictUnitTasksService = inject(DictUnitTasksService);
   private dictUnitTaskItemsService = inject(DictUnitTaskItemsService);
+  private dictAreasService = inject(DictAreasService);
   private snackBar = inject(MatSnackBar);
   private destroy$ = new Subject<void>();
 
@@ -72,6 +74,9 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
 
   // Список завдань з справочника
   protected unitTasks = signal<LookupDto[]>([]);
+
+  // Список областей (РСП), відфільтрований по areaTypeId з обраного завдання
+  protected areas = signal<DictArea[]>([]);
 
   @Input({ required: true })
   set unitTask(value: UnitTaskDto) {
@@ -86,7 +91,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
 
   // Form Controls
   protected taskControl = new FormControl<LookupDto | null>(null);
-  protected areaControl = new FormControl<string | null>(null);
+  protected areaControl = new FormControl<DictArea | null>(null);
   protected droneModelControl = new FormControl<LookupDto | string | null>(null);
 
   // Drone Model Autocomplete
@@ -124,7 +129,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
         console.error('Помилка завантаження завдань:', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
-          'Помилка завантаження завдань'
+          'Помилка завантаження завдань',
         );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
@@ -132,17 +137,24 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
 
     // Ініціалізуємо значення FormControl з unit
     if (this.unitTask.AreaValue) {
-      this.areaControl.setValue(this.unitTask.AreaValue);
+      // TODO: Завантажити повний об'єкт DictArea по AreaValue
+      // Поки що залишаємо порожнім, оскільки в unitTask зберігається тільки AreaValue (string)
     }
     if (this.unitTask.Means && this.unitTask.Means.length > 0) {
       const droneModel: LookupDto = { id: '', value: this.unitTask.Means[0] };
       this.droneModelControl.setValue(droneModel);
     }
 
-    // Підписуємося на зміни task
-    this.taskControl.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((value) => this.onTaskChange(value));
+    // Підписуємося на зміни task - завантажуємо області при зміні завдання
+    this.taskControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((task) => {
+      this.onTaskChange(task);
+      // Завантажуємо області з фільтром по areaTypeId обраного завдання
+      if (task?.id) {
+        this.loadAreasByTask(task.id);
+      } else {
+        this.areas.set([]);
+      }
+    });
 
     // Підписуємося на зміни area
     this.areaControl.valueChanges
@@ -196,7 +208,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
           console.error('Помилка завантаження елементів завдання:', error);
           const errorMessage = S5App_ErrorHandler.handleHttpError(
             error,
-            'Помилка завантаження елементів завдання'
+            'Помилка завантаження елементів завдання',
           );
           this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
 
@@ -214,9 +226,47 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
   /**
    * Обробник зміни зони (РСП)
    */
-  private onAreaChange(areaValue: string | null): void {
-    const updatedUnit = { ...this.unitTask, AreaValue: areaValue || '' };
+  private onAreaChange(area: DictArea | null): void {
+    const updatedUnit = { ...this.unitTask, AreaValue: area?.value || '' };
     this.unitChange.emit(updatedUnit);
+  }
+
+  /**
+   * Завантажує області по areaTypeId з обраного завдання
+   */
+  private loadAreasByTask(taskId: string): void {
+    // Спочатку отримуємо повну інформацію про завдання, щоб дізнатися areaTypeId
+    this.dictUnitTasksService
+      .getById(taskId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (task) => {
+          if (task.areaTypeId) {
+            // Завантажуємо області відфільтровані по areaTypeId
+            this.dictAreasService
+              .getByAreaType(task.areaTypeId)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe({
+                next: (areas) => this.areas.set(areas),
+                error: (error) => {
+                  console.error('Помилка завантаження областей:', error);
+                  const errorMessage = S5App_ErrorHandler.handleHttpError(
+                    error,
+                    'Помилка завантаження областей',
+                  );
+                  this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+                  this.areas.set([]);
+                },
+              });
+          } else {
+            this.areas.set([]);
+          }
+        },
+        error: (error) => {
+          console.error('Помилка завантаження завдання:', error);
+          this.areas.set([]);
+        },
+      });
   }
 
   /**
@@ -237,10 +287,10 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
         return this.dictDroneModelService.lookup(searchTerm, 10).pipe(
           finalize(() => {
             this.isLoadingDroneModels = false;
-          })
+          }),
         );
       }),
-      takeUntil(this.destroy$)
+      takeUntil(this.destroy$),
     );
   }
 
