@@ -128,7 +128,7 @@
                   (click)="$event.stopPropagation()"
                 >
                   <mat-option *ngFor="let areaType of areaTypes()" [value]="areaType.id">
-                    {{ areaType.shortValue }}
+                    {{ areaType.value }} ({{ areaType.shortValue }})
                   </mat-option>
                 </mat-select>
               </mat-form-field>

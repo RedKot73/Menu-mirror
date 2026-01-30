@@ -91,6 +91,10 @@ export class DictUnitTaskComponent implements AfterViewInit {
   constructor() {
     effect(() => {
       this.dataSource.data = this.items();
+      // Переназначаємо sort після оновлення даних, щоб сортування продовжувало працювати
+      if (this.sort) {
+        this.dataSource.sort = this.sort;
+      }
     });
   }
 
