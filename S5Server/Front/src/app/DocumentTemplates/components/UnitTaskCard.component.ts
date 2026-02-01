@@ -72,10 +72,10 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
   // Используем сигнал для реактивного отслеживания изменений unitTask
   private unitTaskSignal = signal<UnitTaskDto | null>(null);
 
-  // Список завдань з справочника
+  // Перелік завдань з довідника
   protected unitTasks = signal<LookupDto[]>([]);
 
-  // Список областей (РСП), відфільтрований по areaTypeId з обраного завдання
+  // Райони виконання завдань (РВЗ), відфільтрований по areaTypeId з обраного завдання
   protected areas = signal<DictArea[]>([]);
 
   @Input({ required: true })
@@ -192,6 +192,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
     }
 
     // Завантажуємо всі елементи завдання (для різних категорій документів)
+    /*
     this.dictUnitTaskItemsService
       .getByUnitTask(task.id)
       .pipe(takeUntil(this.destroy$))
@@ -221,6 +222,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
           this.unitChange.emit(updatedUnit);
         },
       });
+    */
   }
 
   /**

@@ -46,17 +46,17 @@
             }
           }
 
-          @if (unit.persistentLocation) {
-            <div class="info-item inline">
-              <strong>ППД:</strong>
-              <span>{{ unit.persistentLocation }}</span>
-            </div>
-          }
+          <div class="info-item inline">
+            <strong>ППД:</strong>
+            <span>{{ unit.persistentLocation || 'Не вказано' }}</span>
+          </div>
 
+          <!-- 
           <div class="info-item inline">
             <strong>Порядок:</strong>
             <span>{{ unit.orderVal }}</span>
           </div>
+          -->
 
           @if (unit.comment) {
             <div class="info-item full-width comment">

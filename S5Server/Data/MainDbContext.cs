@@ -281,17 +281,19 @@ namespace S5Server.Data
                 entity.Property(e => e.IsInvolved).HasColumnType("INTEGER").HasDefaultValue(0);
                 entity.Property(e => e.PersistentLocationId).HasColumnType("TEXT(36)");
                 entity.Property(e => e.Comment).HasColumnType("TEXT");
+                
+                // ✅ ДОДАНО
+                entity.Property(e => e.ChangedBy).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.ValidFrom).IsRequired().HasColumnType("TEXT");
 
                 // Керівний підрозділ
                 entity.HasOne(u => u.Parent)
-                      //.WithMany() // заменить на .WithMany(p => p.ChildUnits) если уберёте [NotMapped] у ChildUnits
                       .WithMany(u => u.ChildUnits)
                       .HasForeignKey(u => u.ParentId)
                       .OnDelete(DeleteBehavior.Restrict);
 
                 // Приданий до підрозділу
                 entity.HasOne(u => u.AssignedUnit)
-                      //.WithMany() // заменить на .WithMany(p => p.AssignedUnits) если уберёте [NotMapped] у AssignedUnits
                       .WithMany(u => u.AssignedUnits)
                       .HasForeignKey(u => u.AssignedUnitId)
                       .OnDelete(DeleteBehavior.SetNull);
@@ -306,10 +308,50 @@ namespace S5Server.Data
                       .WithMany()
                       .HasForeignKey(u => u.UnitTypeId)
                       .OnDelete(DeleteBehavior.Restrict);
+                      
                 entity.HasOne(u => u.PersistentLocation)
                       .WithMany()
                       .HasForeignKey(u => u.PersistentLocationId)
                       .OnDelete(DeleteBehavior.Restrict);
+
+                entity.ToTable(tb => tb.HasTrigger("trg_units_insert_history"))
+                    .ToTable(tb => tb.HasTrigger("trg_units_update_history"))
+                    .ToTable(tb => tb.HasTrigger("trg_units_delete_history"));
+            });
+
+            // В клас MainDbContext додати DbSet:
+            modelBuilder.Entity<UnitHist>(entity =>
+            {
+                entity.ToTable("units_hist");
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+                entity.Property(e => e.UnitId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.ParentId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.ParentShortName).HasColumnType("TEXT(100)");
+                entity.Property(e => e.AssignedUnitId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.AssignedUnitShortName).HasColumnType("TEXT(100)");
+                entity.Property(e => e.Name).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.ShortName).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.MilitaryNumber).HasColumnType("TEXT(100)");
+                entity.Property(e => e.ForceTypeId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.ForceTypeShortValue).HasColumnType("TEXT(50)");
+                entity.Property(e => e.UnitTypeId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.UnitTypeShortValue).HasColumnType("TEXT(50)");
+                entity.Property(e => e.OrderVal).HasColumnType("INTEGER");
+                entity.Property(e => e.IsInvolved).HasColumnType("INTEGER").HasDefaultValue(0);
+                entity.Property(e => e.PersistentLocationId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.PersistentLocationValue).HasColumnType("TEXT(100)");
+                entity.Property(e => e.Comment).HasColumnType("TEXT");
+                entity.Property(e => e.ChangedBy).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.Operation).IsRequired().HasColumnType("TEXT(10)");
+                entity.Property(e => e.ValidFrom).IsRequired().HasColumnType("TEXT");
+                entity.Property(e => e.ValidTo).HasColumnType("TEXT");
+
+                // Індекси для аудиту та аналітики
+                entity.HasIndex(e => e.UnitId);
+                entity.HasIndex(e => new { e.UnitId, e.ValidFrom });
+                entity.HasIndex(e => e.Operation);
             });
 
             modelBuilder.Entity<Soldier>(entity =>
@@ -376,6 +418,10 @@ namespace S5Server.Data
                       .WithOne(s => s.Soldier)
                       //.HasForeignKey(s => s.VezhaUserId)
                       .OnDelete(DeleteBehavior.SetNull);
+
+                entity.ToTable(tb => tb.HasTrigger("trg_soldiers_insert_history"))
+                    .ToTable(tb => tb.HasTrigger("trg_soldiers_update_history"))
+                    .ToTable(tb => tb.HasTrigger("trg_soldiers_delete_history"));
                 /*
                 // Індекси
                 entity.HasIndex(e => e.UnitId);
@@ -539,6 +585,10 @@ namespace S5Server.Data
         /// Підрозділи
         /// </summary>
         public DbSet<Unit> Units { get; set; }
+        /// <summary>
+        /// Историческая таблица подразделений
+        /// </summary>
+        public DbSet<UnitHist> UnitHistories { get; set; }
         /// <summary>
         /// Військовослужбовці (бійці)
         /// </summary>

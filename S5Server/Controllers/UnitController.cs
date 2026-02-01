@@ -189,8 +189,11 @@ public class UnitController : ControllerBase
 
         try
         {
-            // ✅ Використовуємо Extension-метод
             var entity = dto.ToEntity();
+            
+            // ✅ Встановлюємо ChangedBy з поточного користувача
+            entity.ChangedBy = User.Identity?.Name ?? "System";
+            entity.ValidFrom = DateTime.UtcNow;
 
             // Встановлюємо OrderVal, якщо не вказано
             /*
@@ -267,6 +270,10 @@ public class UnitController : ControllerBase
             if (e.EqualsDto(dto))
                 return NoContent();
 
+            // ✅ Оновлюємо ChangedBy при кожній зміні
+            e.ChangedBy = User.Identity?.Name ?? "System";
+            // ValidFrom НЕ змінюємо!
+
             // ✅ Застосовуємо зміни через Extension-метод
             e.ApplyDto(dto);
 
@@ -297,7 +304,8 @@ public class UnitController : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Помилка при оновленні Unit Id={Id}", id);
+                _logger.LogError(ex, "Помилка при оновленні Unit Id={Id}\n{Msg}\n{ExMsg}",
+                    id, ex.Message, ex.InnerException?.Message);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }

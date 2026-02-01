@@ -40,7 +40,10 @@ public record UnitDto(
     int OrderVal,
     string? PersistentLocationId,
     string? PersistentLocation,
-    string? Comment);
+    string? Comment,
+    // ✅ ДОДАНО
+    string ChangedBy,
+    DateTime ValidFrom);
 
 /// <summary>
 /// Розширений DTO для дерева: додає ознаку наявності дочірніх підрозділів
@@ -63,7 +66,10 @@ public record UnitTreeItemDto(
     string? PersistentLocationId,
     string? PersistentLocation,
     string? Comment,
-    bool HasChildren = false) 
+    bool HasChildren,
+    // ✅ ДОДАНО
+    string ChangedBy,
+    DateTime ValidFrom) 
     : UnitDto(
         Id,
         ParentId,
@@ -81,7 +87,9 @@ public record UnitTreeItemDto(
         OrderVal,
         PersistentLocationId,
         PersistentLocation,
-        Comment);
+        Comment,
+        ChangedBy,
+        ValidFrom);
 
 /// <summary>
 /// DTO для набора даних підрозділу для Angular (формування документу)
@@ -265,6 +273,18 @@ public class Unit
     /// </summary>
     [NotMapped]
     public List<Soldier> InvolvedSoldiers { get; set; } = [];
+
+    /// <summary>
+    /// Кто внёс изменение (UserId або "System")
+    /// </summary>
+    [StringLength(100), Required]
+    public string ChangedBy { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Дата начала действия записи
+    /// </summary>
+    [Required]
+    public DateTime ValidFrom { get; set; } = DateTime.Now;
 }
 
 /// <summary>
@@ -293,7 +313,10 @@ public static class UnitExtensions
             unit.OrderVal,
             unit.PersistentLocationId,
             unit.PersistentLocation?.Value,
-            unit.Comment);
+            unit.Comment,
+            // ✅ ДОДАНО
+            unit.ChangedBy,
+            unit.ValidFrom);
 
     /// <summary>
     /// Конвертує Unit у TreeItemDto з прапорцем HasChildren
@@ -317,7 +340,10 @@ public static class UnitExtensions
             unit.PersistentLocationId,
             unit.PersistentLocation?.Value,
             unit.Comment,
-            hasChildren);
+            hasChildren,
+            // ✅ ДОДАНО
+            unit.ChangedBy,
+            unit.ValidFrom);
 
     /// <summary>
     /// Створює новий екземпляр Unit з DTO
@@ -340,7 +366,10 @@ public static class UnitExtensions
             PersistentLocationId = dto.PersistentLocationId,
             Comment = string.IsNullOrWhiteSpace(dto.Comment) 
                 ? null 
-                : dto.Comment.Trim()
+                : dto.Comment.Trim(),
+            // ✅ ДОДАНО
+            ChangedBy = dto.ChangedBy,
+            ValidFrom = dto.ValidFrom
         };
 
     /// <summary>
@@ -364,7 +393,10 @@ public static class UnitExtensions
             PersistentLocationId = dto.PersistentLocationId,
             Comment = string.IsNullOrWhiteSpace(dto.Comment) 
                 ? null 
-                : dto.Comment.Trim()
+                : dto.Comment.Trim(),
+            // ✅ ДОДАНО: автоматично встановлюються на сервері
+            ChangedBy = "System", // АБО отримувати з User.Identity?.Name
+            ValidFrom = DateTime.UtcNow
         };
 
     /// <summary>
@@ -387,6 +419,9 @@ public static class UnitExtensions
         unit.Comment = string.IsNullOrWhiteSpace(dto.Comment) 
             ? null 
             : dto.Comment.Trim();
+        // ✅ ДОДАНО: оновлюємо ChangedBy, ValidFrom НЕ оновлюємо (тільки при INSERT)
+        unit.ChangedBy = dto.ChangedBy;
+        // ValidFrom НЕ змінюємо при UPDATE!
     }
 
     /// <summary>
@@ -409,6 +444,7 @@ public static class UnitExtensions
                unit.Comment == (string.IsNullOrWhiteSpace(dto.Comment) 
                    ? null 
                    : dto.Comment.Trim());
+        // ✅ ChangedBy та ValidFrom НЕ порівнюємо (аудит-поля)
     }
 
     /// <summary>

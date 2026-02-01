@@ -795,7 +795,14 @@ namespace S5Server.Migrations
 
                     b.HasIndex("UnitId");
 
-                    b.ToTable("soldiers", (string)null);
+                    b.ToTable("soldiers", null, t =>
+                        {
+                            t.HasTrigger("trg_soldiers_delete_history");
+
+                            t.HasTrigger("trg_soldiers_insert_history");
+
+                            t.HasTrigger("trg_soldiers_update_history");
+                        });
                 });
 
             modelBuilder.Entity("S5Server.Models.SoldierHist", b =>
@@ -1026,6 +1033,11 @@ namespace S5Server.Migrations
                     b.Property<string>("AssignedUnitId")
                         .HasColumnType("TEXT(36)");
 
+                    b.Property<string>("ChangedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT(100)");
+
                     b.Property<string>("Comment")
                         .HasColumnType("TEXT");
 
@@ -1063,6 +1075,9 @@ namespace S5Server.Migrations
                     b.Property<string>("UnitTypeId")
                         .HasColumnType("TEXT(36)");
 
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AssignedUnitId");
@@ -1075,7 +1090,117 @@ namespace S5Server.Migrations
 
                     b.HasIndex("UnitTypeId");
 
-                    b.ToTable("units", (string)null);
+                    b.ToTable("units", null, t =>
+                        {
+                            t.HasTrigger("trg_units_delete_history");
+
+                            t.HasTrigger("trg_units_insert_history");
+
+                            t.HasTrigger("trg_units_update_history");
+                        });
+                });
+
+            modelBuilder.Entity("S5Server.Models.UnitHist", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("AssignedUnitId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("AssignedUnitShortName")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT(100)");
+
+                    b.Property<string>("ChangedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT(100)");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ForceTypeId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("ForceTypeShortValue")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT(50)");
+
+                    b.Property<bool>("IsInvolved")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("MilitaryNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT(100)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT(100)");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT(10)");
+
+                    b.Property<int>("OrderVal")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ParentId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("ParentShortName")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT(100)");
+
+                    b.Property<string>("PersistentLocationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("PersistentLocationValue")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT(100)");
+
+                    b.Property<string>("ShortName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT(100)");
+
+                    b.Property<string>("UnitId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("UnitTypeId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("UnitTypeShortValue")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT(50)");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ValidTo")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Operation");
+
+                    b.HasIndex("UnitId");
+
+                    b.HasIndex("UnitId", "ValidFrom");
+
+                    b.ToTable("units_hist", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

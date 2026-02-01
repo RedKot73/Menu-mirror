@@ -307,8 +307,9 @@ public class DictUnitTasksController : ControllerBase
         try
         {
             var data = await Query()
+                .Include(t => t.AreaType)
                 .OrderBy(t => t.Value)
-                .Select(t => new LookupDto(t.Id, t.Value))
+                .Select(t => t.ToLookupDto())
                 .ToListAsync(ct);
 
             return Ok(data);

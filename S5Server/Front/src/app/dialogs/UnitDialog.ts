@@ -7,12 +7,19 @@ import {
   ChangeDetectorRef,
 } from '@angular/core';
 import { FormsModule, FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+  MatDialog,
+} from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   MatAutocompleteModule,
   MatAutocompleteSelectedEvent,
@@ -26,9 +33,10 @@ import { DictForcesTypeService, DictForcesType } from '../../ServerService/dictF
 import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
 import { UnitDto, UnitService } from '../Unit/services/unit.service';
 import { DictUnitTypeService, DictUnitType } from '../../ServerService/dictUnitType.service';
-import { DictAreasService } from '../../ServerService/dictAreas.service';
+import { DictAreasService, DictArea } from '../../ServerService/dictAreas.service';
 import { LookupDto } from '../shared/models/lookup.models';
 import { PPD_AREA_TYPE_GUID } from '../Unit/unit.constants';
+import { DictAreaSelectDialogComponent } from './DictAreaSelect-dialog.component';
 
 @Component({
   selector: 'unit-dialog',
@@ -43,6 +51,8 @@ import { PPD_AREA_TYPE_GUID } from '../Unit/unit.constants';
     MatOptionModule,
     MatAutocompleteModule,
     AsyncPipe,
+    MatIconModule,
+    MatTooltipModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './UnitDialog.html',
@@ -55,6 +65,7 @@ export class UnitDialogComponent implements OnInit {
   private dictAreasService = inject(DictAreasService);
   private cdr = inject(ChangeDetectorRef);
   private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
 
   dictForcesTypes: DictForcesType[] = [];
 
@@ -76,11 +87,8 @@ export class UnitDialogComponent implements OnInit {
   isLoadingUnitTypes = false;
   selectedUnitType: LookupDto | null = null;
 
-  // Для автокомплита пункту постійної дислокації (ППД)
-  persistentLocationSearchControl = new FormControl<LookupDto | string | null>(null);
-  filteredPersistentLocations: Observable<LookupDto[]>;
-  isLoadingPersistentLocations = false;
-  selectedPersistentLocation: LookupDto | null = null;
+  // Для вибору пункту постійної дислокації (ППД) через діалог
+  selectedPersistentLocation: DictArea | null = null;
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: UnitDto,
@@ -156,29 +164,6 @@ export class UnitDialogComponent implements OnInit {
         return of([]);
       }),
     );
-
-    // Настраиваем автокомплит для пункту постійної дислокації (ППД)
-    this.filteredPersistentLocations = this.persistentLocationSearchControl.valueChanges.pipe(
-      startWith(''),
-      debounceTime(300),
-      distinctUntilChanged(),
-      switchMap((value) => {
-        const searchTerm =
-          typeof value === 'string'
-            ? value
-            : value && typeof value === 'object' && 'value' in value
-              ? value.value
-              : '';
-        if (searchTerm && searchTerm.length >= 2) {
-          this.isLoadingPersistentLocations = true;
-          // Фільтруємо тільки записи з типом "ППД"
-          return this.dictAreasService
-            .lookup(searchTerm, PPD_AREA_TYPE_GUID, 10)
-            .pipe(finalize(() => (this.isLoadingPersistentLocations = false)));
-        }
-        return of([]);
-      }),
-    );
   }
 
   ngOnInit() {
@@ -240,8 +225,7 @@ export class UnitDialogComponent implements OnInit {
     if (this.data.persistentLocationId) {
       this.dictAreasService.getById(this.data.persistentLocationId).subscribe({
         next: (area) => {
-          this.selectedPersistentLocation = { id: area.id, value: area.value };
-          this.persistentLocationSearchControl.setValue(this.selectedPersistentLocation);
+          this.selectedPersistentLocation = area;
         },
         error: (error) => {
           const errorMessage = S5App_ErrorHandler.handleHttpError(
@@ -303,15 +287,31 @@ export class UnitDialogComponent implements OnInit {
     this.data.unitTypeId = selectedType ? selectedType.id : undefined;
   }
 
-  // Методи для автокомпліту пункту постійної дислокації
-  displayPersistentLocationFn = (location: LookupDto | null): string => {
-    return location ? location.value : '';
-  };
+  // Методи для вибору пункту постійної дислокації через діалог
+  openPersistentLocationDialog() {
+    const dialogRef = this.dialog.open(DictAreaSelectDialogComponent, {
+      width: '900px',
+      data: {
+        areaTypeId: PPD_AREA_TYPE_GUID,
+        title: 'Вибір пункту постійної дислокації (ППД)',
+      },
+    });
 
-  onPersistentLocationSelected(event: MatAutocompleteSelectedEvent) {
-    const selectedLocation = event.option.value as LookupDto | null;
-    this.selectedPersistentLocation = selectedLocation;
-    this.data.persistentLocationId = selectedLocation ? selectedLocation.id : undefined;
+    dialogRef.afterClosed().subscribe((result: DictArea | undefined) => {
+      if (result) {
+        this.selectedPersistentLocation = result;
+        this.data.persistentLocationId = result.id;
+        this.data.persistentLocation = result.value;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  clearPersistentLocation() {
+    this.selectedPersistentLocation = null;
+    this.data.persistentLocationId = undefined;
+    this.data.persistentLocation = undefined;
+    this.cdr.detectChanges();
   }
 
   onCancel() {

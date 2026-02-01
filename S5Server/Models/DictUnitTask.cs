@@ -167,5 +167,10 @@ namespace S5Server.Models
                    unitTask.WithMeans == dto.WithMeans &&
                    unitTask.AreaTypeId == dto.AreaTypeId;
         }
+        /// <summary>
+        /// Конвертує у LookupDto для випадаючих списків
+        /// </summary>
+        public static LookupDto ToLookupDto(this DictUnitTask unitTask) =>
+            new(unitTask.Id, $"{unitTask.Value} ({unitTask.AreaType.ShortValue})");
     }
 }
