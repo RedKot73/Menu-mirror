@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace S5Server.Models
 {
+    /// <summary>
+    /// Завдання підрозділу для використання в документах БР/БД
+    /// </summary>
     public record DictUnitTaskDto(
         string Id,
         /// <summary>
@@ -29,6 +32,9 @@ namespace S5Server.Models
         /// </summary>
         string AreaType);
 
+    /// <summary>
+    /// Завдання підрозділу для використання в документах БР/БД
+    /// </summary>
     public record DictUnitTaskCreateDto(
         string Value,
         string? Comment,
@@ -43,11 +49,6 @@ namespace S5Server.Models
     /// <summary>
     /// Завдання підрозділу для використання в документах БР/БД
     /// </summary>
-    /// <remarks>This class maps to the 'dict_unit_task' database table and provides properties for
-    /// identifying, describing, and configuring unit tasks. It is typically used in scenarios where tasks are assigned
-    /// to units and may include financial amounts, comments, and configuration flags. All properties are required
-    /// unless otherwise specified. Thread safety is not guaranteed; instances should be managed appropriately in
-    /// concurrent environments.</remarks>
     [Table("dict_unit_task")]
     public class DictUnitTask
     {

@@ -1123,6 +1123,11 @@ namespace S5Server.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT(100)");
 
+                    b.Property<bool>("IsParentDocUsed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
                     b.Property<bool>("IsPublished")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
@@ -1132,6 +1137,14 @@ namespace S5Server.Migrations
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("TEXT(150)");
+
+                    b.Property<DateTime>("ParentDocDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ParentDocNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT(100)");
 
                     b.Property<DateTime?>("PublishedAtUtc")
                         .HasColumnType("TEXT");
