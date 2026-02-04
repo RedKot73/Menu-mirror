@@ -511,10 +511,141 @@ namespace S5Server.Data
             {
                 entity.ToTable("template_data_sets");
                 entity.HasKey(e => e.Id);
+                
                 entity.Property(e => e.Id).HasColumnType("TEXT(36)");
                 entity.Property(e => e.Name).IsRequired().HasColumnType("TEXT(150)");
-                entity.Property(e => e.DataJson).IsRequired().HasColumnType("TEXT");
-                entity.Property(e => e.CreatedAtUtc).HasColumnType("TEXT");
+                entity.Property(e => e.DocNumber).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.DocDate).IsRequired().HasColumnType("TEXT");
+                entity.Property(e => e.IsPublished).HasColumnType("INTEGER").HasDefaultValue(false);
+                entity.Property(e => e.PublishedAtUtc).HasColumnType("TEXT");
+                entity.Property(e => e.CreatedAtUtc).IsRequired().HasColumnType("TEXT");
+                entity.Property(e => e.UpdatedAtUtc).HasColumnType("TEXT");
+
+                // Зв'язок One-to-Many з UnitTask
+                entity.HasMany(e => e.UnitTasks)
+                    .WithOne(ut => ut.DataSet)
+                    .HasForeignKey(ut => ut.DataSetId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Індекси
+                entity.HasIndex(e => e.Name);
+                entity.HasIndex(e => e.DocNumber);
+                entity.HasIndex(e => e.IsPublished);
+                entity.HasIndex(e => new { e.DocDate, e.IsPublished });
+            });
+
+            modelBuilder.Entity<UnitTask>(entity =>
+            {
+                entity.ToTable("units_task");
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+                entity.Property(e => e.DataSetId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.UnitId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.UnitShortName).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.ParentId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.ParentShortName).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.AssignedUnitId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.AssignedShortName).HasColumnType("TEXT(100)");
+                entity.Property(e => e.UnitTypeId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.UnitTypeName).HasColumnType("TEXT(100)");
+                entity.Property(e => e.IsInvolved).HasColumnType("INTEGER").HasDefaultValue(false);
+                entity.Property(e => e.PersistentLocationId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.PersistentLocationValue).HasColumnType("TEXT(100)");
+                entity.Property(e => e.TaskId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.TaskValue).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.IsPublished).HasColumnType("INTEGER").HasDefaultValue(false);
+                entity.Property(e => e.PublishedAtUtc).HasColumnType("TEXT");
+                entity.Property(e => e.ChangedBy).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.ValidFrom).IsRequired().HasColumnType("TEXT");
+
+                // Зв'язки
+                entity.HasOne(e => e.Unit)
+                    .WithMany()
+                    .HasForeignKey(e => e.UnitId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Parent)
+                    .WithMany()
+                    .HasForeignKey(e => e.ParentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.AssignedUnit)
+                    .WithMany()
+                    .HasForeignKey(e => e.AssignedUnitId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.UnitType)
+                    .WithMany()
+                    .HasForeignKey(e => e.UnitTypeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.PersistentLocation)
+                    .WithMany()
+                    .HasForeignKey(e => e.PersistentLocationId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Task)
+                    .WithMany()
+                    .HasForeignKey(e => e.TaskId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Індекси
+                entity.HasIndex(e => e.UnitId);
+                entity.HasIndex(e => e.TaskId);
+                entity.HasIndex(e => e.IsPublished);
+                entity.HasIndex(e => new { e.UnitId, e.PublishedAtUtc });
+            });
+            modelBuilder.Entity<SoldierTask>(entity =>
+            {
+                entity.ToTable("soldiers_task");
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+                entity.Property(e => e.UnitTaskId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.SoldierId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.ExternId).HasColumnType("INTEGER");
+                entity.Property(e => e.FirstName).IsRequired().HasColumnType("TEXT(50)");
+                entity.Property(e => e.MidleName).HasColumnType("TEXT(50)");
+                entity.Property(e => e.LastName).HasColumnType("TEXT(50)");
+                //entity.Property(e => e.BirthDate).HasColumnType("TEXT");
+                entity.Property(e => e.NickName).HasColumnType("TEXT(50)");
+                
+                // Денормалізовані поля
+                entity.Property(e => e.UnitId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.UnitShortName).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.AssignedUnitId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.AssignedUnitShortName).HasColumnType("TEXT(100)");
+                entity.Property(e => e.InvolvedUnitId).HasColumnType("TEXT(36)");
+                entity.Property(e => e.InvolvedUnitShortName).HasColumnType("TEXT(100)");
+                entity.Property(e => e.RankId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.RankShortValue).IsRequired().HasColumnType("TEXT(50)");
+                entity.Property(e => e.PositionId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.PositionValue).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.StateId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.StateValue).IsRequired().HasColumnType("TEXT(50)");
+                
+                entity.Property(e => e.Comment).HasColumnType("TEXT");
+                //entity.Property(e => e.ArrivedAt).HasColumnType("TEXT");
+                //entity.Property(e => e.DepartedAt).HasColumnType("TEXT");
+                entity.Property(e => e.ChangedBy).IsRequired().HasColumnType("TEXT(100)");
+                entity.Property(e => e.ValidFrom).IsRequired().HasColumnType("TEXT");
+
+                // Зв'язки
+                entity.HasOne(e => e.UnitTask)
+                    .WithMany(u => u.SoldiersTask)
+                    .HasForeignKey(e => e.UnitTaskId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Soldier)
+                    .WithMany()
+                    .HasForeignKey(e => e.SoldierId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Індекси
+                entity.HasIndex(e => e.UnitTaskId);
+                entity.HasIndex(e => e.SoldierId);
+                entity.HasIndex(e => new { e.UnitTaskId, e.SoldierId });
             });
         }
 
@@ -590,6 +721,13 @@ namespace S5Server.Data
         /// </summary>
         public DbSet<UnitHist> UnitHistories { get; set; }
         /// <summary>
+        /// Gets or sets the collection of unit tasks managed by the context.
+        /// </summary>
+        /// <remarks>Use this property to query, add, update, or remove unit tasks in the database through
+        /// Entity Framework. Changes made to this collection are tracked and persisted when the context is
+        /// saved.</remarks>
+        public DbSet<UnitTask> UnitTasks { get; set; }
+        /// <summary>
         /// Військовослужбовці (бійці)
         /// </summary>
         public DbSet<Soldier> Soldiers { get; set; }
@@ -597,6 +735,10 @@ namespace S5Server.Data
         /// Историческая таблица изменений солдат
         /// </summary>
         public DbSet<SoldierHist> SoldierHistories { get; set; }
+        /// <summary>
+        /// Снимок состояния бойца на момент назначения задачи подразделению
+        /// </summary>
+        public DbSet<SoldierTask> SoldierTasks { get; set; }
 
         /// <summary>
         /// Gets or sets the collection of document templates in the database context.

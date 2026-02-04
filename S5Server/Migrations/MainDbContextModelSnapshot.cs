@@ -926,6 +926,120 @@ namespace S5Server.Migrations
                     b.ToTable("soldiers_hist", (string)null);
                 });
 
+            modelBuilder.Entity("S5Server.Models.SoldierTask", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("AssignedUnitId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("AssignedUnitShortName")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT(100)");
+
+                    b.Property<string>("ChangedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT(100)");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ExternId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT(50)");
+
+                    b.Property<string>("InvolvedUnitId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("InvolvedUnitShortName")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT(100)");
+
+                    b.Property<string>("LastName")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT(50)");
+
+                    b.Property<string>("MidleName")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT(50)");
+
+                    b.Property<string>("NickName")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT(50)");
+
+                    b.Property<string>("PositionId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("PositionValue")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT(100)");
+
+                    b.Property<string>("RankId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("RankShortValue")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT(50)");
+
+                    b.Property<string>("SoldierId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("StateId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("StateValue")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT(50)");
+
+                    b.Property<string>("UnitId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("UnitShortName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT(100)");
+
+                    b.Property<string>("UnitTaskId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SoldierId");
+
+                    b.HasIndex("UnitTaskId");
+
+                    b.HasIndex("UnitTaskId", "SoldierId");
+
+                    b.ToTable("soldiers_task", (string)null);
+                });
+
             modelBuilder.Entity("S5Server.Models.TVezhaUser<string>", b =>
                 {
                     b.Property<string>("Id")
@@ -1001,12 +1115,18 @@ namespace S5Server.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("DataJson")
-                        .IsRequired()
+                    b.Property<DateTime>("DocDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("DocNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT(100)");
+
                     b.Property<bool>("IsPublished")
-                        .HasColumnType("INTEGER");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1020,6 +1140,14 @@ namespace S5Server.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DocNumber");
+
+                    b.HasIndex("IsPublished");
+
+                    b.HasIndex("Name");
+
+                    b.HasIndex("DocDate", "IsPublished");
 
                     b.ToTable("template_data_sets", (string)null);
                 });
@@ -1201,6 +1329,104 @@ namespace S5Server.Migrations
                     b.HasIndex("UnitId", "ValidFrom");
 
                     b.ToTable("units_hist", (string)null);
+                });
+
+            modelBuilder.Entity("S5Server.Models.UnitTask", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("AssignedShortName")
+                        .HasColumnType("TEXT(100)");
+
+                    b.Property<string>("AssignedUnitId")
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("ChangedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT(100)");
+
+                    b.Property<string>("DataSetId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<bool>("IsInvolved")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsPublished")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("ParentId")
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("ParentShortName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT(100)");
+
+                    b.Property<string>("PersistentLocationId")
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("PersistentLocationValue")
+                        .HasColumnType("TEXT(100)");
+
+                    b.Property<DateTime?>("PublishedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TaskId")
+                        .IsRequired()
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("TaskValue")
+                        .IsRequired()
+                        .HasColumnType("TEXT(100)");
+
+                    b.Property<string>("UnitId")
+                        .IsRequired()
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("UnitShortName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT(100)");
+
+                    b.Property<string>("UnitTypeId")
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("UnitTypeName")
+                        .HasColumnType("TEXT(100)");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedUnitId");
+
+                    b.HasIndex("DataSetId");
+
+                    b.HasIndex("IsPublished");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("PersistentLocationId");
+
+                    b.HasIndex("TaskId");
+
+                    b.HasIndex("UnitId");
+
+                    b.HasIndex("UnitTypeId");
+
+                    b.HasIndex("UnitId", "PublishedAtUtc");
+
+                    b.ToTable("units_task", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -1427,6 +1653,25 @@ namespace S5Server.Migrations
                     b.Navigation("Unit");
                 });
 
+            modelBuilder.Entity("S5Server.Models.SoldierTask", b =>
+                {
+                    b.HasOne("S5Server.Models.Soldier", "Soldier")
+                        .WithMany()
+                        .HasForeignKey("SoldierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("S5Server.Models.UnitTask", "UnitTask")
+                        .WithMany("SoldiersTask")
+                        .HasForeignKey("UnitTaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Soldier");
+
+                    b.Navigation("UnitTask");
+                });
+
             modelBuilder.Entity("S5Server.Models.TVezhaUser<string>", b =>
                 {
                     b.HasOne("S5Server.Models.Soldier", "Soldier")
@@ -1476,6 +1721,61 @@ namespace S5Server.Migrations
                     b.Navigation("UnitType");
                 });
 
+            modelBuilder.Entity("S5Server.Models.UnitTask", b =>
+                {
+                    b.HasOne("S5Server.Models.Unit", "AssignedUnit")
+                        .WithMany()
+                        .HasForeignKey("AssignedUnitId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("S5Server.Models.TemplateDataSet", "DataSet")
+                        .WithMany("UnitTasks")
+                        .HasForeignKey("DataSetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("S5Server.Models.Unit", "Parent")
+                        .WithMany()
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("S5Server.Models.DictArea", "PersistentLocation")
+                        .WithMany()
+                        .HasForeignKey("PersistentLocationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("S5Server.Models.DictUnitTask", "Task")
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("S5Server.Models.Unit", "Unit")
+                        .WithMany()
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("S5Server.Models.DictUnitType", "UnitType")
+                        .WithMany()
+                        .HasForeignKey("UnitTypeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("AssignedUnit");
+
+                    b.Navigation("DataSet");
+
+                    b.Navigation("Parent");
+
+                    b.Navigation("PersistentLocation");
+
+                    b.Navigation("Task");
+
+                    b.Navigation("Unit");
+
+                    b.Navigation("UnitType");
+                });
+
             modelBuilder.Entity("S5Server.Models.DictAreaType", b =>
                 {
                     b.Navigation("Areas");
@@ -1513,6 +1813,11 @@ namespace S5Server.Migrations
                     b.Navigation("VezhaUser");
                 });
 
+            modelBuilder.Entity("S5Server.Models.TemplateDataSet", b =>
+                {
+                    b.Navigation("UnitTasks");
+                });
+
             modelBuilder.Entity("S5Server.Models.Unit", b =>
                 {
                     b.Navigation("AssignedSoldiers");
@@ -1524,6 +1829,11 @@ namespace S5Server.Migrations
                     b.Navigation("InvolvedSoldiers");
 
                     b.Navigation("Soldiers");
+                });
+
+            modelBuilder.Entity("S5Server.Models.UnitTask", b =>
+                {
+                    b.Navigation("SoldiersTask");
                 });
 #pragma warning restore 612, 618
         }
