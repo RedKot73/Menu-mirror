@@ -8,7 +8,6 @@ import {
   TemplateDataSetCreateDto,
   TemplateDataSetUpdateDto,
   TemplateDataSetUtils,
-  UnitTaskDto,
 } from '../models/template-dataset.models';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 
@@ -30,23 +29,10 @@ export class TemplateDataSetService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
-          'Не вдалося отримати набори даних'
+          'Не вдалося отримати набори даних',
         );
         return throwError(() => new Error(message));
-      })
-    );
-  }
-
-  // Получить набор данных підрозділу з особовим складом для формування документів
-  getUnitDataSet(id: string): Observable<UnitTaskDto> {
-    return this.http.get<UnitTaskDto>(`${this.baseUrl}/data-sets/unit-task/${id}`).pipe(
-      catchError((error: HttpErrorResponse) => {
-        const message = S5App_ErrorHandler.handleHttpError(
-          error,
-          'Не вдалося отримати набір даних підрозділу'
-        );
-        return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -58,20 +44,17 @@ export class TemplateDataSetService {
     // Валидация перед отправкой
     const validation = TemplateDataSetUtils.validate(dto);
     if (!validation.valid) {
-      return throwError(() => new Error(`Ошибка валидации: ${validation.errors.join(', ')}`));
+      return throwError(() => new Error(`Помилка валідації: ${validation.errors.join(', ')}`));
     }
-
-    // Подготовка данных для отправки
-    //const serverDto = TemplateDataSetUtils.toServerDto(dto);
 
     return this.http.post<TemplateDataSetDto>(`${this.baseUrl}/data-sets`, dto).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
-          'Не вдалося створити набір даних'
+          'Не вдалося створити набір даних',
         );
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -84,10 +67,10 @@ export class TemplateDataSetService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
-          'Не вдалося отримати набір даних'
+          'Не вдалося отримати набір даних',
         );
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -100,10 +83,10 @@ export class TemplateDataSetService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
-          'Не вдалося видалити набір даних'
+          'Не вдалося видалити набір даних',
         );
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -116,22 +99,25 @@ export class TemplateDataSetService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося оновити набір даних');
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
+  /**
+   * Змінити статус публікації
+   * POST /api/templ_data/data-sets/{id}/publish/{set_publish}
+   */
   publish(id: string, set_publish: boolean): Observable<void> {
-    // POST /api/templ_data/{id}/publish/{set_publish}
     return this.http
-      .post<void>(`${this.baseUrl}/${id}/publish/${set_publish ? 'true' : 'false'}`, {})
+      .post<void>(`${this.baseUrl}/data-sets/${id}/publish/${set_publish ? 'true' : 'false'}`, {})
       .pipe(
         catchError((error: HttpErrorResponse) => {
           const message = S5App_ErrorHandler.handleHttpError(
             error,
-            'Не вдалося змінити статус публікації набору даних'
+            'Не вдалося змінити статус публікації набору даних',
           );
           return throwError(() => new Error(message));
-        })
+        }),
       );
   }
 }

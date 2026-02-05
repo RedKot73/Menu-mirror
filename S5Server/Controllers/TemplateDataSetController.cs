@@ -1,312 +1,350 @@
-﻿using System.Text.Json;
-
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
 using S5Server.Data;
 using S5Server.Models;
 using S5Server.Utils;
 
-namespace S5Server.Controllers
+namespace S5Server.Controllers;
+
+[ApiController]
+[Route("api/templ_data")]
+public class TemplateDataSetController : ControllerBase
 {
-    [ApiController]
-    [Route("api/templ_data")]
-    public class TemplateDataSetController : ControllerBase
+    private readonly MainDbContext _db;
+    private readonly DbSet<TemplateDataSet> _set;
+    private readonly ILogger<TemplateDataSetController> _logger;
+
+    public TemplateDataSetController(MainDbContext db, 
+        ILogger<TemplateDataSetController> logger)
     {
-        private readonly MainDbContext _db;
-        private readonly DbSet<TemplateDataSet> _set;
-        private readonly ILogger<DocumentTemplatesController> _logger;
+        _db = db;
+        _set = _db.TemplateDataSets;
+        _logger = logger;
+    }
 
-        public TemplateDataSetController(MainDbContext db, 
-            ILogger<DocumentTemplatesController> logger)
+    /// <summary>
+    /// Отримати всі набори даних (БЕЗ деталей)
+    /// </summary>
+    [HttpGet("data-sets")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] bool? isPublished,
+        CancellationToken ct = default)
+    {
+        try
         {
-            _db = db;
-            _set = _db.TemplateDataSets;
-            _logger = logger;
-        }
+            var query = _set.AsNoTracking()
+                .AsQueryable();
 
-        [HttpGet("data-sets")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetAll(CancellationToken ct = default)
-        {
-            try
-            {
-                var items = await _set.AsNoTracking()
-                    .OrderBy(t => t.Name)
-                    .ThenByDescending(t => t.CreatedAtUtc)
-                    .Select(t => TemplateDataSetDto.ToDto(t))
-                    .ToListAsync(ct);
+            if (isPublished.HasValue)
+                query = query.Where(ds => ds.IsPublished == isPublished.Value);
 
-                return Ok(items);
-            }
-            catch (OperationCanceledException)
-            {
-                return Problem(statusCode: 499, title: "Скасовано кліентом");
-            }
-            catch (Exception ex)
-            {
-                if (_logger.IsEnabled(LogLevel.Error))
-                    _logger.LogError(ex, "Ошибка получения наборов данных");
-                return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
-            }
-        }
-
-        [HttpPost("data-sets")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status409Conflict)]
-        public async Task<IActionResult> CreateDataSet([FromBody] TemplateDataSetCreateDto dto,
-            CancellationToken ct = default)
-        {
-            if (!ModelState.IsValid)
-                return ValidationProblem(ModelState);
-
-            try
-            {
-                // Валидация JSON
-                try 
-                { JsonDocument.Parse(dto.DataJson); }
-                catch
-                {
-                    return Problem(statusCode: 400, title: "Некорректный JSON");
-                }
-
-                var ds = new TemplateDataSet
-                {
-                    Name = dto.Name.Trim(),
-                    DataJson = dto.DataJson,
-                    CreatedAtUtc = DateTime.UtcNow
-                };
-                _set.Add(ds);
-                try
-                {
-                    await _db.SaveChangesAsync(ct);
-                    return Ok(new { ds.Id, ds.Name, ds.CreatedAtUtc });
-                }
-                catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
-                {
-                    if (_logger.IsEnabled(LogLevel.Information))
-                        _logger.LogInformation(ex, "Конфликт уникальности набора данных Name={Name}", ds.Name);
-                    return Problem(
-                        statusCode: 409,
-                        title: "Конфликт уникальности",
-                        detail: $"Набор данных с именем \"{ds.Name}\" уже существует.",
-                        extensions: new Dictionary<string, object?> { ["field"] = "Name", ["value"] = ds.Name });
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                return Problem(statusCode: 499, title: "Скасовано кліентом");
-            }
-            catch (Exception ex)
-            {
-                if (_logger.IsEnabled(LogLevel.Error))
-                    _logger.LogError(ex, "Ошибка создания набора данных");
-                return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
-            }
-        }
-
-        [HttpGet("data-sets/{dataSetId}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetDataSet(string dataSetId, CancellationToken ct = default)
-        {
-            try
-            {
-                var ds = await _set
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(x => x.Id == dataSetId, ct);
-                if (ds == null)
-                    return Problem(statusCode: 404, title: "Не знайдено", detail: $"DataSetId={dataSetId}");
-
-                return Ok(TemplateDataSetDto.ToDto(ds));
-            }
-            catch (OperationCanceledException)
-            {
-                return Problem(statusCode: 499, title: "Скасовано кліентом");
-            }
-            catch (Exception ex)
-            {
-                if (_logger.IsEnabled(LogLevel.Error))
-                    _logger.LogError(ex, "Ошибка получения набора данных DataSetId={DataSetId}", dataSetId);
-                return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
-            }
-        }
-
-        /// <summary>
-        /// Набор данных підрозділу для формування документу на фронті (Angular)
-        /// </summary>
-        [HttpGet("data-sets/unit-task/{id}")]
-        public async Task<ActionResult<UnitDataSetDto>> GetUnitDataSet(string id, CancellationToken ct = default)
-        {
-            var unit = await _db.Units
-                .AsNoTracking()
-                .Include(u => u.Parent)
-                .Include(u => u.AssignedUnit)
-                .Include(u => u.UnitType)
-                .FirstOrDefaultAsync(u => u.Id == id, ct);
-
-            if (unit is null)
-                return NotFound();
-
-            var sldrsData = _db.Soldiers
-                .AsNoTracking()
-                .Include(s => s.Unit)
-                .Include(s => s.AssignedUnit)
-                .Include(s => s.InvolvedUnit)
-                .Include(s => s.Rank)
-                .Include(s => s.Position)
-                .Include(s => s.State);
-            var soldiers = await sldrsData 
-                .Where(s => s.UnitId == id)
-                .OrderBy(s => s.Rank.OrderVal)
-                .ThenBy(s => s.LastName)
-                .ThenBy(s => s.FirstName)
-                .Select(s => SoldierDto.ToDto(s))
-                .ToListAsync(ct);
-            var assignedSoldiers = await sldrsData
-                .Where (s => s.AssignedUnitId == id)
-                .OrderBy(s => s.Rank.OrderVal)
-                .ThenBy(s => s.LastName)
-                .ThenBy(s => s.FirstName)
-                .Select(s => SoldierDto.ToDto(s))
-                .ToListAsync(ct);
-            var involvedSoldiers = await sldrsData
-                .Where(s => s.InvolvedUnitId == id)
-                .OrderBy(s => s.Rank.OrderVal)
-                .ThenBy(s => s.LastName)
-                .ThenBy(s => s.FirstName)
-                .Select(s => SoldierDto.ToDto(s))
+            var items = await query
+                .OrderByDescending(t => t.DocDate)
+                .ThenByDescending(t => t.CreatedAtUtc)
+                .Select(ds => ds.ToDto())  // ✅ Extension-метод
                 .ToListAsync(ct);
 
-            return Ok(UnitDataSetDto.From(unit,
-                soldiers, assignedSoldiers, involvedSoldiers));
+            return Ok(items);
         }
-
-        [HttpPut("data-sets/{dataSetId}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status409Conflict)]
-        public async Task<IActionResult> UpdateDataSet(string dataSetId,
-            [FromBody] TemplateDataSetCreateDto dto, CancellationToken ct = default)
+        catch (OperationCanceledException)
         {
-            if (!ModelState.IsValid)
-                return ValidationProblem(ModelState);
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка отримання наборів даних\n{Err}", ex.Message);
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+    /// <summary>
+    /// Створити новий набір даних
+    /// </summary>
+    [HttpPost("data-sets")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CreateDataSet(
+        [FromBody] TemplateDataSetCreateDto dto,
+        CancellationToken ct = default)
+    {
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        try
+        {
+            var ds = new TemplateDataSet
+            {
+                Name = dto.Name.Trim(),
+                DocNumber = dto.DocNumber.Trim(),
+                DocDate = dto.DocDate,
+                IsPublished = dto.IsPublished,
+                CreatedAtUtc = DateTime.UtcNow
+            };
+
+            _set.Add(ds);
 
             try
             {
-                var ds = await _db.TemplateDataSets
-                    .AsTracking()
-                    .FirstOrDefaultAsync(x => x.Id == dataSetId, ct);
-
-                if (ds == null)
-                    return Problem(statusCode: 404, title: "Не знайдено", detail: $"DataSetId={dataSetId}");
-
-                var publishStateChanged = ds.IsPublished != dto.IsPublished;
-
-                ds.Name = dto.Name.Trim();
-                ds.DataJson = dto.DataJson.Trim();
-                ds.IsPublished = dto.IsPublished;
-
-                if (publishStateChanged)
-                    ds.PublishedAtUtc = dto.IsPublished ? DateTime.UtcNow : null;
-
-                ds.UpdatedAtUtc = DateTime.UtcNow;
-
-                try
-                {
-                    await _db.SaveChangesAsync(ct);
-                    return Ok(TemplateDataSetDto.ToDto(ds));
-                }
-                catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
-                {
-                    if (_logger.IsEnabled(LogLevel.Information))
-                        _logger.LogInformation(ex, "Конфликт уникальности набора данных при обновлении Name={Name} DataSetId={DataSetId}", ds.Name, dataSetId);
-                    return Problem(
-                        statusCode: 409,
-                        title: "Конфликт уникальности",
-                        detail: $"Набор данных с именем \"{ds.Name}\" уже существует.",
-                        extensions: new Dictionary<string, object?> { ["field"] = "Name", ["value"] = ds.Name });
-                }
-                catch (DbUpdateConcurrencyException ex)
-                {
-                    if (_logger.IsEnabled(LogLevel.Warning))
-                        _logger.LogWarning(ex, "Конкурентный конфликт при обновлении набора данных DataSetId={DataSetId}", dataSetId);
-                    return Problem(statusCode: 409, title: "Конкурентный конфликт");
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                return Problem(statusCode: 499, title: "Скасовано кліентом");
-            }
-            catch (Exception ex)
-            {
-                if (_logger.IsEnabled(LogLevel.Error))
-                    _logger.LogError(ex, "Ошибка при обновлении набора данных DataSetId={DataSetId}", dataSetId);
-                return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
-            }
-        }
-
-        [HttpDelete("data-sets/{dataSetId}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeleteDataSet(string dataSetId, CancellationToken ct = default)
-        {
-            try
-            {
-                var ds = await _set
-                    .FirstOrDefaultAsync(x => x.Id == dataSetId, ct);
-                if (ds == null)
-                    return Problem(statusCode: 404, title: "Не знайдено", detail: $"DataSetId={dataSetId}");
-
-                _set.Remove(ds);
                 await _db.SaveChangesAsync(ct);
-                return NoContent();
+
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation(
+                        "Створено набір даних DataSetId={Id}, Name={Name}, DocNumber={DocNumber}",
+                        ds.Id, ds.Name, ds.DocNumber);
+
+                return CreatedAtAction(
+                    nameof(GetDataSet), 
+                    new { dataSetId = ds.Id }, 
+                    ds.ToDto());  // ✅ Extension-метод
             }
-            catch (OperationCanceledException)
+            catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
             {
-                return Problem(statusCode: 499, title: "Скасовано кліентом");
-            }
-            catch (Exception ex)
-            {
-                if (_logger.IsEnabled(LogLevel.Error))
-                    _logger.LogError(ex, "Ошибка удаления набора данных DataSetId={DataSetId}", dataSetId);
-                return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation(ex, "Конфлікт унікальності набору даних Name={Name}", ds.Name);
+                
+                return Problem(
+                    statusCode: 409,
+                    title: "Конфлікт унікальності",
+                    detail: $"Набір даних з іменем \"{ds.Name}\" вже існує.",
+                    extensions: new Dictionary<string, object?> { ["field"] = "Name", ["value"] = ds.Name });
             }
         }
-
-        [HttpPost("{id}/publish/{set_publish}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Publish(string id, bool set_publish, CancellationToken ct = default)
+        catch (OperationCanceledException)
         {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка створення набору даних");
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+    /// <summary>
+    /// Отримати набір даних за ID (БЕЗ деталей)
+    /// </summary>
+    [HttpGet("data-sets/{dataSetId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetDataSet(string dataSetId, CancellationToken ct = default)
+    {
+        try
+        {
+            var ds = await _set
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == dataSetId, ct);
+
+            if (ds == null)
+                return Problem(statusCode: 404, title: "Не знайдено", detail: $"DataSetId={dataSetId}");
+
+            return Ok(ds.ToDto());  // ✅ Extension-метод
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка отримання набору даних DataSetId={DataSetId}", dataSetId);
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+    /// <summary>
+    /// Оновити набір даних
+    /// </summary>
+    [HttpPut("data-sets/{dataSetId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> UpdateDataSet(
+        string dataSetId,
+        [FromBody] TemplateDataSetUpdateDto dto, 
+        CancellationToken ct = default)
+    {
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        try
+        {
+            var ds = await _set
+                .AsTracking()
+                .FirstOrDefaultAsync(x => x.Id == dataSetId, ct);
+
+            if (ds == null)
+                return Problem(statusCode: 404, title: "Не знайдено", detail: $"DataSetId={dataSetId}");
+
+            ds.UpdateFrom(dto);  // ✅ Extension-метод
+
             try
             {
-                var t = await _set
-                    .AsTracking()
-                    .FirstOrDefaultAsync(x => x.Id == id, ct);
-                if (t == null)
-                    return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
-
-                t.IsPublished = set_publish;
-                t.PublishedAtUtc = DateTime.UtcNow;
-                t.UpdatedAtUtc = DateTime.UtcNow;
                 await _db.SaveChangesAsync(ct);
-                return NoContent();
+
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation(
+                        "Оновлено набір даних DataSetId={Id}, IsPublished={IsPublished}",
+                        dataSetId, dto.IsPublished);
+
+                return Ok(ds.ToDto());  // ✅ Extension-метод
             }
-            catch (OperationCanceledException)
+            catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
             {
-                return Problem(statusCode: 499, title: "Скасовано кліентом");
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation(ex, 
+                        "Конфлікт унікальності набору даних при оновленні Name={Name} DataSetId={DataSetId}", 
+                        ds.Name, dataSetId);
+                
+                return Problem(
+                    statusCode: 409,
+                    title: "Конфлікт унікальності",
+                    detail: $"Набір даних з іменем \"{ds.Name}\" вже існує.",
+                    extensions: new Dictionary<string, object?> { ["field"] = "Name", ["value"] = ds.Name });
             }
-            catch (Exception ex)
+            catch (DbUpdateConcurrencyException ex)
             {
-                if (_logger.IsEnabled(LogLevel.Error))
-                    _logger.LogError(ex, "Помилка публікації даних документа Id={Id}", id);
-                return Problem(statusCode: 500, title: "Помилка публікації даних документа");
+                if (_logger.IsEnabled(LogLevel.Warning))
+                    _logger.LogWarning(ex, "Конкурентний конфлікт при оновленні набору даних DataSetId={DataSetId}", dataSetId);
+                
+                return Problem(statusCode: 409, title: "Конкурентний конфлікт");
             }
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка при оновленні набору даних DataSetId={DataSetId}", dataSetId);
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+    /// <summary>
+    /// Видалити набір даних
+    /// </summary>
+    [HttpDelete("data-sets/{dataSetId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteDataSet(string dataSetId, CancellationToken ct = default)
+    {
+        try
+        {
+            var ds = await _set
+                .FirstOrDefaultAsync(x => x.Id == dataSetId, ct);
+            
+            if (ds == null)
+                return Problem(statusCode: 404, title: "Не знайдено", detail: $"DataSetId={dataSetId}");
+
+            _set.Remove(ds);
+            await _db.SaveChangesAsync(ct);
+
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Видалено набір даних DataSetId={DataSetId}", dataSetId);
+
+            return NoContent();
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка видалення набору даних DataSetId={DataSetId}", dataSetId);
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+    /// <summary>
+    /// Змінити статус публікації
+    /// </summary>
+    [HttpPost("data-sets/{id}/publish/{set_publish}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Publish(string id, bool set_publish, CancellationToken ct = default)
+    {
+        try
+        {
+            var ds = await _set
+                .AsTracking()
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
+            
+            if (ds == null)
+                return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
+
+            ds.Publish(set_publish);  // ✅ Extension-метод
+            await _db.SaveChangesAsync(ct);
+
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation(
+                    "Змінено статус публікації набору даних Id={Id}, IsPublished={IsPublished}",
+                    id, set_publish);
+
+            return NoContent();
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка публікації даних документа Id={Id}", id);
+            return Problem(statusCode: 500, title: "Помилка публікації даних документа");
+        }
+    }
+
+    /// <summary>
+    /// Отримати список з кількістю завдань
+    /// </summary>
+    [HttpGet("data-sets/with-counts")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAllWithCounts(
+        [FromQuery] bool? isPublished,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var query = _set.AsNoTracking().AsQueryable();
+
+            if (isPublished.HasValue)
+                query = query.Where(ds => ds.IsPublished == isPublished.Value);
+
+            var items = await query
+                .Select(ds => new 
+                {
+                    ds.Id,
+                    ds.Name,
+                    ds.DocNumber,
+                    ds.DocDate,
+                    ds.IsPublished,
+                    ds.PublishedAtUtc,
+                    ds.CreatedAtUtc,
+                    ds.UpdatedAtUtc,
+                    UnitTasksCount = _db.UnitTasks.Count(ut => ut.DataSetId == ds.Id)
+                })
+                .OrderByDescending(t => t.DocDate)
+                .ThenByDescending(t => t.CreatedAtUtc)
+                .ToListAsync(ct);
+
+            return Ok(items);
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка отримання наборів даних з лічильниками");
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
 }

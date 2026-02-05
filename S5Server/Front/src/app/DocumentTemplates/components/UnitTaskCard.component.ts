@@ -5,6 +5,8 @@ import {
   EventEmitter,
   OnInit,
   OnDestroy,
+  AfterViewInit,
+  ViewChild,
   inject,
   computed,
   signal,
@@ -32,16 +34,28 @@ import {
   MatAutocompleteModule,
   MatAutocompleteSelectedEvent,
 } from '@angular/material/autocomplete';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { DatePipe } from '@angular/common';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { UnitTaskDto } from '../models/template-dataset.models';
 import { LookupDto } from '../../shared/models/lookup.models';
 import { DictDroneModelService } from '../../../ServerService/dictDroneModel.service';
-import { DictUnitTasksService } from '../../../ServerService/dictUnitTasks.service';
-import { DictUnitTaskItemsService } from '../../../ServerService/dictUnitTaskItems.service';
+import { DictUnitTasksService, DictUnitTask } from '../../../ServerService/dictUnitTasks.service';
 import { DictAreasService, DictArea } from '../../../ServerService/dictAreas.service';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
-import { UnitContentComponent } from '../../Unit/UnitContent.component';
+//import { UnitContentComponent } from '../../Unit/UnitContent.component';
 import { UnitDto } from '../../Unit/services/unit.service';
+import { UnitTag } from '../../Soldier/Soldier.component';
+import { SoldierService, SoldierDto } from '../../Soldier/services/soldier.service';
+import {
+  isCriticalStatus,
+  isSevereStatus,
+  isProblematicStatus,
+  isRecoveryStatus,
+} from '../../Soldier/Soldier.constant';
 
 @Component({
   selector: 'app-unit-task-card',
@@ -56,27 +70,63 @@ import { UnitDto } from '../../Unit/services/unit.service';
     MatSelectModule,
     MatInputModule,
     MatAutocompleteModule,
-    UnitContentComponent,
+    MatExpansionModule,
+    MatTableModule,
+    MatSortModule,
+    DatePipe,
+    MatTooltipModule,
+    //UnitContentComponent,
   ],
   templateUrl: './UnitTaskCard.component.html',
-  styleUrls: ['./UnitTaskCard.component.scss'],
+  styleUrls: [
+    './UnitTaskCard.component.scss',
+    '../../Unit/UnitContent.component.scss',
+    '../../Soldier/Soldier.component.scss',
+  ],
 })
-export class UnitTaskCardComponent implements OnInit, OnDestroy {
+export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   private dictDroneModelService = inject(DictDroneModelService);
   private dictUnitTasksService = inject(DictUnitTasksService);
-  private dictUnitTaskItemsService = inject(DictUnitTaskItemsService);
   private dictAreasService = inject(DictAreasService);
+  private soldierService = inject(SoldierService);
   private snackBar = inject(MatSnackBar);
   private destroy$ = new Subject<void>();
 
-  // Используем сигнал для реактивного отслеживания изменений unitTask
+  // Сигнал для реактивного відстеження змін unitTask
   private unitTaskSignal = signal<UnitTaskDto | null>(null);
 
   // Перелік завдань з довідника
-  protected unitTasks = signal<LookupDto[]>([]);
-
-  // Райони виконання завдань (РВЗ), відфільтрований по areaTypeId з обраного завдання
+  protected unitTasks = signal<DictUnitTask[]>([]);
+  // Перелік областей (РВЗ)
   protected areas = signal<DictArea[]>([]);
+
+  // Дані особового складу
+  soldiers = signal<SoldierDto[]>([]);
+  soldierDataSource = new MatTableDataSource<SoldierDto>([]);
+  soldierDisplayedColumns: string[] = [
+    'fio',
+    'nickName',
+    'rankShortValue',
+    'positionValue',
+    'stateValue',
+    'unitShortName',
+    'assignedUnitShortName',
+    'operationalUnitShortName',
+    'arrivedAt',
+    'departedAt',
+    'comment',
+  ];
+
+  @ViewChild(MatSort) sort!: MatSort;
+
+  // Методи для перевірки статусів
+  isCriticalStatus = isCriticalStatus;
+  isSevereStatus = isSevereStatus;
+  isProblematicStatus = isProblematicStatus;
+  isRecoveryStatus = isRecoveryStatus;
+
+  // Для доступу до enum в шаблоні
+  readonly unitTag = UnitTag;
 
   @Input({ required: true })
   set unitTask(value: UnitTaskDto) {
@@ -90,7 +140,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
   @Output() unitChange = new EventEmitter<UnitTaskDto>();
 
   // Form Controls
-  protected taskControl = new FormControl<LookupDto | null>(null);
+  protected taskControl = new FormControl<DictUnitTask | null>(null);
   protected areaControl = new FormControl<DictArea | null>(null);
   protected droneModelControl = new FormControl<LookupDto | string | null>(null);
 
@@ -99,27 +149,42 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
   protected isLoadingDroneModels = false;
 
   // Перетворюємо UnitTaskDto в UnitDto для UnitContent компонента
-  // Используем computed() чтобы избежать создания нового объекта при каждом change detection
   unitForContent = computed<UnitDto>(() => {
     const task = this.unitTaskSignal();
     if (!task) {
       return {} as UnitDto;
     }
     return {
-      ...task,
-      name: task.shortName,
+      id: task.unitId,
+      parentId: task.parentId,
+      parentShortName: task.parentShortName,
+      assignedUnitId: task.assignedUnitId,
+      assignedShortName: task.assignedShortName,
+      name: task.unitShortName,
+      shortName: task.unitShortName,
+      militaryNumber: '',
+      forceTypeId: undefined,
+      forceType: undefined,
+      unitTypeId: task.unitTypeId,
+      unitType: task.unitTypeName,
+      isInvolved: task.isInvolved,
       orderVal: 0,
+      persistentLocationId: task.persistentLocationId,
+      persistentLocation: task.persistentLocationValue,
+      comment: undefined,
+      changedBy: task.changedBy,
+      validFrom: task.validFrom,
     } as UnitDto;
   });
 
   ngOnInit(): void {
-    // Завантажуємо список завдань
-    this.dictUnitTasksService.getSelectList().subscribe({
+    // Завантажуємо повний список завдань (з areaTypeId)
+    this.dictUnitTasksService.getAll().subscribe({
       next: (tasks) => {
         this.unitTasks.set(tasks);
         // Після завантаження списку ініціалізуємо значення taskControl
-        if (this.unitTask.TaskId) {
-          const task = tasks.find((t) => t.id === this.unitTask.TaskId);
+        if (this.unitTask.taskId) {
+          const task = tasks.find((t) => t.id === this.unitTask.taskId);
           if (task) {
             this.taskControl.setValue(task);
           }
@@ -135,39 +200,63 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
       },
     });
 
-    // Ініціалізуємо значення FormControl з unit
-    if (this.unitTask.AreaValue) {
-      // TODO: Завантажити повний об'єкт DictArea по AreaValue
-      // Поки що залишаємо порожнім, оскільки в unitTask зберігається тільки AreaValue (string)
-    }
-    if (this.unitTask.Means && this.unitTask.Means.length > 0) {
-      const droneModel: LookupDto = { id: '', value: this.unitTask.Means[0] };
-      this.droneModelControl.setValue(droneModel);
+    // Завантажуємо особовий склад
+    this.reloadSoldiers();
+
+    // Ініціалізуємо значення DroneModel
+    if (this.unitTask.means && this.unitTask.means.length > 0) {
+      // TODO: Відобразити список засобів БПЛА
     }
 
-    // Підписуємося на зміни task - завантажуємо області при зміні завдання
+    // Підписуємося на зміни task
     this.taskControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((task) => {
       this.onTaskChange(task);
-      // Завантажуємо області з фільтром по areaTypeId обраного завдання
-      if (task?.id) {
-        this.loadAreasByTask(task.id);
-      } else {
-        this.areas.set([]);
-      }
     });
 
     // Підписуємося на зміни area
-    this.areaControl.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((value) => this.onAreaChange(value));
+    this.areaControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((area) => {
+      this.onAreaChange(area);
+    });
 
     // Ініціалізуємо автокомпліт для БПЛА
     this.initDroneModelAutocomplete();
   }
 
+  ngAfterViewInit(): void {
+    this.soldierDataSource.sort = this.sort;
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /**
+   * Завантажує особовий склад підрозділу
+   */
+  reloadSoldiers(): void {
+    const unitId = this.unitTask.unitId;
+    if (!unitId) {
+      return;
+    }
+
+    this.soldierService
+      .getAll(undefined, unitId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (soldiers: SoldierDto[]) => {
+          this.soldiers.set(soldiers);
+          this.soldierDataSource.data = soldiers;
+        },
+        error: (error: unknown) => {
+          console.error('Помилка завантаження особового складу:', error);
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
+            error,
+            'Помилка завантаження особового складу',
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
+      });
   }
 
   /**
@@ -180,92 +269,81 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
   /**
    * Обробник зміни завдання
    */
-  private onTaskChange(task: LookupDto | null): void {
+  private onTaskChange(task: DictUnitTask | null): void {
     if (!task) {
       const updatedUnit: UnitTaskDto = {
         ...this.unitTask,
-        TaskId: '',
-        TaskItems: [],
+        taskId: '',
+        taskValue: '',
+        areaId: '',
+        areaValue: '',
+      };
+      this.unitChange.emit(updatedUnit);
+      this.areas.set([]);
+      return;
+    }
+
+    const updatedUnit: UnitTaskDto = {
+      ...this.unitTask,
+      taskId: task.id,
+      taskValue: task.value,
+    };
+    this.unitChange.emit(updatedUnit);
+
+    // Завантажуємо області для обраного завдання (використовуємо areaTypeId з кешованого об'єкта)
+    if (task.areaTypeId) {
+      this.loadAreasByTask(task.areaTypeId);
+    }
+  }
+
+  /**
+   * Обробник зміни області (РВЗ)
+   */
+  onAreaChange(area: DictArea | null): void {
+    if (!area) {
+      const updatedUnit: UnitTaskDto = {
+        ...this.unitTask,
+        areaId: '',
+        areaValue: '',
       };
       this.unitChange.emit(updatedUnit);
       return;
     }
 
-    // Завантажуємо всі елементи завдання (для різних категорій документів)
-    /*
-    this.dictUnitTaskItemsService
-      .getByUnitTask(task.id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (taskItems) => {
-          const updatedUnit: UnitTaskDto = {
-            ...this.unitTask,
-            TaskId: task.id,
-            TaskItems: taskItems,
-          };
-          this.unitChange.emit(updatedUnit);
-        },
-        error: (error) => {
-          console.error('Помилка завантаження елементів завдання:', error);
-          const errorMessage = S5App_ErrorHandler.handleHttpError(
-            error,
-            'Помилка завантаження елементів завдання',
-          );
-          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-
-          // Встановлюємо порожній масив елементів
-          const updatedUnit: UnitTaskDto = {
-            ...this.unitTask,
-            TaskId: task.id,
-            TaskItems: [],
-          };
-          this.unitChange.emit(updatedUnit);
-        },
-      });
-    */
-  }
-
-  /**
-   * Обробник зміни зони (РСП)
-   */
-  private onAreaChange(area: DictArea | null): void {
-    const updatedUnit = { ...this.unitTask, AreaValue: area?.value || '' };
+    const updatedUnit: UnitTaskDto = {
+      ...this.unitTask,
+      areaId: area.id,
+      areaValue: area.value,
+    };
     this.unitChange.emit(updatedUnit);
   }
 
   /**
-   * Завантажує області по areaTypeId з обраного завдання
+   * Завантажує області по areaTypeId
    */
-  private loadAreasByTask(taskId: string): void {
-    // Спочатку отримуємо повну інформацію про завдання, щоб дізнатися areaTypeId
-    this.dictUnitTasksService
-      .getById(taskId)
+  private loadAreasByTask(areaTypeId: string): void {
+    // Завантажуємо області відфільтровані по areaTypeId
+    this.dictAreasService
+      .getByAreaType(areaTypeId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (task) => {
-          if (task.areaTypeId) {
-            // Завантажуємо області відфільтровані по areaTypeId
-            this.dictAreasService
-              .getByAreaType(task.areaTypeId)
-              .pipe(takeUntil(this.destroy$))
-              .subscribe({
-                next: (areas) => this.areas.set(areas),
-                error: (error) => {
-                  console.error('Помилка завантаження областей:', error);
-                  const errorMessage = S5App_ErrorHandler.handleHttpError(
-                    error,
-                    'Помилка завантаження областей',
-                  );
-                  this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-                  this.areas.set([]);
-                },
-              });
-          } else {
-            this.areas.set([]);
+        next: (areas) => {
+          this.areas.set(areas);
+          // Ініціалізуємо значення areaControl якщо є збережена область
+          if (this.unitTask.areaId) {
+            const area = areas.find((a) => a.id === this.unitTask.areaId);
+            if (area) {
+              this.areaControl.setValue(area, { emitEvent: false });
+            }
           }
         },
         error: (error) => {
-          console.error('Помилка завантаження завдання:', error);
+          console.error('Помилка завантаження областей:', error);
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
+            error,
+            'Помилка завантаження областей',
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           this.areas.set([]);
         },
       });
@@ -308,9 +386,24 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy {
    */
   onDroneModelSelected(event: MatAutocompleteSelectedEvent): void {
     const selectedDroneModel = event.option.value as LookupDto | null;
+
+    // TODO: Додати логіку для роботи з means (DroneModelTask[])
+    // Потрібно створити окремий сервіс DroneModelTaskService
+    // та відображення списку засобів
+
     const updatedUnit = {
       ...this.unitTask,
-      Means: selectedDroneModel ? [selectedDroneModel.value] : [],
+      means: selectedDroneModel
+        ? [
+            {
+              id: '',
+              unitTaskId: this.unitTask.id,
+              droneModelId: selectedDroneModel.id,
+              droneModelValue: selectedDroneModel.value,
+              quantity: 1,
+            },
+          ]
+        : [],
     };
     this.unitChange.emit(updatedUnit);
   }

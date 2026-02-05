@@ -92,58 +92,6 @@ public record UnitTreeItemDto(
         ValidFrom);
 
 /// <summary>
-/// DTO для набора даних підрозділу для Angular (формування документу)
-/// Soldiers включає список особового складу підрозділу (основних бійців UnitId == Id).
-/// </summary>
-public record UnitDataSetDto(
-    string Id,
-    string? ParentId,
-    string? ParentShortName,
-    string? AssignedShortName,
-    string ShortName,
-    string? UnitTypeId,
-    string? UnitType,
-    /// <summary>
-    /// True - Оперативний/Тимчасовий підрозділ
-    /// </summary>
-    bool IsInvolved,
-    string? Comment,
-    /// <summary>
-    /// Особовий склад
-    /// </summary>
-    SoldierDto[] Soldiers,
-    /// <summary>
-    /// Приданий особовий склад
-    /// </summary>
-    SoldierDto[] AssignedSoldiers,
-    /// <summary>
-    /// Задіяний особовий склад - Екіпаж
-    /// </summary>
-    SoldierDto[] InvolvedSoldiers)
-{
-    /// <summary>
-    /// Створює UnitDataSetDto з Entity та списків солдатів
-    /// </summary>
-    public static UnitDataSetDto From(Unit u,
-        List<SoldierDto> soldiers,
-        List<SoldierDto> assignedSoldiers,
-        List<SoldierDto> involvedSoldiers) => new(
-        u.Id,
-        u.ParentId,
-        u.Parent?.ShortName,
-        u.AssignedUnit?.ShortName ?? u.AssignedUnit?.Name,
-        u.ShortName,
-        u.UnitTypeId,
-        u.UnitType?.ShortValue,
-        u.IsInvolved,
-        u.Comment,
-        [.. soldiers],
-        [.. assignedSoldiers],
-        [.. involvedSoldiers]
-    );
-}
-
-/// <summary>
 /// Підрозділ (організаційно-штатна бойова одиниця).
 /// Ієрархія: Parent / ChildUnits.
 /// Придання: AssignedUnit / AssignedUnits.
@@ -165,7 +113,9 @@ public class Unit
     /// Основний підрозділ
     /// </summary>
     public string? ParentId { get; set; }
-
+    /// <summary>
+    /// Основний підрозділ
+    /// </summary>
     [ValidateNever]
     public virtual Unit? Parent { get; set; }
 
@@ -173,7 +123,6 @@ public class Unit
     /// Приданий до підрозділу
     /// </summary>
     public string? AssignedUnitId { get; set; }
-
     /// <summary>
     /// Приданий до підрозділу
     /// </summary>
@@ -215,7 +164,7 @@ public class Unit
     public string? UnitTypeId { get; set; }
 
     /// <summary>
-    /// Тип підрозділу
+    /// Тип підрозділу Бригада, Полк, Батальйон, Рота
     /// </summary>
     [ValidateNever]
     public DictUnitType? UnitType { get; set; }

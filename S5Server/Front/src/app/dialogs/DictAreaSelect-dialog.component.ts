@@ -13,6 +13,7 @@ import { MatSortModule } from '@angular/material/sort';
 import { DictAreasService, DictArea } from '../../ServerService/dictAreas.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
+import { CityCodeInfo } from '../../ServerService/dictCityCode.service';
 
 export interface DictAreaSelectDialogData {
   /** Фільтр по типу РВЗ (опціонально) */
@@ -298,7 +299,7 @@ export class DictAreaSelectDialogComponent {
     this.dialogRef.close(area);
   }
 
-  getCityCodeDisplay(cityCodeInfo: any): string {
+  getCityCodeDisplay(cityCodeInfo: CityCodeInfo): string {
     return this.dictAreasService.buildCityCodeDisplayValue(cityCodeInfo);
   }
 

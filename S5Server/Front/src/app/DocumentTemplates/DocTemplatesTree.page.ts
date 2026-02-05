@@ -7,7 +7,7 @@ import { DataSetTableComponent } from './components/DataSetTable.component';
 import { TemplateEditorComponent } from './components/TemplateEditor.component';
 import { ResultEditorComponent } from './components/ResultEditor.component';
 import { TemplateDto } from '../DocumentTemplates/models/document-template.models';
-import { TemplateDataSetListItem } from '../DocumentTemplates/models/template-dataset.models';
+import { TemplateDataSetDto } from '../DocumentTemplates/models/template-dataset.models';
 import { UnitsTaskEditorComponent } from '../DocumentTemplates/components/UnitsTaskEditor.component';
 import { MasterDetailLayoutComponent } from '../shared/components/MasterDetailLayout.component';
 
@@ -32,7 +32,7 @@ export class DocTemplatesTree {
   @ViewChild('unitsTaskEditor') unitsTaskEditor!: UnitsTaskEditorComponent;
 
   selectedTemplate = signal<TemplateDto | null>(null);
-  selectedDataSet = signal<TemplateDataSetListItem | null>(null);
+  selectedDataSet = signal<TemplateDataSetDto | null>(null);
 
   // Signals для контенту редакторів (для ResultEditor)
   templateContent = signal<string>('');
@@ -50,7 +50,7 @@ export class DocTemplatesTree {
   /**
    * Обработчик выбора набора данных из DataSetTable компонента
    */
-  onDataSetSelected(dataSet: TemplateDataSetListItem | null): void {
+  onDataSetSelected(dataSet: TemplateDataSetDto | null): void {
     if (!dataSet) {
       return;
     }

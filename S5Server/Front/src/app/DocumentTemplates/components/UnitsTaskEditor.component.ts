@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
@@ -16,17 +17,20 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 
 import {
-  DocumentDataSet,
   TemplateDataSetCreateDto,
   TemplateDataSetUpdateDto,
   UnitTaskDto,
+  UnitTaskCreateDto,
 } from '../models/template-dataset.models';
 import { TemplateDataSetService } from '../services/template-dataset.service';
+import { UnitTaskService } from '../services/unit-task.service';
+import { UnitService } from '../../Unit/services/unit.service';
 import { JsonEditorDialogComponent } from '../components/JsonEditorDialog.component';
 import { UnitTaskCardComponent } from './UnitTaskCard.component';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
-import { TemplateDataSetListItem } from '../models/template-dataset.models';
+import { TemplateDataSetDto } from '../models/template-dataset.models';
 import { DocTemplateUtils } from '../models/shared.models';
+import { VerticalLayoutComponent } from '../../shared/components/VerticalLayout.component';
 
 @Component({
   selector: 'app-units-task-editor',
@@ -43,6 +47,7 @@ import { DocTemplateUtils } from '../models/shared.models';
     MatFormFieldModule,
     MatInputModule,
     UnitTaskCardComponent,
+    VerticalLayoutComponent,
   ],
   providers: [provideNativeDateAdapter()],
   templateUrl: './UnitsTaskEditor.component.html',
@@ -53,6 +58,8 @@ export class UnitsTaskEditorComponent {
   private dialog = inject(MatDialog);
 
   private dataSetService = inject(TemplateDataSetService);
+  private unitTaskService = inject(UnitTaskService);
+  private unitService = inject(UnitService);
 
   @ViewChild('parentDateInput') parentDateInput?: ElementRef<HTMLInputElement>;
   @ViewChild('parentNumberInput') parentNumberInput?: ElementRef<HTMLInputElement>;
@@ -63,12 +70,15 @@ export class UnitsTaskEditorComponent {
   protected selectedUnits = signal<UnitTaskDto[]>([]);
 
   // --- Current Loaded DataSet ---
-  protected dataSet = signal<TemplateDataSetListItem | null>(null);
+  protected dataSet = signal<TemplateDataSetDto | null>(null);
 
   // --- Document Info ---
-  protected parentDocumentDate = signal<Date | null>(new Date());
+  // Документ старшого начальника
+  protected isParentDocUsed = signal<boolean>(false);
+  protected parentDocumentDate = signal<Date | null>(null);
   protected parentDocumentNumber = signal<string>('');
-  // Дата документа
+
+  // Основний документ
   protected documentDate = signal<Date | null>(new Date());
   protected documentNumber = signal<string>('');
 
@@ -93,12 +103,12 @@ export class UnitsTaskEditorComponent {
    * Відкриває діалог редагування JSON
    */
   openJsonEditor(): void {
-    const jsonString = this.getDataSetContent(null, 2);
+    const jsonString = JSON.stringify(this.selectedUnits(), null, 2);
 
     this.dialog.open(JsonEditorDialogComponent, {
       data: {
         jsonContent: jsonString,
-        readOnly: false,
+        readOnly: true,
         title: 'Дані документа - Вибрані підрозділи',
       },
       width: '90vw',
@@ -109,13 +119,34 @@ export class UnitsTaskEditorComponent {
   }
 
   /**
-   * Обробник зміни дати документа
+   * Обробник зміни прапорця "Чи існує документ старшого начальника"
+   */
+  onParentDocUsedChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.isParentDocUsed.set(input.checked);
+    this.hasUnsavedChanges.set(true);
+  }
+
+  /**
+   * Обробник зміни дати документа старшого начальника
    */
   onParentDocumentDateChange(event: MatDatepickerInputEvent<Date>): void {
     this.parentDocumentDate.set(event.value || null);
     this.hasUnsavedChanges.set(true);
   }
 
+  /**
+   * Обробник зміни номера документа старшого начальника
+   */
+  onParentDocumentNumberChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.parentDocumentNumber.set(input.value);
+    this.hasUnsavedChanges.set(true);
+  }
+
+  /**
+   * Обробник зміни дати документа
+   */
   onDocumentDateChange(event: MatDatepickerInputEvent<Date>): void {
     this.documentDate.set(event.value || null);
     this.hasUnsavedChanges.set(true);
@@ -124,15 +155,22 @@ export class UnitsTaskEditorComponent {
   /**
    * Обробник зміни номера документа
    */
-  onParentDocumentNumberChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.parentDocumentNumber.set(input.value);
-    this.hasUnsavedChanges.set(true);
-  }
   onDocumentNumberChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.documentNumber.set(input.value);
     this.hasUnsavedChanges.set(true);
+  }
+
+  /**
+   * Повертає контент DataSet у форматі JSON для ResultEditor
+   */
+  getDataSetContent(): string {
+    const units = this.selectedUnits();
+    if (units.length === 0) {
+      return '';
+    }
+
+    return JSON.stringify(units, null, 2);
   }
 
   /**
@@ -144,7 +182,7 @@ export class UnitsTaskEditorComponent {
       const confirmed = confirm(
         '⚠️ У вас є незбережені зміни!\n\n' +
           'Якщо ви продовжите, всі незбережені дані будуть втрачені.\n\n' +
-          'Продовжити?'
+          'Продовжити?',
       );
       return confirmed;
     }
@@ -152,38 +190,53 @@ export class UnitsTaskEditorComponent {
   }
 
   /**
-   * Добавляет подразделение в список выбранных
-   * Загружает полный DataSet с особовим складом через API
+   * Додає підрозділ до списку вибраних
+   * Завантажує Unit через UnitService
    */
   addUnitToSelection(unitId: string) {
     const currentList = this.selectedUnits();
-    // Проверяем, нет ли уже этого подразделения в списке
-    if (currentList.find((u) => u.id === unitId)) {
+    // Перевіряємо, чи немає вже цього підрозділу в списку
+    if (currentList.find((u) => u.unitId === unitId)) {
+      this.snackBar.open('Цей підрозділ вже додано до списку', 'Закрити', { duration: 3000 });
       return;
     }
 
-    // Загружаем полный DataSet подразделения
-    this.dataSetService.getUnitDataSet(unitId).subscribe({
-      next: (unitDataSet) => {
-        // Створюємо UnitTaskDto з порожніми значеннями завдань
+    // Завантажуємо дані підрозділу через UnitService
+    this.unitService.getById(unitId).subscribe({
+      next: (unit) => {
+        // Створюємо новий UnitTask (ще не збережений на сервері)
         const unitTask: UnitTaskDto = {
-          ...unitDataSet,
-          TaskId: '',
-          TaskItems: [],
-          AreaId: '',
-          AreaValue: '',
-          Means: [],
+          id: '', // Ще не створено на сервері
+          unitId: unit.id,
+          unitShortName: unit.shortName || '',
+          parentId: unit.parentId,
+          parentShortName: unit.parentShortName || '',
+          assignedUnitId: unit.assignedUnitId,
+          assignedShortName: unit.assignedShortName,
+          unitTypeId: unit.unitTypeId,
+          unitTypeName: unit.unitType,
+          isInvolved: false,
+          persistentLocationId: unit.persistentLocationId,
+          persistentLocationValue: unit.persistentLocation,
+          taskId: '', // Користувач має вибрати
+          taskValue: '',
+          areaId: '', // Користувач має вибрати РВЗ
+          areaValue: '',
+          means: [],
+          isPublished: false,
+          publishedAtUtc: undefined,
+          changedBy: '',
+          validFrom: new Date().toISOString(),
         };
 
         this.selectedUnits.set([...currentList, unitTask]);
-        // Позначаємо що є незбережені зміни
         this.hasUnsavedChanges.set(true);
       },
       error: (error) => {
         console.error('Помилка завантаження даних підрозділу:', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
-          'Помилка завантаження даних підрозділу:'
+          'Помилка завантаження даних підрозділу',
         );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
@@ -200,77 +253,63 @@ export class UnitsTaskEditorComponent {
     this.hasUnsavedChanges.set(true);
   }
 
+  /**
+   * Завантажує DataSet та список UnitTask
+   */
   loadDataSet(dataSetId: string): void {
     if (this.dataSet()?.id === dataSetId) {
       return; // Вже завантажено
     }
-    // Перевіряємо чи немає незбережених змін перед завантаженням нового набору
+
+    // Перевіряємо чи немає незбережених змін
     if (!this.checkUnsavedChanges()) {
-      return; // Користувач скасував завантаження
+      return;
     }
 
     this.dataSetService.getDataSetById(dataSetId).subscribe({
       next: (dataSet) => {
-        let documentData: DocumentDataSet;
-        try {
-          documentData = JSON.parse(dataSet.dataJson) as DocumentDataSet;
-        } catch (error) {
-          const errorMessage = S5App_ErrorHandler.handleJsonError(error);
-          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-          return;
-        }
-
-        if (!documentData || !documentData.unitsTask) {
-          this.snackBar.open('Набір даних не містить інформації про підрозділи', 'Закрити', {
-            duration: 5000,
-          });
-          return;
-        }
-
-        // Зберігаємо інформацію про поточний завантажений DataSet
+        // Зберігаємо інформацію про поточний DataSet
         this.dataSet.set(dataSet);
 
+        // Оновлюємо дані документа старшого начальника
+        this.isParentDocUsed.set(dataSet.isParentDocUsed);
+        this.parentDocumentDate.set(dataSet.parentDocDate ? new Date(dataSet.parentDocDate) : null);
+        this.parentDocumentNumber.set(dataSet.parentDocNumber || '');
+
         // Оновлюємо дату та номер документа
-        this.parentDocumentDate.set(new Date(documentData.parentDocumentDate));
-        this.parentDocumentNumber.set(documentData.parentDocumentNumber);
-        this.documentDate.set(new Date(documentData.documentDate));
-        this.documentNumber.set(documentData.documentNumber);
+        this.documentDate.set(new Date(dataSet.docDate));
+        this.documentNumber.set(dataSet.docNumber);
 
-        // Оновлюємо вибрані підрозділи
-        this.selectedUnits.set(documentData.unitsTask);
-
-        // Скидаємо прапорець незбережених змін (ми щойно завантажили збережені дані)
-        this.hasUnsavedChanges.set(false);
-
-        this.snackBar.open(`Завантажено набір "${dataSet.name}"`, 'Закрити', { duration: 3000 });
+        // Завантажуємо список UnitTask для цього DataSet
+        this.unitTaskService.getAll({ dataSetId: dataSet.id }).subscribe({
+          next: (unitTasks) => {
+            this.selectedUnits.set(unitTasks);
+            this.hasUnsavedChanges.set(false);
+            this.snackBar.open(
+              `Завантажено набір "${dataSet.name}" з ${unitTasks.length} підрозділами`,
+              'Закрити',
+              { duration: 3000 },
+            );
+          },
+          error: (error) => {
+            console.error('Помилка завантаження завдань підрозділів:', error);
+            const errorMessage = S5App_ErrorHandler.handleHttpError(
+              error,
+              'Помилка завантаження завдань підрозділів',
+            );
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          },
+        });
       },
       error: (error) => {
         console.error('Помилка завантаження набору даних:', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
-          'Помилка завантаження набору даних:'
+          'Помилка завантаження набору даних',
         );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
     });
-  }
-
-  getDataSetContent(
-    replacer?: (string | number)[] | null | undefined,
-    space?: string | number | undefined
-  ): string {
-    // Формуємо дані для збереження
-    const dataToSave: DocumentDataSet = {
-      parentDocumentDate: this.parentDocumentDate()?.toISOString() || '',
-      parentDocumentNumber: this.parentDocumentNumber(),
-      documentDate: this.documentDate()?.toISOString() || '',
-      documentNumber: this.documentNumber(),
-      unitsTask: this.selectedUnits(),
-      savedAt: new Date().toISOString(),
-    };
-
-    const dataJson = JSON.stringify(dataToSave, replacer, space);
-    return dataJson;
   }
 
   /**
@@ -279,7 +318,7 @@ export class UnitsTaskEditorComponent {
   private checkRequiredField(
     value: string | Date | null | undefined,
     input: ElementRef<HTMLInputElement> | undefined,
-    errorMessage: string
+    errorMessage: string,
   ): boolean {
     const isEmpty = !value || (typeof value === 'string' && value.trim() === '');
 
@@ -303,24 +342,26 @@ export class UnitsTaskEditorComponent {
     }
 
     // Перевірка обов'язкових полів
-    if (
-      !this.checkRequiredField(
-        this.parentDocumentDate(),
-        this.parentDateInput,
-        'Заповніть дату документа старшого начальника'
-      )
-    ) {
-      return;
-    }
+    if (this.isParentDocUsed()) {
+      if (
+        !this.checkRequiredField(
+          this.parentDocumentDate(),
+          this.parentDateInput,
+          'Заповніть дату документа старшого начальника',
+        )
+      ) {
+        return;
+      }
 
-    if (
-      !this.checkRequiredField(
-        this.parentDocumentNumber(),
-        this.parentNumberInput,
-        'Заповніть номер документа старшого начальника'
-      )
-    ) {
-      return;
+      if (
+        !this.checkRequiredField(
+          this.parentDocumentNumber(),
+          this.parentNumberInput,
+          'Заповніть номер документа старшого начальника',
+        )
+      ) {
+        return;
+      }
     }
 
     if (!this.checkRequiredField(this.documentDate(), this.dateInput, 'Заповніть дату документа')) {
@@ -338,62 +379,50 @@ export class UnitsTaskEditorComponent {
     for (let i = 0; i < units.length; i++) {
       const unit = units[i];
 
-      if (!unit.TaskId || !unit.TaskItems || unit.TaskItems.length === 0) {
+      if (!unit.taskId) {
         this.snackBar.open(
-          `Підрозділ "${unit.shortName}" (${i + 1}): заповніть завдання`,
+          `Підрозділ "${unit.unitShortName}" (${i + 1}): заповніть завдання`,
           'Закрити',
-          { duration: 5000 }
+          { duration: 5000 },
         );
         return;
       }
 
-      /*
-      if (!unit.AreaValue || unit.AreaValue.trim() === '') {
+      if (!unit.areaId) {
         this.snackBar.open(
-          `Підрозділ "${unit.shortName}" (${i + 1}): заповніть РСП для екіпажів`,
+          `Підрозділ "${unit.unitShortName}" (${i + 1}): заповніть район виконання завдань (РВЗ)`,
           'Закрити',
-          { duration: 5000 }
+          { duration: 5000 },
         );
         return;
       }
-
-      if (!unit.Means || unit.Means.length === 0) {
-        this.snackBar.open(
-          `Підрозділ "${unit.shortName}" (${i + 1}): оберіть засіб (модель БПЛА)`,
-          'Закрити',
-          { duration: 5000 }
-        );
-        return;
-      }
-      */
     }
 
-    const dataJson = this.getDataSetContent();
     // Генеруємо назву на основі дати та номера документа
     const dateStr = this.documentDate()?.toLocaleDateString('uk-UA') || '';
-    const docNum = `${this.parentDocumentNumber()}-${this.documentNumber()}`.trim();
-    const dataSetName = docNum || `Дані документа від ${dateStr} № ${docNum}`;
+    const docNum = this.documentNumber().trim();
+    const dataSetName = `Дані документа від ${dateStr} № ${docNum}`;
 
     this.isSaving.set(true);
 
-    // Перевіряємо чи є поточний завантажений DataSet
     const currentDataSet = this.dataSet();
 
     if (currentDataSet) {
       // Оновлюємо існуючий DataSet
       const updateDto: TemplateDataSetUpdateDto = {
         name: dataSetName,
-        dataJson: dataJson,
+        isParentDocUsed: this.isParentDocUsed(),
+        parentDocNumber: this.parentDocumentNumber(),
+        parentDocDate: this.parentDocumentDate()?.toISOString() || new Date().toISOString(),
+        docNumber: this.documentNumber(),
+        docDate: this.documentDate()!.toISOString(),
         isPublished: currentDataSet.isPublished,
       };
 
       this.dataSetService.updateDataSet(currentDataSet.id, updateDto).subscribe({
         next: () => {
-          this.isSaving.set(false);
-          this.hasUnsavedChanges.set(false);
-          this.snackBar.open(`Набір "${dataSetName}" успішно оновлено`, 'Закрити', {
-            duration: 5000,
-          });
+          // Після оновлення DataSet зберігаємо UnitTask
+          this.saveUnitTasks(currentDataSet.id);
         },
         error: (error) => {
           this.isSaving.set(false);
@@ -406,42 +435,87 @@ export class UnitsTaskEditorComponent {
       // Створюємо новий DataSet
       const createDto: TemplateDataSetCreateDto = {
         name: dataSetName,
-        dataJson: dataJson,
+        isParentDocUsed: this.isParentDocUsed(),
+        parentDocNumber: this.parentDocumentNumber(),
+        parentDocDate: this.parentDocumentDate()?.toISOString() || new Date().toISOString(),
+        docNumber: this.documentNumber(),
+        docDate: this.documentDate()!.toISOString(),
         isPublished: false,
       };
 
       this.dataSetService.createDataSet(createDto).subscribe({
         next: (createdDataSet) => {
-          this.isSaving.set(false);
-          this.hasUnsavedChanges.set(false);
           // Зберігаємо інформацію про новостворений DataSet
           this.dataSet.set({
             id: createdDataSet.id,
             name: createdDataSet.name,
+            isParentDocUsed: createdDataSet.isParentDocUsed,
+            parentDocNumber: createdDataSet.parentDocNumber,
+            parentDocDate: createdDataSet.parentDocDate,
+            docNumber: createdDataSet.docNumber,
+            docDate: createdDataSet.docDate,
             isPublished: createdDataSet.isPublished,
             createdAtUtc: createdDataSet.createdAtUtc,
             updatedAtUtc: createdDataSet.updatedAtUtc,
             publishedAtUtc: createdDataSet.publishedAtUtc,
           });
-          this.snackBar.open(
-            `Дані успішно збережено як набір "${createdDataSet.name}"`,
-            'Закрити',
-            {
-              duration: 5000,
-            }
-          );
+
+          // Після створення DataSet зберігаємо UnitTask
+          this.saveUnitTasks(createdDataSet.id);
         },
         error: (error) => {
           this.isSaving.set(false);
           console.error('Error creating dataset:', error);
           const errorMessage = S5App_ErrorHandler.handleHttpError(
             error,
-            'Помилка збереження даних'
+            'Помилка збереження даних',
           );
           this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
         },
       });
     }
+  }
+
+  /**
+   * Зберігає UnitTask для кожного підрозділу
+   */
+  private saveUnitTasks(dataSetId: string): void {
+    const units = this.selectedUnits();
+    const saveObservables = units.map((unit) => {
+      if (unit.id) {
+        // Оновлюємо існуючий UnitTask
+        return this.unitTaskService.update(unit.id, unit);
+      } else {
+        // Створюємо новий UnitTask (snapshot)
+        const createDto: UnitTaskCreateDto = {
+          dataSetId: dataSetId,
+          unitId: unit.unitId,
+          taskId: unit.taskId,
+          areaId: unit.areaId,
+        };
+        return this.unitTaskService.create(createDto);
+      }
+    });
+
+    forkJoin(saveObservables).subscribe({
+      next: () => {
+        this.isSaving.set(false);
+        this.hasUnsavedChanges.set(false);
+        this.snackBar.open('Дані успішно збережено', 'Закрити', { duration: 3000 });
+
+        // Перезавантажуємо DataSet для оновлення даних
+        this.loadDataSet(dataSetId);
+      },
+      error: (error) => {
+        this.isSaving.set(false);
+        console.error('Помилка збереження завдань підрозділів:', error);
+        const errorMessage = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Помилка збереження завдань підрозділів',
+        );
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      },
+    });
   }
 
   /**
@@ -453,19 +527,16 @@ export class UnitsTaskEditorComponent {
       return;
     }
 
-    // Очищаємо поточний DataSet (переходимо в режим створення нового)
+    // Очищаємо поточний DataSet
     this.dataSet.set(null);
 
     // Очищуємо всі дані
     this.selectedUnits.set([]);
+    this.isParentDocUsed.set(false);
+    this.parentDocumentDate.set(null);
+    this.parentDocumentNumber.set('');
     this.documentDate.set(new Date());
     this.documentNumber.set('');
-    /*
-    this.selectedDroneModels.clear();
-    this.droneModelSearchControls.clear();
-    this.filteredDroneModels.clear();
-    this.isLoadingDroneModels.clear();
-    */
 
     // Скидаємо прапорець стану
     this.hasUnsavedChanges.set(false);
@@ -518,7 +589,7 @@ export class UnitsTaskEditorComponent {
         console.error('Error changing publish status:', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
-          'Помилка зміни статусу публікації'
+          'Помилка зміни статусу публікації',
         );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },

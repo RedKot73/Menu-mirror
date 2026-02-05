@@ -1,97 +1,175 @@
-// Модели для работы с TemplateDataSet API
+// Модели для работы с TemplateDataSet и UnitTask API
 
-import { DictUnitTaskItem } from '../../../ServerService/dictUnitTaskItems.service';
-import { UnitDataSetDto } from '../../Unit/services/unit.service';
+// === TemplateDataSet Models (Заголовок документа) ===
 
-// DTO для передачи данных TemplateDataSet (соответствует TemplateDataSetDto)
+/**
+ * DTO для передачи данных TemplateDataSet
+ * Відповідає серверному TemplateDataSetDto
+ */
 export interface TemplateDataSetDto {
   id: string;
   name: string;
-  dataJson: string;
+  isParentDocUsed: boolean; // Чи існує документ старшого начальника
+  parentDocNumber: string; // Номер документу старшого начальника
+  parentDocDate: string; // Дата документу старшого начальника (ISO date string)
+  docNumber: string; // Номер документу
+  docDate: string; // Дата документу (ISO date string)
   isPublished: boolean;
   publishedAtUtc?: string; // ISO date string
   createdAtUtc: string; // ISO date string
   updatedAtUtc?: string; // ISO date string
 }
 
-// DTO для создания нового TemplateDataSet (соответствует TemplateDataSetCreateDto)
+/**
+ * DTO для створення нового TemplateDataSet
+ */
 export interface TemplateDataSetCreateDto {
   name: string;
-  dataJson: string;
-  isPublished: boolean;
-}
-
-// Упрощенная модель для списков (опциональная, для оптимизации)
-export interface TemplateDataSetListItem {
-  id: string;
-  name: string;
-  isPublished: boolean;
-  publishedAtUtc?: string; // ISO date string
-  createdAtUtc: string;
-  updatedAtUtc?: string;
-}
-
-// Модель для обновления TemplateDataSet
-export interface TemplateDataSetUpdateDto {
-  name: string;
-  dataJson: string;
-  isPublished: boolean;
-}
-
-export interface UnitTaskDto extends UnitDataSetDto {
-  TaskId: string;
-  /** Елементи завдання (DictUnitTaskItem) */
-  TaskItems: DictUnitTaskItem[];
-  /** Зона виконання завдання */
-  AreaId: string;
-  /** Зона виконання завдання */
-  AreaValue: string;
-  /** Перелік засобів ураження */
-  Means: string[];
+  isParentDocUsed?: boolean;
+  parentDocNumber?: string;
+  parentDocDate?: string; // ISO date string
+  docNumber: string;
+  docDate: string; // ISO date string
+  isPublished?: boolean;
 }
 
 /**
- * Полная модель данных документа (сохраняется в dataJson)
- * Использует UnitDataSetDto из unit.service для подразделений
+ * DTO для оновлення TemplateDataSet
  */
-export interface DocumentDataSet {
-  parentDocumentDate: string; // ISO date string
-  parentDocumentNumber: string;
-  documentDate: string; // ISO date string
-  documentNumber: string;
-  unitsTask: UnitTaskDto[];
-  savedAt: string; // ISO date string
+export interface TemplateDataSetUpdateDto {
+  name: string;
+  isParentDocUsed: boolean;
+  parentDocNumber: string;
+  parentDocDate: string; // ISO date string
+  docNumber: string;
+  docDate: string; // ISO date string
+  isPublished: boolean;
 }
 
-// Утилиты для работы с TemplateDataSet
+// === UnitTask Models (Snap-shot підрозділу з завданням) ===
+
+/**
+ * DTO для snap-shot бійця в UnitTask
+ */
+export interface SoldierTaskDto {
+  id: string;
+  unitTaskId: string;
+  soldierId: string;
+  externId?: number;
+  firstName: string;
+  midleName?: string;
+  lastName?: string;
+  fio: string;
+  nickName?: string;
+  unitId: string;
+  unitShortName: string;
+  assignedUnitId?: string;
+  assignedUnitShortName?: string;
+  involvedUnitId?: string;
+  involvedUnitShortName?: string;
+  rankId: string;
+  rankShortValue: string;
+  positionId: string;
+  positionValue: string;
+  stateId: string;
+  stateValue: string;
+  comment?: string;
+  changedBy: string;
+  validFrom: string;
+}
+
+/**
+ * DTO для моделі БПЛА в завданні підрозділу
+ */
+export interface DroneModelTaskDto {
+  id: string;
+  unitTaskId: string;
+  droneModelId: string;
+  droneModelValue: string;
+  quantity: number;
+}
+
+/**
+ * DTO для створення UnitTask
+ */
+export interface UnitTaskCreateDto {
+  dataSetId: string;
+  unitId: string;
+  taskId: string;
+  areaId: string;
+}
+
+/**
+ * Базовий DTO для UnitTask (без списку бійців)
+ * Відповідає серверному UnitTaskDto
+ */
+export interface UnitTaskDto {
+  id: string;
+  dataSetId?: string;
+  unitId: string;
+  unitShortName: string;
+  parentId?: string;
+  parentShortName: string;
+  assignedUnitId?: string;
+  assignedShortName?: string;
+  unitTypeId?: string;
+  unitTypeName?: string;
+  isInvolved: boolean;
+  persistentLocationId?: string;
+  persistentLocationValue?: string;
+  taskId: string;
+  taskValue: string;
+  areaId: string;
+  areaValue?: string;
+  means?: DroneModelTaskDto[];
+  isPublished: boolean;
+  publishedAtUtc?: string;
+  changedBy: string;
+  validFrom: string;
+}
+
+// === Утиліти ===
 export class TemplateDataSetUtils {
   /**
-   * Валидирует DataSet перед отправкой
+   * Валідує DataSet перед відправкою
    */
   static validate(dataSet: TemplateDataSetCreateDto): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
     if (!dataSet.name || dataSet.name.trim() === '') {
-      errors.push('Название набора данных обязательно');
+      errors.push("Назва набору даних обов'язкова");
     }
 
     if (dataSet.name.length > 150) {
-      errors.push('Название не должно превышать 150 символов');
+      errors.push('Назва не повинна перевищувати 150 символів');
     }
 
-    if (!dataSet.dataJson || dataSet.dataJson.trim() === '') {
-      errors.push('JSON данные обязательны');
+    if (!dataSet.docNumber || dataSet.docNumber.trim() === '') {
+      errors.push("Номер документу обов'язковий");
     }
 
-    try {
-      JSON.parse(dataSet.dataJson);
-    } catch {
-      errors.push('JSON данные должны быть в валидном формате');
+    if (!dataSet.docDate) {
+      errors.push("Дата документу обов'язкова");
     }
 
     return {
       valid: errors.length === 0,
       errors,
     };
+  }
+
+  /**
+   * Форматує дату для відображення
+   */
+  static formatDate(dateString: string): string {
+    if (!dateString) {
+      return '';
+    }
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('uk-UA');
+    } catch {
+      return dateString;
+    }
   }
 }

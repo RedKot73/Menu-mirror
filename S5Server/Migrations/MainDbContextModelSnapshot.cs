@@ -713,6 +713,39 @@ namespace S5Server.Migrations
                     b.ToTable("document_templates", (string)null);
                 });
 
+            modelBuilder.Entity("S5Server.Models.DroneModelTask", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<string>("DroneModelId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.Property<int>("Quantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.Property<string>("UnitTaskId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DroneModelId");
+
+                    b.HasIndex("UnitTaskId");
+
+                    b.HasIndex("UnitTaskId", "DroneModelId")
+                        .IsUnique();
+
+                    b.ToTable("drone_model_task", (string)null);
+                });
+
             modelBuilder.Entity("S5Server.Models.Soldier", b =>
                 {
                     b.Property<string>("Id")
@@ -1035,7 +1068,8 @@ namespace S5Server.Migrations
 
                     b.HasIndex("UnitTaskId");
 
-                    b.HasIndex("UnitTaskId", "SoldierId");
+                    b.HasIndex("UnitTaskId", "SoldierId")
+                        .IsUnique();
 
                     b.ToTable("soldiers_task", (string)null);
                 });
@@ -1160,7 +1194,8 @@ namespace S5Server.Migrations
 
                     b.HasIndex("Name");
 
-                    b.HasIndex("DocDate", "IsPublished");
+                    b.HasIndex("DocDate", "DocNumber")
+                        .IsUnique();
 
                     b.ToTable("template_data_sets", (string)null);
                 });
@@ -1350,6 +1385,10 @@ namespace S5Server.Migrations
                         .HasMaxLength(36)
                         .HasColumnType("TEXT(36)");
 
+                    b.Property<string>("AreaId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("AssignedShortName")
                         .HasColumnType("TEXT(100)");
 
@@ -1437,7 +1476,8 @@ namespace S5Server.Migrations
 
                     b.HasIndex("UnitTypeId");
 
-                    b.HasIndex("UnitId", "PublishedAtUtc");
+                    b.HasIndex("UnitId", "TaskId")
+                        .IsUnique();
 
                     b.ToTable("units_task", (string)null);
                 });
@@ -1615,6 +1655,25 @@ namespace S5Server.Migrations
                         .IsRequired();
 
                     b.Navigation("TemplateCategory");
+                });
+
+            modelBuilder.Entity("S5Server.Models.DroneModelTask", b =>
+                {
+                    b.HasOne("S5Server.Models.DictDroneModel", "DroneModel")
+                        .WithMany()
+                        .HasForeignKey("DroneModelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("S5Server.Models.UnitTask", "UnitTask")
+                        .WithMany("Means")
+                        .HasForeignKey("UnitTaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DroneModel");
+
+                    b.Navigation("UnitTask");
                 });
 
             modelBuilder.Entity("S5Server.Models.Soldier", b =>
@@ -1846,6 +1905,8 @@ namespace S5Server.Migrations
 
             modelBuilder.Entity("S5Server.Models.UnitTask", b =>
                 {
+                    b.Navigation("Means");
+
                     b.Navigation("SoldiersTask");
                 });
 #pragma warning restore 612, 618

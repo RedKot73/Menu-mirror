@@ -1,130 +1,154 @@
-<mat-card>
-  <mat-card-header>
-    <mat-card-title> Документ старшого начальника </mat-card-title>
-    <div class="header-actions">
-      <button
-        mat-raised-button
-        color="accent"
-        (click)="openJsonEditor()"
-        [disabled]="selectedUnits().length === 0"
-        matTooltip="Переглянути дані у форматі JSON"
-      >
-        <mat-icon>data_object</mat-icon>
-        Дані документа
-      </button>
-      <button
-        mat-raised-button
-        color="primary"
-        (click)="saveSelectedUnitsAsDataSet()"
-        [disabled]="selectedUnits().length === 0 || !hasUnsavedChanges()"
-        matTooltip="Зберегти дані"
-      >
-        @if (isSaving()) {
-        <mat-icon>hourglass_empty</mat-icon>
-        } @else {
-        <mat-icon>save</mat-icon>
-        } Зберегти
-      </button>
+<app-vertical-layout>
+  <!-- Action Panel -->
+  <div actionPanel class="action-panel-content">
+    <div class="top-bar">
+      <div class="title-section">
+        <span class="title"> Вибрані підрозділи ({{ selectedUnits().length }}) </span>
+        @if (hasUnsavedChanges()) {
+          <mat-icon class="unsaved-indicator" matTooltip="Є незбережені зміни" color="warn">
+            warning
+          </mat-icon>
+        }
+        @let currentDataSet = dataSet();
+        @if (currentDataSet) {
+          <mat-button-toggle-group
+            [value]="currentDataSet.isPublished"
+            (change)="onPublishStatusChange($event.value)"
+            class="status-toggle"
+            [disabled]="isSaving()"
+          >
+            <mat-button-toggle [value]="false" matTooltip="Чернетка">
+              <mat-icon>edit</mat-icon>
+              {{ getStatusLabel(false) }}
+            </mat-button-toggle>
+            <mat-button-toggle [value]="true" matTooltip="Опубліковано">
+              <mat-icon>check_circle</mat-icon>
+              {{ getStatusLabel(true) }}
+            </mat-button-toggle>
+          </mat-button-toggle-group>
+        }
+      </div>
+
+      <div class="actions-section">
+        <button
+          mat-raised-button
+          color="accent"
+          (click)="openJsonEditor()"
+          [disabled]="selectedUnits().length === 0"
+          matTooltip="Переглянути дані у форматі JSON"
+        >
+          <mat-icon>data_object</mat-icon>
+          Дані документа
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="saveSelectedUnitsAsDataSet()"
+          [disabled]="selectedUnits().length === 0 || !hasUnsavedChanges()"
+          matTooltip="Зберегти дані"
+        >
+          @if (isSaving()) {
+            <mat-icon>hourglass_empty</mat-icon>
+          } @else {
+            <mat-icon>save</mat-icon>
+          }
+          Зберегти
+        </button>
+      </div>
     </div>
-  </mat-card-header>
 
-  <mat-card-content>
-    <mat-form-field appearance="outline" class="document-field">
-      <mat-label>Дата документа</mat-label>
-      <input
-        #parentDateInput
-        matInput
-        [matDatepicker]="parentPicker"
-        [value]="parentDocumentDate()"
-        (dateChange)="onParentDocumentDateChange($event)"
-        required
-      />
-      <mat-datepicker-toggle matIconSuffix [for]="parentPicker"></mat-datepicker-toggle>
-      <mat-datepicker #parentPicker></mat-datepicker>
-    </mat-form-field>
+    <mat-card class="document-card">
+      <mat-card-header>
+        <mat-card-title>Документ</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="checkbox-field">
+          <input
+            type="checkbox"
+            id="isParentDocUsed"
+            [checked]="isParentDocUsed()"
+            (change)="onParentDocUsedChange($event)"
+          />
+          <label for="isParentDocUsed">Чи існує документ старшого начальника</label>
+        </div>
 
-    <mat-form-field appearance="outline" class="document-field">
-      <mat-label>Номер документа</mat-label>
-      <input
-        #parentNumberInput
-        matInput
-        type="text"
-        [value]="parentDocumentNumber()"
-        (input)="onParentDocumentNumberChange($event)"
-        required
-      />
-    </mat-form-field>
-  </mat-card-content>
-</mat-card>
+        @if (isParentDocUsed()) {
+          <div class="document-fields-row">
+            <mat-form-field appearance="outline" class="document-field">
+              <mat-label>Дата документа старшого начальника</mat-label>
+              <input
+                #parentDateInput
+                matInput
+                [matDatepicker]="parentPicker"
+                [value]="parentDocumentDate()"
+                (dateChange)="onParentDocumentDateChange($event)"
+                required
+              />
+              <mat-datepicker-toggle matIconSuffix [for]="parentPicker"></mat-datepicker-toggle>
+              <mat-datepicker #parentPicker></mat-datepicker>
+            </mat-form-field>
 
-<mat-card>
-  <mat-card-header>
-    <mat-card-title>
-      Вибрані підрозділи ({{ selectedUnits().length }}) @if (hasUnsavedChanges()) {
-      <mat-icon class="unsaved-indicator" matTooltip="Є незбережені зміни" color="warn">
-        warning
-      </mat-icon>
-      } @let currentDataSet = dataSet(); @if (currentDataSet) {
-      <mat-button-toggle-group
-        [value]="currentDataSet.isPublished"
-        (change)="onPublishStatusChange($event.value)"
-        class="status-toggle"
-        [disabled]="isSaving()"
-      >
-        <mat-button-toggle [value]="false" matTooltip="Чернетка">
-          <mat-icon>edit</mat-icon>
-          {{ getStatusLabel(false) }}
-        </mat-button-toggle>
-        <mat-button-toggle [value]="true" matTooltip="Опубліковано">
-          <mat-icon>check_circle</mat-icon>
-          {{ getStatusLabel(true) }}
-        </mat-button-toggle>
-      </mat-button-toggle-group>
-      }
-    </mat-card-title>
-  </mat-card-header>
+            <mat-form-field appearance="outline" class="document-field">
+              <mat-label>Номер документа старшого начальника</mat-label>
+              <input
+                #parentNumberInput
+                matInput
+                type="text"
+                [value]="parentDocumentNumber()"
+                (input)="onParentDocumentNumberChange($event)"
+                required
+              />
+            </mat-form-field>
+          </div>
+        }
 
-  <mat-card-content>
-    <mat-form-field appearance="outline" class="document-field">
-      <mat-label>Дата документа</mat-label>
-      <input
-        #dateInput
-        matInput
-        [matDatepicker]="picker"
-        [value]="documentDate()"
-        (dateChange)="onDocumentDateChange($event)"
-        required
-      />
-      <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-      <mat-datepicker #picker></mat-datepicker>
-    </mat-form-field>
+        <div class="document-fields-row">
+          <mat-form-field appearance="outline" class="document-field">
+            <mat-label>Дата документа</mat-label>
+            <input
+              #dateInput
+              matInput
+              [matDatepicker]="picker"
+              [value]="documentDate()"
+              (dateChange)="onDocumentDateChange($event)"
+              required
+            />
+            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
 
-    <mat-form-field appearance="outline" class="document-field">
-      <mat-label>Номер документа</mat-label>
-      <input
-        #numberInput
-        matInput
-        type="text"
-        [value]="documentNumber()"
-        (input)="onDocumentNumberChange($event)"
-        required
-      />
-    </mat-form-field>
-  </mat-card-content>
-</mat-card>
-
-<div class="selected-units-list">
-  @if (selectedUnits().length === 0) {
-  <div class="empty-list">
-    <mat-icon>inbox</mat-icon>
-    <p>Список порожній. Додайте підрозділи з дерева.</p>
+          <mat-form-field appearance="outline" class="document-field">
+            <mat-label>Номер документа</mat-label>
+            <input
+              #numberInput
+              matInput
+              type="text"
+              [value]="documentNumber()"
+              (input)="onDocumentNumberChange($event)"
+              required
+            />
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
   </div>
-  } @else { @for (unitTask of selectedUnits(); track unitTask.id) {
-  <app-unit-task-card
-    [unitTask]="unitTask"
-    (remove)="removeUnitFromSelection($event)"
-    (unitChange)="onUnitChange($event)"
-  >
-  </app-unit-task-card>
-  } }
-</div>
+
+  <!-- Content Panel -->
+  <div contentPanel class="selected-units-list">
+      @if (selectedUnits().length === 0) {
+        <div class="empty-list">
+          <mat-icon>inbox</mat-icon>
+          <p>Список порожній. Додайте підрозділи з дерева.</p>
+        </div>
+      } @else {
+        @for (unitTask of selectedUnits(); track unitTask.id) {
+          <app-unit-task-card
+            [unitTask]="unitTask"
+            (remove)="removeUnitFromSelection($event)"
+            (unitChange)="onUnitChange($event)"
+          >
+          </app-unit-task-card>
+        }
+      }
+  </div>
+</app-vertical-layout>

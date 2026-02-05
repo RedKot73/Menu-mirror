@@ -2,7 +2,6 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LookupDto } from '../app/shared/models/lookup.models';
-import { DictUnitTaskItemDto } from './dictUnitTaskItems.service';
 
 export interface DictUnitTaskDto {
   id: string;
@@ -14,8 +13,6 @@ export interface DictUnitTaskDto {
   areaTypeId: string;
   /** Тип району виконання завдань (РВЗ) */
   areaType: string;
-  /** Елементи завдання для різних категорій документів */
-  unitTaskItems?: DictUnitTaskItemDto[];
 }
 
 export interface DictUnitTaskCreateDto {

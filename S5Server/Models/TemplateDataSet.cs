@@ -1,83 +1,140 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace S5Server.Models
+namespace S5Server.Models;
+
+/// <summary>
+/// DTO для читання TemplateDataSet (БЕЗ деталей)
+/// </summary>
+public record TemplateDataSetDto(
+    string Id,
+    string Name,
+    string DocNumber,
+    DateTime DocDate,
+    bool IsPublished,
+    DateTime? PublishedAtUtc,
+    DateTime CreatedAtUtc,
+    DateTime? UpdatedAtUtc);
+
+/// <summary>
+/// DTO для створення TemplateDataSet
+/// </summary>
+public record TemplateDataSetCreateDto(
+    string Name,
+    string DocNumber,
+    DateTime DocDate,
+    bool IsPublished = false);
+
+/// <summary>
+/// DTO для оновлення TemplateDataSet
+/// </summary>
+public record TemplateDataSetUpdateDto(
+    string Name,
+    string DocNumber,
+    DateTime DocDate,
+    bool IsPublished);
+
+/// <summary>
+/// Сохранённый набор данных для подстановки в шаблон документа (БР/БД)
+/// </summary>
+[Table("template_data_sets")]
+public class TemplateDataSet
 {
-
-    public record TemplateDataSetDto(
-        string Id,
-        //string TemplateId,
-        //string? TemplateName,
-        string Name,
-        string DataJson,
-        bool IsPublished,
-        DateTime? PublishedAtUtc,
-        DateTime CreatedAtUtc,
-        DateTime? UpdatedAtUtc)
-    {
-        public static TemplateDataSetDto ToDto(TemplateDataSet e) =>
-            new(
-                e.Id,
-                //e.TemplateId,
-                //e.Template?.Name,
-                e.Name,
-                e.DataJson,
-                e.IsPublished,
-                e.PublishedAtUtc,
-                e.CreatedAtUtc,
-                e.UpdatedAtUtc
-            );
-
-        public static void ApplyDto(TemplateDataSet e, TemplateDataSetDto dto)
-        {
-            //e.TemplateId = dto.TemplateId;
-            e.Name = dto.Name.Trim();
-            e.DataJson = dto.DataJson.Trim();
-            e.IsPublished = dto.IsPublished;
-            e.PublishedAtUtc = dto.PublishedAtUtc;
-            e.CreatedAtUtc = dto.CreatedAtUtc;
-            e.UpdatedAtUtc = dto.UpdatedAtUtc;
-        }
-    }
-    public record TemplateDataSetCreateDto(
-        //string TemplateId,
-        string Name,
-        string DataJson,
-        bool IsPublished);
+    [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public string Id { get; set; } = Guid.NewGuid().ToString("D");
 
     /// <summary>
-    /// Сохранённый набор данных (JSON) для конкретного шаблона
+    /// Чи існує документ старшого начальника
     /// </summary>
-    [Table("template_data_sets")]
-    public class TemplateDataSet
+    public bool IsParentDocUsed { get; set; } = false;
+
+    /// <summary>
+    /// Номер документу старшого начальника
+    /// </summary>
+    [StringLength(100), Required]
+    public string ParentDocNumber { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Дата документу старшого начальника
+    /// </summary>
+    [Required]
+    public DateTime ParentDocDate { get; set; }
+
+    [StringLength(150), Required]
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Номер документу
+    /// </summary>
+    [StringLength(100), Required]
+    public string DocNumber { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Дата документу
+    /// </summary>
+    [Required]
+    public DateTime DocDate { get; set; }
+
+    /// <summary>
+    /// Список завдань підрозділів
+    /// </summary>
+    public List<UnitTask> UnitTasks { get; set; } = [];
+
+    // Публикация
+    /// <summary>
+    /// Gets or sets a value indicating whether the content is published.
+    /// </summary>
+    public bool IsPublished { get; set; }
+    public DateTime? PublishedAtUtc { get; set; }
+
+    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAtUtc { get; set; }
+}
+
+/// <summary>
+/// Extension-методи для TemplateDataSet
+/// </summary>
+public static class TemplateDataSetExtensions
+{
+    /// <summary>
+    /// Конвертує TemplateDataSet у DTO (БЕЗ UnitTasks)
+    /// </summary>
+    public static TemplateDataSetDto ToDto(this TemplateDataSet ds) =>
+        new(
+            ds.Id,
+            ds.Name,
+            ds.DocNumber,
+            ds.DocDate,
+            ds.IsPublished,
+            ds.PublishedAtUtc,
+            ds.CreatedAtUtc,
+            ds.UpdatedAtUtc);
+
+    /// <summary>
+    /// Змінити статус публікації
+    /// </summary>
+    public static void Publish(this TemplateDataSet ds, bool setPublish)
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public string Id { get; set; } = Guid.NewGuid().ToString("D");
-        /*
-        [ForeignKey(nameof(Template)), Required]
-        public string TemplateId { get; set; } = string.Empty;
+        ds.IsPublished = setPublish;
+        ds.PublishedAtUtc = setPublish ? DateTime.UtcNow : null;
+        ds.UpdatedAtUtc = DateTime.UtcNow;
+    }
 
-        [ValidateNever]
-        public DocumentTemplate Template { get; set; } = default!;
-        */
+    /// <summary>
+    /// Оновити поля з DTO
+    /// </summary>
+    public static void UpdateFrom(this TemplateDataSet ds, TemplateDataSetUpdateDto dto)
+    {
+        var publishStateChanged = ds.IsPublished != dto.IsPublished;
 
-        [StringLength(150), Required]
-        public string Name { get; set; } = string.Empty;
+        ds.Name = dto.Name.Trim();
+        ds.DocNumber = dto.DocNumber.Trim();
+        ds.DocDate = dto.DocDate;
+        ds.IsPublished = dto.IsPublished;
 
-        /// <summary>
-        /// JSON с данными для подстановки
-        /// </summary>
-        [Required]
-        public string DataJson { get; set; } = "{}";
+        if (publishStateChanged)
+            ds.PublishedAtUtc = dto.IsPublished ? DateTime.UtcNow : null;
 
-        // Публикация
-        /// <summary>
-        /// Gets or sets a value indicating whether the content is published.
-        /// </summary>
-        public bool IsPublished { get; set; }
-        public DateTime? PublishedAtUtc { get; set; }
-
-        public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
-        public DateTime? UpdatedAtUtc { get; set; }
+        ds.UpdatedAtUtc = DateTime.UtcNow;
     }
 }

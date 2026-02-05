@@ -13,7 +13,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { UnitTreeComponent } from '../Unit/UnitTree.component';
 import { UnitTreeNode } from '../Unit/unit-tree-node.component';
 import { DataSetTableComponent } from '../DocumentTemplates/components/DataSetTable.component';
-import { TemplateDataSetListItem } from '../DocumentTemplates/models/template-dataset.models';
+import { TemplateDataSetDto } from '../DocumentTemplates/models/template-dataset.models';
 import { UnitsTaskEditorComponent } from '../DocumentTemplates/components/UnitsTaskEditor.component';
 import { MasterDetailLayoutComponent } from '../shared/components/MasterDetailLayout.component';
 
@@ -61,7 +61,7 @@ export class DocumentDataSetComponent {
   /**
    * Загружает полный DataSet с особовим складом через API
    */
-  onDataSetSelected(dataSet: TemplateDataSetListItem | null) {
+  onDataSetSelected(dataSet: TemplateDataSetDto | null) {
     if (!dataSet) {
       return;
     }

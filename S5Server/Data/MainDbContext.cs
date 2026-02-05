@@ -513,6 +513,11 @@ namespace S5Server.Data
                 entity.HasKey(e => e.Id);
                 
                 entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+
+                entity.Property(e => e.IsParentDocUsed).HasColumnType("INTEGER").HasDefaultValue(false);
+                entity.Property(e => e.ParentDocNumber).HasColumnType("TEXT(100)");
+                entity.Property(e => e.ParentDocDate).HasColumnType("TEXT");
+
                 entity.Property(e => e.Name).IsRequired().HasColumnType("TEXT(150)");
                 entity.Property(e => e.DocNumber).IsRequired().HasColumnType("TEXT(100)");
                 entity.Property(e => e.DocDate).IsRequired().HasColumnType("TEXT");
@@ -531,7 +536,7 @@ namespace S5Server.Data
                 entity.HasIndex(e => e.Name);
                 entity.HasIndex(e => e.DocNumber);
                 entity.HasIndex(e => e.IsPublished);
-                entity.HasIndex(e => new { e.DocDate, e.IsPublished });
+                entity.HasIndex(e => new { e.DocDate, e.DocNumber }).IsUnique();
             });
 
             modelBuilder.Entity<UnitTask>(entity =>
@@ -594,7 +599,7 @@ namespace S5Server.Data
                 entity.HasIndex(e => e.UnitId);
                 entity.HasIndex(e => e.TaskId);
                 entity.HasIndex(e => e.IsPublished);
-                entity.HasIndex(e => new { e.UnitId, e.PublishedAtUtc });
+                entity.HasIndex(e => new { e.UnitId, e.TaskId }).IsUnique();
             });
             modelBuilder.Entity<SoldierTask>(entity =>
             {
@@ -645,10 +650,37 @@ namespace S5Server.Data
                 // Індекси
                 entity.HasIndex(e => e.UnitTaskId);
                 entity.HasIndex(e => e.SoldierId);
-                entity.HasIndex(e => new { e.UnitTaskId, e.SoldierId });
+                entity.HasIndex(e => new { e.UnitTaskId, e.SoldierId }).IsUnique();
+            });
+
+
+            modelBuilder.Entity<DroneModelTask>(entity =>
+            {
+                entity.ToTable("drone_model_task");
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).HasColumnType("TEXT(36)");
+                entity.Property(e => e.UnitTaskId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.DroneModelId).IsRequired().HasColumnType("TEXT(36)");
+                entity.Property(e => e.Quantity).IsRequired().HasColumnType("INTEGER").HasDefaultValue(1);
+
+                // Зв'язки
+                entity.HasOne(e => e.UnitTask)
+                    .WithMany(ut => ut.Means)
+                    .HasForeignKey(e => e.UnitTaskId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.DroneModel)
+                    .WithMany()
+                    .HasForeignKey(e => e.DroneModelId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Індекси
+                entity.HasIndex(e => e.UnitTaskId);
+                entity.HasIndex(e => e.DroneModelId);
+                entity.HasIndex(e => new { e.UnitTaskId, e.DroneModelId }).IsUnique();
             });
         }
-
 
         /// <summary>
         /// Категорії об'єктів адміністративно-територіальних одиниць
@@ -741,7 +773,12 @@ namespace S5Server.Data
         public DbSet<SoldierTask> SoldierTasks { get; set; }
 
         /// <summary>
-        /// Gets or sets the collection of document templates in the database context.
+        /// Моделі БПЛА для завдань підрозділів
+        /// </summary>
+        public DbSet<DroneModelTask> DroneModelTasks { get; set; }
+
+        /// <summary>
+        /// Шаблони документів БР/БД
         /// </summary>
         public DbSet<DocumentTemplate> DocumentTemplates { get; set; }
         /// <summary>

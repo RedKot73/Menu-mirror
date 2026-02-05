@@ -15,7 +15,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { TemplateDataSetService } from '../services/template-dataset.service';
-import { TemplateDataSetListItem } from '../models/template-dataset.models';
+import { TemplateDataSetDto, TemplateDataSetUtils } from '../models/template-dataset.models';
 import { ConfirmDialogComponent } from '../../dialogs/ConfirmDialog.component';
 import { DocTemplateUtils } from '../models/shared.models';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -57,16 +57,26 @@ export class DataSetTableComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
 
   // Output для передачі вибраного набору даних
-  dataSetSelected = output<TemplateDataSetListItem | null>();
+  dataSetSelected = output<TemplateDataSetDto | null>();
 
   // Signals
-  dataSets = signal<TemplateDataSetListItem[]>([]);
-  selectedDataSet = signal<TemplateDataSetListItem | null>(null);
+  dataSets = signal<TemplateDataSetDto[]>([]);
+  selectedDataSet = signal<TemplateDataSetDto | null>(null);
   isLoading = signal(false);
 
   // Table configuration
-  displayedColumns: string[] = ['menu', 'name', 'isPublished', 'createdAtUtc', 'updatedAtUtc'];
-  dataSource = new MatTableDataSource<TemplateDataSetListItem>([]);
+  displayedColumns: string[] = [
+    'menu',
+    'name',
+    'parentDocNumber',
+    'parentDocDate',
+    'docNumber',
+    'docDate',
+    'isPublished',
+    'createdAtUtc',
+    'updatedAtUtc',
+  ];
+  dataSource = new MatTableDataSource<TemplateDataSetDto>([]);
 
   constructor() {
     // Обновляем dataSource при изменении данных
@@ -103,7 +113,7 @@ export class DataSetTableComponent implements OnInit {
   /**
    * Выбирает набор данных
    */
-  selectDataSet(dataSet: TemplateDataSetListItem): void {
+  selectDataSet(dataSet: TemplateDataSetDto): void {
     this.selectedDataSet.set(dataSet);
     this.dataSetSelected.emit(dataSet);
   }
@@ -131,7 +141,7 @@ export class DataSetTableComponent implements OnInit {
    * Клонирует набор данных
    */
   /*
-  cloneDataSet(dataSet: TemplateDataSetListItem): void {
+  cloneDataSet(dataSet: TemplateDataSetDto): void {
     const newName = `${dataSet.name} (копія)`;
     this.isLoading.set(true);
 
@@ -152,7 +162,7 @@ export class DataSetTableComponent implements OnInit {
   /**
    * Удаляет набор данных
    */
-  deleteDataSet(dataSet: TemplateDataSetListItem): void {
+  deleteDataSet(dataSet: TemplateDataSetDto): void {
     const ref = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       maxWidth: '95vw',
@@ -196,9 +206,31 @@ export class DataSetTableComponent implements OnInit {
   }
 
   /**
-   * Форматирует дату для отображения
+   * Форматує дату для відображення
    */
   formatDate(dateString: string): string {
-    return DocTemplateUtils.formatDate(dateString);
+    return TemplateDataSetUtils.formatDate(dateString);
+  }
+
+  cloneDataSet(_dataSet: TemplateDataSetDto) {
+    this.snackBar.open('Method not implemented.', 'Закрити', { duration: 5000 });
+    /*
+  cloneDataSet(dataSet: TemplateDataSetDto): void {
+    const newName = `${dataSet.name} (копія)`;
+    this.isLoading.set(true);
+
+    this.templateDataSetService.cloneDataSet(dataSet.id, newName).subscribe({
+      next: () => {
+        this.loadDataSets();
+            this.snackBar.open('Набір даних клоновано успішно', 'Закрити', { duration: 3000 });
+      },
+      error: (error) => {
+        console.error('Error cloning dataset:', error);
+        this.snackBar.open('Помилка клонування набору даних', 'Закрити', { duration: 5000 });
+        this.isLoading.set(false);
+      },
+    });
+  }
+  */
   }
 }
