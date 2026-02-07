@@ -14,10 +14,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Subject, firstValueFrom } from 'rxjs';
-import {
-  finalize,
-  takeUntil,
-} from 'rxjs/operators';
+import { finalize, takeUntil } from 'rxjs/operators';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -27,16 +24,18 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
-import {
-  MatAutocompleteModule,
-} from '@angular/material/autocomplete';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { DatePipe } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { UnitTaskDto, UnitTaskCreateDto, DroneModelTaskDto } from '../models/template-dataset.models';
+import {
+  UnitTaskDto,
+  UnitTaskCreateDto,
+  DroneModelTaskDto,
+} from '../models/template-dataset.models';
 import { DictUnitTasksService, DictUnitTask } from '../../../ServerService/dictUnitTasks.service';
 import { DictAreasService, DictArea } from '../../../ServerService/dictAreas.service';
 import { DroneModelTaskService } from '../services/drone-model-task.service';
@@ -152,7 +151,8 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
         if (this.unitTask.taskId) {
           const task = tasks.find((t) => t.id === this.unitTask.taskId);
           if (task) {
-            this.taskControl.setValue(task);
+            // Використовуємо emitEvent: false щоб не спрацювали обробники при ініціалізації
+            this.taskControl.setValue(task, { emitEvent: false });
           }
         }
       },
@@ -174,16 +174,6 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
       this.means.set(this.unitTask.means);
       this.meansDataSource.data = this.unitTask.means;
     }
-
-    // Підписуємося на зміни task
-    this.taskControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((task) => {
-      this.onTaskChange(task);
-    });
-
-    // Підписуємося на зміни area
-    this.areaControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((area) => {
-      this.onAreaChange(area);
-    });
   }
 
   ngAfterViewInit(): void {
@@ -245,7 +235,10 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isLoadingMeans.set(true);
     this.droneModelTaskService
       .getByUnitTask(unitTaskId)
-      .pipe(takeUntil(this.destroy$), finalize(() => this.isLoadingMeans.set(false)))
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.isLoadingMeans.set(false)),
+      )
       .subscribe({
         next: (means: DroneModelTaskDto[]) => {
           this.means.set(means);
@@ -270,9 +263,9 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * Обробник зміни завдання
+   * Обробник зміни завдання (викликається при selectionChange)
    */
-  private onTaskChange(task: DictUnitTask | null): void {
+  onTaskChange(task: DictUnitTask | null): void {
     if (!task) {
       const updatedUnit: UnitTaskDto = {
         ...this.unitTask,
@@ -366,16 +359,10 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
     dialogRef.afterClosed().subscribe((selectedDrone: DictDroneModel | undefined) => {
       if (selectedDrone) {
         // Перевіряємо чи немає вже такого дрона
-        const existingMean = this.means().find(
-          (m) => m.droneModelId === selectedDrone.id,
-        );
+        const existingMean = this.means().find((m) => m.droneModelId === selectedDrone.id);
 
         if (existingMean) {
-          this.snackBar.open(
-            'Ця модель БПЛА вже додана до списку',
-            'Закрити',
-            { duration: 3000 },
-          );
+          this.snackBar.open('Ця модель БПЛА вже додана до списку', 'Закрити', { duration: 3000 });
           return;
         }
 
@@ -408,8 +395,8 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   deleteMean(mean: DroneModelTaskDto): void {
     // Локальне видалення (збереження буде через saveUnitTask)
-    const updatedMeans = this.means().filter(
-      (m) => m.id ? m.id !== mean.id : m.droneModelId !== mean.droneModelId
+    const updatedMeans = this.means().filter((m) =>
+      m.id ? m.id !== mean.id : m.droneModelId !== mean.droneModelId,
     );
     this.means.set(updatedMeans);
     this.meansDataSource.data = updatedMeans;
@@ -443,28 +430,26 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
         };
         const result = await firstValueFrom(this.unitTaskService.create(createDto));
         this.unitTask.id = result.id; // Оновлюємо ID локально
-        
+
         // Синхронізуємо ID з батьківським компонентом
         this.unitChange.emit({ ...this.unitTask, id: result.id });
       }
 
       // 2. Зберігаємо засоби через bulkSave
-      const meansToSave = this.means().map(mean => ({
+      const meansToSave = this.means().map((mean) => ({
         unitTaskId: this.unitTask.id,
         droneModelId: mean.droneModelId,
         quantity: mean.quantity,
       }));
 
-      await firstValueFrom(
-        this.droneModelTaskService.bulkSave(this.unitTask.id, meansToSave)
-      );
+      await firstValueFrom(this.droneModelTaskService.bulkSave(this.unitTask.id, meansToSave));
 
       return true;
     } catch (error) {
       console.error('Помилка збереження UnitTask:', error);
       const errorMessage = S5App_ErrorHandler.handleHttpError(
         error,
-        `Помилка збереження підрозділу "${this.unitTask.unitShortName}"`
+        `Помилка збереження підрозділу "${this.unitTask.unitShortName}"`,
       );
       this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       return false;
