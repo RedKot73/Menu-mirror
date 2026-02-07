@@ -15,19 +15,21 @@ public record DroneModelTaskDto(
     int Quantity);
 
 /// <summary>
-/// DTO для створення DroneModelTask
-/// </summary>
-public record DroneModelTaskCreateDto(
-    string UnitTaskId,
-    string DroneModelId,
-    int Quantity = 1);
-
-/// <summary>
 /// DTO для оновлення DroneModelTask
 /// </summary>
-public record DroneModelTaskUpdateDto(
+public record DroneModelTaskUpSertDto(
+    string UnitTaskId,
     string DroneModelId,
     int Quantity);
+/// <summary>
+/// Результат масового збереження/оновлення
+/// </summary>
+public record BulkSaveResult(
+    bool Success,
+    int Created,
+    int Updated,
+    int Deleted,
+    int Total);
 
 /// <summary>
 /// Модель БПЛА (для завдань підрозділів)
@@ -91,7 +93,7 @@ public static class DroneModelTaskExtensions
     /// <summary>
     /// Створює DroneModelTask з CreateDto
     /// </summary>
-    public static DroneModelTask FromCreateDto(this DroneModelTaskCreateDto dto) =>
+    public static DroneModelTask FromCreateDto(this DroneModelTaskUpSertDto dto) =>
         new()
         {
             Id = Guid.NewGuid().ToString("D"),
@@ -103,7 +105,7 @@ public static class DroneModelTaskExtensions
     /// <summary>
     /// Оновити поля з UpdateDto
     /// </summary>
-    public static void UpdateFrom(this DroneModelTask entity, DroneModelTaskUpdateDto dto)
+    public static void UpdateFrom(this DroneModelTask entity, DroneModelTaskUpSertDto dto)
     {
         entity.DroneModelId = dto.DroneModelId;
         entity.Quantity = dto.Quantity;
@@ -112,7 +114,11 @@ public static class DroneModelTaskExtensions
     /// <summary>
     /// Перевірка чи змінились дані
     /// </summary>
-    public static bool EqualsDto(this DroneModelTask entity, DroneModelTaskUpdateDto dto) =>
+    public static bool EqualsDto(this DroneModelTask entity, DroneModelTaskUpSertDto dto) =>
         entity.DroneModelId == dto.DroneModelId &&
         entity.Quantity == dto.Quantity;
+
+    public static bool EqualsDto(this List<DroneModelTask> means, List<DroneModelTaskUpSertDto> dto) =>
+        means.Count == dto.Count &&
+        !means.Where((t, i) => !t.EqualsDto(dto[i])).Any();
 }

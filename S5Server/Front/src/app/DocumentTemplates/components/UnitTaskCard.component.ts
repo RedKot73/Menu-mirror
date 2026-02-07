@@ -8,17 +8,13 @@ import {
   AfterViewInit,
   ViewChild,
   inject,
-  computed,
+  //computed,
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Observable, of, Subject } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
 import {
-  debounceTime,
-  distinctUntilChanged,
-  switchMap,
-  startWith,
   finalize,
   takeUntil,
 } from 'rxjs/operators';
@@ -30,9 +26,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import {
   MatAutocompleteModule,
-  MatAutocompleteSelectedEvent,
 } from '@angular/material/autocomplete';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
@@ -40,15 +36,14 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { DatePipe } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { UnitTaskDto } from '../models/template-dataset.models';
-import { LookupDto } from '../../shared/models/lookup.models';
-import { DictDroneModelService } from '../../../ServerService/dictDroneModel.service';
+import { UnitTaskDto, UnitTaskCreateDto, DroneModelTaskDto } from '../models/template-dataset.models';
 import { DictUnitTasksService, DictUnitTask } from '../../../ServerService/dictUnitTasks.service';
 import { DictAreasService, DictArea } from '../../../ServerService/dictAreas.service';
-import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
-//import { UnitContentComponent } from '../../Unit/UnitContent.component';
-import { UnitDto } from '../../Unit/services/unit.service';
-import { UnitTag } from '../../Soldier/Soldier.component';
+import { DroneModelTaskService } from '../services/drone-model-task.service';
+import { UnitTaskService } from '../services/unit-task.service';
+import { DictDroneModelSelectDialogComponent } from '../../dialogs/DictDroneModelSelect-dialog.component';
+import { DictDroneModel } from '../../../ServerService/dictDroneModel.service';
+//import { UnitDto } from '../../Unit/services/unit.service';
 import { SoldierService, SoldierDto } from '../../Soldier/services/soldier.service';
 import {
   isCriticalStatus,
@@ -56,6 +51,7 @@ import {
   isProblematicStatus,
   isRecoveryStatus,
 } from '../../Soldier/Soldier.constant';
+import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 
 @Component({
   selector: 'app-unit-task-card',
@@ -75,7 +71,6 @@ import {
     MatSortModule,
     DatePipe,
     MatTooltipModule,
-    //UnitContentComponent,
   ],
   templateUrl: './UnitTaskCard.component.html',
   styleUrls: [
@@ -85,11 +80,13 @@ import {
   ],
 })
 export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
-  private dictDroneModelService = inject(DictDroneModelService);
   private dictUnitTasksService = inject(DictUnitTasksService);
   private dictAreasService = inject(DictAreasService);
+  private droneModelTaskService = inject(DroneModelTaskService);
+  private unitTaskService = inject(UnitTaskService);
   private soldierService = inject(SoldierService);
   private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
   private destroy$ = new Subject<void>();
 
   // Сигнал для реактивного відстеження змін unitTask
@@ -117,6 +114,12 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
     'comment',
   ];
 
+  // Дані засобів (Master-Detail)
+  means = signal<DroneModelTaskDto[]>([]);
+  meansDataSource = new MatTableDataSource<DroneModelTaskDto>([]);
+  meansDisplayedColumns: string[] = ['actions', 'droneModelValue', 'quantity'];
+  isLoadingMeans = signal<boolean>(false);
+
   @ViewChild(MatSort) sort!: MatSort;
 
   // Методи для перевірки статусів
@@ -124,9 +127,6 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   isSevereStatus = isSevereStatus;
   isProblematicStatus = isProblematicStatus;
   isRecoveryStatus = isRecoveryStatus;
-
-  // Для доступу до enum в шаблоні
-  readonly unitTag = UnitTag;
 
   @Input({ required: true })
   set unitTask(value: UnitTaskDto) {
@@ -142,40 +142,6 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   // Form Controls
   protected taskControl = new FormControl<DictUnitTask | null>(null);
   protected areaControl = new FormControl<DictArea | null>(null);
-  protected droneModelControl = new FormControl<LookupDto | string | null>(null);
-
-  // Drone Model Autocomplete
-  protected filteredDroneModels$!: Observable<LookupDto[]>;
-  protected isLoadingDroneModels = false;
-
-  // Перетворюємо UnitTaskDto в UnitDto для UnitContent компонента
-  unitForContent = computed<UnitDto>(() => {
-    const task = this.unitTaskSignal();
-    if (!task) {
-      return {} as UnitDto;
-    }
-    return {
-      id: task.unitId,
-      parentId: task.parentId,
-      parentShortName: task.parentShortName,
-      assignedUnitId: task.assignedUnitId,
-      assignedShortName: task.assignedShortName,
-      name: task.unitShortName,
-      shortName: task.unitShortName,
-      militaryNumber: '',
-      forceTypeId: undefined,
-      forceType: undefined,
-      unitTypeId: task.unitTypeId,
-      unitType: task.unitTypeName,
-      isInvolved: task.isInvolved,
-      orderVal: 0,
-      persistentLocationId: task.persistentLocationId,
-      persistentLocation: task.persistentLocationValue,
-      comment: undefined,
-      changedBy: task.changedBy,
-      validFrom: task.validFrom,
-    } as UnitDto;
-  });
 
   ngOnInit(): void {
     // Завантажуємо повний список завдань (з areaTypeId)
@@ -203,9 +169,10 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
     // Завантажуємо особовий склад
     this.reloadSoldiers();
 
-    // Ініціалізуємо значення DroneModel
+    // ✅ Ініціалізуємо локально додані засоби (якщо є)
     if (this.unitTask.means && this.unitTask.means.length > 0) {
-      // TODO: Відобразити список засобів БПЛА
+      this.means.set(this.unitTask.means);
+      this.meansDataSource.data = this.unitTask.means;
     }
 
     // Підписуємося на зміни task
@@ -217,9 +184,6 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
     this.areaControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((area) => {
       this.onAreaChange(area);
     });
-
-    // Ініціалізуємо автокомпліт для БПЛА
-    this.initDroneModelAutocomplete();
   }
 
   ngAfterViewInit(): void {
@@ -253,6 +217,45 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
           const errorMessage = S5App_ErrorHandler.handleHttpError(
             error,
             'Помилка завантаження особового складу',
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
+      });
+  }
+
+  /**
+   * Завантажує засоби (дрони) для завдання підрозділу (Master-Detail)
+   */
+  loadMeans(): void {
+    const unitTaskId = this.unitTask.id;
+    if (!unitTaskId) {
+      // UnitTask ще не збережено - показуємо локально додані засоби
+      if (this.unitTask.means && this.unitTask.means.length > 0) {
+        this.means.set(this.unitTask.means);
+        this.meansDataSource.data = this.unitTask.means;
+      }
+      return;
+    }
+
+    // Якщо вже завантажено - не перезавантажуємо
+    if (this.means().length > 0) {
+      return;
+    }
+
+    this.isLoadingMeans.set(true);
+    this.droneModelTaskService
+      .getByUnitTask(unitTaskId)
+      .pipe(takeUntil(this.destroy$), finalize(() => this.isLoadingMeans.set(false)))
+      .subscribe({
+        next: (means: DroneModelTaskDto[]) => {
+          this.means.set(means);
+          this.meansDataSource.data = means;
+        },
+        error: (error: unknown) => {
+          console.error('Помилка завантаження засобів:', error);
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
+            error,
+            'Помилка завантаження засобів',
           );
           this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
         },
@@ -350,61 +353,121 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * Ініціалізує автокомпліт для моделі БПЛА
+   * Відкриває діалог вибору моделі БПЛА та додає її до списку засобів
    */
-  private initDroneModelAutocomplete(): void {
-    this.filteredDroneModels$ = this.droneModelControl.valueChanges.pipe(
-      startWith(''),
-      debounceTime(300),
-      distinctUntilChanged(),
-      switchMap((value) => {
-        const searchTerm = typeof value === 'string' ? value : value?.value || '';
-        if (searchTerm.length < 2) {
-          return of([]);
+  addMean(): void {
+    const dialogRef = this.dialog.open(DictDroneModelSelectDialogComponent, {
+      width: '800px',
+      data: {
+        title: 'Оберіть модель БПЛА',
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((selectedDrone: DictDroneModel | undefined) => {
+      if (selectedDrone) {
+        // Перевіряємо чи немає вже такого дрона
+        const existingMean = this.means().find(
+          (m) => m.droneModelId === selectedDrone.id,
+        );
+
+        if (existingMean) {
+          this.snackBar.open(
+            'Ця модель БПЛА вже додана до списку',
+            'Закрити',
+            { duration: 3000 },
+          );
+          return;
         }
 
-        this.isLoadingDroneModels = true;
-        return this.dictDroneModelService.lookup(searchTerm, 10).pipe(
-          finalize(() => {
-            this.isLoadingDroneModels = false;
-          }),
-        );
-      }),
-      takeUntil(this.destroy$),
-    );
+        // Додаємо локально (збереження буде через saveUnitTask)
+        const newMean: DroneModelTaskDto = {
+          id: '', // Буде створено при збереженні
+          unitTaskId: this.unitTask.id || '',
+          droneModelId: selectedDrone.id,
+          droneModelValue: selectedDrone.value,
+          quantity: 1,
+        };
+
+        const updatedMeans = [...this.means(), newMean];
+        this.means.set(updatedMeans);
+        this.meansDataSource.data = updatedMeans;
+
+        // Синхронізуємо з батьківським компонентом
+        const updatedUnit = {
+          ...this.unitTask,
+          meansCount: updatedMeans.length,
+          means: updatedMeans,
+        };
+        this.unitChange.emit(updatedUnit);
+      }
+    });
   }
 
   /**
-   * Відображення назви моделі БПЛА в автокомпліті
+   * Видаляє засіб зі списку
    */
-  displayDroneModelFn = (droneModel: LookupDto | null): string => {
-    return droneModel ? droneModel.value : '';
-  };
+  deleteMean(mean: DroneModelTaskDto): void {
+    // Локальне видалення (збереження буде через saveUnitTask)
+    const updatedMeans = this.means().filter(
+      (m) => m.id ? m.id !== mean.id : m.droneModelId !== mean.droneModelId
+    );
+    this.means.set(updatedMeans);
+    this.meansDataSource.data = updatedMeans;
 
-  /**
-   * Обробник вибору моделі БПЛА
-   */
-  onDroneModelSelected(event: MatAutocompleteSelectedEvent): void {
-    const selectedDroneModel = event.option.value as LookupDto | null;
-
-    // TODO: Додати логіку для роботи з means (DroneModelTask[])
-    // Потрібно створити окремий сервіс DroneModelTaskService
-    // та відображення списку засобів
-
+    // Синхронізуємо з батьківським компонентом
     const updatedUnit = {
       ...this.unitTask,
-      means: selectedDroneModel
-        ? [
-            {
-              id: '',
-              unitTaskId: this.unitTask.id,
-              droneModelId: selectedDroneModel.id,
-              droneModelValue: selectedDroneModel.value,
-              quantity: 1,
-            },
-          ]
-        : [],
+      meansCount: updatedMeans.length,
+      means: updatedMeans,
     };
     this.unitChange.emit(updatedUnit);
+  }
+
+  /**
+   * ✅ ПУБЛІЧНИЙ МЕТОД: Зберігає UnitTask + його засоби (means)
+   * Викликається з батьківського компонента при загальному збереженні
+   */
+  async saveUnitTask(dataSetId: string): Promise<boolean> {
+    try {
+      // 1. Створюємо або оновлюємо UnitTask
+      if (this.unitTask.id) {
+        // Оновлюємо існуючий
+        await firstValueFrom(this.unitTaskService.update(this.unitTask.id, this.unitTask));
+      } else {
+        // Створюємо новий
+        const createDto: UnitTaskCreateDto = {
+          dataSetId: dataSetId,
+          unitId: this.unitTask.unitId,
+          taskId: this.unitTask.taskId,
+          areaId: this.unitTask.areaId,
+        };
+        const result = await firstValueFrom(this.unitTaskService.create(createDto));
+        this.unitTask.id = result.id; // Оновлюємо ID локально
+        
+        // Синхронізуємо ID з батьківським компонентом
+        this.unitChange.emit({ ...this.unitTask, id: result.id });
+      }
+
+      // 2. Зберігаємо засоби через bulkSave
+      const meansToSave = this.means().map(mean => ({
+        unitTaskId: this.unitTask.id,
+        droneModelId: mean.droneModelId,
+        quantity: mean.quantity,
+      }));
+
+      await firstValueFrom(
+        this.droneModelTaskService.bulkSave(this.unitTask.id, meansToSave)
+      );
+
+      return true;
+    } catch (error) {
+      console.error('Помилка збереження UnitTask:', error);
+      const errorMessage = S5App_ErrorHandler.handleHttpError(
+        error,
+        `Помилка збереження підрозділу "${this.unitTask.unitShortName}"`
+      );
+      this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      return false;
+    }
   }
 }

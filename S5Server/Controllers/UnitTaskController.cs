@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using S5Server.Data;
 using S5Server.Models;
 using S5Server.Utils;
@@ -53,13 +54,22 @@ public class UnitTaskController : ControllerBase
             if (isPublished.HasValue)
                 query = query.Where(t => t.IsPublished == isPublished.Value);
 
+            // ✅ ОДИН SQL-ЗАПИТ з підзапитом COUNT:
             var items = await query
                 .OrderByDescending(t => t.PublishedAtUtc)
                 .ThenByDescending(t => t.ValidFrom)
-                .Select(t => t.ToDto())
+                .Select(t => new
+                {
+                    Task = t,
+                    MeansCount = _db.DroneModelTasks.Count(m => m.UnitTaskId == t.Id)
+                })
                 .ToListAsync(ct);
 
-            return Ok(items);
+            var result = items
+                .Select(x => x.Task.ToDto(x.MeansCount))
+                .ToList();
+
+            return Ok(result);
         }
         catch (OperationCanceledException)
         {
@@ -166,6 +176,7 @@ public class UnitTaskController : ControllerBase
                     detail: $"Підрозділ з ID '{dto.UnitId}' не знайдено");
 
             // 5. Перевірити, чи немає вже активного завдання для цього підрозділу
+            /*
             var existingTask = await _set
                 .FirstOrDefaultAsync(t => t.UnitId == dto.UnitId && t.IsPublished, ct);
 
@@ -186,6 +197,7 @@ public class UnitTaskController : ControllerBase
                         ["existingTaskId"] = existingTask.Id
                     });
             }
+            */
 
             // 6. Створити знімок підрозділу
             var changedBy = User.Identity?.Name ?? "System";

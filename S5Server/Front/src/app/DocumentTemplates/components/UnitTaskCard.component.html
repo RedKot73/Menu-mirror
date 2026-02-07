@@ -1,10 +1,10 @@
 <div class="main-content">
-  @if (unitForContent(); as unit) {
+  @if (unitTask; as unit) {
     <!-- Детальная информация о подразделении -->
     <mat-card class="unit-details-card">
       <mat-card-header>
         <mat-card-title class="info-item inline">
-          {{ unit.shortName }}
+          {{ unit.unitShortName }}
           @if (unit.isInvolved) {
             <mat-icon>groups</mat-icon>
             <span>Екіпаж/Група</span>
@@ -31,23 +31,6 @@
             </div>
           }
           @if (!unit.isInvolved) {
-            @if (unit.militaryNumber) {
-              <div class="info-item inline">
-                <strong>Військова частина:</strong>
-                <span>{{ unit.militaryNumber }}</span>
-              </div>
-            }
-
-            <div class="info-item inline">
-              <strong>Тип сил:</strong>
-              <span>{{ unit.forceType || 'Не вказано' }}</span>
-            </div>
-
-            <div class="info-item inline">
-              <strong>Тип підрозділу:</strong>
-              <span>{{ unit.unitType || 'Не вказано' }}</span>
-            </div>
-
             @if (unit.assignedShortName) {
               <div class="info-item inline">
                 <strong>Приданий до:</strong>
@@ -58,15 +41,8 @@
 
           <div class="info-item inline">
             <strong>ППД:</strong>
-            <span>{{ unit.persistentLocation || 'Не вказано' }}</span>
+            <span>{{ unit.persistentLocationValue || 'Не вказано' }}</span>
           </div>
-
-          @if (unit.comment) {
-            <div class="info-item full-width comment">
-              <strong>Коментар:</strong>
-              <span>{{ unit.comment }}</span>
-            </div>
-          }
         </div>
 
         <div class="task-assignments">
@@ -90,36 +66,77 @@
               </mat-select>
             </mat-form-field>
           </div>
-          <div class="task-item">
-            <strong>Засіб:</strong>
-            <mat-form-field appearance="outline" class="task-select">
-              <input
-                type="text"
-                matInput
-                [formControl]="droneModelControl"
-                [matAutocomplete]="droneModelAuto"
-                placeholder="Оберіть модель БПЛА"
-              />
-              <mat-autocomplete
-                #droneModelAuto="matAutocomplete"
-                [displayWith]="displayDroneModelFn"
-                (optionSelected)="onDroneModelSelected($event)"
-              >
-                <mat-option [value]="null">Не вибрано</mat-option>
-                @if (isLoadingDroneModels) {
-                  <mat-option disabled>Завантаження...</mat-option>
-                }
-                @for (model of filteredDroneModels$ | async; track model.id) {
-                  <mat-option [value]="model">{{ model.value }}</mat-option>
-                }
-              </mat-autocomplete>
-            </mat-form-field>
-          </div>
         </div>
       </mat-card-content>
     </mat-card>
 
     <mat-accordion class="sections-accordion">
+      <!-- Засоби (Дрони) -->
+      <mat-expansion-panel class="unit-section-panel" (opened)="loadMeans()">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon color="primary">flight</mat-icon>
+            Засоби ({{ unitTask.meansCount || 0 }} БПЛА)
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="section-content">
+          <div class="action-container">
+            <div class="action-buttons">
+              <button mat-raised-button color="accent" (click)="addMean()">
+                <mat-icon>add</mat-icon>
+                Додати засіб
+              </button>
+            </div>
+          </div>
+          @if (isLoadingMeans()) {
+            <div class="loading-indicator">
+              <mat-icon>hourglass_empty</mat-icon>
+              Завантаження...
+            </div>
+          } @else {
+            @if (means().length === 0) {
+              <div class="empty-list">
+                <mat-icon>flight</mat-icon>
+                <p>Засоби не додано</p>
+              </div>
+            } @else {
+              <table mat-table [dataSource]="meansDataSource" class="mat-elevation-z8">
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef style="width: 80px">Дії</th>
+                  <td mat-cell *matCellDef="let mean">
+                    <button
+                      mat-icon-button
+                      color="warn"
+                      matTooltip="Видалити засіб"
+                      (click)="deleteMean(mean)"
+                    >
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+
+                <!-- DroneModel Column -->
+                <ng-container matColumnDef="droneModelValue">
+                  <th mat-header-cell *matHeaderCellDef>Модель БПЛА</th>
+                  <td mat-cell *matCellDef="let mean">{{ mean.droneModelValue }}</td>
+                </ng-container>
+
+                <!-- Quantity Column -->
+                <ng-container matColumnDef="quantity">
+                  <th mat-header-cell *matHeaderCellDef>Кількість</th>
+                  <td mat-cell *matCellDef="let mean">{{ mean.quantity }}</td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="meansDisplayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: meansDisplayedColumns"></tr>
+              </table>
+            }
+          }
+        </div>
+      </mat-expansion-panel>
+
       <!-- Особовий склад -->
       <mat-expansion-panel class="unit-section-panel">
         <mat-expansion-panel-header>

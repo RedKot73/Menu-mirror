@@ -1,9 +1,8 @@
-import { inject, signal, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { inject, signal, HostListener, ViewChild, ElementRef, ViewChildren, QueryList } from '@angular/core';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
 
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
@@ -20,7 +19,6 @@ import {
   TemplateDataSetCreateDto,
   TemplateDataSetUpdateDto,
   UnitTaskDto,
-  UnitTaskCreateDto,
 } from '../models/template-dataset.models';
 import { TemplateDataSetService } from '../services/template-dataset.service';
 import { UnitTaskService } from '../services/unit-task.service';
@@ -58,13 +56,16 @@ export class UnitsTaskEditorComponent {
   private dialog = inject(MatDialog);
 
   private dataSetService = inject(TemplateDataSetService);
-  private unitTaskService = inject(UnitTaskService);
   private unitService = inject(UnitService);
+  private unitTaskService = inject(UnitTaskService);
 
   @ViewChild('parentDateInput') parentDateInput?: ElementRef<HTMLInputElement>;
   @ViewChild('parentNumberInput') parentNumberInput?: ElementRef<HTMLInputElement>;
   @ViewChild('dateInput') dateInput?: ElementRef<HTMLInputElement>;
   @ViewChild('numberInput') numberInput?: ElementRef<HTMLInputElement>;
+
+  // Доступ до всіх карток підрозділів
+  @ViewChildren(UnitTaskCardComponent) unitTaskCards!: QueryList<UnitTaskCardComponent>;
 
   // --- Selected Units List with DataSets ---
   protected selectedUnits = signal<UnitTaskDto[]>([]);
@@ -222,7 +223,8 @@ export class UnitsTaskEditorComponent {
           taskValue: '',
           areaId: '', // Користувач має вибрати РВЗ
           areaValue: '',
-          means: [],
+          meansCount: 0, // ✅ Кількість засобів (Master-Detail)
+          means: [], // ✅ OPTIONAL: завантажується окремо
           isPublished: false,
           publishedAtUtc: undefined,
           changedBy: '',
@@ -364,12 +366,19 @@ export class UnitsTaskEditorComponent {
       }
     }
 
-    if (!this.checkRequiredField(this.documentDate(), this.dateInput, 'Заповніть дату документа')) {
+    if (!this.checkRequiredField(
+          this.documentDate(),
+          this.dateInput,
+          'Заповніть дату документа'))
+    {
       return;
     }
 
     if (
-      !this.checkRequiredField(this.documentNumber(), this.numberInput, 'Заповніть номер документа')
+      !this.checkRequiredField(
+        this.documentNumber(),
+        this.numberInput,
+        'Заповніть номер документа')
     ) {
       return;
     }
@@ -478,44 +487,56 @@ export class UnitsTaskEditorComponent {
 
   /**
    * Зберігає UnitTask для кожного підрозділу
+   * Координує збереження через виклик card.saveUnitTask()
    */
-  private saveUnitTasks(dataSetId: string): void {
-    const units = this.selectedUnits();
-    const saveObservables = units.map((unit) => {
-      if (unit.id) {
-        // Оновлюємо існуючий UnitTask
-        return this.unitTaskService.update(unit.id, unit);
-      } else {
-        // Створюємо новий UnitTask (snapshot)
-        const createDto: UnitTaskCreateDto = {
-          dataSetId: dataSetId,
-          unitId: unit.unitId,
-          taskId: unit.taskId,
-          areaId: unit.areaId,
-        };
-        return this.unitTaskService.create(createDto);
+  private async saveUnitTasks(dataSetId: string): Promise<void> {
+    const cards = this.unitTaskCards.toArray();
+    
+    if (cards.length === 0) {
+      this.snackBar.open('Немає підрозділів для збереження', 'Закрити', { duration: 3000 });
+      this.isSaving.set(false);
+      return;
+    }
+
+    try {
+      let successCount = 0;
+      let failedCount = 0;
+
+      // Зберігаємо кожну картку послідовно
+      for (const card of cards) {
+        const success = await card.saveUnitTask(dataSetId);
+        if (success) {
+          successCount++;
+        } else {
+          failedCount++;
+        }
       }
-    });
 
-    forkJoin(saveObservables).subscribe({
-      next: () => {
-        this.isSaving.set(false);
+      this.isSaving.set(false);
+
+      if (failedCount === 0) {
         this.hasUnsavedChanges.set(false);
-        this.snackBar.open('Дані успішно збережено', 'Закрити', { duration: 3000 });
-
-        // Перезавантажуємо DataSet для оновлення даних
-        this.loadDataSet(dataSetId);
-      },
-      error: (error) => {
-        this.isSaving.set(false);
-        console.error('Помилка збереження завдань підрозділів:', error);
-        const errorMessage = S5App_ErrorHandler.handleHttpError(
-          error,
-          'Помилка збереження завдань підрозділів',
+        this.snackBar.open(
+          `Дані успішно збережено (${successCount} підрозділів)`,
+          'Закрити',
+          { duration: 3000 }
         );
-        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-      },
-    });
+      } else {
+        this.snackBar.open(
+          `Збережено: ${successCount}, Помилок: ${failedCount}`,
+          'Закрити',
+          { duration: 5000 }
+        );
+      }
+    } catch (error) {
+      this.isSaving.set(false);
+      console.error('Помилка збереження завдань підрозділів:', error);
+      const errorMessage = S5App_ErrorHandler.handleHttpError(
+        error,
+        'Помилка збереження завдань підрозділів',
+      );
+      this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+    }
   }
 
   /**

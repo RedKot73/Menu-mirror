@@ -49,6 +49,46 @@ export interface TemplateDataSetUpdateDto {
 // === UnitTask Models (Snap-shot підрозділу з завданням) ===
 
 /**
+ * DTO для створення UnitTask
+ */
+export interface UnitTaskCreateDto {
+  dataSetId: string;
+  unitId: string;
+  taskId: string;
+  areaId: string;
+}
+
+/**
+ * Базовий DTO для UnitTask (без списку бійців)
+ * Відповідає серверному UnitTaskDto
+ */
+export interface UnitTaskDto {
+  id: string;
+  dataSetId?: string;
+  unitId: string;
+  unitShortName: string;
+  parentId?: string;
+  parentShortName: string;
+  assignedUnitId?: string;
+  assignedShortName?: string;
+  unitTypeId?: string;
+  unitTypeName?: string;
+  isInvolved: boolean;
+  persistentLocationId?: string;
+  persistentLocationValue?: string;
+  taskId: string;
+  taskValue: string;
+  areaId: string;
+  areaValue?: string; // ✅ Назва району
+  meansCount: number; // ✅ Кількість засобів (Master-Detail)
+  means?: DroneModelTaskDto[]; // ✅ OPTIONAL: завантажується окремо при розгортанні
+  isPublished: boolean;
+  publishedAtUtc?: string;
+  changedBy: string;
+  validFrom: string;
+}
+
+/**
  * DTO для snap-shot бійця в UnitTask
  */
 export interface SoldierTaskDto {
@@ -87,45 +127,6 @@ export interface DroneModelTaskDto {
   droneModelId: string;
   droneModelValue: string;
   quantity: number;
-}
-
-/**
- * DTO для створення UnitTask
- */
-export interface UnitTaskCreateDto {
-  dataSetId: string;
-  unitId: string;
-  taskId: string;
-  areaId: string;
-}
-
-/**
- * Базовий DTO для UnitTask (без списку бійців)
- * Відповідає серверному UnitTaskDto
- */
-export interface UnitTaskDto {
-  id: string;
-  dataSetId?: string;
-  unitId: string;
-  unitShortName: string;
-  parentId?: string;
-  parentShortName: string;
-  assignedUnitId?: string;
-  assignedShortName?: string;
-  unitTypeId?: string;
-  unitTypeName?: string;
-  isInvolved: boolean;
-  persistentLocationId?: string;
-  persistentLocationValue?: string;
-  taskId: string;
-  taskValue: string;
-  areaId: string;
-  areaValue?: string;
-  means?: DroneModelTaskDto[];
-  isPublished: boolean;
-  publishedAtUtc?: string;
-  changedBy: string;
-  validFrom: string;
 }
 
 // === Утиліти ===

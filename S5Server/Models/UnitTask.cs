@@ -5,39 +5,14 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 namespace S5Server.Models;
 
 /// <summary>
-/// DTO для набора даних підрозділу для Angular (формування документу)
-/// </summary>
-public record UnitDataSetDto(
-    string Id,
-    string? ParentId,
-    string? ParentShortName,
-    string? AssignedShortName,
-    string ShortName,
-    string? UnitTypeId,
-    string? UnitType,
-    bool IsInvolved,
-    string? Comment)
-{
-    public static UnitDataSetDto From(Unit u) => new(
-        u.Id,
-        u.ParentId,
-        u.Parent?.ShortName,
-        u.AssignedUnit?.ShortName ?? u.AssignedUnit?.Name,
-        u.ShortName,
-        u.UnitTypeId,
-        u.UnitType?.ShortValue,
-        u.IsInvolved,
-        u.Comment);
-}
-
-/// <summary>
 /// DTO для створення UnitTask
 /// </summary>
 public record UnitTaskCreateDto(
     string DataSetId,
     string UnitId,
     string TaskId,
-    string AreaId);
+    string AreaId/*,
+    List<DroneModelTaskCreateDto> Means*/);
 
 /// <summary>
 /// DTO для UnitTask (БЕЗ деталей - Master-Detail Pattern)
@@ -59,6 +34,8 @@ public record UnitTaskDto(
     string TaskId,
     string TaskValue,
     string AreaId,
+    string? AreaValue,          // ✅ ДОДАНО: назва району
+    int MeansCount,             // ✅ ДОДАНО: кількість засобів
     bool IsPublished,
     DateTime? PublishedAtUtc,
     string ChangedBy,
@@ -278,7 +255,7 @@ public static class UnitTaskExtensions
     /// <summary>
     /// Конвертує UnitTask у DTO (БЕЗ деталей)
     /// </summary>
-    public static UnitTaskDto ToDto(this UnitTask task) =>
+    public static UnitTaskDto ToDto(this UnitTask task, int meansCount = 0) =>
         new(
             task.Id,
             task.DataSetId,
@@ -296,10 +273,21 @@ public static class UnitTaskExtensions
             task.TaskId,
             task.TaskValue,
             task.AreaId,
+            task.Area?.Value,      // ✅ З Include(Area)
+            meansCount,            // ✅ З запиту
             task.IsPublished,
             task.PublishedAtUtc,
             task.ChangedBy,
             task.ValidFrom);
+
+    public static bool IsEqualTo(this UnitTask task, UnitTaskDto dto) =>
+        task.Id == dto.Id &&
+        task.DataSetId == dto.DataSetId &&
+        task.UnitId == dto.UnitId &&
+        task.UnitShortName == dto.UnitShortName &&
+        task.ParentId == dto.ParentId &&
+        task.ParentShortName == dto.ParentShortName &&
+        task.AssignedUnitId == dto.AssignedUnitId;
 
     /// <summary>
     /// Змінити статус публікації

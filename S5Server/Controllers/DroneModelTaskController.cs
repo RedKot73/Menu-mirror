@@ -148,7 +148,7 @@ public class DroneModelTaskController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<DroneModelTaskDto>> Create(
-        [FromBody] DroneModelTaskCreateDto dto,
+        [FromBody] DroneModelTaskUpSertDto dto,
         CancellationToken ct = default)
     {
         if (!ModelState.IsValid)
@@ -243,7 +243,7 @@ public class DroneModelTaskController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<DroneModelTaskDto>> Update(
         string id,
-        [FromBody] DroneModelTaskUpdateDto dto,  // ✅ Використовуємо UpdateDto
+        [FromBody] DroneModelTaskUpSertDto dto,  // ✅ Використовуємо UpdateDto
         CancellationToken ct = default)
     {
         if (!ModelState.IsValid)
@@ -434,6 +434,139 @@ public class DroneModelTaskController : ControllerBase
         {
             if (_logger.IsEnabled(LogLevel.Error))
                 _logger.LogError(ex, "Помилка в lookup DroneModel");
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+    /// <summary>
+    /// Масове збереження засобів ураження для завдання (Create/Update/Delete)
+    /// </summary>
+    [HttpPost("bulk-save/{unitTaskId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<BulkSaveResult>> BulkSave(
+        string unitTaskId,
+        [FromBody] List<DroneModelTaskUpSertDto> dtos,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(unitTaskId))
+            return BadRequest("unitTaskId обов'язковий");
+
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        try
+        {
+            // 1. Перевірка існування UnitTask
+            var unitTaskExists = await _db.UnitTasks
+                .AnyAsync(ut => ut.Id == unitTaskId, ct);
+            if (!unitTaskExists)
+                return Problem(
+                    statusCode: 404,
+                    title: "Не знайдено",
+                    detail: $"UnitTask з ID '{unitTaskId}' не знайдено");
+
+            using var transaction = await _db.Database.BeginTransactionAsync(ct);
+            try
+            {
+                // 2. Завантажити існуючі Means
+                var existingMeans = await _set
+                    .Where(m => m.UnitTaskId == unitTaskId)
+                    .ToListAsync(ct);
+
+                var incomingModelIds = dtos
+                    .Select(d => d.DroneModelId)
+                    .ToHashSet();
+
+                // 3. DELETE: Видалити ті, яких немає у новому списку
+                var toDelete = existingMeans
+                    .Where(existing => !incomingModelIds.Contains(existing.DroneModelId))
+                    .ToList();
+                _set.RemoveRange(toDelete);
+
+                var created = 0;
+                var updated = 0;
+                var deleted = toDelete.Count;
+
+                // 4. CREATE/UPDATE: Додати нові або оновити існуючі
+                foreach (var dto in dtos)
+                {
+                    // Перевірка існування DroneModel
+                    var droneModelExists = await _db.DictDroneModels
+                        .AnyAsync(dm => dm.Id == dto.DroneModelId, ct);
+                    if (!droneModelExists)
+                    {
+                        await transaction.RollbackAsync(ct);
+                        return Problem(
+                            statusCode: 400,
+                            title: "Невалідні дані",
+                            detail: $"DroneModel з ID '{dto.DroneModelId}' не знайдено");
+                    }
+
+                    var existing = existingMeans
+                        .FirstOrDefault(m => m.DroneModelId == dto.DroneModelId);
+
+                    if (existing != null)
+                    {
+                        // UPDATE
+                        if (existing.Quantity != dto.Quantity)
+                        {
+                            existing.Quantity = dto.Quantity;
+                            updated++;
+                        }
+                    }
+                    else
+                    {
+                        // CREATE
+                        var newMean = new DroneModelTask
+                        {
+                            Id = Guid.NewGuid().ToString("D"),
+                            UnitTaskId = unitTaskId,
+                            DroneModelId = dto.DroneModelId,
+                            Quantity = dto.Quantity
+                        };
+                        _set.Add(newMean);
+                        created++;
+                    }
+                }
+
+                await _db.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
+
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation(
+                        "BulkSave для UnitTaskId={UnitTaskId}: створено={Created}, оновлено={Updated}, видалено={Deleted}",
+                        unitTaskId, created, updated, deleted);
+
+                return Ok(new BulkSaveResult(
+                    Success: true,
+                    Created: created,
+                    Updated: updated,
+                    Deleted: deleted,
+                    Total: created + updated));
+            }
+            catch (DbUpdateException ex)
+            {
+                await transaction.RollbackAsync(ct);
+
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Помилка БД при BulkSave UnitTaskId={UnitTaskId}", unitTaskId);
+
+                return Problem(
+                    statusCode: 500,
+                    title: "Помилка збереження",
+                    detail: "Не вдалося зберегти зміни");
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка при BulkSave UnitTaskId={UnitTaskId}", unitTaskId);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
