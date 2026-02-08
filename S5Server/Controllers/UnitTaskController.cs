@@ -31,33 +31,47 @@ public class UnitTaskController : ControllerBase
         [FromQuery] string? dataSetId,
         [FromQuery] string? unitId,
         [FromQuery] string? taskId,
-        [FromQuery] bool? isPublished,
         CancellationToken ct = default)
     {
         try
         {
-            var query = _set.AsNoTracking()
+            // Базовий запит
+            var baseQuery = _set.AsNoTracking()
                 .Include(t => t.Task)
                 .Include(t => t.Area)
                 .AsQueryable();
 
             // Фільтри
             if (!string.IsNullOrWhiteSpace(dataSetId))
-                query = query.Where(t => t.DataSetId == dataSetId);
+                baseQuery = baseQuery.Where(t => t.DataSetId == dataSetId);
 
             if (!string.IsNullOrWhiteSpace(unitId))
-                query = query.Where(t => t.UnitId == unitId);
+                baseQuery = baseQuery.Where(t => t.UnitId == unitId);
 
             if (!string.IsNullOrWhiteSpace(taskId))
-                query = query.Where(t => t.TaskId == taskId);
+                baseQuery = baseQuery.Where(t => t.TaskId == taskId);
 
-            if (isPublished.HasValue)
-                query = query.Where(t => t.IsPublished == isPublished.Value);
-
-            // ✅ ОДИН SQL-ЗАПИТ з підзапитом COUNT:
-            var items = await query
+            // ✅ 1️⃣ Published: БЕЗ Unit (snapshot)
+            var publishedQuery = baseQuery
+                .Where(t => t.IsPublished)
                 .OrderByDescending(t => t.PublishedAtUtc)
-                .ThenByDescending(t => t.ValidFrom)
+                .ThenByDescending(t => t.ValidFrom);
+
+            // ✅ 2️⃣ Unpublished: З актуальними даними Unit
+            var unpublishedQuery = baseQuery
+                .Where(t => !t.IsPublished)
+                .Include(t => t.Unit)
+                    .ThenInclude(u => u!.Parent)
+                .Include(t => t.Unit)
+                    .ThenInclude(u => u!.AssignedUnit)
+                .Include(t => t.Unit)
+                    .ThenInclude(u => u!.UnitType)
+                .Include(t => t.Unit)
+                    .ThenInclude(u => u!.PersistentLocation)
+                .OrderByDescending(t => t.ValidFrom);
+
+            // ✅ Виконати запити + MeansCount одразу
+            var published = await publishedQuery
                 .Select(t => new
                 {
                     Task = t,
@@ -65,7 +79,22 @@ public class UnitTaskController : ControllerBase
                 })
                 .ToListAsync(ct);
 
-            var result = items
+            var unpublished = await unpublishedQuery
+                .Select(t => new
+                {
+                    Task = t,
+                    MeansCount = _db.DroneModelTasks.Count(m => m.UnitTaskId == t.Id)
+                })
+                .ToListAsync(ct);
+
+            // ✅ 3️⃣ Об'єднати (БЕЗ дублікатів, бо published != unpublished)
+            var allTasks = published
+                .Concat(unpublished)
+                .OrderByDescending(x => x.Task.PublishedAtUtc ?? x.Task.ValidFrom)
+                .ToList();
+
+            // ✅ 4️⃣ ToDto з Smart Logic (автоматично вибирає snapshot/actual)
+            var result = allTasks
                 .Select(x => x.Task.ToDto(x.MeansCount))
                 .ToList();
 

@@ -53,6 +53,7 @@ import {
 } from '../../Soldier/Soldier.constant';
 import { DocTemplateUtils } from '../models/shared.models';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
+import { PPD_AREA_TYPE_GUID } from '../../Unit/unit.constants';
 
 @Component({
   selector: 'app-unit-task-card',
@@ -324,7 +325,40 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
    * Завантажує області по areaTypeId
    */
   private loadAreasByTask(areaTypeId: string): void {
-    // Завантажуємо області відфільтровані по areaTypeId
+    // Якщо це завдання типу ППД - використовуємо persistentLocationId як РВЗ
+    if (areaTypeId === PPD_AREA_TYPE_GUID) {
+      // Для ППД РВЗ береться з persistentLocationId підрозділу
+      if (this.unitTask.persistentLocationId) {
+        // Створюємо "віртуальний" DictArea об'єкт з persistentLocation
+        const persistentArea: DictArea = {
+          id: this.unitTask.persistentLocationId,
+          value: this.unitTask.persistentLocationValue || 'ППД',
+          areaTypeId: PPD_AREA_TYPE_GUID,
+          areaType: 'ППД',
+        };
+
+        this.areas.set([persistentArea]);
+        this.areaControl.setValue(persistentArea, { emitEvent: false });
+
+        // Оновлюємо unitTask з persistentLocationId як areaId
+        const updatedUnit: UnitTaskDto = {
+          ...this.unitTask,
+          areaId: this.unitTask.persistentLocationId,
+          areaValue: this.unitTask.persistentLocationValue || 'ППД',
+        };
+        this.unitChange.emit(updatedUnit);
+      } else {
+        // Якщо persistentLocationId відсутній - очищуємо
+        this.areas.set([]);
+        this.areaControl.setValue(null, { emitEvent: false });
+        const errorMessage = 'Для підрозділу не вказано ППД. Спочатку вкажіть ППД підрозділу.';
+        console.error(errorMessage);
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      }
+      return;
+    }
+
+    // Для інших типів завдань - завантажуємо області з сервера
     this.dictAreasService
       .getByAreaType(areaTypeId)
       .pipe(takeUntil(this.destroy$))
@@ -422,7 +456,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   async saveUnitTask(dataSetId: string): Promise<boolean> {
     this.isSaving.set(true);
-    
+
     try {
       // 1. Створюємо або оновлюємо UnitTask
       if (this.unitTask.id) {

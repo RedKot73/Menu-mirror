@@ -254,31 +254,39 @@ public static class UnitTaskExtensions
 
     /// <summary>
     /// Конвертує UnitTask у DTO (БЕЗ деталей)
+    /// Smart: Published = snapshot, Unpublished = actual from Unit
     /// </summary>
-    public static UnitTaskDto ToDto(this UnitTask task, int meansCount = 0) =>
-        new(
+    public static UnitTaskDto ToDto(this UnitTask task, int meansCount = 0)
+    {
+        // ✅ ЛОГІКА: Якщо IsPublished - false і Unit != null — взяти актуальні дані з Unit,
+        // ігноруючи збережені в UnitTask (які можуть бути застарілими)
+        var useActualData = !task.IsPublished && task.Unit != null;
+
+        return new UnitTaskDto(
             task.Id,
             task.DataSetId,
             task.UnitId,
-            task.UnitShortName,
-            task.ParentId,
-            task.ParentShortName,
-            task.AssignedUnitId,
-            task.AssignedShortName,
-            task.UnitTypeId,
-            task.UnitTypeName,
-            task.IsInvolved,
-            task.PersistentLocationId,
-            task.PersistentLocationValue,
+            // ✅ Smart: snapshot або actual
+            useActualData ? task.Unit!.ShortName : task.UnitShortName,
+            useActualData ? task.Unit!.ParentId : task.ParentId,
+            useActualData ? (task.Unit!.Parent?.ShortName ?? string.Empty) : task.ParentShortName,
+            useActualData ? task.Unit!.AssignedUnitId : task.AssignedUnitId,
+            useActualData ? task.Unit!.AssignedUnit?.ShortName : task.AssignedShortName,
+            useActualData ? task.Unit!.UnitTypeId : task.UnitTypeId,
+            useActualData ? (task.Unit!.UnitType?.ShortValue ?? task.Unit!.UnitType?.Value) : task.UnitTypeName,
+            useActualData ? task.Unit!.IsInvolved : task.IsInvolved,
+            useActualData ? task.Unit!.PersistentLocationId : task.PersistentLocationId,
+            useActualData ? task.Unit!.PersistentLocation?.Value : task.PersistentLocationValue,
             task.TaskId,
             task.TaskValue,
             task.AreaId,
-            task.Area?.Value,      // ✅ З Include(Area)
-            meansCount,            // ✅ З запиту
+            task.Area?.Value,
+            meansCount,
             task.IsPublished,
             task.PublishedAtUtc,
             task.ChangedBy,
             task.ValidFrom);
+    }
 
     public static bool IsEqualTo(this UnitTask task, UnitTaskDto dto) =>
         task.Id == dto.Id &&
