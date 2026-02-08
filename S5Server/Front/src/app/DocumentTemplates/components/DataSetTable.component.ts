@@ -67,7 +67,7 @@ export class DataSetTableComponent implements OnInit {
   // Table configuration
   displayedColumns: string[] = [
     'menu',
-    'name',
+    //'name',
     'parentDocNumber',
     'parentDocDate',
     'docNumber',

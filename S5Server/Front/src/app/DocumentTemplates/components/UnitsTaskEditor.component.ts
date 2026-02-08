@@ -22,7 +22,7 @@ import {
 import { TemplateDataSetService } from '../services/template-dataset.service';
 import { UnitTaskService } from '../services/unit-task.service';
 import { UnitService } from '../../Unit/services/unit.service';
-import { JsonEditorDialogComponent } from '../components/JsonEditorDialog.component';
+//import { JsonEditorDialogComponent } from '../components/JsonEditorDialog.component';
 import { UnitTaskCardComponent } from './UnitTaskCard.component';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 import { TemplateDataSetDto } from '../models/template-dataset.models';
@@ -52,7 +52,7 @@ import { VerticalLayoutComponent } from '../../shared/components/VerticalLayout.
 })
 export class UnitsTaskEditorComponent {
   private snackBar = inject(MatSnackBar);
-  private dialog = inject(MatDialog);
+  //private dialog = inject(MatDialog);
 
   private dataSetService = inject(TemplateDataSetService);
   private unitService = inject(UnitService);
@@ -102,6 +102,7 @@ export class UnitsTaskEditorComponent {
   /**
    * Відкриває діалог редагування JSON
    */
+  /*
   openJsonEditor(): void {
     const jsonString = JSON.stringify(this.selectedUnits(), null, 2);
 
@@ -117,7 +118,7 @@ export class UnitsTaskEditorComponent {
       disableClose: false,
     });
   }
-
+*/
   /**
    * Обробник зміни прапорця "Чи існує документ старшого начальника"
    */

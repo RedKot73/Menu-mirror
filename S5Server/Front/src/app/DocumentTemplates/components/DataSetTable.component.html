@@ -23,13 +23,14 @@
     <div class="table-container">
       <table mat-table [dataSource]="dataSource" matSort class="datasets-table">
         <!-- Name Column -->
+         <!--
         <ng-container matColumnDef="name">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Назва</th>
           <td mat-cell *matCellDef="let dataSet">
             <span class="dataset-name">{{ dataSet.name }}</span>
           </td>
         </ng-container>
-
+        -->
         <!-- Parent Document Number Column -->
         <ng-container matColumnDef="parentDocNumber">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Номер док. старшого нач.</th>
