@@ -1,4 +1,13 @@
-import { inject, signal, HostListener, ViewChild, ElementRef, ViewChildren, QueryList } from '@angular/core';
+import {
+  inject,
+  signal,
+  HostListener,
+  ViewChild,
+  ElementRef,
+  ViewChildren,
+  QueryList,
+  OnInit,
+} from '@angular/core';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,7 +16,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 //import { MatDialog } from '@angular/material/dialog';
 import { MatDatepickerModule, MatDatepickerInputEvent } from '@angular/material/datepicker';
-import { provideNativeDateAdapter } from '@angular/material/core';
+//import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -15,10 +24,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 
-import {
-  TemplateDataSetUpSertDto,
-  UnitTaskDto,
-} from '../models/template-dataset.models';
+import { TemplateDataSetUpSertDto, UnitTaskDto } from '../models/template-dataset.models';
 import { TemplateDataSetService } from '../services/template-dataset.service';
 import { UnitTaskService } from '../services/unit-task.service';
 import { UnitService } from '../../Unit/services/unit.service';
@@ -28,6 +34,10 @@ import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 import { TemplateDataSetDto } from '../models/template-dataset.models';
 import { DocTemplateUtils } from '../models/shared.models';
 import { VerticalLayoutComponent } from '../../shared/components/VerticalLayout.component';
+
+import { provideLuxonDateAdapter } from '@angular/material-luxon-adapter';
+import { DateAdapter, MAT_DATE_LOCALE } from '@angular/material/core';
+//import { DateTime } from 'luxon';
 
 @Component({
   selector: 'app-units-task-editor',
@@ -46,11 +56,27 @@ import { VerticalLayoutComponent } from '../../shared/components/VerticalLayout.
     UnitTaskCardComponent,
     VerticalLayoutComponent,
   ],
-  providers: [provideNativeDateAdapter()],
+  providers: [
+    // The locale would typically be provided on the root module of your application. We do it at
+    // the component level here, due to limitations of our example generation script.
+    { provide: MAT_DATE_LOCALE, useValue: 'uk-UA' },
+
+    // Luxon can be provided globally to your app by adding `provideLuxonDateAdapter`
+    // to your app config. We provide it at the component level here, due to limitations
+    // of our example generation script.
+    provideLuxonDateAdapter(),
+  ],
   templateUrl: './UnitsTaskEditor.component.html',
   styleUrls: ['./UnitsTaskEditor.component.scss'],
 })
-export class UnitsTaskEditorComponent {
+export class UnitsTaskEditorComponent implements OnInit {
+  private readonly _adapter = inject<DateAdapter<Date>>(DateAdapter);
+  private readonly _locale = signal('uk-UA');
+
+  ngOnInit(): void {
+    this._adapter.setLocale(this._locale());
+  }
+
   private snackBar = inject(MatSnackBar);
   //private dialog = inject(MatDialog);
 
@@ -366,19 +392,12 @@ export class UnitsTaskEditorComponent {
       }
     }
 
-    if (!this.checkRequiredField(
-          this.documentDate(),
-          this.dateInput,
-          'Заповніть дату документа'))
-    {
+    if (!this.checkRequiredField(this.documentDate(), this.dateInput, 'Заповніть дату документа')) {
       return;
     }
 
     if (
-      !this.checkRequiredField(
-        this.documentNumber(),
-        this.numberInput,
-        'Заповніть номер документа')
+      !this.checkRequiredField(this.documentNumber(), this.numberInput, 'Заповніть номер документа')
     ) {
       return;
     }
@@ -408,7 +427,8 @@ export class UnitsTaskEditorComponent {
     }
 
     // Генеруємо назву на основі дати та номера документа
-    const dateStr = this.documentDate()?.toLocaleDateString('uk-UA') || '';
+    const date = this.documentDate();
+    const dateStr = date ? new Intl.DateTimeFormat('uk-UA').format(date) : '';
     const docNum = this.documentNumber().trim();
     const dataSetName = `Дані документа від ${dateStr} № ${docNum}`;
 
@@ -422,10 +442,10 @@ export class UnitsTaskEditorComponent {
       isParentDocUsed: this.isParentDocUsed(),
       parentDocNumber: this.isParentDocUsed() ? this.parentDocumentNumber() : null,
       parentDocDate: this.isParentDocUsed()
-        ? this.parentDocumentDate()?.toISOString() || null
+        ? this.parentDocumentDate()?.toISOString().split('T')[0] || null
         : null,
       docNumber: this.documentNumber(),
-      docDate: this.documentDate()!.toISOString(),
+      docDate: this.documentDate()!.toISOString().split('T')[0],
       isPublished: currentDataSet?.isPublished || false,
     };
 
@@ -472,7 +492,7 @@ export class UnitsTaskEditorComponent {
    */
   private async saveUnitTasks(dataSetId: string): Promise<void> {
     const cards = this.unitTaskCards.toArray();
-    
+
     if (cards.length === 0) {
       this.snackBar.open('Немає підрозділів для збереження', 'Закрити', { duration: 3000 });
       this.isSaving.set(false);
@@ -497,17 +517,13 @@ export class UnitsTaskEditorComponent {
 
       if (failedCount === 0) {
         this.hasUnsavedChanges.set(false);
-        this.snackBar.open(
-          `Дані успішно збережено (${successCount} підрозділів)`,
-          'Закрити',
-          { duration: 3000 }
-        );
+        this.snackBar.open(`Дані успішно збережено (${successCount} підрозділів)`, 'Закрити', {
+          duration: 3000,
+        });
       } else {
-        this.snackBar.open(
-          `Збережено: ${successCount}, Помилок: ${failedCount}`,
-          'Закрити',
-          { duration: 5000 }
-        );
+        this.snackBar.open(`Збережено: ${successCount}, Помилок: ${failedCount}`, 'Закрити', {
+          duration: 5000,
+        });
       }
     } catch (error) {
       this.isSaving.set(false);
