@@ -5,8 +5,7 @@ import { catchError } from 'rxjs/operators';
 
 import {
   TemplateDataSetDto,
-  TemplateDataSetCreateDto,
-  TemplateDataSetUpdateDto,
+  TemplateDataSetUpSertDto,
   TemplateDataSetUtils,
 } from '../models/template-dataset.models';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
@@ -40,7 +39,7 @@ export class TemplateDataSetService {
    * Создать новый набор данных
    * POST /api/templ_data/data-sets
    */
-  createDataSet(dto: TemplateDataSetCreateDto): Observable<TemplateDataSetDto> {
+  createDataSet(dto: TemplateDataSetUpSertDto): Observable<TemplateDataSetDto> {
     // Валидация перед отправкой
     const validation = TemplateDataSetUtils.validate(dto);
     if (!validation.valid) {
@@ -94,7 +93,7 @@ export class TemplateDataSetService {
    * Обновить набор данных
    * PUT /api/templ_data/data-sets/{dataSetId}
    */
-  updateDataSet(dataSetId: string, dto: TemplateDataSetUpdateDto): Observable<void> {
+  updateDataSet(dataSetId: string, dto: TemplateDataSetUpSertDto): Observable<void> {
     return this.http.put<void>(`${this.baseUrl}/data-sets/${dataSetId}`, dto).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося оновити набір даних');

@@ -683,7 +683,9 @@ namespace S5Server.Migrations
                         .HasColumnType("TEXT(300)");
 
                     b.Property<bool>("IsPublished")
-                        .HasColumnType("INTEGER");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1172,11 +1174,10 @@ namespace S5Server.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("TEXT(150)");
 
-                    b.Property<DateTime>("ParentDocDate")
+                    b.Property<DateTime?>("ParentDocDate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ParentDocNumber")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT(100)");
 
@@ -1387,12 +1388,15 @@ namespace S5Server.Migrations
 
                     b.Property<string>("AreaId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT(36)");
 
                     b.Property<string>("AssignedShortName")
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT(100)");
 
                     b.Property<string>("AssignedUnitId")
+                        .HasMaxLength(36)
                         .HasColumnType("TEXT(36)");
 
                     b.Property<string>("ChangedBy")
@@ -1416,6 +1420,7 @@ namespace S5Server.Migrations
                         .HasDefaultValue(false);
 
                     b.Property<string>("ParentId")
+                        .HasMaxLength(36)
                         .HasColumnType("TEXT(36)");
 
                     b.Property<string>("ParentShortName")
@@ -1424,9 +1429,11 @@ namespace S5Server.Migrations
                         .HasColumnType("TEXT(100)");
 
                     b.Property<string>("PersistentLocationId")
+                        .HasMaxLength(36)
                         .HasColumnType("TEXT(36)");
 
                     b.Property<string>("PersistentLocationValue")
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT(100)");
 
                     b.Property<DateTime?>("PublishedAtUtc")
@@ -1434,14 +1441,17 @@ namespace S5Server.Migrations
 
                     b.Property<string>("TaskId")
                         .IsRequired()
+                        .HasMaxLength(36)
                         .HasColumnType("TEXT(36)");
 
                     b.Property<string>("TaskValue")
                         .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT(100)");
 
                     b.Property<string>("UnitId")
                         .IsRequired()
+                        .HasMaxLength(36)
                         .HasColumnType("TEXT(36)");
 
                     b.Property<string>("UnitShortName")
@@ -1450,15 +1460,19 @@ namespace S5Server.Migrations
                         .HasColumnType("TEXT(100)");
 
                     b.Property<string>("UnitTypeId")
+                        .HasMaxLength(36)
                         .HasColumnType("TEXT(36)");
 
                     b.Property<string>("UnitTypeName")
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT(100)");
 
                     b.Property<DateTime>("ValidFrom")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AreaId");
 
                     b.HasIndex("AssignedUnitId");
 
@@ -1795,6 +1809,12 @@ namespace S5Server.Migrations
 
             modelBuilder.Entity("S5Server.Models.UnitTask", b =>
                 {
+                    b.HasOne("S5Server.Models.DictArea", "Area")
+                        .WithMany()
+                        .HasForeignKey("AreaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("S5Server.Models.Unit", "AssignedUnit")
                         .WithMany()
                         .HasForeignKey("AssignedUnitId")
@@ -1832,6 +1852,8 @@ namespace S5Server.Migrations
                         .WithMany()
                         .HasForeignKey("UnitTypeId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Area");
 
                     b.Navigation("AssignedUnit");
 

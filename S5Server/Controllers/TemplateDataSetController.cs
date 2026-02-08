@@ -33,8 +33,7 @@ public class TemplateDataSetController : ControllerBase
     {
         try
         {
-            var query = _set.AsNoTracking()
-                .AsQueryable();
+            var query = _set.AsNoTracking();
 
             if (isPublished.HasValue)
                 query = query.Where(ds => ds.IsPublished == isPublished.Value);
@@ -42,7 +41,7 @@ public class TemplateDataSetController : ControllerBase
             var items = await query
                 .OrderByDescending(t => t.DocDate)
                 .ThenByDescending(t => t.CreatedAtUtc)
-                .Select(ds => ds.ToDto())  // ✅ Extension-метод
+                .Select(ds => ds.ToDto())
                 .ToListAsync(ct);
 
             return Ok(items);
@@ -67,23 +66,21 @@ public class TemplateDataSetController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateDataSet(
-        [FromBody] TemplateDataSetCreateDto dto,
+        [FromBody] TemplateDataSetUpSertDto dto,
         CancellationToken ct = default)
     {
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
+        // ✅ Валідація через extension-метод
+        var (isValid, errorMessage) = dto.ValidateParentDoc();
+        if (!isValid)
+            return BadRequest(errorMessage);
+
         try
         {
-            var ds = new TemplateDataSet
-            {
-                Name = dto.Name.Trim(),
-                DocNumber = dto.DocNumber.Trim(),
-                DocDate = dto.DocDate,
-                IsPublished = dto.IsPublished,
-                CreatedAtUtc = DateTime.UtcNow
-            };
-
+            // ✅ Створення через extension-метод
+            var ds = dto.FromCreateDto();
             _set.Add(ds);
 
             try
@@ -98,7 +95,7 @@ public class TemplateDataSetController : ControllerBase
                 return CreatedAtAction(
                     nameof(GetDataSet), 
                     new { dataSetId = ds.Id }, 
-                    ds.ToDto());  // ✅ Extension-метод
+                    ds.ToDto());
             }
             catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
             {
@@ -141,7 +138,7 @@ public class TemplateDataSetController : ControllerBase
             if (ds == null)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"DataSetId={dataSetId}");
 
-            return Ok(ds.ToDto());  // ✅ Extension-метод
+            return Ok(ds.ToDto());
         }
         catch (OperationCanceledException)
         {
@@ -165,11 +162,15 @@ public class TemplateDataSetController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateDataSet(
         string dataSetId,
-        [FromBody] TemplateDataSetUpdateDto dto, 
+        [FromBody] TemplateDataSetUpSertDto dto, 
         CancellationToken ct = default)
     {
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
+
+        var (isValid, errorMessage) = dto.ValidateParentDoc();
+        if (!isValid)
+            return BadRequest(errorMessage);
 
         try
         {
@@ -180,7 +181,16 @@ public class TemplateDataSetController : ControllerBase
             if (ds == null)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"DataSetId={dataSetId}");
 
-            ds.UpdateFrom(dto);  // ✅ Extension-метод
+            // ✅ ПЕРЕВІРКА ЧИ ЗМІНИЛИСЬ ДАНІ
+            if (ds.IsEqualTo(dto))
+            {
+                if (_logger.IsEnabled(LogLevel.Debug))
+                    _logger.LogDebug("Дані не змінились DataSetId={DataSetId}, пропускаємо оновлення", dataSetId);
+                
+                return Ok(ds.ToDto());  // ✅ Повертаємо існуючі дані БЕЗ UPDATE
+            }
+
+            ds.UpdateFrom(dto);
 
             try
             {
@@ -191,7 +201,7 @@ public class TemplateDataSetController : ControllerBase
                         "Оновлено набір даних DataSetId={Id}, IsPublished={IsPublished}",
                         dataSetId, dto.IsPublished);
 
-                return Ok(ds.ToDto());  // ✅ Extension-метод
+                return Ok(ds.ToDto());
             }
             catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
             {
@@ -279,7 +289,8 @@ public class TemplateDataSetController : ControllerBase
             if (ds == null)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
 
-            ds.Publish(set_publish);  // ✅ Extension-метод
+            // ✅ Публікація через extension-метод
+            ds.Publish(set_publish);
             await _db.SaveChangesAsync(ct);
 
             if (_logger.IsEnabled(LogLevel.Information))
@@ -312,7 +323,7 @@ public class TemplateDataSetController : ControllerBase
     {
         try
         {
-            var query = _set.AsNoTracking().AsQueryable();
+            var query = _set.AsNoTracking();
 
             if (isPublished.HasValue)
                 query = query.Where(ds => ds.IsPublished == isPublished.Value);

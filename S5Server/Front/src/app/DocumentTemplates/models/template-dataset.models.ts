@@ -10,8 +10,8 @@ export interface TemplateDataSetDto {
   id: string;
   name: string;
   isParentDocUsed: boolean; // Чи існує документ старшого начальника
-  parentDocNumber: string; // Номер документу старшого начальника
-  parentDocDate: string; // Дата документу старшого начальника (ISO date string)
+  parentDocNumber?: string | null; // Номер документу старшого начальника (nullable)
+  parentDocDate?: string | null; // Дата документу старшого начальника (ISO date string, nullable)
   docNumber: string; // Номер документу
   docDate: string; // Дата документу (ISO date string)
   isPublished: boolean;
@@ -21,26 +21,13 @@ export interface TemplateDataSetDto {
 }
 
 /**
- * DTO для створення нового TemplateDataSet
+ * DTO для створення/оновлення TemplateDataSet
  */
-export interface TemplateDataSetCreateDto {
-  name: string;
-  isParentDocUsed?: boolean;
-  parentDocNumber?: string;
-  parentDocDate?: string; // ISO date string
-  docNumber: string;
-  docDate: string; // ISO date string
-  isPublished?: boolean;
-}
-
-/**
- * DTO для оновлення TemplateDataSet
- */
-export interface TemplateDataSetUpdateDto {
+export interface TemplateDataSetUpSertDto {
   name: string;
   isParentDocUsed: boolean;
-  parentDocNumber: string;
-  parentDocDate: string; // ISO date string
+  parentDocNumber?: string | null; // Nullable, обов'язковий тільки якщо isParentDocUsed = true
+  parentDocDate?: string | null; // Nullable, обов'язковий тільки якщо isParentDocUsed = true
   docNumber: string;
   docDate: string; // ISO date string
   isPublished: boolean;
@@ -134,7 +121,7 @@ export class TemplateDataSetUtils {
   /**
    * Валідує DataSet перед відправкою
    */
-  static validate(dataSet: TemplateDataSetCreateDto): { valid: boolean; errors: string[] } {
+  static validate(dataSet: TemplateDataSetUpSertDto): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
     if (!dataSet.name || dataSet.name.trim() === '') {
@@ -151,6 +138,16 @@ export class TemplateDataSetUtils {
 
     if (!dataSet.docDate) {
       errors.push("Дата документу обов'язкова");
+    }
+
+    // ✅ Валідація ParentDoc полів (аналогічно серверу)
+    if (dataSet.isParentDocUsed) {
+      if (!dataSet.parentDocNumber || dataSet.parentDocNumber.trim() === '') {
+        errors.push("Номер документу старшого начальника обов'язковий, якщо документ існує");
+      }
+      if (!dataSet.parentDocDate) {
+        errors.push("Дата документу старшого начальника обов'язкова, якщо документ існує");
+      }
     }
 
     return {

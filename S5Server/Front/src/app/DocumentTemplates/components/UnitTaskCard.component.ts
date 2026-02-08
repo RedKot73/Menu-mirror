@@ -19,6 +19,7 @@ import { finalize, takeUntil } from 'rxjs/operators';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
@@ -50,6 +51,7 @@ import {
   isProblematicStatus,
   isRecoveryStatus,
 } from '../../Soldier/Soldier.constant';
+import { DocTemplateUtils } from '../models/shared.models';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 
 @Component({
@@ -70,6 +72,7 @@ import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
     MatSortModule,
     DatePipe,
     MatTooltipModule,
+    MatButtonToggleModule,
   ],
   templateUrl: './UnitTaskCard.component.html',
   styleUrls: [
@@ -118,6 +121,9 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   meansDataSource = new MatTableDataSource<DroneModelTaskDto>([]);
   meansDisplayedColumns: string[] = ['actions', 'droneModelValue', 'quantity'];
   isLoadingMeans = signal<boolean>(false);
+
+  // Стан збереження (для індикації процесу)
+  isSaving = signal<boolean>(false);
 
   @ViewChild(MatSort) sort!: MatSort;
 
@@ -415,6 +421,8 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
    * Викликається з батьківського компонента при загальному збереженні
    */
   async saveUnitTask(dataSetId: string): Promise<boolean> {
+    this.isSaving.set(true);
+    
     try {
       // 1. Створюємо або оновлюємо UnitTask
       if (this.unitTask.id) {
@@ -453,6 +461,70 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
       );
       this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       return false;
+    } finally {
+      this.isSaving.set(false);
     }
+  }
+
+  /**
+   * Отримує читабельну назву статусу публікації
+   */
+  getStatusLabel(isPublished: boolean): string {
+    return DocTemplateUtils.getStatusLabel(isPublished);
+  }
+
+  /**
+   * Обробник зміни статусу публікації
+   */
+  onPublishStatusChange(isPublished: boolean): void {
+    const currentUnitTask = this.unitTask;
+    if (!currentUnitTask || !currentUnitTask.id) {
+      this.snackBar.open('Неможливо змінити статус: завдання ще не збережено', 'Закрити', {
+        duration: 3000,
+      });
+      return;
+    }
+
+    // Перевіряємо чи статус дійсно змінився
+    if (currentUnitTask.isPublished === isPublished) {
+      return;
+    }
+
+    this.isSaving.set(true);
+
+    this.unitTaskService.publish(currentUnitTask.id, isPublished).subscribe({
+      next: () => {
+        this.isSaving.set(false);
+
+        // Оновлюємо локальний unitTask з новим статусом
+        const updatedUnitTask: UnitTaskDto = {
+          ...currentUnitTask,
+          isPublished: isPublished,
+          publishedAtUtc: isPublished ? new Date().toISOString() : undefined,
+        };
+
+        // Оновлюємо внутрішній signal
+        this.unitTaskSignal.set(updatedUnitTask);
+
+        // ✅ Сповіщаємо батьківський компонент про зміну
+        this.unitChange.emit(updatedUnitTask);
+
+        const statusText = isPublished ? 'опубліковано' : 'знято з публікації';
+        this.snackBar.open(
+          `Завдання підрозділу "${currentUnitTask.unitShortName}" ${statusText}`,
+          'Закрити',
+          { duration: 3000 },
+        );
+      },
+      error: (error) => {
+        this.isSaving.set(false);
+        console.error('Error changing publish status:', error);
+        const errorMessage = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Помилка зміни статусу публікації',
+        );
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      },
+    });
   }
 }

@@ -8,6 +8,9 @@ namespace S5Server.Models;
 /// </summary>
 public record TemplateDataSetDto(
     string Id,
+    bool IsParentDocUsed,
+    string? ParentDocNumber,
+    DateTime? ParentDocDate,
     string Name,
     string DocNumber,
     DateTime DocDate,
@@ -17,18 +20,12 @@ public record TemplateDataSetDto(
     DateTime? UpdatedAtUtc);
 
 /// <summary>
-/// DTO для створення TemplateDataSet
-/// </summary>
-public record TemplateDataSetCreateDto(
-    string Name,
-    string DocNumber,
-    DateTime DocDate,
-    bool IsPublished = false);
-
-/// <summary>
 /// DTO для оновлення TemplateDataSet
 /// </summary>
-public record TemplateDataSetUpdateDto(
+public record TemplateDataSetUpSertDto(
+    bool IsParentDocUsed,
+    string? ParentDocNumber,
+    DateTime? ParentDocDate,
     string Name,
     string DocNumber,
     DateTime DocDate,
@@ -51,14 +48,13 @@ public class TemplateDataSet
     /// <summary>
     /// Номер документу старшого начальника
     /// </summary>
-    [StringLength(100), Required]
-    public string ParentDocNumber { get; set; } = string.Empty;
+    [StringLength(100)]
+    public string? ParentDocNumber { get; set; }  // ✅ Nullable
 
     /// <summary>
     /// Дата документу старшого начальника
     /// </summary>
-    [Required]
-    public DateTime ParentDocDate { get; set; }
+    public DateTime? ParentDocDate { get; set; }  // ✅ Nullable
 
     [StringLength(150), Required]
     public string Name { get; set; } = string.Empty;
@@ -97,11 +93,31 @@ public class TemplateDataSet
 public static class TemplateDataSetExtensions
 {
     /// <summary>
+    /// Створює TemplateDataSet з DTO
+    /// </summary>
+    public static TemplateDataSet FromCreateDto(this TemplateDataSetUpSertDto dto) =>
+        new()
+        {
+            Id = Guid.NewGuid().ToString("D"),
+            IsParentDocUsed = dto.IsParentDocUsed,
+            ParentDocNumber = dto.ParentDocNumber,
+            ParentDocDate = dto.ParentDocDate,
+            Name = dto.Name.Trim(),
+            DocNumber = dto.DocNumber.Trim(),
+            DocDate = dto.DocDate,
+            IsPublished = dto.IsPublished,
+            CreatedAtUtc = DateTime.UtcNow
+        };
+
+    /// <summary>
     /// Конвертує TemplateDataSet у DTO (БЕЗ UnitTasks)
     /// </summary>
     public static TemplateDataSetDto ToDto(this TemplateDataSet ds) =>
         new(
             ds.Id,
+            ds.IsParentDocUsed,
+            ds.ParentDocNumber,
+            ds.ParentDocDate,
             ds.Name,
             ds.DocNumber,
             ds.DocDate,
@@ -109,6 +125,18 @@ public static class TemplateDataSetExtensions
             ds.PublishedAtUtc,
             ds.CreatedAtUtc,
             ds.UpdatedAtUtc);
+
+    /// <summary>
+    /// Перевірка чи змінились дані
+    /// </summary>
+    public static bool IsEqualTo(this TemplateDataSet ds, TemplateDataSetUpSertDto dto) =>
+        ds.IsParentDocUsed == dto.IsParentDocUsed &&
+        ds.ParentDocNumber == dto.ParentDocNumber &&
+        ds.ParentDocDate == dto.ParentDocDate &&
+        ds.Name == dto.Name.Trim() &&
+        ds.DocNumber == dto.DocNumber.Trim() &&
+        ds.DocDate == dto.DocDate &&
+        ds.IsPublished == dto.IsPublished;
 
     /// <summary>
     /// Змінити статус публікації
@@ -123,10 +151,13 @@ public static class TemplateDataSetExtensions
     /// <summary>
     /// Оновити поля з DTO
     /// </summary>
-    public static void UpdateFrom(this TemplateDataSet ds, TemplateDataSetUpdateDto dto)
+    public static void UpdateFrom(this TemplateDataSet ds, TemplateDataSetUpSertDto dto)
     {
         var publishStateChanged = ds.IsPublished != dto.IsPublished;
 
+        ds.IsParentDocUsed = dto.IsParentDocUsed;
+        ds.ParentDocNumber = dto.ParentDocNumber;
+        ds.ParentDocDate = dto.ParentDocDate;
         ds.Name = dto.Name.Trim();
         ds.DocNumber = dto.DocNumber.Trim();
         ds.DocDate = dto.DocDate;
@@ -136,5 +167,22 @@ public static class TemplateDataSetExtensions
             ds.PublishedAtUtc = dto.IsPublished ? DateTime.UtcNow : null;
 
         ds.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Валідація ParentDoc полів
+    /// </summary>
+    public static (bool IsValid, string? ErrorMessage) ValidateParentDoc(this TemplateDataSetUpSertDto dto)
+    {
+        if (!dto.IsParentDocUsed)
+            return (true, null);
+
+        if (string.IsNullOrWhiteSpace(dto.ParentDocNumber))
+            return (false, "ParentDocNumber обов'язковий, якщо IsParentDocUsed = true");
+
+        if (dto.ParentDocDate == null)
+            return (false, "ParentDocDate обов'язковий, якщо IsParentDocUsed = true");
+
+        return (true, null);
     }
 }

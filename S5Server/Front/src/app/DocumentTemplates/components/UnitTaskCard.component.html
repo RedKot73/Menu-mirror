@@ -9,6 +9,23 @@
             <mat-icon>groups</mat-icon>
             <span>Екіпаж/Група</span>
           }
+
+          <mat-button-toggle-group
+            [value]="unit.isPublished"
+            (change)="onPublishStatusChange($event.value)"
+            class="status-toggle"
+            [disabled]="isSaving()"
+          >
+            <mat-button-toggle [value]="false" matTooltip="Чернетка">
+              <mat-icon>edit</mat-icon>
+              {{ getStatusLabel(false) }}
+            </mat-button-toggle>
+            <mat-button-toggle [value]="true" matTooltip="Опубліковано">
+              <mat-icon>check_circle</mat-icon>
+              {{ getStatusLabel(true) }}
+            </mat-button-toggle>
+          </mat-button-toggle-group>
+
           <div class="remove-button-container">
             <button
               mat-icon-button

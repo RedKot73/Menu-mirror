@@ -16,8 +16,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 
 import {
-  TemplateDataSetCreateDto,
-  TemplateDataSetUpdateDto,
+  TemplateDataSetUpSertDto,
   UnitTaskDto,
 } from '../models/template-dataset.models';
 import { TemplateDataSetService } from '../services/template-dataset.service';
@@ -416,19 +415,22 @@ export class UnitsTaskEditorComponent {
 
     const currentDataSet = this.dataSet();
 
+    // Формуємо DTO для створення або оновлення
+    const dataSetDto: TemplateDataSetUpSertDto = {
+      name: dataSetName,
+      isParentDocUsed: this.isParentDocUsed(),
+      parentDocNumber: this.isParentDocUsed() ? this.parentDocumentNumber() : null,
+      parentDocDate: this.isParentDocUsed()
+        ? this.parentDocumentDate()?.toISOString() || null
+        : null,
+      docNumber: this.documentNumber(),
+      docDate: this.documentDate()!.toISOString(),
+      isPublished: currentDataSet?.isPublished || false,
+    };
+
     if (currentDataSet) {
       // Оновлюємо існуючий DataSet
-      const updateDto: TemplateDataSetUpdateDto = {
-        name: dataSetName,
-        isParentDocUsed: this.isParentDocUsed(),
-        parentDocNumber: this.parentDocumentNumber(),
-        parentDocDate: this.parentDocumentDate()?.toISOString() || new Date().toISOString(),
-        docNumber: this.documentNumber(),
-        docDate: this.documentDate()!.toISOString(),
-        isPublished: currentDataSet.isPublished,
-      };
-
-      this.dataSetService.updateDataSet(currentDataSet.id, updateDto).subscribe({
+      this.dataSetService.updateDataSet(currentDataSet.id, dataSetDto).subscribe({
         next: () => {
           // Після оновлення DataSet зберігаємо UnitTask
           this.saveUnitTasks(currentDataSet.id);
@@ -442,32 +444,10 @@ export class UnitsTaskEditorComponent {
       });
     } else {
       // Створюємо новий DataSet
-      const createDto: TemplateDataSetCreateDto = {
-        name: dataSetName,
-        isParentDocUsed: this.isParentDocUsed(),
-        parentDocNumber: this.parentDocumentNumber(),
-        parentDocDate: this.parentDocumentDate()?.toISOString() || new Date().toISOString(),
-        docNumber: this.documentNumber(),
-        docDate: this.documentDate()!.toISOString(),
-        isPublished: false,
-      };
-
-      this.dataSetService.createDataSet(createDto).subscribe({
+      this.dataSetService.createDataSet(dataSetDto).subscribe({
         next: (createdDataSet) => {
           // Зберігаємо інформацію про новостворений DataSet
-          this.dataSet.set({
-            id: createdDataSet.id,
-            name: createdDataSet.name,
-            isParentDocUsed: createdDataSet.isParentDocUsed,
-            parentDocNumber: createdDataSet.parentDocNumber,
-            parentDocDate: createdDataSet.parentDocDate,
-            docNumber: createdDataSet.docNumber,
-            docDate: createdDataSet.docDate,
-            isPublished: createdDataSet.isPublished,
-            createdAtUtc: createdDataSet.createdAtUtc,
-            updatedAtUtc: createdDataSet.updatedAtUtc,
-            publishedAtUtc: createdDataSet.publishedAtUtc,
-          });
+          this.dataSet.set(createdDataSet);
 
           // Після створення DataSet зберігаємо UnitTask
           this.saveUnitTasks(createdDataSet.id);

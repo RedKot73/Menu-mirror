@@ -498,7 +498,7 @@ namespace S5Server.Data
                       .WithMany()
                       .HasForeignKey(e => e.TemplateCategoryId)
                       .OnDelete(DeleteBehavior.Restrict);
-                entity.Property(e => e.IsPublished).HasColumnType("INTEGER");
+                entity.Property(e => e.IsPublished).HasColumnType("INTEGER").HasDefaultValue(false);
                 entity.Property(e => e.PublishedAtUtc).HasColumnType("TEXT");
                 entity.Property(e => e.CreatedAtUtc).HasColumnType("TEXT");
                 entity.Property(e => e.UpdatedAtUtc).HasColumnType("TEXT");
