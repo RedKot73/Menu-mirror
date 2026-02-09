@@ -283,6 +283,10 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
       };
       this.unitChange.emit(updatedUnit);
       this.areas.set([]);
+      
+      // ✅ Очищуємо засоби при скиданні завдання
+      this.means.set([]);
+      this.meansDataSource.data = [];
       return;
     }
 
@@ -292,6 +296,19 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
       taskValue: task.value,
     };
     this.unitChange.emit(updatedUnit);
+
+    // ✅ Перевіряємо чи потрібні засоби для цього завдання
+    if (!task.withMeans) {
+      // Якщо засоби не використовуються - очищуємо список
+      this.means.set([]);
+      this.meansDataSource.data = [];
+      const updatedUnitWithoutMeans = {
+        ...updatedUnit,
+        meansCount: 0,
+        means: [],
+      };
+      this.unitChange.emit(updatedUnitWithoutMeans);
+    }
 
     // Завантажуємо області для обраного завдання (використовуємо areaTypeId з кешованого об'єкта)
     if (task.areaTypeId) {

@@ -7,7 +7,9 @@ export interface DictUnitTaskDto {
   id: string;
   value: string;
   comment?: string;
+  /** Сума в грн. за виконання завдання */
   amount: number;
+  /** Чи використовуються засоби (БПЛА) */
   withMeans: boolean;
   /** Тип району виконання завдань (РВЗ) */
   areaTypeId: string;

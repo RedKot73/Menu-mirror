@@ -1,4 +1,4 @@
-import { Component, signal, Inject, inject } from '@angular/core';
+import { Component, signal, Inject, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -8,7 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatSortModule } from '@angular/material/sort';
+import { MatSort, MatSortModule } from '@angular/material/sort';
 
 import { DictDroneModelService, DictDroneModel } from '../../ServerService/dictDroneModel.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -72,43 +72,35 @@ export interface DictDroneModelSelectDialogData {
         </div>
 
         <!-- Таблиця -->
-        <div class="table-container">
-          @if (isLoading()) {
-            <div class="loading-container">
-              <mat-icon class="loading-spinner">refresh</mat-icon>
-              <p>Завантаження...</p>
-            </div>
-          } @else {
-            <table mat-table [dataSource]="dataSource" matSort class="selection-table">
-              <!-- Value Column -->
-              <ng-container matColumnDef="value">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Назва моделі БПЛА</th>
-                <td mat-cell *matCellDef="let item">{{ item.value }}</td>
-              </ng-container>
+        <div class="table-container" [hidden]="isLoading()">
+          <table mat-table [dataSource]="dataSource" matSort class="selection-table">
+            <!-- Value Column -->
+            <ng-container matColumnDef="value">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Назва моделі БПЛА</th>
+              <td mat-cell *matCellDef="let item">{{ item.value }}</td>
+            </ng-container>
 
-              <!-- Comment Column -->
-              <ng-container matColumnDef="comment">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Коментар</th>
-                <td mat-cell *matCellDef="let item">{{ item.comment || '-' }}</td>
-              </ng-container>
+            <!-- Drone Type Column -->
+            <ng-container matColumnDef="droneTypeName">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Тип дрона</th>
+              <td mat-cell *matCellDef="let item">{{ item.droneTypeName || '-' }}</td>
+            </ng-container>
 
-              <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-              <tr
-                mat-row
-                *matRowDef="let row; columns: displayedColumns"
-                (click)="selectDroneModel(row)"
-                class="selectable-row"
-              ></tr>
-            </table>
-
-            @if (items().length === 0) {
-              <div class="no-data">
-                <mat-icon>flight</mat-icon>
-                <p>Моделі БПЛА не знайдено</p>
-              </div>
-            }
-          }
+            <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+            <tr
+              mat-row
+              *matRowDef="let row; columns: displayedColumns"
+              (click)="selectDroneModel(row)"
+              class="selectable-row"
+            ></tr>
+          </table>
         </div>
+        @if (this.isLoading()) {
+          <div class="loading-container">
+            <mat-icon class="loading-spinner">refresh</mat-icon>
+            <p>Завантаження...</p>
+          </div>
+        }
       </div>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
@@ -219,9 +211,11 @@ export class DictDroneModelSelectDialogComponent {
   private dictDroneModelService = inject(DictDroneModelService);
   private snackBar = inject(MatSnackBar);
 
+  @ViewChild(MatSort, { static: false }) sort!: MatSort;
+
   items = signal<DictDroneModel[]>([]);
   dataSource = new MatTableDataSource<DictDroneModel>([]);
-  displayedColumns = ['value', 'comment'];
+  displayedColumns = ['value', 'droneTypeName'];
   isLoading = signal(false);
   searchTerm = signal('');
   dialogTitle = signal('Вибір моделі БПЛА');
@@ -235,6 +229,7 @@ export class DictDroneModelSelectDialogComponent {
     if (data?.title) {
       this.dialogTitle.set(data.title);
     }
+
     this.reload();
   }
 
@@ -246,6 +241,7 @@ export class DictDroneModelSelectDialogComponent {
         const filtered = this.filterBySearchTerm(droneModels);
         this.items.set(filtered);
         this.dataSource.data = filtered;
+        this.dataSource.sort = this.sort;
         this.isLoading.set(false);
       },
       error: (error) => {
@@ -259,10 +255,7 @@ export class DictDroneModelSelectDialogComponent {
     if (!search) {
       return items;
     }
-    return items.filter(
-      (item) =>
-        item.value.toLowerCase().includes(search),
-    );
+    return items.filter((item) => item.value.toLowerCase().includes(search));
   }
 
   private handleError(error: unknown) {
