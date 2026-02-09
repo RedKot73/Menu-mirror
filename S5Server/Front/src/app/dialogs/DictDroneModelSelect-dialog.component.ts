@@ -21,6 +21,11 @@ export interface DictDroneModelSelectDialogData {
   title?: string;
 }
 
+/** Розширений тип для відображення і редагування моделі з кількістю */
+export interface DictDroneModelWithQuantity extends DictDroneModel {
+  quantity: number;
+}
+
 @Component({
   selector: 'dict-drone-model-select-dialog',
   standalone: true,
@@ -86,13 +91,40 @@ export interface DictDroneModelSelectDialogData {
               <td mat-cell *matCellDef="let item">{{ item.droneTypeName || '-' }}</td>
             </ng-container>
 
+            <!-- Quantity Column -->
+            <ng-container matColumnDef="quantity">
+              <th mat-header-cell *matHeaderCellDef style="width: 120px">Кількість</th>
+              <td mat-cell *matCellDef="let item">
+                <mat-form-field appearance="outline" class="quantity-field">
+                  <input
+                    matInput
+                    type="number"
+                    [(ngModel)]="item.quantity"
+                    min="1"
+                    (click)="$event.stopPropagation()"
+                    placeholder="0"
+                  />
+                </mat-form-field>
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef style="width: 100px">Дії</th>
+              <td mat-cell *matCellDef="let item">
+                <button
+                  mat-raised-button
+                  color="primary"
+                  (click)="selectDroneModel(item); $event.stopPropagation()"
+                  [disabled]="!item.quantity || item.quantity < 1"
+                >
+                  Вибрати
+                </button>
+              </td>
+            </ng-container>
+
             <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-            <tr
-              mat-row
-              *matRowDef="let row; columns: displayedColumns"
-              (click)="selectDroneModel(row)"
-              class="selectable-row"
-            ></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns" class="selectable-row"></tr>
           </table>
         </div>
         @if (this.isLoading()) {
@@ -149,13 +181,22 @@ export interface DictDroneModelSelectDialogData {
         width: 100%;
       }
 
-      .selectable-row {
-        cursor: pointer;
-        transition: background-color 0.2s;
+      .quantity-field {
+        width: 80px;
+        margin: 0;
       }
 
-      .selectable-row:hover {
-        background-color: #f5f5f5;
+      .quantity-field ::ng-deep .mat-mdc-form-field-infix {
+        min-height: 40px;
+        padding: 4px 0;
+      }
+
+      .quantity-field ::ng-deep .mat-mdc-text-field-wrapper {
+        padding: 0;
+      }
+
+      .selectable-row {
+        cursor: default;
       }
 
       .loading-container {
@@ -179,23 +220,6 @@ export interface DictDroneModelSelectDialogData {
         }
       }
 
-      .no-data {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 40px;
-        color: #666;
-
-        mat-icon {
-          font-size: 48px;
-          width: 48px;
-          height: 48px;
-          color: #ccc;
-          margin-bottom: 16px;
-        }
-      }
-
       @keyframes spin {
         from {
           transform: rotate(0deg);
@@ -213,9 +237,9 @@ export class DictDroneModelSelectDialogComponent {
 
   @ViewChild(MatSort, { static: false }) sort!: MatSort;
 
-  items = signal<DictDroneModel[]>([]);
-  dataSource = new MatTableDataSource<DictDroneModel>([]);
-  displayedColumns = ['value', 'droneTypeName'];
+  items = signal<DictDroneModelWithQuantity[]>([]);
+  dataSource = new MatTableDataSource<DictDroneModelWithQuantity>([]);
+  displayedColumns = ['value', 'droneTypeName', 'quantity', 'actions'];
   isLoading = signal(false);
   searchTerm = signal('');
   dialogTitle = signal('Вибір моделі БПЛА');
@@ -238,7 +262,12 @@ export class DictDroneModelSelectDialogComponent {
 
     this.dictDroneModelService.getAll().subscribe({
       next: (droneModels) => {
-        const filtered = this.filterBySearchTerm(droneModels);
+        // Конвертуємо в DictDroneModelWithQuantity
+        const modelsWithQuantity: DictDroneModelWithQuantity[] = droneModels.map((model) => ({
+          ...model,
+          quantity: 1, // За замовчуванням 1
+        }));
+        const filtered = this.filterBySearchTerm(modelsWithQuantity);
         this.items.set(filtered);
         this.dataSource.data = filtered;
         this.dataSource.sort = this.sort;
@@ -250,7 +279,9 @@ export class DictDroneModelSelectDialogComponent {
     });
   }
 
-  private filterBySearchTerm(items: DictDroneModel[]): DictDroneModel[] {
+  private filterBySearchTerm(
+    items: DictDroneModelWithQuantity[],
+  ): DictDroneModelWithQuantity[] {
     const search = this.searchTerm().toLowerCase().trim();
     if (!search) {
       return items;
@@ -282,7 +313,11 @@ export class DictDroneModelSelectDialogComponent {
     this.reload();
   }
 
-  selectDroneModel(droneModel: DictDroneModel) {
+  selectDroneModel(droneModel: DictDroneModelWithQuantity) {
+    if (!droneModel.quantity || droneModel.quantity < 1) {
+      this.snackBar.open('Будь ласка, вкажіть кількість', 'Закрити', { duration: 3000 });
+      return;
+    }
     this.dialogRef.close(droneModel);
   }
 

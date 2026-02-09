@@ -41,9 +41,8 @@ import { DictUnitTasksService, DictUnitTask } from '../../../ServerService/dictU
 import { DictAreasService, DictArea } from '../../../ServerService/dictAreas.service';
 import { DroneModelTaskService } from '../services/drone-model-task.service';
 import { UnitTaskService } from '../services/unit-task.service';
-import { DictDroneModelSelectDialogComponent } from '../../dialogs/DictDroneModelSelect-dialog.component';
-import { DictDroneModel } from '../../../ServerService/dictDroneModel.service';
-//import { UnitDto } from '../../Unit/services/unit.service';
+import { DictDroneModelSelectDialogComponent, DictDroneModelWithQuantity } from '../../dialogs/DictDroneModelSelect-dialog.component';
+//import { DictDroneModel } from '../../../ServerService/dictDroneModel.service';
 import { SoldierService, SoldierDto } from '../../Soldier/services/soldier.service';
 import {
   isCriticalStatus,
@@ -413,7 +412,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
       },
     });
 
-    dialogRef.afterClosed().subscribe((selectedDrone: DictDroneModel | undefined) => {
+    dialogRef.afterClosed().subscribe((selectedDrone: DictDroneModelWithQuantity | undefined) => {
       if (selectedDrone) {
         // Перевіряємо чи немає вже такого дрона
         const existingMean = this.means().find((m) => m.droneModelId === selectedDrone.id);
@@ -429,7 +428,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
           unitTaskId: this.unitTask.id || '',
           droneModelId: selectedDrone.id,
           droneModelValue: selectedDrone.value,
-          quantity: 1,
+          quantity: selectedDrone.quantity, // ✅ Використовуємо кількість з діалогу
         };
 
         const updatedMeans = [...this.means(), newMean];
