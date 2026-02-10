@@ -165,7 +165,7 @@
       }
 
       <!-- Особовий склад -->
-      <mat-expansion-panel class="unit-section-panel">
+      <mat-expansion-panel class="unit-section-panel" (opened)="reloadSoldiers()">
         <mat-expansion-panel-header>
           <mat-panel-title>
             <mat-icon color="primary">group</mat-icon>

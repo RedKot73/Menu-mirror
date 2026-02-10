@@ -8,7 +8,6 @@ import {
   AfterViewInit,
   ViewChild,
   inject,
-  //computed,
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -42,7 +41,6 @@ import { DictAreasService, DictArea } from '../../../ServerService/dictAreas.ser
 import { DroneModelTaskService } from '../services/drone-model-task.service';
 import { UnitTaskService } from '../services/unit-task.service';
 import { DictDroneModelSelectDialogComponent, DictDroneModelWithQuantity } from '../../dialogs/DictDroneModelSelect-dialog.component';
-//import { DictDroneModel } from '../../../ServerService/dictDroneModel.service';
 import { SoldierService, SoldierDto } from '../../Soldier/services/soldier.service';
 import {
   isCriticalStatus,
@@ -173,7 +171,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
     });
 
     // Завантажуємо особовий склад
-    this.reloadSoldiers();
+    //this.reloadSoldiers();
 
     // ✅ Ініціалізуємо локально додані засоби (якщо є)
     if (this.unitTask.means && this.unitTask.means.length > 0) {
@@ -207,6 +205,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
         next: (soldiers: SoldierDto[]) => {
           this.soldiers.set(soldiers);
           this.soldierDataSource.data = soldiers;
+          this.soldierDataSource.sort = this.sort;
         },
         error: (error: unknown) => {
           console.error('Помилка завантаження особового складу:', error);
