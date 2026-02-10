@@ -15,11 +15,12 @@ public record SoldierTaskDto(
     string FirstName,
     string? MidleName,
     string? LastName,
-    string Fio,
     //DateOnly? BirthDate,
     string? NickName,
     string UnitId,
     string UnitShortName,
+    DateOnly? ArrivedAt,
+    DateOnly? DepartedAt,
     string? AssignedUnitId,
     string? AssignedUnitShortName,
     string? InvolvedUnitId,
@@ -35,6 +36,13 @@ public record SoldierTaskDto(
     //DateOnly? DepartedAt,
     string ChangedBy,
     DateTime ValidFrom);
+
+/// <summary>
+/// DTO для кількості бійців
+/// </summary>
+public record SoldierCountDto(
+    string UnitTaskId,
+    int Count);
 
 /// <summary>
 /// Снимок состояния бойца на момент назначения задачи подразделению
@@ -184,12 +192,12 @@ public class SoldierTask
     /// <summary>
     /// Прибув до підрозділу
     /// </summary>
-    //public DateOnly? ArrivedAt { get; set; }
+    public DateOnly? ArrivedAt { get; set; }
 
     /// <summary>
     /// Вибув з підрозділу
     /// </summary>
-    //public DateOnly? DepartedAt { get; set; }
+    public DateOnly? DepartedAt { get; set; }
 
     /// <summary>
     /// Хто вніс зміну (UserId або "System")
@@ -210,11 +218,94 @@ public class SoldierTask
 public static class SoldierTaskExtensions
 {
     /// <summary>
-    /// Створює SoldierTask зі снимка Soldier (при публікації завдання)
+    /// Конвертує SoldierTask у DTO
+    /// Smart: Published = snapshot, Unpublished = actual from Soldier
     /// </summary>
-    /// <param name="soldier">Боєць</param>
-    /// <param name="unitTaskId">ID завдання підрозділу</param>
-    /// <param name="changedBy">Хто публікує</param>
+    public static SoldierTaskDto ToDto(this SoldierTask soldierTask, bool isPublished)
+    {
+        // ✅ ЛОГІКА: Якщо unpublished і Soldier завантажено — взяти актуальні дані
+        var useActualData = !isPublished && soldierTask.Soldier != null;
+
+        return new SoldierTaskDto(
+            soldierTask.Id,
+            soldierTask.UnitTaskId,
+            soldierTask.SoldierId,
+            soldierTask.ExternId,
+            useActualData ? soldierTask.Soldier!.FirstName : soldierTask.FirstName,
+            useActualData ? soldierTask.Soldier!.MidleName : soldierTask.MidleName,
+            useActualData ? soldierTask.Soldier!.LastName : soldierTask.LastName,
+            useActualData ? soldierTask.Soldier!.NickName : soldierTask.NickName,
+            // Unit
+            useActualData ? soldierTask.Soldier!.UnitId : soldierTask.UnitId,
+            useActualData ? soldierTask.Soldier!.Unit?.ShortName ?? string.Empty : soldierTask.UnitShortName,
+            //
+            useActualData ? soldierTask.Soldier!.ArrivedAt : soldierTask.ArrivedAt,
+            useActualData ? soldierTask.Soldier!.DepartedAt : soldierTask.DepartedAt,
+            // AssignedUnit
+            useActualData ? soldierTask.Soldier!.AssignedUnitId : soldierTask.AssignedUnitId,
+            useActualData ? soldierTask.Soldier!.AssignedUnit?.ShortName : soldierTask.AssignedUnitShortName,
+            // InvolvedUnit
+            useActualData ? soldierTask.Soldier!.InvolvedUnitId : soldierTask.InvolvedUnitId,
+            useActualData ? soldierTask.Soldier!.InvolvedUnit?.ShortName : soldierTask.InvolvedUnitShortName,
+            // Rank
+            useActualData ? soldierTask.Soldier!.RankId : soldierTask.RankId,
+            useActualData ? soldierTask.Soldier!.Rank?.ShortValue ?? string.Empty : soldierTask.RankShortValue,
+            // Position
+            useActualData ? soldierTask.Soldier!.PositionId : soldierTask.PositionId,
+            useActualData ? soldierTask.Soldier!.Position?.Value ?? string.Empty : soldierTask.PositionValue,
+            // State
+            useActualData ? soldierTask.Soldier!.StateId : soldierTask.StateId,
+            useActualData ? soldierTask.Soldier!.State?.Value ?? string.Empty : soldierTask.StateValue,
+            useActualData ? soldierTask.Soldier!.Comment : soldierTask.Comment,
+            soldierTask.ChangedBy,
+            soldierTask.ValidFrom);
+    }
+
+    /// <summary>
+    /// Конвертує Soldier у DTO
+    /// для випадку коли UnitTask ще не опубліковано
+    /// і потрібно показати актуальні дані бійця
+    /// </summary>
+    public static SoldierTaskDto ToDto(this Soldier soldier)
+    {
+        return new SoldierTaskDto(
+            string.Empty,
+            string.Empty,
+            soldier.Id,
+            soldier.ExternId,
+            soldier.FirstName,
+            soldier.MidleName,
+            soldier.LastName,
+            soldier.NickName,
+            // Unit
+            soldier.UnitId,
+            soldier.Unit.ShortName,
+            //
+            soldier.ArrivedAt,
+            soldier.DepartedAt,
+            // AssignedUnit
+            soldier.AssignedUnitId,
+            soldier.AssignedUnit?.ShortName,
+            // InvolvedUnit
+            soldier.InvolvedUnitId,
+            soldier.InvolvedUnit?.ShortName,
+            // Rank
+            soldier.RankId,
+            soldier.Rank.ShortValue,
+            // Position
+            soldier.PositionId,
+            soldier.Position.Value,
+            // State
+            soldier.StateId,
+            soldier.State.Value,
+            soldier.Comment,
+            soldier.ChangedBy,
+            soldier.ValidFrom);
+    }
+
+    /// <summary>
+    /// Створити snapshot з Soldier
+    /// </summary>
     public static SoldierTask CreateSnapshot(
         this Soldier soldier,
         string unitTaskId,
@@ -228,57 +319,30 @@ public static class SoldierTaskExtensions
             FirstName = soldier.FirstName,
             MidleName = soldier.MidleName,
             LastName = soldier.LastName,
-            //BirthDate = soldier.BirthDate,
             NickName = soldier.NickName,
+            // Unit
             UnitId = soldier.UnitId,
-            UnitShortName = soldier.Unit?.ShortName ?? soldier.Unit?.Name ?? string.Empty,
+            UnitShortName = soldier.Unit?.ShortName ?? string.Empty,
+            // AssignedUnit
             AssignedUnitId = soldier.AssignedUnitId,
-            AssignedUnitShortName = soldier.AssignedUnit?.ShortName ?? soldier.AssignedUnit?.Name,
+            AssignedUnitShortName = soldier.AssignedUnit?.ShortName,
+            //
+            ArrivedAt = soldier.ArrivedAt,
+            DepartedAt = soldier.DepartedAt,
+            // InvolvedUnit
             InvolvedUnitId = soldier.InvolvedUnitId,
-            InvolvedUnitShortName = soldier.InvolvedUnit?.ShortName ?? soldier.InvolvedUnit?.Name,
+            InvolvedUnitShortName = soldier.InvolvedUnit?.ShortName,
+            // Rank
             RankId = soldier.RankId,
-            RankShortValue = soldier.Rank?.ShortValue ?? soldier.Rank?.Value ?? string.Empty,
+            RankShortValue = soldier.Rank?.ShortValue ?? string.Empty,
+            // Position
             PositionId = soldier.PositionId,
             PositionValue = soldier.Position?.Value ?? string.Empty,
+            // State
             StateId = soldier.StateId,
             StateValue = soldier.State?.Value ?? string.Empty,
             Comment = soldier.Comment,
-            //ArrivedAt = soldier.ArrivedAt,
-            //DepartedAt = soldier.DepartedAt,
             ChangedBy = changedBy,
             ValidFrom = DateTime.UtcNow
         };
-
-    /// <summary>
-    /// Конвертує SoldierTask у DTO
-    /// </summary>
-    public static SoldierTaskDto ToDto(this SoldierTask task) =>
-        new(
-            task.Id,
-            task.UnitTaskId,
-            task.SoldierId,
-            task.ExternId,
-            task.FirstName,
-            task.MidleName,
-            task.LastName,
-            task.FIO,
-            //task.BirthDate,
-            task.NickName,
-            task.UnitId,
-            task.UnitShortName,
-            task.AssignedUnitId,
-            task.AssignedUnitShortName,
-            task.InvolvedUnitId,
-            task.InvolvedUnitShortName,
-            task.RankId,
-            task.RankShortValue,
-            task.PositionId,
-            task.PositionValue,
-            task.StateId,
-            task.StateValue,
-            task.Comment,
-            //task.ArrivedAt,
-            //task.DepartedAt,
-            task.ChangedBy,
-            task.ValidFrom);
 }

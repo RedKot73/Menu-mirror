@@ -41,13 +41,14 @@ import { DictAreasService, DictArea } from '../../../ServerService/dictAreas.ser
 import { DroneModelTaskService } from '../services/drone-model-task.service';
 import { UnitTaskService } from '../services/unit-task.service';
 import { DictDroneModelSelectDialogComponent, DictDroneModelWithQuantity } from '../../dialogs/DictDroneModelSelect-dialog.component';
-import { SoldierService, SoldierDto } from '../../Soldier/services/soldier.service';
+import { SoldierTaskService, SoldierTaskDto, SoldierCountDto } from '../../DocumentDataSet/services/soldierTask.service';
 import {
   isCriticalStatus,
   isSevereStatus,
   isProblematicStatus,
   isRecoveryStatus,
 } from '../../Soldier/Soldier.constant';
+import { SoldierUtils } from '../../Soldier/soldier.utils';
 import { DocTemplateUtils } from '../models/shared.models';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 import { PPD_AREA_TYPE_GUID } from '../../Unit/unit.constants';
@@ -84,7 +85,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   private dictAreasService = inject(DictAreasService);
   private droneModelTaskService = inject(DroneModelTaskService);
   private unitTaskService = inject(UnitTaskService);
-  private soldierService = inject(SoldierService);
+  private soldierTaskService = inject(SoldierTaskService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
   private destroy$ = new Subject<void>();
@@ -97,9 +98,9 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   // Перелік областей (РВЗ)
   protected areas = signal<DictArea[]>([]);
 
-  // Дані особового складу
-  soldiers = signal<SoldierDto[]>([]);
-  soldierDataSource = new MatTableDataSource<SoldierDto>([]);
+  // Дані особового складу (замінено на SoldierTaskDto)
+  soldiers = signal<SoldierTaskDto[]>([]);
+  soldierDataSource = new MatTableDataSource<SoldierTaskDto>([]);
   soldierDisplayedColumns: string[] = [
     'fio',
     'nickName',
@@ -108,11 +109,13 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
     'stateValue',
     'unitShortName',
     'assignedUnitShortName',
-    'operationalUnitShortName',
     'arrivedAt',
     'departedAt',
+    'involvedUnitShortName',
     'comment',
   ];
+  soldierCount = signal<number>(0);
+  isLoadingSoldiers = signal<boolean>(false);
 
   // Дані засобів (Master-Detail)
   means = signal<DroneModelTaskDto[]>([]);
@@ -170,9 +173,6 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
       },
     });
 
-    // Завантажуємо особовий склад
-    //this.reloadSoldiers();
-
     // ✅ Ініціалізуємо локально додані засоби (якщо є)
     if (this.unitTask.means && this.unitTask.means.length > 0) {
       this.means.set(this.unitTask.means);
@@ -190,22 +190,59 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * Завантажує особовий склад підрозділу
+   * Завантажує особовий склад підрозділу для завдання
    */
   reloadSoldiers(): void {
-    const unitId = this.unitTask.unitId;
-    if (!unitId) {
+    const unitTaskId = this.unitTask.id;
+
+    if (!unitTaskId) {
+      const unitId = this.unitTask.unitId;
+      // Якщо завдання ще не збережено - завантажуємо актуальний склад підрозділу
+      if (!unitId) {
+        this.snackBar.open('Не вказано підрозділ', 'Закрити', { duration: 3000 });
+        return;
+      }
+
+      this.isLoadingSoldiers.set(true);
+      this.soldierTaskService
+        .getByUnit(unitId)
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => this.isLoadingSoldiers.set(false)),
+        )
+        .subscribe({
+          next: (soldiers: SoldierTaskDto[]) => {
+            this.soldiers.set(soldiers);
+            this.soldierDataSource.data = soldiers;
+            this.soldierDataSource.sort = this.sort;
+            this.soldierCount.set(soldiers.length);
+          },
+          error: (error: unknown) => {
+            console.error('Помилка завантаження особового складу підрозділу:', error);
+            const errorMessage = S5App_ErrorHandler.handleHttpError(
+              error,
+              'Помилка завантаження особового складу підрозділу',
+            );
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          },
+        });
       return;
     }
 
-    this.soldierService
-      .getAll(undefined, unitId)
-      .pipe(takeUntil(this.destroy$))
+    // Якщо завдання збережено - завантажуємоSnapshot
+    this.isLoadingSoldiers.set(true);
+    this.soldierTaskService
+      .getByUnitTask(unitTaskId)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.isLoadingSoldiers.set(false)),
+      )
       .subscribe({
-        next: (soldiers: SoldierDto[]) => {
+        next: (soldiers: SoldierTaskDto[]) => {
           this.soldiers.set(soldiers);
           this.soldierDataSource.data = soldiers;
           this.soldierDataSource.sort = this.sort;
+          this.soldierCount.set(soldiers.length);
         },
         error: (error: unknown) => {
           console.error('Помилка завантаження особового складу:', error);
@@ -214,6 +251,28 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
             'Помилка завантаження особового складу',
           );
           this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
+      });
+  }
+
+  /**
+   * Завантажує кількість бійців для завдання
+   */
+  loadSoldierCount(): void {
+    const unitTaskId = this.unitTask.id;
+    if (!unitTaskId) {
+      return;
+    }
+
+    this.soldierTaskService
+      .getCount(unitTaskId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data: SoldierCountDto) => {
+          this.soldierCount.set(data.count);
+        },
+        error: (error: unknown) => {
+          console.error('Помилка завантаження кількості бійців:', error);
         },
       });
   }
@@ -281,7 +340,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
       };
       this.unitChange.emit(updatedUnit);
       this.areas.set([]);
-      
+
       // ✅ Очищуємо засоби при скиданні завдання
       this.means.set([]);
       this.meansDataSource.data = [];
@@ -516,13 +575,6 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * Отримує читабельну назву статусу публікації
-   */
-  getStatusLabel(isPublished: boolean): string {
-    return DocTemplateUtils.getStatusLabel(isPublished);
-  }
-
-  /**
    * Обробник зміни статусу публікації
    */
   onPublishStatusChange(isPublished: boolean): void {
@@ -575,5 +627,16 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
     });
+  }
+
+  /**
+   * Отримує читабельну назву статусу публікації
+   */
+  getStatusLabel(isPublished: boolean): string {
+    return DocTemplateUtils.getStatusLabel(isPublished);
+  }
+
+  getSoldierFIO(soldier: SoldierTaskDto): string {
+    return SoldierUtils.formatFIO(soldier.firstName, soldier.midleName, soldier.lastName);
   }
 }

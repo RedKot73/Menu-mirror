@@ -134,16 +134,7 @@ export class SoldierService {
     const targetId = unitId ?? '';
     return this.http.post<SoldierDto>(`${this.api}/${id}/assign-assigned/${targetId}`, {});
   }
-  /**
-   * Снимает назначение подразделения Приданий с бойца
-   * @param id Soldier.id
-   * @returns void
-   */
-  /*
-  unassignAssigned(id: string): Observable<void> {
-    return this.http.post<void>(`${this.api}/${id}/unassign-assigned`, {});
-  }
-*/
+
   /**
    * Назначает бойцу Оперативний підрозділ
    * @param id Soldier.id
@@ -155,16 +146,6 @@ export class SoldierService {
     return this.http.post<SoldierDto>(`${this.api}/${id}/assign-involved/${targetId}`, {});
   }
 
-  /**
-   * Снимает назначение Оперативний підрозділ с бойца
-   * @param id Soldier.id
-   * @returns void
-   */
-  /*
-  unassignOperational(id: string): Observable<void> {
-    return this.http.post<void>(`${this.api}/${id}/unassign-operational`, {});
-  }
-  */
   move(id: string, newUnitId: string): Observable<SoldierDto> {
     return this.http.post<SoldierDto>(`${this.api}/${id}/move/${newUnitId}`, {});
   }

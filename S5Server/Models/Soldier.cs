@@ -162,7 +162,7 @@ namespace S5Server.Models
         /// Позивний
         /// </summary>
         [StringLength(50), Display(Name = "Позивний")]
-        public string? NickName { get; set; }// = string.Empty;
+        public string? NickName { get; set; }
 
         /// <summary>
         /// Підрозділ
