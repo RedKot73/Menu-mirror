@@ -631,8 +631,8 @@ namespace S5Server.Data
                 entity.Property(e => e.StateValue).IsRequired().HasColumnType("TEXT(50)");
                 
                 entity.Property(e => e.Comment).HasColumnType("TEXT");
-                //entity.Property(e => e.ArrivedAt).HasColumnType("TEXT");
-                //entity.Property(e => e.DepartedAt).HasColumnType("TEXT");
+                entity.Property(e => e.ArrivedAt).HasColumnType("TEXT");
+                entity.Property(e => e.DepartedAt).HasColumnType("TEXT");
                 entity.Property(e => e.ChangedBy).IsRequired().HasColumnType("TEXT(100)");
                 entity.Property(e => e.ValidFrom).IsRequired().HasColumnType("TEXT");
 

@@ -967,6 +967,9 @@ namespace S5Server.Migrations
                         .HasMaxLength(36)
                         .HasColumnType("TEXT(36)");
 
+                    b.Property<DateOnly?>("ArrivedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("AssignedUnitId")
                         .HasMaxLength(36)
                         .HasColumnType("TEXT(36)");
@@ -981,6 +984,9 @@ namespace S5Server.Migrations
                         .HasColumnType("TEXT(100)");
 
                     b.Property<string>("Comment")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("DepartedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("ExternId")
