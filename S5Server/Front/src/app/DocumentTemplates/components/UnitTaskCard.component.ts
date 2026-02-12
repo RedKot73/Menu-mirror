@@ -12,7 +12,7 @@ import {
   effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Subject, firstValueFrom } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
 
@@ -39,10 +39,20 @@ import {
 } from '../models/template-dataset.models';
 import { DictUnitTasksService, DictUnitTask } from '../../../ServerService/dictUnitTasks.service';
 import { DictAreasService, DictArea } from '../../../ServerService/dictAreas.service';
-import { DroneModelTaskService } from '../services/drone-model-task.service';
+import {
+  DroneModelTaskService,
+  DroneModelTaskUpSertDto,
+} from '../services/drone-model-task.service';
 import { UnitTaskService } from '../services/unit-task.service';
-import { DictDroneModelSelectDialogComponent, DictDroneModelWithQuantity } from '../../dialogs/DictDroneModelSelect-dialog.component';
-import { SoldierTaskService, SoldierTaskDto, SoldierCountDto } from '../../DocumentDataSet/services/soldierTask.service';
+import {
+  DictDroneModelSelectDialogComponent,
+  DictDroneModelWithQuantity,
+} from '../../dialogs/DictDroneModelSelect-dialog.component';
+import {
+  SoldierTaskService,
+  SoldierTaskDto,
+  SoldierCountDto,
+} from '../../DocumentDataSet/services/soldierTask.service';
 import {
   isCriticalStatus,
   isSevereStatus,
@@ -60,6 +70,7 @@ import { PPD_AREA_TYPE_GUID } from '../../Unit/unit.constants';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatCardModule,
     MatIconModule,
     MatButtonModule,
@@ -127,6 +138,11 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   // Стан збереження (для індикації процесу)
   isSaving = signal<boolean>(false);
 
+  // Стан редагування засобів
+  editingMeanId = signal<string | null>(null);
+  editingMeanField = signal<'quantity' | null>(null);
+  editingMeanValue = signal<number | undefined>(undefined);
+
   @ViewChild(MatSort) sort!: MatSort;
 
   // Методи для перевірки статусів
@@ -154,8 +170,9 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
     // ✅ Додаємо effect для реакції на зміни unitTaskSignal
     effect(() => {
       const unitTask = this.unitTaskSignal();
-      if (!unitTask) 
-        { return; }
+      if (!unitTask) {
+        return;
+      }
 
       // Ініціалізуємо засоби
       if (unitTask.means && unitTask.means.length > 0) {
@@ -186,7 +203,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
     effect(() => {
       const areas = this.areas();
       const unitTask = this.unitTaskSignal();
-      
+
       if (unitTask?.areaId && areas.length > 0) {
         const currentArea = this.areaControl.value;
         // ✅ Перевіряємо чи змінилася область (щоб уникнути зациклення)
@@ -423,13 +440,13 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
    * Обробник зміни області (РВЗ)
    */
   onAreaChange(area: DictArea | null): void {
-      const updatedUnit: UnitTaskDto = {
-        ...this.unitTask,
-        areaId: area ? area.id : '',
-        areaValue: area ? area.value : '',
-      };
-      this.unitTaskSignal.set(updatedUnit);
-      this.unitChange.emit(updatedUnit);
+    const updatedUnit: UnitTaskDto = {
+      ...this.unitTask,
+      areaId: area ? area.id : '',
+      areaValue: area ? area.value : '',
+    };
+    this.unitTaskSignal.set(updatedUnit);
+    this.unitChange.emit(updatedUnit);
   }
 
   /**
@@ -534,6 +551,123 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
         this.unitChange.emit(updatedUnit);
       }
     });
+  }
+
+  /**
+   * Перевіряє чи редагується конкретне поле засобу
+   */
+  isEditingMean(meanId: string, field: 'quantity'): boolean {
+    return this.editingMeanId() === meanId && this.editingMeanField() === field;
+  }
+
+  /**
+   * Починає редагування поля засобу
+   */
+  startEditingMean(mean: DroneModelTaskDto, field: 'quantity', event: Event): void {
+    event.stopPropagation();
+    // Використовуємо droneModelId як унікальний ідентифікатор для локально доданих засобів
+    const meanId = mean.id || mean.droneModelId;
+    this.editingMeanId.set(meanId);
+    this.editingMeanField.set(field);
+    this.editingMeanValue.set(mean.quantity);
+  }
+
+  /**
+   * Скасовує редагування
+   */
+  cancelEditingMean(event: Event): void {
+    event.stopPropagation();
+    this.editingMeanId.set(null);
+    this.editingMeanField.set(null);
+    this.editingMeanValue.set(undefined);
+  }
+
+  /**
+   * Зберігає зміни поля засобу
+   */
+  saveMeanFieldChange(mean: DroneModelTaskDto, field: 'quantity', event: Event): void {
+    event.stopPropagation();
+
+    const newValue = this.editingMeanValue();
+    if (newValue === undefined || newValue <= 0) {
+      this.snackBar.open('Кількість має бути більше 0', 'Закрити', { duration: 3000 });
+      return;
+    }
+
+    // Оновлюємо локальне значення
+    const updatedMeans = this.means().map((m) => {
+      const mId = m.id || m.droneModelId;
+      const meanId = mean.id || mean.droneModelId;
+      if (mId === meanId) {
+        return { ...m, quantity: newValue };
+      }
+      return m;
+    });
+
+    this.means.set(updatedMeans);
+    this.meansDataSource.data = updatedMeans;
+
+    // Синхронізуємо з батьківським компонентом
+    const updatedUnit = {
+      ...this.unitTask,
+      means: updatedMeans,
+    };
+    this.unitTaskSignal.set(updatedUnit);
+    this.unitChange.emit(updatedUnit);
+
+    // Якщо засіб вже збережено (має id) - оновлюємо через API
+    if (mean.id) {
+      const updateDto: DroneModelTaskUpSertDto = {
+        unitTaskId: mean.unitTaskId,
+        droneModelId: mean.droneModelId,
+        quantity: newValue,
+      };
+
+      this.droneModelTaskService.update(mean.id, updateDto).subscribe({
+        next: () => {
+          this.snackBar.open('Кількість оновлено', 'Закрити', { duration: 2000 });
+          this.cancelEditingMean(event);
+        },
+        error: (error) => {
+          console.error('Помилка оновлення кількості:', error);
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
+            error,
+            'Помилка оновлення кількості',
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          // Відновлюємо попереднє значення
+          this.means.set(
+            this.means().map((m) => {
+              const mId = m.id || m.droneModelId;
+              const meanId = mean.id || mean.droneModelId;
+              if (mId === meanId) {
+                return { ...m, quantity: mean.quantity };
+              }
+              return m;
+            }),
+          );
+          this.meansDataSource.data = this.means();
+          this.cancelEditingMean(event);
+        },
+      });
+    } else {
+      // Локально доданий засіб - просто закриваємо редагування
+      this.snackBar.open(
+        'Кількість оновлено (буде збережено при загальному збереженні)',
+        'Закрити',
+        {
+          duration: 2000,
+        },
+      );
+      this.cancelEditingMean(event);
+    }
+  }
+
+  /**
+   * Оновлює значення при редагуванні
+   */
+  updateEditingMeanValue(value: number): void {
+    this.editingMeanValue.set(value);
   }
 
   /**

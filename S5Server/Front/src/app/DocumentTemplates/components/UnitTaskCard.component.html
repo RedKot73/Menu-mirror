@@ -155,7 +155,53 @@
                   <!-- Quantity Column -->
                   <ng-container matColumnDef="quantity">
                     <th mat-header-cell *matHeaderCellDef>Кількість</th>
-                    <td mat-cell *matCellDef="let mean">{{ mean.quantity }}</td>
+                    <td mat-cell *matCellDef="let mean" class="editable-cell">
+                      @if (isEditingMean(mean.id || mean.droneModelId, 'quantity')) {
+                        <!-- Режим редагування -->
+                        <div class="edit-mode">
+                          <input
+                            type="number"
+                            [(ngModel)]="editingMeanValue"
+                            (ngModelChange)="updateEditingMeanValue($event)"
+                            (click)="$event.stopPropagation()"
+                            (keydown.enter)="saveMeanFieldChange(mean, 'quantity', $event)"
+                            (keydown.escape)="cancelEditingMean($event)"
+                            class="inline-input"
+                            min="1"
+                            autofocus
+                          />
+                          <button
+                            mat-icon-button
+                            class="save-btn"
+                            (click)="saveMeanFieldChange(mean, 'quantity', $event)"
+                            matTooltip="Зберегти"
+                          >
+                            <mat-icon>check</mat-icon>
+                          </button>
+                          <button
+                            mat-icon-button
+                            class="cancel-btn"
+                            (click)="cancelEditingMean($event)"
+                            matTooltip="Відмінити"
+                          >
+                            <mat-icon>close</mat-icon>
+                          </button>
+                        </div>
+                      } @else {
+                        <!-- Режим перегляду -->
+                        <div class="view-mode">
+                          <span class="value-text">{{ mean.quantity }}</span>
+                          <button
+                            mat-icon-button
+                            class="edit-btn"
+                            (click)="startEditingMean(mean, 'quantity', $event)"
+                            matTooltip="Редагувати"
+                          >
+                            <mat-icon>edit</mat-icon>
+                          </button>
+                        </div>
+                      }
+                    </td>
                   </ng-container>
 
                   <tr mat-header-row *matHeaderRowDef="meansDisplayedColumns"></tr>
