@@ -12,6 +12,7 @@ public record DroneModelTaskDto(
     string UnitTaskId,
     string DroneModelId,
     string DroneModelValue,
+    string DroneTypeName,
     int Quantity);
 
 /// <summary>
@@ -87,7 +88,8 @@ public static class DroneModelTaskExtensions
             entity.Id,
             entity.UnitTaskId,
             entity.DroneModelId,
-            entity.DroneModel?.Value ?? string.Empty,
+            entity.DroneModel.Value ?? string.Empty,
+            entity.DroneModel.DroneType.ShortValue ?? string.Empty,
             entity.Quantity);
 
     /// <summary>

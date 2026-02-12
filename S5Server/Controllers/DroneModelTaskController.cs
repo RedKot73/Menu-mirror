@@ -29,6 +29,7 @@ public class DroneModelTaskController : ControllerBase
     private IQueryable<DroneModelTask> Query() =>
         _set.AsNoTracking()
             .Include(x => x.DroneModel);
+        //.ThenInclude(t => t.DroneType);
 
     /// <summary>
     /// Отримати список моделей БПЛА з можливістю фільтрації
@@ -42,7 +43,8 @@ public class DroneModelTaskController : ControllerBase
     {
         try
         {
-            var query = Query();
+            var query = Query()
+                .Include(t => t.DroneModel.DroneType).AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(unitTaskId))
                 query = query.Where(x => x.UnitTaskId == unitTaskId);
@@ -84,7 +86,9 @@ public class DroneModelTaskController : ControllerBase
 
         try
         {
+            //var entity = await Query()
             var entity = await Query()
+                .Include(t => t.DroneModel.DroneType)
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
 
             if (entity == null)
@@ -119,6 +123,7 @@ public class DroneModelTaskController : ControllerBase
         try
         {
             var items = await Query()
+                .Include(t => t.DroneModel.DroneType)
                 .Where(x => x.UnitTaskId == unitTaskId)
                 .OrderBy(x => x.DroneModel.Value)
                 .Select(x => x.ToDto())  // ✅ Extension-метод

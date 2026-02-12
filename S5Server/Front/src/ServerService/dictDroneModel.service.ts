@@ -6,6 +6,7 @@ import { SimpleDictDto } from './simpleDict.service';
 
 export interface DictDroneModel extends SimpleDictDto {
   droneTypeId: string;
+  droneTypeName: string;
 }
 
 @Injectable({
@@ -39,7 +40,7 @@ export class DictDroneModelService {
   lookupByType(
     droneTypeId: string,
     term: string = '',
-    limit: number = 10
+    limit: number = 10,
   ): Observable<LookupDto[]> {
     const params = { droneTypeId, term, limit: limit.toString() };
     return this.http.get<LookupDto[]>(`${this.api}/lookup-by-type`, { params });

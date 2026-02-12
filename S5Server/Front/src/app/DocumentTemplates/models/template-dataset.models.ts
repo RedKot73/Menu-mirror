@@ -113,6 +113,7 @@ export interface DroneModelTaskDto {
   unitTaskId: string;
   droneModelId: string;
   droneModelValue: string;
+  droneTypeName: string;
   quantity: number;
 }
 

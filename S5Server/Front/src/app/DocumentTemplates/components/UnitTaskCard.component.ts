@@ -9,7 +9,6 @@ import {
   ViewChild,
   inject,
   signal,
-  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -39,10 +38,7 @@ import {
 } from '../models/template-dataset.models';
 import { DictUnitTasksService, DictUnitTask } from '../../../ServerService/dictUnitTasks.service';
 import { DictAreasService, DictArea } from '../../../ServerService/dictAreas.service';
-import {
-  DroneModelTaskService,
-  DroneModelTaskUpSertDto,
-} from '../services/drone-model-task.service';
+import { DroneModelTaskService } from '../services/drone-model-task.service';
 import { UnitTaskService } from '../services/unit-task.service';
 import {
   DictDroneModelSelectDialogComponent,
@@ -132,7 +128,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   // Дані засобів (Master-Detail)
   means = signal<DroneModelTaskDto[]>([]);
   meansDataSource = new MatTableDataSource<DroneModelTaskDto>([]);
-  meansDisplayedColumns: string[] = ['actions', 'droneModelValue', 'quantity'];
+  meansDisplayedColumns: string[] = ['actions', 'droneModelValue', 'droneTypeName', 'quantity'];
   isLoadingMeans = signal<boolean>(false);
 
   // Стан збереження (для індикації процесу)
@@ -166,63 +162,13 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   protected taskControl = new FormControl<DictUnitTask | null>(null);
   protected areaControl = new FormControl<DictArea | null>(null);
 
-  constructor() {
-    // ✅ Додаємо effect для реакції на зміни unitTaskSignal
-    effect(() => {
-      const unitTask = this.unitTaskSignal();
-      if (!unitTask) {
-        return;
-      }
-
-      // Ініціалізуємо засоби
-      if (unitTask.means && unitTask.means.length > 0) {
-        this.means.set(unitTask.means);
-        this.meansDataSource.data = unitTask.means;
-      }
-
-      // Ініціалізуємо taskControl якщо завдання вже обрано
-      const tasks = this.unitTasks();
-      if (unitTask.taskId && tasks.length > 0) {
-        const currentTask = this.taskControl.value;
-        // ✅ Перевіряємо чи змінилося завдання
-        if (!currentTask || currentTask.id !== unitTask.taskId) {
-          const task = tasks.find((t) => t.id === unitTask.taskId);
-          if (task) {
-            this.taskControl.setValue(task, { emitEvent: false });
-
-            // ✅ Завантажуємо області для обраного завдання
-            if (task.areaTypeId) {
-              this.loadAreasByTask(task.areaTypeId);
-            }
-          }
-        }
-      }
-    });
-
-    // ✅ Додаємо effect для ініціалізації areaControl після завантаження areas
-    effect(() => {
-      const areas = this.areas();
-      const unitTask = this.unitTaskSignal();
-
-      if (unitTask?.areaId && areas.length > 0) {
-        const currentArea = this.areaControl.value;
-        // ✅ Перевіряємо чи змінилася область (щоб уникнути зациклення)
-        if (!currentArea || currentArea.id !== unitTask.areaId) {
-          const area = areas.find((a) => a.id === unitTask.areaId);
-          if (area) {
-            this.areaControl.setValue(area, { emitEvent: false });
-          }
-        }
-      }
-    });
-  }
-
   ngOnInit(): void {
     // Завантажуємо повний список завдань (з areaTypeId)
     this.dictUnitTasksService.getAll().subscribe({
       next: (tasks) => {
         this.unitTasks.set(tasks);
-        // ✅ Видаляємо ініціалізацію taskControl звідси - тепер це робить effect
+        // Ініціалізуємо контроли після завантаження довідника
+        this.initializeControls();
       },
       error: (error) => {
         console.error('Помилка завантаження завдань:', error);
@@ -234,10 +180,38 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
       },
     });
 
-    // ✅ Ініціалізуємо локально додані засоби (якщо є)
+    // Ініціалізуємо локально додані засоби (якщо є)
     if (this.unitTask.means && this.unitTask.means.length > 0) {
       this.means.set(this.unitTask.means);
       this.meansDataSource.data = this.unitTask.means;
+    }
+  }
+
+  /**
+   * Ініціалізує контроли значеннями з unitTask (без емітів подій)
+   */
+  private initializeControls(): void {
+    const unitTask = this.unitTask;
+    const tasks = this.unitTasks();
+
+    // Ініціалізуємо засоби
+    if (unitTask.means && unitTask.means.length > 0) {
+      this.means.set(unitTask.means);
+      this.meansDataSource.data = unitTask.means;
+    }
+
+    // Ініціалізуємо taskControl якщо завдання вже обрано
+    if (unitTask.taskId && tasks.length > 0) {
+      const task = tasks.find((t) => t.id === unitTask.taskId);
+      if (task) {
+        this.taskControl.setValue(task, { emitEvent: false });
+
+        // Завантажуємо області для обраного завдання (без емітів)
+        // areaControl буде встановлено в loadAreasByTask після завантаження областей
+        if (task.areaTypeId) {
+          this.loadAreasByTask(task.areaTypeId, true);
+        }
+      }
     }
   }
 
@@ -451,8 +425,10 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
 
   /**
    * Завантажує області по areaTypeId
+   * @param areaTypeId - ID типу області
+   * @param isInitialization - true якщо це початкова ініціалізація (не емітити зміни)
    */
-  private loadAreasByTask(areaTypeId: string): void {
+  private loadAreasByTask(areaTypeId: string, isInitialization: boolean = false): void {
     // Якщо це завдання типу ППД - використовуємо persistentLocationId як РВЗ
     if (areaTypeId === PPD_AREA_TYPE_GUID) {
       // Для ППД РВЗ береться з persistentLocationId підрозділу
@@ -468,14 +444,16 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
         this.areas.set([persistentArea]);
         this.areaControl.setValue(persistentArea, { emitEvent: false });
 
-        // Оновлюємо unitTask з persistentLocationId як areaId
-        const updatedUnit: UnitTaskDto = {
-          ...this.unitTask,
-          areaId: this.unitTask.persistentLocationId,
-          areaValue: this.unitTask.persistentLocationValue || 'ППД',
-        };
-        this.unitTaskSignal.set(updatedUnit);
-        this.unitChange.emit(updatedUnit);
+        // Оновлюємо unitTask з persistentLocationId як areaId, тільки якщо НЕ ініціалізація
+        if (!isInitialization && this.unitTask.areaId !== this.unitTask.persistentLocationId) {
+          const updatedUnit: UnitTaskDto = {
+            ...this.unitTask,
+            areaId: this.unitTask.persistentLocationId,
+            areaValue: this.unitTask.persistentLocationValue || 'ППД',
+          };
+          this.unitTaskSignal.set(updatedUnit);
+          this.unitChange.emit(updatedUnit);
+        }
       } else {
         // Якщо persistentLocationId відсутній - очищуємо
         this.areas.set([]);
@@ -494,7 +472,14 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
       .subscribe({
         next: (areas) => {
           this.areas.set(areas);
-          // ✅ Видаляємо ініціалізацію areaControl звідси - тепер це робить effect
+
+          // Якщо це ініціалізація і areaId вже встановлений - встановлюємо areaControl
+          if (isInitialization && this.unitTask.areaId) {
+            const area = areas.find((a) => a.id === this.unitTask.areaId);
+            if (area) {
+              this.areaControl.setValue(area, { emitEvent: false });
+            }
+          }
         },
         error: (error) => {
           console.error('Помилка завантаження областей:', error);
@@ -535,6 +520,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
           unitTaskId: this.unitTask.id || '',
           droneModelId: selectedDrone.id,
           droneModelValue: selectedDrone.value,
+          droneTypeName: selectedDrone.droneTypeName,
           quantity: selectedDrone.quantity, // ✅ Використовуємо кількість з діалогу
         };
 
@@ -615,52 +601,8 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
     this.unitTaskSignal.set(updatedUnit);
     this.unitChange.emit(updatedUnit);
 
-    // Якщо засіб вже збережено (має id) - оновлюємо через API
-    if (mean.id) {
-      const updateDto: DroneModelTaskUpSertDto = {
-        unitTaskId: mean.unitTaskId,
-        droneModelId: mean.droneModelId,
-        quantity: newValue,
-      };
-
-      this.droneModelTaskService.update(mean.id, updateDto).subscribe({
-        next: () => {
-          this.snackBar.open('Кількість оновлено', 'Закрити', { duration: 2000 });
-          this.cancelEditingMean(event);
-        },
-        error: (error) => {
-          console.error('Помилка оновлення кількості:', error);
-          const errorMessage = S5App_ErrorHandler.handleHttpError(
-            error,
-            'Помилка оновлення кількості',
-          );
-          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-          // Відновлюємо попереднє значення
-          this.means.set(
-            this.means().map((m) => {
-              const mId = m.id || m.droneModelId;
-              const meanId = mean.id || mean.droneModelId;
-              if (mId === meanId) {
-                return { ...m, quantity: mean.quantity };
-              }
-              return m;
-            }),
-          );
-          this.meansDataSource.data = this.means();
-          this.cancelEditingMean(event);
-        },
-      });
-    } else {
-      // Локально доданий засіб - просто закриваємо редагування
-      this.snackBar.open(
-        'Кількість оновлено (буде збережено при загальному збереженні)',
-        'Закрити',
-        {
-          duration: 2000,
-        },
-      );
-      this.cancelEditingMean(event);
-    }
+    // Скидаємо стан редагування
+    this.cancelEditingMean(event);
   }
 
   /**
@@ -725,6 +667,13 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
       }));
 
       await firstValueFrom(this.droneModelTaskService.bulkSave(this.unitTask.id, meansToSave));
+
+      // 3. Перезавантажуємо засоби з сервера (щоб отримати droneTypeName та інші поля)
+      const savedMeans = await firstValueFrom(
+        this.droneModelTaskService.getByUnitTask(this.unitTask.id),
+      );
+      this.means.set(savedMeans);
+      this.meansDataSource.data = savedMeans;
 
       return true;
     } catch (error) {
