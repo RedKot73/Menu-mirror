@@ -289,13 +289,26 @@ public static class UnitTaskExtensions
     }
 
     public static bool IsEqualTo(this UnitTask task, UnitTaskDto dto) =>
-        task.Id == dto.Id &&
-        task.DataSetId == dto.DataSetId &&
-        task.UnitId == dto.UnitId &&
-        task.UnitShortName == dto.UnitShortName &&
-        task.ParentId == dto.ParentId &&
-        task.ParentShortName == dto.ParentShortName &&
-        task.AssignedUnitId == dto.AssignedUnitId;
+        task.TaskId == dto.TaskId &&
+        task.AreaId == dto.AreaId &&
+        task.IsPublished == dto.IsPublished;
+
+    public static void UpdateFromDto(this UnitTask task, UnitTaskDto dto, string changedBy)
+    {
+        // Оновити статус публікації
+        if (dto.IsPublished != task.IsPublished)
+            task.Publish(dto.IsPublished);
+        
+        // Якщо обидва published - не змінюємо дані
+        if (task.IsPublished && dto.IsPublished)
+            return;
+        
+        // Це draft (або став draft) - оновлюємо
+        task.TaskId = dto.TaskId;
+        task.TaskValue = dto.TaskValue;
+        task.AreaId = dto.AreaId;
+        task.ChangedBy = changedBy;
+    }
 
     /// <summary>
     /// Змінити статус публікації

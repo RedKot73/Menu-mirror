@@ -61,13 +61,13 @@ public class UnitTaskController : ControllerBase
             var unpublishedQuery = baseQuery
                 .Where(t => !t.IsPublished)
                 .Include(t => t.Unit)
-                    .ThenInclude(u => u!.Parent)
+                    .ThenInclude(u => u.Parent)
                 .Include(t => t.Unit)
-                    .ThenInclude(u => u!.AssignedUnit)
+                    .ThenInclude(u => u.AssignedUnit)
                 .Include(t => t.Unit)
-                    .ThenInclude(u => u!.UnitType)
+                    .ThenInclude(u => u.UnitType)
                 .Include(t => t.Unit)
-                    .ThenInclude(u => u!.PersistentLocation)
+                    .ThenInclude(u => u.PersistentLocation)
                 .OrderByDescending(t => t.ValidFrom);
 
             // ✅ Виконати запити + MeansCount одразу
@@ -334,17 +334,23 @@ public class UnitTaskController : ControllerBase
             if (task == null)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Завдання з ID '{id}' не знайдено");
 
+            if (task.IsEqualTo(dto))
+                return Ok(task.ToDto());  // ✅ Повертаємо існуючі дані БЕЗ UPDATE
+
             // Оновити тільки статус публікації
+            /*
             task.Publish(dto.IsPublished);
+            */
+            task.UpdateFromDto(dto, User.Identity?.Name ?? "System");
 
             try
             {
                 await _db.SaveChangesAsync(ct);
-
+                /*
                 if (_logger.IsEnabled(LogLevel.Information))
                     _logger.LogInformation("Оновлено завдання UnitTaskId={Id}, IsPublished={IsPublished}",
                         id, dto.IsPublished);
-
+                */
                 // Завантажити оновлений знімок
                 var updated = await _set
                     .AsNoTracking()

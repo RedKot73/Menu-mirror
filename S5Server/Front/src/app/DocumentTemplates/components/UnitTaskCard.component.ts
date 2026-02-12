@@ -9,6 +9,7 @@ import {
   ViewChild,
   inject,
   signal,
+  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -149,19 +150,62 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   protected taskControl = new FormControl<DictUnitTask | null>(null);
   protected areaControl = new FormControl<DictArea | null>(null);
 
+  constructor() {
+    // ✅ Додаємо effect для реакції на зміни unitTaskSignal
+    effect(() => {
+      const unitTask = this.unitTaskSignal();
+      if (!unitTask) 
+        { return; }
+
+      // Ініціалізуємо засоби
+      if (unitTask.means && unitTask.means.length > 0) {
+        this.means.set(unitTask.means);
+        this.meansDataSource.data = unitTask.means;
+      }
+
+      // Ініціалізуємо taskControl якщо завдання вже обрано
+      const tasks = this.unitTasks();
+      if (unitTask.taskId && tasks.length > 0) {
+        const currentTask = this.taskControl.value;
+        // ✅ Перевіряємо чи змінилося завдання
+        if (!currentTask || currentTask.id !== unitTask.taskId) {
+          const task = tasks.find((t) => t.id === unitTask.taskId);
+          if (task) {
+            this.taskControl.setValue(task, { emitEvent: false });
+
+            // ✅ Завантажуємо області для обраного завдання
+            if (task.areaTypeId) {
+              this.loadAreasByTask(task.areaTypeId);
+            }
+          }
+        }
+      }
+    });
+
+    // ✅ Додаємо effect для ініціалізації areaControl після завантаження areas
+    effect(() => {
+      const areas = this.areas();
+      const unitTask = this.unitTaskSignal();
+      
+      if (unitTask?.areaId && areas.length > 0) {
+        const currentArea = this.areaControl.value;
+        // ✅ Перевіряємо чи змінилася область (щоб уникнути зациклення)
+        if (!currentArea || currentArea.id !== unitTask.areaId) {
+          const area = areas.find((a) => a.id === unitTask.areaId);
+          if (area) {
+            this.areaControl.setValue(area, { emitEvent: false });
+          }
+        }
+      }
+    });
+  }
+
   ngOnInit(): void {
     // Завантажуємо повний список завдань (з areaTypeId)
     this.dictUnitTasksService.getAll().subscribe({
       next: (tasks) => {
         this.unitTasks.set(tasks);
-        // Після завантаження списку ініціалізуємо значення taskControl
-        if (this.unitTask.taskId) {
-          const task = tasks.find((t) => t.id === this.unitTask.taskId);
-          if (task) {
-            // Використовуємо emitEvent: false щоб не спрацювали обробники при ініціалізації
-            this.taskControl.setValue(task, { emitEvent: false });
-          }
-        }
+        // ✅ Видаляємо ініціалізацію taskControl звідси - тепер це робить effect
       },
       error: (error) => {
         console.error('Помилка завантаження завдань:', error);
@@ -338,6 +382,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
         areaId: '',
         areaValue: '',
       };
+      this.unitTaskSignal.set(updatedUnit);
       this.unitChange.emit(updatedUnit);
       this.areas.set([]);
 
@@ -352,6 +397,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
       taskId: task.id,
       taskValue: task.value,
     };
+    this.unitTaskSignal.set(updatedUnit);
     this.unitChange.emit(updatedUnit);
 
     // ✅ Перевіряємо чи потрібні засоби для цього завдання
@@ -377,22 +423,13 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
    * Обробник зміни області (РВЗ)
    */
   onAreaChange(area: DictArea | null): void {
-    if (!area) {
       const updatedUnit: UnitTaskDto = {
         ...this.unitTask,
-        areaId: '',
-        areaValue: '',
+        areaId: area ? area.id : '',
+        areaValue: area ? area.value : '',
       };
+      this.unitTaskSignal.set(updatedUnit);
       this.unitChange.emit(updatedUnit);
-      return;
-    }
-
-    const updatedUnit: UnitTaskDto = {
-      ...this.unitTask,
-      areaId: area.id,
-      areaValue: area.value,
-    };
-    this.unitChange.emit(updatedUnit);
   }
 
   /**
@@ -420,6 +457,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
           areaId: this.unitTask.persistentLocationId,
           areaValue: this.unitTask.persistentLocationValue || 'ППД',
         };
+        this.unitTaskSignal.set(updatedUnit);
         this.unitChange.emit(updatedUnit);
       } else {
         // Якщо persistentLocationId відсутній - очищуємо
@@ -439,13 +477,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
       .subscribe({
         next: (areas) => {
           this.areas.set(areas);
-          // Ініціалізуємо значення areaControl якщо є збережена область
-          if (this.unitTask.areaId) {
-            const area = areas.find((a) => a.id === this.unitTask.areaId);
-            if (area) {
-              this.areaControl.setValue(area, { emitEvent: false });
-            }
-          }
+          // ✅ Видаляємо ініціалізацію areaControl звідси - тепер це робить effect
         },
         error: (error) => {
           console.error('Помилка завантаження областей:', error);

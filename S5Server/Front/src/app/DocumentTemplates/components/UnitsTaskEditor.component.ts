@@ -313,11 +313,13 @@ export class UnitsTaskEditorComponent implements OnInit {
           next: (unitTasks) => {
             this.selectedUnits.set(unitTasks);
             this.hasUnsavedChanges.set(false);
+            /*
             this.snackBar.open(
               `Завантажено набір "${dataSet.name}" з ${unitTasks.length} підрозділами`,
               'Закрити',
               { duration: 3000 },
             );
+            */
           },
           error: (error) => {
             console.error('Помилка завантаження завдань підрозділів:', error);

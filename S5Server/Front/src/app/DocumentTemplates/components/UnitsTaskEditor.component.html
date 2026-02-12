@@ -1,67 +1,50 @@
 <app-vertical-layout>
   <!-- Action Panel -->
   <div actionPanel class="action-panel-content">
-    <div class="top-bar">
-      <div class="title-section">
-        <span class="title"> Вибрані підрозділи ({{ selectedUnits().length }}) </span>
-        @if (hasUnsavedChanges()) {
-          <mat-icon class="unsaved-indicator" matTooltip="Є незбережені зміни" color="warn">
-            warning
-          </mat-icon>
-        }
-        @let currentDataSet = dataSet();
-        @if (currentDataSet) {
-          <mat-button-toggle-group
-            [value]="currentDataSet.isPublished"
-            (change)="onPublishStatusChange($event.value)"
-            class="status-toggle"
-            [disabled]="isSaving()"
-          >
-            <mat-button-toggle [value]="false" matTooltip="Чернетка">
-              <mat-icon>edit</mat-icon>
-              {{ getStatusLabel(false) }}
-            </mat-button-toggle>
-            <mat-button-toggle [value]="true" matTooltip="Опубліковано">
-              <mat-icon>check_circle</mat-icon>
-              {{ getStatusLabel(true) }}
-            </mat-button-toggle>
-          </mat-button-toggle-group>
-        }
-      </div>
-
-      <div class="actions-section">
-        <!--
-        <button
-          mat-raised-button
-          color="accent"
-          (click)="openJsonEditor()"
-          [disabled]="selectedUnits().length === 0"
-          matTooltip="Переглянути дані у форматі JSON"
-        >
-          <mat-icon>data_object</mat-icon>
-          Дані документа
-        </button>
-        -->
-        <button
-          mat-raised-button
-          color="primary"
-          (click)="saveSelectedUnitsAsDataSet()"
-          [disabled]="selectedUnits().length === 0 || !hasUnsavedChanges()"
-          matTooltip="Зберегти дані"
-        >
-          @if (isSaving()) {
-            <mat-icon>hourglass_empty</mat-icon>
-          } @else {
-            <mat-icon>save</mat-icon>
-          }
-          Зберегти
-        </button>
-      </div>
-    </div>
-
     <mat-card class="document-card">
-      <mat-card-header>
-        <mat-card-title>Документ</mat-card-title>
+      <mat-card-header class="header-layout">
+        <div class="header-left">
+          <mat-card-title>Документ (вибрані підрозділи: {{ selectedUnits().length }})</mat-card-title>
+          @if (hasUnsavedChanges()) {
+            <mat-icon class="unsaved-indicator" matTooltip="Є незбережені зміни" color="warn">
+              warning
+            </mat-icon>
+          }
+        </div>
+        <div class="header-right">
+          @let currentDataSet = dataSet();
+          @if (currentDataSet) {
+            <mat-button-toggle-group
+              [value]="currentDataSet.isPublished"
+              (change)="onPublishStatusChange($event.value)"
+              class="status-toggle"
+              [disabled]="isSaving()"
+            >
+              <mat-button-toggle [value]="false" matTooltip="Чернетка">
+                <mat-icon>edit</mat-icon>
+                {{ getStatusLabel(false) }}
+              </mat-button-toggle>
+              <mat-button-toggle [value]="true" matTooltip="Опубліковано">
+                <mat-icon>check_circle</mat-icon>
+                {{ getStatusLabel(true) }}
+              </mat-button-toggle>
+            </mat-button-toggle-group>
+          }
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="saveSelectedUnitsAsDataSet()"
+            [disabled]="selectedUnits().length === 0 || !hasUnsavedChanges()"
+            matTooltip="Зберегти дані"
+          >
+            @if (isSaving()) {
+              <mat-icon>hourglass_empty</mat-icon>
+            } @else {
+              <mat-icon>save</mat-icon>
+            }
+            Зберегти
+          </button>
+        </div>
       </mat-card-header>
       <mat-card-content>
         <div class="checkbox-field">
