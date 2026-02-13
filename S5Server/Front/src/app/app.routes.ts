@@ -10,12 +10,6 @@ class UsersPage {}
 
 export const routes: Routes = [
   {
-    path: 'DocumentDataSet',
-    loadComponent: () =>
-      import('../app/DocumentDataSet/DocumentDataSet.page').then((m) => m.DocumentDataSetComponent),
-    title: 'Дані документів',
-  },
-  {
     path: 'dictDroneTypes',
     loadComponent: () =>
       import('../dictionaries/dictDroneType.component').then((m) => m.DictDroneTypeComponent),
@@ -79,16 +73,6 @@ export const routes: Routes = [
       ),
     title: 'Кодифікатор адміністративно-територіальних одиниць',
   },
-  /*
-  {
-    path: 'dictCityCodesTree',
-    loadComponent: () =>
-      import('../dictionaries/CityCode/CityCodeTree.component').then(
-        (m) => m.CityCodeTreeComponent,
-      ),
-    title: 'Дерево кодів адміністративно-територіальних одиниць',
-  },
-  */
   {
     path: 'dictArea',
     loadComponent: () =>
@@ -126,10 +110,16 @@ export const routes: Routes = [
     loadComponent: () => import('../app/Personnel/Personnel.page').then((m) => m.PersonnelPage),
   },
   {
+    path: 'DocumentDataSet',
+    loadComponent: () =>
+      import('../app/DocumentDataSet/DocumentDataSet.page').then((m) => m.DocumentDataSetComponent),
+    title: 'Дані документів',
+  },
+  {
     path: 'templates',
     title: 'Шаблони документів',
     loadComponent: () =>
-      import('./DocumentTemplates/DocTemplatesTree.page').then((m) => m.DocTemplatesTree),
+      import('../app/DocumentTemplates/DocTemplatesTree.page').then((m) => m.DocTemplatesTree),
   },
   { path: 'users', title: 'Користувачі', component: UsersPage },
   {

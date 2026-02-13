@@ -5,11 +5,13 @@
       <mat-card-header class="header-layout">
         <div class="header-left">
           <mat-card-title>Документ (вибрані підрозділи: {{ selectedUnits().length }})</mat-card-title>
+          <!--
           @if (hasUnsavedChanges()) {
             <mat-icon class="unsaved-indicator" matTooltip="Є незбережені зміни" color="warn">
               warning
             </mat-icon>
           }
+          -->
         </div>
         <div class="header-right">
           @let currentDataSet = dataSet();
@@ -20,11 +22,12 @@
               class="status-toggle"
               [disabled]="isSaving()"
             >
-              <mat-button-toggle [value]="false" matTooltip="Чернетка">
+            @let statusText = currentDataSet.isPublished ? ('Опубліковано ' + (currentDataSet.publishedAtUtc | date:'dd.MM.yyyy')) : 'Чернетка';
+              <mat-button-toggle [value]="false" [matTooltip]="statusText">
                 <mat-icon>edit</mat-icon>
                 {{ getStatusLabel(false) }}
               </mat-button-toggle>
-              <mat-button-toggle [value]="true" matTooltip="Опубліковано">
+              <mat-button-toggle [value]="true" [matTooltip]="statusText">
                 <mat-icon>check_circle</mat-icon>
                 {{ getStatusLabel(true) }}
               </mat-button-toggle>

@@ -15,7 +15,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { TemplateDataSetService } from '../services/template-dataset.service';
-import { TemplateDataSetDto, TemplateDataSetUtils } from '../models/template-dataset.models';
+import { TemplateDataSetDto } from '../models/template-dataset.models';
 import { ConfirmDialogComponent } from '../../dialogs/ConfirmDialog.component';
 import { DocTemplateUtils } from '../models/shared.models';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -209,7 +209,7 @@ export class DataSetTableComponent implements OnInit {
    * Форматує дату для відображення
    */
   formatDate(dateString: string): string {
-    return TemplateDataSetUtils.formatDate(dateString);
+    return DocTemplateUtils.formatDate(dateString);
   }
 
   cloneDataSet(_dataSet: TemplateDataSetDto) {

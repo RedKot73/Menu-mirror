@@ -1,4 +1,5 @@
 // Utility типы и константы
+import { DatePipe } from '@angular/common';
 export type TemplateDataSetStatus = 'published' | 'draft';
 
 // Утилитарный класс для работы с форматами
@@ -20,18 +21,14 @@ export class DocTemplateUtils {
   /**
    * Форматирует дату для отображения
    */
-  static formatDate(dateString: string): string {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('ru-RU', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch {
-      return dateString;
-    }
+  static formatDate(dateValue: string | Date | null | undefined, includeTime = false): string {
+    if (!dateValue) { return ''; }
+
+    const pipe = new DatePipe('uk-UA');
+    const format = includeTime ? 'dd.MM.yyyy HH:mm' : 'dd.MM.yyyy';
+    
+    // DatePipe сам умеет проверять валидность даты и возвращает null, если она плохая
+    return pipe.transform(dateValue, format) ?? String(dateValue);
   }
+
 }

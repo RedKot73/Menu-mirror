@@ -156,19 +156,4 @@ export class TemplateDataSetUtils {
       errors,
     };
   }
-
-  /**
-   * Форматує дату для відображення
-   */
-  static formatDate(dateString: string): string {
-    if (!dateString) {
-      return '';
-    }
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('uk-UA');
-    } catch {
-      return dateString;
-    }
-  }
 }

@@ -14,30 +14,25 @@ import { FormsModule } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
 
 import { MatSnackBar } from '@angular/material/snack-bar';
-//import { MatDialog } from '@angular/material/dialog';
 import { MatDatepickerModule, MatDatepickerInputEvent } from '@angular/material/datepicker';
-//import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
+
 
 import { TemplateDataSetUpSertDto, UnitTaskDto } from '../models/template-dataset.models';
 import { TemplateDataSetService } from '../services/template-dataset.service';
 import { UnitTaskService } from '../services/unit-task.service';
 import { UnitService } from '../../Unit/services/unit.service';
-//import { JsonEditorDialogComponent } from '../components/JsonEditorDialog.component';
 import { UnitTaskCardComponent } from './UnitTaskCard.component';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 import { TemplateDataSetDto } from '../models/template-dataset.models';
 import { DocTemplateUtils } from '../models/shared.models';
 import { VerticalLayoutComponent } from '../../shared/components/VerticalLayout.component';
-
-import { provideLuxonDateAdapter } from '@angular/material-luxon-adapter';
-import { DateAdapter, MAT_DATE_LOCALE } from '@angular/material/core';
-//import { DateTime } from 'luxon';
 
 @Component({
   selector: 'app-units-task-editor',
@@ -55,30 +50,23 @@ import { DateAdapter, MAT_DATE_LOCALE } from '@angular/material/core';
     MatInputModule,
     UnitTaskCardComponent,
     VerticalLayoutComponent,
+    MatTooltipModule,
   ],
   providers: [
-    // The locale would typically be provided on the root module of your application. We do it at
-    // the component level here, due to limitations of our example generation script.
-    { provide: MAT_DATE_LOCALE, useValue: 'uk-UA' },
-
-    // Luxon can be provided globally to your app by adding `provideLuxonDateAdapter`
-    // to your app config. We provide it at the component level here, due to limitations
-    // of our example generation script.
-    provideLuxonDateAdapter(),
   ],
   templateUrl: './UnitsTaskEditor.component.html',
   styleUrls: ['./UnitsTaskEditor.component.scss'],
 })
 export class UnitsTaskEditorComponent implements OnInit {
+  /*
   private readonly _adapter = inject<DateAdapter<Date>>(DateAdapter);
   private readonly _locale = signal('uk-UA');
-
+  */
   ngOnInit(): void {
-    this._adapter.setLocale(this._locale());
+    // this._adapter.setLocale(this._locale());
   }
 
   private snackBar = inject(MatSnackBar);
-  //private dialog = inject(MatDialog);
 
   private dataSetService = inject(TemplateDataSetService);
   private unitService = inject(UnitService);
@@ -126,26 +114,6 @@ export class UnitsTaskEditorComponent implements OnInit {
   }
 
   /**
-   * Відкриває діалог редагування JSON
-   */
-  /*
-  openJsonEditor(): void {
-    const jsonString = JSON.stringify(this.selectedUnits(), null, 2);
-
-    this.dialog.open(JsonEditorDialogComponent, {
-      data: {
-        jsonContent: jsonString,
-        readOnly: true,
-        title: 'Дані документа - Вибрані підрозділи',
-      },
-      width: '90vw',
-      maxWidth: '1400px',
-      height: '80vh',
-      disableClose: false,
-    });
-  }
-*/
-  /**
    * Обробник зміни прапорця "Чи існує документ старшого начальника"
    */
   onParentDocUsedChange(event: Event): void {
@@ -159,7 +127,7 @@ export class UnitsTaskEditorComponent implements OnInit {
    */
   onParentDocumentDateChange(event: MatDatepickerInputEvent<Date>): void {
     this.parentDocumentDate.set(event.value || null);
-    this.hasUnsavedChanges.set(true);
+      this.hasUnsavedChanges.set(true);
   }
 
   /**
@@ -565,13 +533,6 @@ export class UnitsTaskEditorComponent implements OnInit {
   }
 
   /**
-   * Отримує читабельну назву статусу публікації
-   */
-  getStatusLabel(isPublished: boolean): string {
-    return DocTemplateUtils.getStatusLabel(isPublished);
-  }
-
-  /**
    * Обробник зміни статусу публікації
    */
   onPublishStatusChange(isPublished: boolean): void {
@@ -636,5 +597,16 @@ export class UnitsTaskEditorComponent implements OnInit {
     if (this.hasUnsavedChanges()) {
       $event.preventDefault();
     }
+  }
+
+  /**
+   * Отримує читабельну назву статусу публікації
+   */
+  getStatusLabel(isPublished: boolean): string {
+    return DocTemplateUtils.getStatusLabel(isPublished);
+  }
+
+  formatDate(dateString: string): string {
+    return DocTemplateUtils.formatDate(dateString);
   }
 }
