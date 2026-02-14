@@ -1,12 +1,12 @@
 import {
   inject,
   signal,
+  DestroyRef,
   HostListener,
   ViewChild,
   ElementRef,
   ViewChildren,
   QueryList,
-  OnInit,
 } from '@angular/core';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -22,7 +22,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
-
+import { switchMap, tap } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { TemplateDataSetUpSertDto, UnitTaskDto } from '../models/template-dataset.models';
 import { TemplateDataSetService } from '../services/template-dataset.service';
@@ -33,7 +34,7 @@ import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 import { TemplateDataSetDto } from '../models/template-dataset.models';
 import { DocTemplateUtils } from '../models/shared.models';
 import { VerticalLayoutComponent } from '../../shared/components/VerticalLayout.component';
-
+import { DateMaskDirective } from '../../shared/directives/date-mask.directive';
 @Component({
   selector: 'app-units-task-editor',
   standalone: true,
@@ -51,21 +52,15 @@ import { VerticalLayoutComponent } from '../../shared/components/VerticalLayout.
     UnitTaskCardComponent,
     VerticalLayoutComponent,
     MatTooltipModule,
+    DateMaskDirective,
   ],
   providers: [
   ],
   templateUrl: './UnitsTaskEditor.component.html',
   styleUrls: ['./UnitsTaskEditor.component.scss'],
 })
-export class UnitsTaskEditorComponent implements OnInit {
-  /*
-  private readonly _adapter = inject<DateAdapter<Date>>(DateAdapter);
-  private readonly _locale = signal('uk-UA');
-  */
-  ngOnInit(): void {
-    // this._adapter.setLocale(this._locale());
-  }
-
+export class UnitsTaskEditorComponent {
+  private destroyRef = inject(DestroyRef);
   private snackBar = inject(MatSnackBar);
 
   private dataSetService = inject(TemplateDataSetService);
@@ -104,11 +99,11 @@ export class UnitsTaskEditorComponent implements OnInit {
    * Обробник зміни підрозділу з дочірнього компонента
    */
   onUnitChange(updatedUnit: UnitTaskDto): void {
-    const units = this.selectedUnits();
+    const units = [...this.selectedUnits()];
     const unitIndex = units.findIndex((u) => u.id === updatedUnit.id);
     if (unitIndex !== -1) {
       units[unitIndex] = updatedUnit;
-      this.selectedUnits.set([...units]);
+      this.selectedUnits.set(units);
       this.hasUnsavedChanges.set(true);
     }
   }
@@ -126,8 +121,16 @@ export class UnitsTaskEditorComponent implements OnInit {
    * Обробник зміни дати документа старшого начальника
    */
   onParentDocumentDateChange(event: MatDatepickerInputEvent<Date>): void {
-    this.parentDocumentDate.set(event.value || null);
-      this.hasUnsavedChanges.set(true);
+    const inputElement = event.targetElement as HTMLInputElement;
+
+    // Пытаемся распарсить то, что ввел пользователь вручную
+    const manualDate = DocTemplateUtils.parseDateString(inputElement.value);
+
+    // Если ручной парсинг удался — берем его, иначе берем то, что определил Material
+    const finalDate = manualDate || event.value;
+
+    this.parentDocumentDate.set(finalDate);
+    this.hasUnsavedChanges.set(true);
   }
 
   /**
@@ -143,7 +146,14 @@ export class UnitsTaskEditorComponent implements OnInit {
    * Обробник зміни дати документа
    */
   onDocumentDateChange(event: MatDatepickerInputEvent<Date>): void {
-    this.documentDate.set(event.value || null);
+    const inputElement = event.targetElement as HTMLInputElement;
+
+    // Пытаемся распарсить то, что ввел пользователь вручную
+    const manualDate = DocTemplateUtils.parseDateString(inputElement.value);
+
+    // Если ручной парсинг удался — берем его, иначе берем то, что определил Material
+    const finalDate = manualDate || event.value;
+    this.documentDate.set(finalDate);
     this.hasUnsavedChanges.set(true);
   }
 
@@ -197,7 +207,7 @@ export class UnitsTaskEditorComponent implements OnInit {
     }
 
     // Завантажуємо дані підрозділу через UnitService
-    this.unitService.getById(unitId).subscribe({
+    this.unitService.getById(unitId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (unit) => {
         // Створюємо новий UnitTask (ще не збережений на сервері)
         const unitTask: UnitTaskDto = {
@@ -262,8 +272,8 @@ export class UnitsTaskEditorComponent implements OnInit {
       return;
     }
 
-    this.dataSetService.getDataSetById(dataSetId).subscribe({
-      next: (dataSet) => {
+    this.dataSetService.getDataSetById(dataSetId).pipe(
+      tap((dataSet) => {
         // Зберігаємо інформацію про поточний DataSet
         this.dataSet.set(dataSet);
 
@@ -275,29 +285,13 @@ export class UnitsTaskEditorComponent implements OnInit {
         // Оновлюємо дату та номер документа
         this.documentDate.set(new Date(dataSet.docDate));
         this.documentNumber.set(dataSet.docNumber);
-
-        // Завантажуємо список UnitTask для цього DataSet
-        this.unitTaskService.getAll({ dataSetId: dataSet.id }).subscribe({
-          next: (unitTasks) => {
-            this.selectedUnits.set(unitTasks);
-            this.hasUnsavedChanges.set(false);
-            /*
-            this.snackBar.open(
-              `Завантажено набір "${dataSet.name}" з ${unitTasks.length} підрозділами`,
-              'Закрити',
-              { duration: 3000 },
-            );
-            */
-          },
-          error: (error) => {
-            console.error('Помилка завантаження завдань підрозділів:', error);
-            const errorMessage = S5App_ErrorHandler.handleHttpError(
-              error,
-              'Помилка завантаження завдань підрозділів',
-            );
-            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-          },
-        });
+      }),
+      switchMap((dataSet) => this.unitTaskService.getAll({ dataSetId: dataSet.id })),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: (unitTasks) => {
+        this.selectedUnits.set(unitTasks);
+        this.hasUnsavedChanges.set(false);
       },
       error: (error) => {
         console.error('Помилка завантаження набору даних:', error);
@@ -421,7 +415,7 @@ export class UnitsTaskEditorComponent implements OnInit {
 
     if (currentDataSet) {
       // Оновлюємо існуючий DataSet
-      this.dataSetService.updateDataSet(currentDataSet.id, dataSetDto).subscribe({
+      this.dataSetService.updateDataSet(currentDataSet.id, dataSetDto).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: () => {
           // Після оновлення DataSet зберігаємо UnitTask
           this.saveUnitTasks(currentDataSet.id);
@@ -435,7 +429,7 @@ export class UnitsTaskEditorComponent implements OnInit {
       });
     } else {
       // Створюємо новий DataSet
-      this.dataSetService.createDataSet(dataSetDto).subscribe({
+      this.dataSetService.createDataSet(dataSetDto).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (createdDataSet) => {
           // Зберігаємо інформацію про новостворений DataSet
           this.dataSet.set(createdDataSet);
@@ -549,7 +543,7 @@ export class UnitsTaskEditorComponent implements OnInit {
 
     this.isSaving.set(true);
 
-    this.dataSetService.publish(currentDataSet.id, isPublished).subscribe({
+    this.dataSetService.publish(currentDataSet.id, isPublished).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.isSaving.set(false);
         // Оновлюємо статус в локальному signal

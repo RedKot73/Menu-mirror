@@ -12,43 +12,6 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-
-  .top-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-
-  .title-section {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-
-    .title {
-      font-size: 16px;
-      font-weight: 500;
-      white-space: nowrap;
-    }
-
-    .unsaved-indicator {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-      animation: pulse 2s infinite;
-    }
-
-    .status-toggle {
-      margin-left: auto;
-    }
-  }
-
-  .actions-section {
-    display: flex;
-    gap: 8px;
-  }
 }
 
 // ===== DOCUMENT CARDS =====
@@ -121,13 +84,6 @@
       }
     }
   }
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
 }
 
 .header-layout {
@@ -225,28 +181,6 @@
   }
 }
 
-// Анімація для індикатора незбережених змін
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-// Раскраска ячейки с датой прибытия для бойцов с датой прибытия менее 14 дней назад
-.mat-mdc-cell {
-  &.row-overdue {
-    background-color: #ffcdd2 !important; // Красный фон (Material Red 100)
-
-    &:hover {
-      background-color: #ef9a9a !important; // Более темный красный при наведении (Material Red 200)
-    }
-  }
-}
-
 // Медіа-запити для мобільних пристроїв
 @media (max-width: 768px) {
   mat-card {
@@ -271,9 +205,5 @@
 
   .selected-units-list {
     padding: 8px;
-  }
-
-  .unit-details-card .unit-info-grid {
-    grid-template-columns: 1fr;
   }
 }

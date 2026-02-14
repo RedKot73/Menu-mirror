@@ -4,7 +4,9 @@
     <mat-card class="document-card">
       <mat-card-header class="header-layout">
         <div class="header-left">
-          <mat-card-title>Документ (вибрані підрозділи: {{ selectedUnits().length }})</mat-card-title>
+          <mat-card-title
+            >Документ (вибрані підрозділи: {{ selectedUnits().length }})</mat-card-title
+          >
           <!--
           @if (hasUnsavedChanges()) {
             <mat-icon class="unsaved-indicator" matTooltip="Є незбережені зміни" color="warn">
@@ -22,7 +24,10 @@
               class="status-toggle"
               [disabled]="isSaving()"
             >
-            @let statusText = currentDataSet.isPublished ? ('Опубліковано ' + (currentDataSet.publishedAtUtc | date:'dd.MM.yyyy')) : 'Чернетка';
+              @let statusText =
+                currentDataSet.isPublished
+                  ? 'Опубліковано ' + (currentDataSet.publishedAtUtc | date: 'dd.MM.yyyy')
+                  : 'Чернетка';
               <mat-button-toggle [value]="false" [matTooltip]="statusText">
                 <mat-icon>edit</mat-icon>
                 {{ getStatusLabel(false) }}
@@ -67,6 +72,8 @@
               <input
                 #parentDateInput
                 matInput
+                appDateMask
+                placeholder="dd.mm.yyyy"
                 [matDatepicker]="parentPicker"
                 [value]="parentDocumentDate()"
                 (dateChange)="onParentDocumentDateChange($event)"
@@ -96,6 +103,8 @@
             <input
               #dateInput
               matInput
+              appDateMask
+              placeholder="dd.mm.yyyy"
               [matDatepicker]="picker"
               [value]="documentDate()"
               (dateChange)="onDocumentDateChange($event)"
@@ -123,20 +132,20 @@
 
   <!-- Content Panel -->
   <div contentPanel class="selected-units-list">
-      @if (selectedUnits().length === 0) {
-        <div class="empty-list">
-          <mat-icon>inbox</mat-icon>
-          <p>Список порожній. Додайте підрозділи з дерева.</p>
-        </div>
-      } @else {
-        @for (unitTask of selectedUnits(); track unitTask.id) {
-          <app-unit-task-card
-            [unitTask]="unitTask"
-            (remove)="removeUnitFromSelection($event)"
-            (unitChange)="onUnitChange($event)"
-          >
-          </app-unit-task-card>
-        }
+    @if (selectedUnits().length === 0) {
+      <div class="empty-list">
+        <mat-icon>inbox</mat-icon>
+        <p>Список порожній. Додайте підрозділи з дерева.</p>
+      </div>
+    } @else {
+      @for (unitTask of selectedUnits(); track unitTask.id) {
+        <app-unit-task-card
+          [unitTask]="unitTask"
+          (remove)="removeUnitFromSelection($event)"
+          (unitChange)="onUnitChange($event)"
+        >
+        </app-unit-task-card>
       }
+    }
   </div>
 </app-vertical-layout>
