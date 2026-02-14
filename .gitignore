@@ -60,3 +60,4 @@ S5Server-*.tar.gz
 /S5Server/bin
 S5Server/logs/
 .vs/
+S5Server/Front/dist/
