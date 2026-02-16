@@ -1,10 +1,31 @@
+///*
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;    // Занимаем всю высоту, которую дает родитель
+  width: 100%;     // И всю ширину
+  overflow: hidden; // Предотвращаем общее вываливание, скроллиться будет только таблица
+}
+
+.table-container {
+  flex: 1 1 auto; // Таблица занимает всё оставшееся место
+  overflow: auto; // Вот здесь появляется и вертикальный, и горизонтальный скролл
+  border: 1px solid #ccc; // Для визуальной границы (опционально)
+
+  table {
+    width: 100%;
+    min-width: 800px; // Гарантирует появление горизонтального скролла на узких экранах
+  }
+}
+//*/
+//============================
 .action-container {
   display: flex;
   gap: 16px;
   align-items: flex-end;
   flex-wrap: wrap;
   margin-bottom: 16px;
-  padding: 16px;
+  padding: 8px;
   background: #f5f5f5;
   border-radius: 8px;
 }

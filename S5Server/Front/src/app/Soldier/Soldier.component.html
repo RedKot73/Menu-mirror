@@ -15,13 +15,8 @@
 </div>
 }
 
-<table
-  mat-table
-  [dataSource]="dataSource"
-  matSort
-  class="mat-elevation-z8"
-  style="width: 100%; margin-top: 1em"
->
+<div class="table-container">
+  <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
   <!-- Menu Column -->
   <ng-container matColumnDef="menu">
     <th mat-header-cell *matHeaderCellDef style="width: 60px">Дії</th>
@@ -289,7 +284,7 @@
     </td>
   </ng-container>
 
-  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
   <tr
     mat-row
     *matRowDef="let row; columns: displayedColumns"
@@ -299,3 +294,4 @@
     [class.row-recovery]="isRecoveryStatus(row.stateId)"
   ></tr>
 </table>
+</div>

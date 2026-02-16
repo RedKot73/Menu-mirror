@@ -1,8 +1,19 @@
-@use '../Soldier/Soldier.component.scss';
-
+//@use '../Soldier/Soldier.component.scss';
+/*
 .table-container {
   margin-top: 1em;
   height: calc(100vh - 150px);
   overflow: auto;
   position: relative;
+}
+*/
+.table-container {
+  flex: 1 1 auto; // Таблица занимает всё оставшееся место
+  overflow: auto; // Вот здесь появляется и вертикальный, и горизонтальный скролл
+  border: 1px solid #ccc; // Для визуальной границы (опционально)
+
+  table {
+    width: 100%;
+    min-width: 800px; // Гарантирует появление горизонтального скролла на узких экранах
+  }
 }

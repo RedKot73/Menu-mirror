@@ -36,7 +36,7 @@ import { MasterDetailLayoutComponent } from '../shared/components/MasterDetailLa
   ],
   providers: [provideNativeDateAdapter()],
   templateUrl: './DocumentDataSet.page.html',
-  styleUrls: ['./DocumentDataSet.page.scss', '../Soldier/Soldier.component.scss'],
+  styleUrls: ['./DocumentDataSet.page.scss'],
 })
 export class DocumentDataSetComponent {
   @ViewChild(UnitTreeComponent) unitTree!: UnitTreeComponent;

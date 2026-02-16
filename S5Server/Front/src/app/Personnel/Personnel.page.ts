@@ -60,7 +60,7 @@ export type Soldier = SoldierDto;
     AsyncPipe,
   ],
   templateUrl: './Personnel.page.html',
-  styleUrl: './Personnel.page.scss',
+  styleUrls: ['./Personnel.page.scss', '../Soldier/Soldier.component.scss'],
 })
 export class PersonnelPage implements AfterViewInit {
   soldierService = inject(SoldierService);
