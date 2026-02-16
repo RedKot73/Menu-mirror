@@ -1,7 +1,17 @@
+// ===== COMPONENT HOST =====
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
 .main-content {
   padding: 24px;
   width: 95%;
-  height: 100%;
+  flex: 1;
+  min-height: 0; // Важливо для правильної роботи flex + overflow
+  overflow-y: auto;
 }
 
 .unit-details-card {
