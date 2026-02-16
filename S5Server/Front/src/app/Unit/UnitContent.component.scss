@@ -1,122 +1,125 @@
 .main-content {
-    padding: 24px;
-    width: 95%;
-    height: 100%;
+  padding: 24px;
+  width: 95%;
+  height: 100%;
 }
 
 .unit-details-card {
-    width: 100%;
-    margin: 0 0 20px 0;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  margin: 0 0 20px 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
 .unit-info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 16px;
-    margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 .info-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .info-item.inline {
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
 }
 
 .info-item.full-width {
-    grid-column: 1 / -1;
+  grid-column: 1 / -1;
 }
 
 .info-item.comment {
-    flex-direction: column;
-    gap: 8px;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .info-item.comment span {
-    word-wrap: break-word;
-    word-break: break-word;
-    white-space: pre-wrap;
-    max-width: 100%;
-    overflow-wrap: break-word;
-    hyphens: auto;
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .info-item strong {
-    color: rgba(0, 0, 0, 0.6);
-    font-size: 14px;
-    font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .info-item span {
-    font-size: 16px;
-    font-weight: 400;
+  font-size: 16px;
+  font-weight: 400;
 }
 
 @media (max-width: 768px) {
-    .main-content {
-        padding: 16px;
-    }
+  .main-content {
+    padding: 16px;
+  }
 
-    .unit-info-grid {
-        grid-template-columns: 1fr;
-    }
+  .unit-info-grid {
+    grid-template-columns: 1fr;
+  }
 
-    .empty-state {
-        padding: 32px 16px;
-    }
+  .empty-state {
+    padding: 32px 16px;
+  }
 
-    .empty-icon {
-        font-size: 48px;
-        width: 48px;
-        height: 48px;
-    }
+  .empty-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+  }
 }
 
 // ----------------------------------------------------
 // Стили для Accordion (Expansion Panels)
 // ----------------------------------------------------
 .sections-accordion {
-    max-width: 900px;
-    margin: 0 auto;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .unit-section-panel {
-    margin-bottom: 8px;
+  margin-bottom: 8px;
 }
 
 /* Налаштування заголовка панелі */
 .unit-section-panel .mat-expansion-panel-header .mat-content {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .unit-section-panel mat-panel-title {
-    display: flex;
-    align-items: center;
-    font-size: 1rem;
-    font-weight: 500;
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  font-weight: 500;
 }
 
 .unit-section-panel mat-icon {
-    margin-right: 12px;
+  margin-right: 12px;
 }
 
 /* Стилі для контенту всередині панелі */
 .section-content {
-    padding: 0;
-    
-    // Для обычного placeholder контента добавляем отступы
-    .todo-placeholder {
-        margin: 16px;
-    }
-    
-    // Для компонентов убираем дополнительные отступы
+  padding: 0;
+  max-height: 60vh;
+  overflow: auto;
+
+  // Для обычного placeholder контента добавляем отступы
+  .todo-placeholder {
+    margin: 16px;
+  }
+
+  // Для компонентов убираем дополнительные отступы
+  /*
     page-soldiers {
         display: block;
         
@@ -125,14 +128,15 @@
             padding: 16px 16px 0 16px;
         }
     }
+    */
 }
 
 .todo-placeholder {
-    color: #9e9e9e;
-    padding: 15px;
-    border: 1px dashed #e0e0e0;
-    border-radius: 4px;
-    font-style: italic;
-    background-color: #fafafa;
-    margin: 0;
+  color: #9e9e9e;
+  padding: 15px;
+  border: 1px dashed #e0e0e0;
+  border-radius: 4px;
+  font-style: italic;
+  background-color: #fafafa;
+  margin: 0;
 }

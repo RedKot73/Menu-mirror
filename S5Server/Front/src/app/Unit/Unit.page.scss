@@ -20,6 +20,8 @@
 }
 
 .content-panel {
+  display: flex; // Чтобы дочерний app-page-soldiers понимал свои границы
+  flex: 1; // Занимаем все оставшееся пространство
   background-color: #fafafa;
 }
 
