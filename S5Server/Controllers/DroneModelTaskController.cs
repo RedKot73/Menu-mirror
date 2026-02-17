@@ -270,7 +270,7 @@ public class DroneModelTaskController : ControllerBase
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
 
             // ✅ Перевірка чи змінились дані
-            if (entity.EqualsDto(dto))
+            if (entity.IsEqualTo(dto))
                 return Ok(entity.ToDto());
 
             entity.UpdateFrom(dto);  // ✅ Extension-метод

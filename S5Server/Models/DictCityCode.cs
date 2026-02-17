@@ -458,7 +458,7 @@ namespace S5Server.Models
         /// <summary>
         /// Перевіряє, чи дані в сутності DictCityCode співпадають з даними в DTO
         /// </summary>
-        public static bool EqualsDto(this DictCityCode cityCode, CityCodeDto dto)
+        public static bool IsEqualTo(this DictCityCode cityCode, CityCodeDto dto)
         {
             return cityCode.ParentId == dto.ParentId?.Trim() &&
                    cityCode.Level1Id == dto.Level1Id?.Trim() &&

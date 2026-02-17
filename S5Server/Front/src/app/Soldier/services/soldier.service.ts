@@ -1,7 +1,10 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+
 import { LookupDto } from '../../shared/models/lookup.models';
+import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 
 export interface SoldierDto {
   id: string;
@@ -51,102 +54,241 @@ export interface SoldierCreateDto {
   providedIn: 'root',
 })
 export class SoldierService {
-  readonly api = '/api/Soldier';
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = '/api/Soldier';
 
   createItemsSignal() {
     return signal<SoldierDto[]>([]);
   }
 
-  // CRUD операции
+  /**
+   * Отримати всіх військовослужбовців (з фільтрацією)
+   * GET /api/Soldier?search={search}&unitId={unitId}
+   */
   getAll(search?: string, unitId?: string): Observable<SoldierDto[]> {
-    const params: Record<string, string> = {};
+    let params = new HttpParams();
     if (search) {
-      params['search'] = search;
+      params = params.set('search', search);
     }
     if (unitId) {
-      params['unitId'] = unitId;
+      params = params.set('unitId', unitId);
     }
 
-    return this.http.get<SoldierDto[]>(this.api, { params });
+    return this.http.get<SoldierDto[]>(this.baseUrl, { params }).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося отримати список військовослужбовців',
+        );
+        return throwError(() => new Error(message));
+      }),
+    );
   }
 
-  // Получить список по приданному подразделению
+  /**
+   * Об'єднаний перелік військовослужбовців за підрозділом
+   * GET /api/Soldier/by-unit?unitId={unitId}
+   */
+  getByUnit(unitId: string): Observable<SoldierDto[]> {
+    let params = new HttpParams();
+    params = params.set('unitId', unitId);
+
+    return this.http.get<SoldierDto[]>(`${this.baseUrl}/by-unit`, { params }).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося отримати перелік військовослужбовців підрозділу',
+        );
+        return throwError(() => new Error(message));
+      }),
+    );
+  }
+
+  /**
+   * Отримати перелік за приданим підрозділом
+   * GET /api/Soldier/by-assigned?assignedUnitId={id}&search={search}&limit={limit}
+   */
   getByAssigned(assignedUnitId: string, search?: string, limit?: number): Observable<SoldierDto[]> {
-    const params: Record<string, string> = { assignedUnitId };
+    let params = new HttpParams();
+    params = params.set('assignedUnitId', assignedUnitId);
     if (search) {
-      params['search'] = search;
+      params = params.set('search', search);
     }
     if (limit) {
-      params['limit'] = limit.toString();
+      params = params.set('limit', limit.toString());
     }
 
-    return this.http.get<SoldierDto[]>(`${this.api}/by-assigned`, { params });
+    return this.http.get<SoldierDto[]>(`${this.baseUrl}/by-assigned`, { params }).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося отримати приданих військовослужбовців',
+        );
+        return throwError(() => new Error(message));
+      }),
+    );
   }
 
-  // Получить список по оперативному подразделению
+  /**
+   * Отримати перелік за оперативним підрозділом
+   * GET /api/Soldier/by-operational?operationalUnitId={id}&search={search}&limit={limit}
+   */
   getByInvolved(
     operationalUnitId: string,
     search?: string,
-    limit?: number
+    limit?: number,
   ): Observable<SoldierDto[]> {
-    const params: Record<string, string> = { operationalUnitId };
+    let params = new HttpParams();
+    params = params.set('operationalUnitId', operationalUnitId);
     if (search) {
-      params['search'] = search;
+      params = params.set('search', search);
     }
     if (limit) {
-      params['limit'] = limit.toString();
+      params = params.set('limit', limit.toString());
     }
 
-    return this.http.get<SoldierDto[]>(`${this.api}/by-operational`, { params });
+    return this.http.get<SoldierDto[]>(`${this.baseUrl}/by-operational`, { params }).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося отримати задіяних військовослужбовців',
+        );
+        return throwError(() => new Error(message));
+      }),
+    );
   }
 
-  // Lookup для автокомплита
-  lookup(term: string, limit: number = 10): Observable<LookupDto[]> {
-    const params = { term, limit: limit.toString() };
-    return this.http.get<LookupDto[]>(`${this.api}/lookup`, { params });
-  }
-
-  getById(id: string): Observable<SoldierDto> {
-    return this.http.get<SoldierDto>(`${this.api}/${id}`);
-  }
-
-  create(item: SoldierCreateDto): Observable<SoldierDto> {
-    return this.http.post<SoldierDto>(this.api, item);
-  }
-
-  update(id: string, item: SoldierDto): Observable<void> {
-    return this.http.put<void>(`${this.api}/${id}`, item);
-  }
-
-  delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.api}/${id}`);
-  }
-
-  // Методы для управления назначениями
   /**
-   * Назначает бойцу подразделение Приданий до...
-   * @param id Soldier.id
-   * @param unitId Unit.id
-   * @returns void
+   * Lookup для автокомпліту
+   * GET /api/Soldier/lookup?term={term}&limit={limit}
+   */
+  lookup(term: string, limit: number = 10): Observable<LookupDto[]> {
+    let params = new HttpParams();
+    params = params.set('term', term);
+    params = params.set('limit', limit.toString());
+
+    return this.http.get<LookupDto[]>(`${this.baseUrl}/lookup`, { params }).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося виконати пошук військовослужбовців',
+        );
+        return throwError(() => new Error(message));
+      }),
+    );
+  }
+
+  /**
+   * Отримати військовослужбовця за ID
+   * GET /api/Soldier/{id}
+   */
+  getById(id: string): Observable<SoldierDto> {
+    return this.http.get<SoldierDto>(`${this.baseUrl}/${id}`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося отримати дані військовослужбовця',
+        );
+        return throwError(() => new Error(message));
+      }),
+    );
+  }
+
+  /**
+   * Створити військовослужбовця
+   * POST /api/Soldier
+   */
+  create(item: SoldierCreateDto): Observable<SoldierDto> {
+    return this.http.post<SoldierDto>(this.baseUrl, item).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося створити військовослужбовця',
+        );
+        return throwError(() => new Error(message));
+      }),
+    );
+  }
+
+  /**
+   * Оновити військовослужбовця
+   * PUT /api/Soldier/{id}
+   */
+  update(id: string, item: SoldierDto): Observable<void> {
+    return this.http.put<void>(`${this.baseUrl}/${id}`, item).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося оновити дані військовослужбовця',
+        );
+        return throwError(() => new Error(message));
+      }),
+    );
+  }
+
+  /**
+   * Видалити військовослужбовця
+   * DELETE /api/Soldier/{id}
+   */
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося видалити військовослужбовця',
+        );
+        return throwError(() => new Error(message));
+      }),
+    );
+  }
+
+  /**
+   * Призначити бійцю підрозділ «Приданий до»
+   * POST /api/Soldier/{id}/assign-assigned/{unitId}
    */
   assignAssigned(id: string, unitId: string | null): Observable<SoldierDto> {
     const targetId = unitId ?? '';
-    return this.http.post<SoldierDto>(`${this.api}/${id}/assign-assigned/${targetId}`, {});
+    return this.http.post<SoldierDto>(`${this.baseUrl}/${id}/assign-assigned/${targetId}`, {}).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося призначити приданий підрозділ',
+        );
+        return throwError(() => new Error(message));
+      }),
+    );
   }
 
   /**
-   * Назначает бойцу Оперативний підрозділ
-   * @param id Soldier.id
-   * @param unitId Unit.id
-   * @returns void
+   * Призначити бійцю оперативний підрозділ
+   * POST /api/Soldier/{id}/assign-involved/{unitId}
    */
   assignInvolved(id: string, unitId: string | null): Observable<SoldierDto> {
     const targetId = unitId ?? '';
-    return this.http.post<SoldierDto>(`${this.api}/${id}/assign-involved/${targetId}`, {});
+    return this.http.post<SoldierDto>(`${this.baseUrl}/${id}/assign-involved/${targetId}`, {}).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося призначити оперативний підрозділ',
+        );
+        return throwError(() => new Error(message));
+      }),
+    );
   }
 
+  /**
+   * Перемістити бійця до іншого підрозділу
+   * POST /api/Soldier/{id}/move/{newUnitId}
+   */
   move(id: string, newUnitId: string): Observable<SoldierDto> {
-    return this.http.post<SoldierDto>(`${this.api}/${id}/move/${newUnitId}`, {});
+    return this.http.post<SoldierDto>(`${this.baseUrl}/${id}/move/${newUnitId}`, {}).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося перемістити військовослужбовця',
+        );
+        return throwError(() => new Error(message));
+      }),
+    );
   }
 }

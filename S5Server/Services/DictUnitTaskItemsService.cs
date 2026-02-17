@@ -77,7 +77,7 @@ namespace S5Server.Services
             if (entity == null)
                 return false;
 
-            if (entity.EqualsDto(dto))
+            if (entity.IsEqualTo(dto))
                 return true; // Нічого не змінилось
 
             entity.ApplyDto(dto);

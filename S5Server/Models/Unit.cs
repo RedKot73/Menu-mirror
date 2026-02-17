@@ -376,7 +376,7 @@ public static class UnitExtensions
     /// <summary>
     /// Перевіряє, чи дані в сутності Unit співпадають з даними в DTO
     /// </summary>
-    public static bool EqualsDto(this Unit unit, UnitDto dto)
+    public static bool IsEqualTo(this Unit unit, UnitDto dto)
     {
         return unit.ParentId == dto.ParentId &&
                unit.AssignedUnitId == dto.AssignedUnitId &&

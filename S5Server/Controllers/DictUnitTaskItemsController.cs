@@ -212,7 +212,7 @@ public class DictUnitTaskItemsController : ControllerBase
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
 
             // Перевіряємо чи змінились дані
-            if (e.EqualsDto(dto))
+            if (e.IsEqualTo(dto))
                 return NoContent();
 
             // Перевіряємо існування зв'язаних сутностей при зміні

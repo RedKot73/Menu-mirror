@@ -146,7 +146,7 @@ public static class DictAreaExtensions
     /// <summary>
     /// Перевіряє, чи дані в сутності DictArea співпадають з даними в DTO
     /// </summary>
-    public static bool EqualsDto(this DictArea area, DictAreaDto dto)
+    public static bool IsEqualTo(this DictArea area, DictAreaDto dto)
     {
         return area.Value == dto.Value.Trim() &&
                area.Comment == (string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim()) &&

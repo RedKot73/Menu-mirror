@@ -108,7 +108,7 @@ namespace S5Server.Models
         /// <summary>
         /// Перевіряє, чи дані в сутності SimpleDictBase співпадають з даними в DTO
         /// </summary>
-        public static bool EqualsDto(this SimpleDictBase entity, SimpleDictDto dto)
+        public static bool IsEqualTo(this SimpleDictBase entity, SimpleDictDto dto)
         {
             return entity.Value == dto.Value.Trim() &&
                    entity.Comment == (string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim());
@@ -167,7 +167,7 @@ namespace S5Server.Models
         /// <summary>
         /// Перевіряє, чи дані в сутності ShortDictBase співпадають з даними в DTO
         /// </summary>
-        public static bool EqualsDto(this ShortDictBase entity, ShortDictDto dto)
+        public static bool IsEqualTo(this ShortDictBase entity, ShortDictDto dto)
         {
             return entity.Value == dto.Value.Trim() &&
                    entity.ShortValue == dto.ShortValue.Trim() &&

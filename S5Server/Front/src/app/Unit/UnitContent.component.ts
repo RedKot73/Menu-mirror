@@ -64,13 +64,14 @@ export class UnitContentComponent {
   reloadSoldiers(): void {
     const unit = this.selectedUnit();
     if (unit?.id) {
-      this.soldierService.getAll(undefined, unit.id).subscribe({
+      //this.soldierService.getAll(undefined, unit.id).subscribe({
+      this.soldierService.getByUnit(unit.id).subscribe({
         next: (data: SoldierDto[]) => this.soldiers.set(data),
         error: (error) => {
           console.error('Помилка завантаження особового складу:', error);
           const errorMessage = S5App_ErrorHandler.handleHttpError(
             error,
-            'Помилка завантаження особового складу'
+            'Помилка завантаження особового складу',
           );
           this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
         },

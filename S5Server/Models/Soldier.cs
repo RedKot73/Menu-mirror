@@ -39,54 +39,7 @@ namespace S5Server.Models
         /// Дата начала действия записи
         /// </summary>
         DateTime ValidFrom
-    )
-    {
-        public static SoldierDto ToDto(Soldier e) =>
-            new(
-                e.Id,
-                e.FirstName,
-                e.MidleName,
-                e.LastName,
-                e.FIO,
-                e.BirthDate,
-                e.NickName,
-                e.UnitId,
-                e.Unit?.ShortName ?? e.Unit?.Name ?? string.Empty,
-                e.ArrivedAt,
-                e.DepartedAt,
-                e.AssignedUnitId,
-                e.AssignedUnit?.ShortName ?? e.AssignedUnit?.Name,
-                e.InvolvedUnitId,
-                e.InvolvedUnit?.ShortName ?? e.InvolvedUnit?.Name,
-                e.RankId,
-                e.Rank?.ShortValue ?? e.Rank?.Value ?? string.Empty,
-                e.PositionId,
-                e.Position?.Value ?? string.Empty,
-                e.StateId,
-                e.State?.Value ?? string.Empty,
-                e.Comment,
-                e.ChangedBy,
-                e.ValidFrom
-            );
-
-        public static void ApplyDto(Soldier e, SoldierDto dto)
-        {
-            e.FirstName = dto.FirstName;
-            e.MidleName = string.IsNullOrWhiteSpace(dto.MidleName) ? null : dto.MidleName;
-            e.LastName = string.IsNullOrWhiteSpace(dto.LastName) ? null : dto.LastName;
-            e.BirthDate = dto.BirthDate;
-            e.NickName = string.IsNullOrWhiteSpace(dto.NickName) ? null : dto.NickName;
-            e.UnitId = dto.UnitId;
-            e.ArrivedAt = dto.ArrivedAt;
-            e.DepartedAt = dto.DepartedAt;
-            e.AssignedUnitId = dto.AssignedUnitId;
-            e.InvolvedUnitId = dto.OperationalUnitId;
-            e.RankId = dto.RankId;
-            e.PositionId = dto.PositionId;
-            e.StateId = dto.StateId;
-            e.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment;
-        }
-    }
+    );
 
     /// <summary>
     /// DTO для создания Soldier
@@ -106,26 +59,7 @@ namespace S5Server.Models
         string PositionId,
         string StateId,
         string? Comment
-    )
-    {
-        public Soldier ToEntity() => new()
-        {
-            FirstName = FirstName.Trim(),
-            MidleName = string.IsNullOrWhiteSpace(MidleName) ? null : MidleName.Trim(),
-            LastName = string.IsNullOrWhiteSpace(LastName) ? null : LastName.Trim(),
-            BirthDate = BirthDate,
-            NickName = string.IsNullOrWhiteSpace(NickName) ? null : NickName.Trim(),
-            UnitId = UnitId,
-            ArrivedAt = ArrivedAt,
-            DepartedAt = DepartedAt,
-            AssignedUnitId = AssignedUnitId,
-            InvolvedUnitId = OperationalUnitId,
-            RankId = RankId,
-            PositionId = PositionId,
-            StateId = StateId,
-            Comment = string.IsNullOrWhiteSpace(Comment) ? null : Comment?.Trim()
-        };
-    }
+    );
 
     /// <summary>
     /// Боєць
@@ -272,5 +206,121 @@ namespace S5Server.Models
         /// </summary>
         [Required]
         public DateTime ValidFrom { get; set; } = DateTime.Now;
+    }
+
+    /// <summary>
+    /// Extension-методи для Soldier
+    /// </summary>
+    public static class SoldierExtensions
+    {
+        /// <summary>
+        /// Конвертує Soldier у SoldierDto
+        /// </summary>
+        public static SoldierDto ToSoldierDto(this Soldier e) =>
+            new(
+                e.Id,
+                e.FirstName,
+                e.MidleName,
+                e.LastName,
+                e.FIO,
+                e.BirthDate,
+                e.NickName,
+                e.UnitId,
+                e.Unit?.ShortName ?? e.Unit?.Name ?? string.Empty,
+                e.ArrivedAt,
+                e.DepartedAt,
+                e.AssignedUnitId,
+                e.AssignedUnit?.ShortName ?? e.AssignedUnit?.Name,
+                e.InvolvedUnitId,
+                e.InvolvedUnit?.ShortName ?? e.InvolvedUnit?.Name,
+                e.RankId,
+                e.Rank?.ShortValue ?? e.Rank?.Value ?? string.Empty,
+                e.PositionId,
+                e.Position?.Value ?? string.Empty,
+                e.StateId,
+                e.State?.Value ?? string.Empty,
+                e.Comment,
+                e.ChangedBy,
+                e.ValidFrom
+            );
+
+        /// <summary>
+        /// Converts a SoldierDto instance to a Soldier entity, mapping relevant properties and applying basic
+        /// normalization.
+        /// </summary>
+        /// <remarks>Use this method to transform DTOs received from external sources into domain entities
+        /// for further processing or persistence. Properties with only whitespace are converted to null to ensure data
+        /// consistency.</remarks>
+        /// <param name="soldierDto">The source SoldierDto object containing soldier data to be converted. Cannot be null.</param>
+        /// <returns>A Soldier entity populated with values from the specified SoldierDto. String properties are trimmed and
+        /// empty values are set to null.</returns>
+        public static Soldier ToEntity(this SoldierCreateDto soldierDto, string changedBy) 
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(changedBy);
+
+            return new()
+            {
+                FirstName = soldierDto.FirstName.Trim(),
+                MidleName = string.IsNullOrWhiteSpace(soldierDto.MidleName) ? null : soldierDto.MidleName.Trim(),
+                LastName = string.IsNullOrWhiteSpace(soldierDto.LastName) ? null : soldierDto.LastName.Trim(),
+                BirthDate = soldierDto.BirthDate,
+                NickName = string.IsNullOrWhiteSpace(soldierDto.NickName) ? null : soldierDto.NickName.Trim(),
+                UnitId = soldierDto.UnitId,
+                ArrivedAt = soldierDto.ArrivedAt,
+                DepartedAt = soldierDto.DepartedAt,
+                AssignedUnitId = soldierDto.AssignedUnitId,
+                InvolvedUnitId = soldierDto.OperationalUnitId,
+                RankId = soldierDto.RankId,
+                PositionId = soldierDto.PositionId,
+                StateId = soldierDto.StateId,
+                Comment = string.IsNullOrWhiteSpace(soldierDto.Comment) ? null : soldierDto.Comment?.Trim(),
+                ChangedBy = changedBy,
+                ValidFrom = DateTime.UtcNow
+            };
+        }
+
+        /// <summary>
+        /// Перевіряє чи рівні дані Soldier з SoldierDto
+        /// </summary>
+        public static bool IsEqualTo(this Soldier e, SoldierDto dto) =>
+            e.FirstName == dto.FirstName &&
+            e.MidleName == (string.IsNullOrWhiteSpace(dto.MidleName) ? null : dto.MidleName) &&
+            e.LastName == (string.IsNullOrWhiteSpace(dto.LastName) ? null : dto.LastName) &&
+            e.BirthDate == dto.BirthDate &&
+            e.NickName == (string.IsNullOrWhiteSpace(dto.NickName) ? null : dto.NickName) &&
+            e.UnitId == dto.UnitId &&
+            e.ArrivedAt == dto.ArrivedAt &&
+            e.DepartedAt == dto.DepartedAt &&
+            e.AssignedUnitId == dto.AssignedUnitId &&
+            e.InvolvedUnitId == dto.OperationalUnitId &&
+            e.RankId == dto.RankId &&
+            e.PositionId == dto.PositionId &&
+            e.StateId == dto.StateId &&
+            e.Comment == (string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment);
+
+        /// <summary>
+        /// Оновлює Soldier даними з SoldierDto
+        /// </summary>
+        public static void UpdateFromDto(this Soldier e, SoldierDto dto, string changedBy)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(changedBy);
+
+            e.FirstName = dto.FirstName;
+            e.MidleName = string.IsNullOrWhiteSpace(dto.MidleName) ? null : dto.MidleName;
+            e.LastName = string.IsNullOrWhiteSpace(dto.LastName) ? null : dto.LastName;
+            e.BirthDate = dto.BirthDate;
+            e.NickName = string.IsNullOrWhiteSpace(dto.NickName) ? null : dto.NickName;
+            e.UnitId = dto.UnitId;
+            e.ArrivedAt = dto.ArrivedAt;
+            e.DepartedAt = dto.DepartedAt;
+            e.AssignedUnitId = dto.AssignedUnitId;
+            e.InvolvedUnitId = dto.OperationalUnitId;
+            e.RankId = dto.RankId;
+            e.PositionId = dto.PositionId;
+            e.StateId = dto.StateId;
+            e.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment;
+            e.ChangedBy = changedBy;
+            e.ValidFrom = DateTime.UtcNow;
+        }
     }
 }

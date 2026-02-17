@@ -267,7 +267,7 @@ public class UnitController : ControllerBase
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
 
             // ✅ Використовуємо Extension-метод для перевірки змін
-            if (e.EqualsDto(dto))
+            if (e.IsEqualTo(dto))
                 return NoContent();
 
             // ✅ Оновлюємо ChangedBy при кожній зміні

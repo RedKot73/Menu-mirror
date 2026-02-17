@@ -60,7 +60,7 @@ namespace S5Server.Controllers
                     .OrderBy(s => s.FirstName)
                     .ThenBy(s => s.MidleName)
                     .ThenBy(s => s.LastName)
-                    .Select(s => SoldierDto.ToDto(s))
+                    .Select(s => s.ToSoldierDto())
                     .ToListAsync(ct);
 
                 return Ok(list);
@@ -73,6 +73,54 @@ namespace S5Server.Controllers
             {
                 if (_logger.IsEnabled(LogLevel.Error))
                     _logger.LogError(ex, "Помилка при отриманні списку Soldier");
+                return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+            }
+        }
+
+        /// <summary>
+        /// Об'єднаний перелік військовослужбовців за підрозділом.
+        /// </summary>
+        [HttpGet("by-unit")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<IEnumerable<SoldierDto>>> GetByUnit(
+            [FromQuery] string unitId,
+            CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(unitId))
+                return BadRequest("unitId обов'язковий");
+
+            try
+            {
+                var qry1 = _set.Where(s => s.UnitId == unitId);
+                var qry2 = _set.Where(s => s.AssignedUnitId == unitId);
+                var qry3 = _set.Where(s => s.InvolvedUnitId == unitId);
+                var result = await (qry1
+                    .Union(qry2)
+                    .Union(qry3))
+                    .Include(s => s.Unit)
+                    .Include(s => s.AssignedUnit)
+                    .Include(s => s.InvolvedUnit)
+                    .Include(s => s.Rank)
+                    .Include(s => s.Position)
+                    .Include(s => s.State)
+                    .OrderBy(s => s.FirstName)
+                    .ThenBy(s => s.MidleName)
+                    .ThenBy(s => s.LastName)
+                    .Select(s => s.ToSoldierDto())
+                    .ToListAsync(ct);
+                return Ok(result);
+            }
+            catch (OperationCanceledException)
+            {
+                return Problem(statusCode: 499, title: "Скасовано кліентом");
+            }
+            catch (Exception ex)
+            {
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, @"Помилка при отриманні
+Об'єднаний перелік військовослужбовців за підрозділом UnitId={unitId}",
+                        unitId);
                 return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
             }
         }
@@ -109,7 +157,7 @@ namespace S5Server.Controllers
                     .OrderBy(s => s.FirstName)
                     .ThenBy(s => s.MidleName)
                     .ThenBy(s => s.LastName)
-                    .Select(s => SoldierDto.ToDto(s))
+                    .Select(s => s.ToSoldierDto())
                     .ToListAsync(ct);
 
                 return Ok(list);
@@ -159,7 +207,7 @@ namespace S5Server.Controllers
                     .OrderBy(s => s.FirstName)
                     .ThenBy(s => s.MidleName)
                     .ThenBy(s => s.LastName)
-                    .Select(s => SoldierDto.ToDto(s))
+                    .Select(s => s.ToSoldierDto())
                     .ToListAsync(ct);
 
                 return Ok(list);
@@ -229,11 +277,11 @@ namespace S5Server.Controllers
 
             try
             {
-                var e = await Query().FirstOrDefaultAsync(s => s.Id == id, ct);
-                if (e == null)
+                var s = await Query().FirstOrDefaultAsync(s => s.Id == id, ct);
+                if (s == null)
                     return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
                 
-                return Ok(SoldierDto.ToDto(e));
+                return Ok(s.ToSoldierDto());
             }
             catch (OperationCanceledException)
             {
@@ -275,13 +323,13 @@ namespace S5Server.Controllers
 
             try
             {
-                var entity = dto.ToEntity();
+                var entity = dto.ToEntity(User.Identity?.Name ?? "System");
 
                 _set.Add(entity);
                 await _db.SaveChangesAsync(ct);
 
                 entity = await Query().FirstAsync(s => s.Id == entity.Id, ct);
-                return CreatedAtAction(nameof(Get), new { id = entity.Id }, SoldierDto.ToDto(entity));
+                return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity.ToSoldierDto());
             }
             catch (OperationCanceledException)
             {
@@ -332,16 +380,10 @@ namespace S5Server.Controllers
                 if (e == null)
                     return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
 
-                var original = (e.FirstName, e.MidleName, e.LastName, e.BirthDate, e.NickName,
-                                e.UnitId, e.AssignedUnitId, e.InvolvedUnitId, e.RankId, e.PositionId, e.StateId, e.Comment);
-
-                SoldierDto.ApplyDto(e, dto);
-
-                var changed = (e.FirstName, e.MidleName, e.LastName, e.BirthDate, e.NickName,
-                               e.UnitId, e.AssignedUnitId, e.InvolvedUnitId, e.RankId, e.PositionId, e.StateId, e.Comment);
-
-                if (original == changed)
+                if (e.IsEqualTo(dto))
                     return NoContent();
+
+                e.UpdateFromDto(dto, User.Identity?.Name ?? "System");
 
                 await _db.SaveChangesAsync(ct);
                 return NoContent();
@@ -444,6 +486,7 @@ namespace S5Server.Controllers
                         e.InvolvedUnitId = newUnitId;
                         break;
                 }
+                e.ChangedBy = User.Identity?.Name ?? "System";
 
                 await _db.SaveChangesAsync(ct);
 
@@ -452,7 +495,7 @@ namespace S5Server.Controllers
                 if (updated == null)
                     return Problem(statusCode: 404, title: "Не знайдено", detail: "Боєць не знайдений після збереження");
 
-                return Ok(SoldierDto.ToDto(updated));
+                return Ok(updated.ToSoldierDto());
             }
             catch (OperationCanceledException)
             {

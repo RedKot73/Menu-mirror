@@ -79,7 +79,7 @@ namespace S5Server.Services
     {
         public static ImportedSoldierResult ToDto(Soldier e, ImportSoldierStatus status)
         {
-            var sldr = SoldierDto.ToDto(e);
+            var sldr = e.ToSoldierDto();
             var res = new ImportedSoldierResult(sldr, status);
             return res;
         }

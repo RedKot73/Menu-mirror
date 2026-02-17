@@ -107,7 +107,7 @@ namespace S5Server.Models
         /// <summary>
         /// Перевіряє, чи дані в сутності DictUnitTaskItem співпадають з даними в DTO
         /// </summary>
-        public static bool EqualsDto(this DictUnitTaskItem item, DictUnitTaskItemDto dto)
+        public static bool IsEqualTo(this DictUnitTaskItem item, DictUnitTaskItemDto dto)
         {
             return item.Value == dto.Value.Trim() &&
                    item.Comment == (string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim()) &&

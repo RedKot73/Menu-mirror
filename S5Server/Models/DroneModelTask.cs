@@ -116,11 +116,11 @@ public static class DroneModelTaskExtensions
     /// <summary>
     /// Перевірка чи змінились дані
     /// </summary>
-    public static bool EqualsDto(this DroneModelTask entity, DroneModelTaskUpSertDto dto) =>
+    public static bool IsEqualTo(this DroneModelTask entity, DroneModelTaskUpSertDto dto) =>
         entity.DroneModelId == dto.DroneModelId &&
         entity.Quantity == dto.Quantity;
 
-    public static bool EqualsDto(this List<DroneModelTask> means, List<DroneModelTaskUpSertDto> dto) =>
+    public static bool IsEqualTo(this List<DroneModelTask> means, List<DroneModelTaskUpSertDto> dto) =>
         means.Count == dto.Count &&
-        !means.Where((t, i) => !t.EqualsDto(dto[i])).Any();
+        !means.Where((t, i) => !t.IsEqualTo(dto[i])).Any();
 }

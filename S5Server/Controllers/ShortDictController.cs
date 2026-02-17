@@ -158,7 +158,7 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
             return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
 
         // Перевіряємо чи змінились дані
-        if (entity.EqualsDto(dto))
+        if (entity.IsEqualTo(dto))
             return Ok(entity.ToDto());
 
         entity.ApplyDto(dto);
