@@ -131,15 +131,15 @@ export class SoldierService {
 
   /**
    * Отримати перелік за оперативним підрозділом
-   * GET /api/Soldier/by-operational?operationalUnitId={id}&search={search}&limit={limit}
+   * GET /api/Soldier/by-involved?involvedUnitId={id}&search={search}&limit={limit}
    */
   getByInvolved(
-    operationalUnitId: string,
+    involvedUnitId: string,
     search?: string,
     limit?: number,
   ): Observable<SoldierDto[]> {
     let params = new HttpParams();
-    params = params.set('operationalUnitId', operationalUnitId);
+    params = params.set('involvedUnitId', involvedUnitId);
     if (search) {
       params = params.set('search', search);
     }
@@ -147,7 +147,7 @@ export class SoldierService {
       params = params.set('limit', limit.toString());
     }
 
-    return this.http.get<SoldierDto[]>(`${this.baseUrl}/by-operational`, { params }).pipe(
+    return this.http.get<SoldierDto[]>(`${this.baseUrl}/by-involved`, { params }).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,

@@ -4,9 +4,19 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    
+    <!-- ✅ .NET 10 оптимізації для Azure -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    
+    <!-- ✅ Додаткові оптимізації -->
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Виключити Angular development files -->
     <Compile Remove="Front\src\app\DocTemplates1\**" />
     <Content Remove="Front\src\app\DocTemplates1\**" />
     <EmbeddedResource Remove="Front\src\app\DocTemplates1\**" />
@@ -15,55 +25,71 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DocumentFormat.OpenXml" Version="3.4.1" />
-    <PackageReference Include="DocumentFormat.OpenXml.Features" Version="3.4.1" />
-    <PackageReference Include="DocumentFormat.OpenXml.Framework" Version="3.4.1" />
-    <PackageReference Include="EfCore.SchemaCompare" Version="10.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />
-    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.3" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.3" />
-    <PackageReference Include="Microsoft.Build" Version="18.0.2" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- PostgreSQL + Entity Framework Core -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+    <PackageReference Include="EFCore.NamingConventions" Version="10.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.3" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.15.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.3" />
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- ASP.NET Core Identity -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.16.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.16.0" />
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- Azure (мінімум для обмеженого бюджету) -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <PackageReference Include="Azure.Identity" Version="1.17.1" />
+    <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.4.0" />
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- Logging (БЕЗКОШТОВНО) -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageReference Include="Serilog.Exceptions" Version="8.4.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.AzureAppServices" Version="10.0.3" />
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- OpenXML (для документів БР/БД) -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.4.1" />
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- TypeScript (тільки для розробки) -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.9.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    
-    <PackageReference Include="Serilog" Version="4.3.1" />
-    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
-    <PackageReference Include="Serilog.Exceptions" Version="8.4.0" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
-    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
-    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="18.0.2" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="18.0.2" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="Data\S5_DB.sqlite">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <!-- Copy Angular build files to wwwroot -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- Angular → wwwroot при Publish -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
   <Target Name="PublishAngular" AfterTargets="Publish">
     <ItemGroup>
       <AngularFiles Include="Front\dist\Menu\browser\**\*.*" />
     </ItemGroup>
-    <Copy SourceFiles="@(AngularFiles)" DestinationFolder="$(PublishDir)wwwroot\%(RecursiveDir)" />
+    <Copy SourceFiles="@(AngularFiles)" 
+          DestinationFolder="$(PublishDir)wwwroot\%(RecursiveDir)" 
+          SkipUnchangedFiles="true" />
   </Target>
 
   <ItemGroup>
-    <Content Include="Front\dist\Menu\browser\**\*.*" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Front\dist\Menu\browser\**\*.*" 
+             CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

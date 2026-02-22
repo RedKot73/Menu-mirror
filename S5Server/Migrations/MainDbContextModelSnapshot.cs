@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using S5Server.Data;
 
 #nullable disable
@@ -15,823 +16,1034 @@ namespace S5Server.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.2");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "10.0.3")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "citext");
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text")
+                        .HasColumnName("concurrency_stamp")
+                        .HasComment("Мітка конкурентності для оптимістичного блокування");
 
                     b.Property<string>("Name")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(256)")
+                        .HasColumnName("name")
+                        .HasComment("Назва ролі (наприклад: Admin, Commander)");
 
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(256)")
+                        .HasColumnName("normalized_name")
+                        .HasComment("Нормалізована назва ролі для пошуку (UPPERCASE)");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_roles");
 
                     b.HasIndex("NormalizedName")
                         .IsUnique()
                         .HasDatabaseName("RoleNameIndex");
 
-                    b.ToTable("AspNetRoles", (string)null);
+                    b.ToTable("roles", "identity", t =>
+                        {
+                            t.HasComment("Ролі користувачів системи (Admin, Commander, Operator, Viewer)");
+                        });
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text")
+                        .HasColumnName("claim_type");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text")
+                        .HasColumnName("claim_value");
 
-                    b.Property<string>("RoleId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("role_id");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_role_claims");
 
-                    b.HasIndex("RoleId");
+                    b.HasIndex("RoleId")
+                        .HasDatabaseName("ix_role_claims_role_id");
 
-                    b.ToTable("AspNetRoleClaims", (string)null);
+                    b.ToTable("role_claims", "identity", t =>
+                        {
+                            t.HasComment("Додаткові дозволи та атрибути ролей. Всі користувачі з роллю автоматично отримують ці claims для перевірки прав доступу");
+                        });
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUser", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("AccessFailedCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("NormalizedEmail")
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("NormalizedUserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PasswordHash")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NormalizedEmail")
-                        .HasDatabaseName("EmailIndex");
-
-                    b.HasIndex("NormalizedUserName")
-                        .IsUnique()
-                        .HasDatabaseName("UserNameIndex");
-
-                    b.ToTable("AspNetUsers", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text")
+                        .HasColumnName("claim_type");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text")
+                        .HasColumnName("claim_value");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_user_claims");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_user_claims_user_id");
 
-                    b.ToTable("AspNetUserClaims", (string)null);
+                    b.ToTable("user_claims", "identity", t =>
+                        {
+                            t.HasComment("Представляє твердження, яке має користувач");
+                        });
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("login_provider")
+                        .HasComment("Назва зовнішнього провайдера Facebook/Microsoft/Google");
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("provider_key")
+                        .HasComment("Google повертає ProviderKey(наприклад 105742856...)");
 
                     b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text")
+                        .HasColumnName("provider_display_name")
+                        .HasComment("Назва провайдера для інтерфейсу");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id")
+                        .HasComment("Посилання на відповідного користувача");
 
-                    b.HasKey("LoginProvider", "ProviderKey");
+                    b.HasKey("LoginProvider", "ProviderKey")
+                        .HasName("pk_user_logins");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_user_logins_user_id");
 
-                    b.ToTable("AspNetUserLogins", (string)null);
+                    b.ToTable("user_logins", "identity", t =>
+                        {
+                            t.HasComment("Для входу через зовнішні сервіси типу Facebook/Microsoft/Google");
+                        });
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
                 {
-                    b.Property<string>("UserId")
-                        .HasColumnType("TEXT");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
 
-                    b.Property<string>("RoleId")
-                        .HasColumnType("TEXT");
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("role_id");
 
-                    b.HasKey("UserId", "RoleId");
+                    b.HasKey("UserId", "RoleId")
+                        .HasName("pk_user_roles");
 
-                    b.HasIndex("RoleId");
+                    b.HasIndex("RoleId")
+                        .HasDatabaseName("ix_user_roles_role_id");
 
-                    b.ToTable("AspNetUserRoles", (string)null);
+                    b.ToTable("user_roles", "identity", t =>
+                        {
+                            t.HasComment("Link between a user and a role");
+                        });
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
-                    b.Property<string>("UserId")
-                        .HasColumnType("TEXT");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("login_provider")
+                        .HasComment("Провайдер: [AspNetUserStore] для внутрішніх, Google/Facebook для зовнішніх");
 
                     b.Property<string>("Name")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("name")
+                        .HasComment("Тип токену: AuthenticatorKey, RecoveryCodes, refresh_token");
 
                     b.Property<string>("Value")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text")
+                        .HasColumnName("value")
+                        .HasComment("Значення токену (зашифроване)");
 
-                    b.HasKey("UserId", "LoginProvider", "Name");
+                    b.HasKey("UserId", "LoginProvider", "Name")
+                        .HasName("pk_user_tokens");
 
-                    b.ToTable("AspNetUserTokens", (string)null);
+                    b.ToTable("user_tokens", "identity", t =>
+                        {
+                            t.HasComment("Токени для 2FA, reset password, email confirmation та зовнішніх провайдерів");
+                        });
                 });
 
             modelBuilder.Entity("S5Server.Models.DictArea", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
-                    b.Property<string>("AreaTypeId")
-                        .IsRequired()
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("AreaTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("area_type_id");
 
                     b.Property<string>("CityCodeId")
-                        .HasColumnType("TEXT(36)");
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("city_code_id");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(250)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("comment");
 
                     b.Property<string>("Coords")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(300)")
+                        .HasColumnName("coords");
 
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("value");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_dict_area");
 
-                    b.HasIndex("AreaTypeId");
+                    b.HasIndex("AreaTypeId")
+                        .HasDatabaseName("ix_dict_area_area_type_id");
 
-                    b.HasIndex("CityCodeId");
+                    b.HasIndex("CityCodeId")
+                        .HasDatabaseName("ix_dict_area_city_code_id");
 
                     b.HasIndex("Value")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_dict_area_value");
 
-                    b.ToTable("dict_area", (string)null);
+                    b.ToTable("dict_area", "dict", t =>
+                        {
+                            t.HasComment("Район виконання завдань (РВЗ)");
+                        });
                 });
 
             modelBuilder.Entity("S5Server.Models.DictAreaType", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(250)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("comment");
 
                     b.Property<string>("ShortValue")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("short_value");
 
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("value");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_dict_area_type");
 
                     b.HasIndex("Value")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_dict_area_type_value");
 
-                    b.ToTable("dict_area_type", (string)null);
+                    b.ToTable("dict_area_type", "dict", t =>
+                        {
+                            t.HasComment("Тип Напрямку ЛБЗ: ППД,РВЗ,ТПУ,ПУ,РВБД,БРО");
+                        });
                 });
 
             modelBuilder.Entity("S5Server.Models.DictCityCategory", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("CodeId")
                         .IsRequired()
                         .HasMaxLength(1)
-                        .HasColumnType("TEXT(1)");
+                        .HasColumnType("varchar(1)")
+                        .HasColumnName("code_id");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(250)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("comment");
 
                     b.Property<string>("ShortValue")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("short_value");
 
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("value");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_dict_city_category");
 
                     b.HasIndex("ShortValue")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_dict_city_category_short_value");
 
                     b.HasIndex("Value")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_dict_city_category_value");
 
-                    b.ToTable("dict_city_category", (string)null);
+                    b.ToTable("dict_city_category", "dict", t =>
+                        {
+                            t.HasComment("Категорія об’єкта: «М» – міста,«С» – села...");
+                        });
                 });
 
             modelBuilder.Entity("S5Server.Models.DictCityCode", b =>
                 {
                     b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("id");
 
-                    b.Property<string>("CategoryId")
-                        .IsRequired()
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("category_id")
+                        .HasComment("Категорія об’єкта: «Р»–райони в областях,«Н»–території територіальних громад...)");
 
                     b.Property<string>("Level1Id")
                         .IsRequired()
-                        .HasColumnType("TEXT(20)");
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("level1id")
+                        .HasComment("Автономна Республіка Крим, області, міста, що мають спеціальний статус");
 
                     b.Property<string>("Level2Id")
-                        .HasColumnType("TEXT(20)");
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("level2id")
+                        .HasComment("райони в областях та Автономній Республіці Крим");
 
                     b.Property<string>("Level3Id")
-                        .HasColumnType("TEXT(20)");
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("level3id")
+                        .HasComment("території територіальних громад в областях");
 
                     b.Property<string>("Level4Id")
-                        .HasColumnType("TEXT(20)");
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("level4id")
+                        .HasComment("міста, селища міського типу, села, селища (населені пункти)");
 
                     b.Property<string>("LevelExtId")
-                        .HasColumnType("TEXT(20)");
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("level_ext_id")
+                        .HasComment("райони в містах (в тому числі, в містах, що мають спеціальний статус)");
 
                     b.Property<string>("ParentId")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("parent_id")
+                        .HasComment("Адм. одиниця вищого рівня");
 
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("value");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_dict_city_code");
 
-                    b.HasIndex("CategoryId");
+                    b.HasIndex("CategoryId")
+                        .HasDatabaseName("ix_dict_city_code_category_id");
 
-                    b.HasIndex("Level1Id");
+                    b.HasIndex("Level1Id")
+                        .HasDatabaseName("ix_dict_city_code_level1id");
 
-                    b.HasIndex("Level2Id");
+                    b.HasIndex("Level2Id")
+                        .HasDatabaseName("ix_dict_city_code_level2id");
 
-                    b.HasIndex("Level3Id");
+                    b.HasIndex("Level3Id")
+                        .HasDatabaseName("ix_dict_city_code_level3id");
 
-                    b.HasIndex("Level4Id");
+                    b.HasIndex("Level4Id")
+                        .HasDatabaseName("ix_dict_city_code_level4id");
 
-                    b.HasIndex("LevelExtId");
+                    b.HasIndex("LevelExtId")
+                        .HasDatabaseName("ix_dict_city_code_level_ext_id");
 
-                    b.HasIndex("ParentId");
+                    b.HasIndex("ParentId")
+                        .HasDatabaseName("ix_dict_city_code_parent_id");
 
-                    b.ToTable("dict_city_code", (string)null);
+                    b.ToTable("dict_city_code", "dict", t =>
+                        {
+                            t.HasComment("Запис Кодифікатору адміністративно-територіальних одиниць та територій територіальних громад");
+                        });
                 });
 
             modelBuilder.Entity("S5Server.Models.DictDroneModel", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(250)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("comment");
 
-                    b.Property<string>("DroneTypeId")
-                        .IsRequired()
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("DroneTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("drone_type_id");
 
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("value");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_dict_drone_model");
 
-                    b.HasIndex("DroneTypeId");
+                    b.HasIndex("DroneTypeId")
+                        .HasDatabaseName("ix_dict_drone_model_drone_type_id");
 
                     b.HasIndex("Value")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_dict_drone_model_value");
 
-                    b.ToTable("dict_drone_model", (string)null);
+                    b.ToTable("dict_drone_model", "dict", t =>
+                        {
+                            t.HasComment("Модель БПЛА");
+                        });
                 });
 
             modelBuilder.Entity("S5Server.Models.DictDroneType", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(250)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("comment");
 
                     b.Property<string>("ShortValue")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("short_value");
 
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("value");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_dict_drone_type");
 
                     b.HasIndex("Value")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_dict_drone_type_value");
 
-                    b.ToTable("dict_drone_type", (string)null);
+                    b.ToTable("dict_drone_type", "dict", t =>
+                        {
+                            t.HasComment("Типи БПЛА");
+                        });
                 });
 
             modelBuilder.Entity("S5Server.Models.DictForcesType", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(250)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("comment");
 
                     b.Property<string>("ShortValue")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("short_value");
 
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("value");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_dict_forces_type");
 
                     b.HasIndex("Value")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_dict_forces_type_value");
 
-                    b.ToTable("dict_forces_type", (string)null);
+                    b.ToTable("dict_forces_type", "dict", t =>
+                        {
+                            t.HasComment("Вид збройних сил Сухопутні, ДШВ, ВМС...");
+                        });
                 });
 
             modelBuilder.Entity("S5Server.Models.DictPosition", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(250)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("comment");
 
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("value");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_dict_position");
 
                     b.HasIndex("Value")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_dict_position_value");
 
-                    b.ToTable("dict_position", (string)null);
+                    b.ToTable("dict_position", "dict", t =>
+                        {
+                            t.HasComment("Посади");
+                        });
                 });
 
             modelBuilder.Entity("S5Server.Models.DictRank", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("Category")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text")
+                        .HasColumnName("category");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(250)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("comment");
 
                     b.Property<string>("NATOCode")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text")
+                        .HasColumnName("nato_code");
 
                     b.Property<int>("OrderVal")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer")
+                        .HasColumnName("order_val");
 
                     b.Property<string>("ShortValue")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("short_value");
 
                     b.Property<string>("SubCategory")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text")
+                        .HasColumnName("sub_category");
 
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("value");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_dict_rank");
 
                     b.HasIndex("Value")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_dict_rank_value");
 
-                    b.ToTable("dict_rank", null, t =>
+                    b.ToTable("dict_rank", "dict", t =>
                         {
-                            t.HasComment("Військове звання");
+                            t.HasComment("Довідник Військове звання");
                         });
                 });
 
             modelBuilder.Entity("S5Server.Models.DictSoldierState", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(250)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("comment");
 
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("value");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_dict_soldier_state");
 
                     b.HasIndex("Value")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_dict_soldier_state_value");
 
-                    b.ToTable("dict_soldier_state", (string)null);
+                    b.ToTable("dict_soldier_state", "dict", t =>
+                        {
+                            t.HasComment("Статус бійця норм/поранено/в полоні/СЗЧ...");
+                        });
                 });
 
             modelBuilder.Entity("S5Server.Models.DictTemplateCategory", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(250)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("comment");
 
                     b.Property<string>("ShortValue")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("short_value");
 
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("value");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_dict_template_category");
 
                     b.HasIndex("Value")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_dict_template_category_value");
 
-                    b.ToTable("dict_template_category", (string)null);
+                    b.ToTable("dict_template_category", "dict", t =>
+                        {
+                            t.HasComment("Категория шаблона документа(БР / БД / и т.д.");
+                        });
                 });
 
             modelBuilder.Entity("S5Server.Models.DictUnitTask", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("REAL");
+                        .HasColumnType("money")
+                        .HasColumnName("amount");
 
-                    b.Property<string>("AreaTypeId")
-                        .IsRequired()
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("AreaTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("area_type_id");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(250)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("comment");
 
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("value");
 
                     b.Property<bool>("WithMeans")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("with_means");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_dict_unit_task");
 
-                    b.HasIndex("AreaTypeId");
+                    b.HasIndex("AreaTypeId")
+                        .HasDatabaseName("ix_dict_unit_task_area_type_id");
 
                     b.HasIndex("Value")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_dict_unit_task_value");
 
-                    b.ToTable("dict_unit_task", (string)null);
+                    b.ToTable("dict_unit_task", "dict", t =>
+                        {
+                            t.HasComment("Завдання підрозділу для використання в документах БР/БД");
+                        });
                 });
 
             modelBuilder.Entity("S5Server.Models.DictUnitTaskItem", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(250)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("comment");
 
-                    b.Property<string>("TemplateCategoryId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("TemplateCategoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("template_category_id");
 
-                    b.Property<string>("UnitTaskId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("UnitTaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("unit_task_id");
 
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("citext")
+                        .HasColumnName("value");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_dict_unit_task_item");
 
-                    b.HasIndex("TemplateCategoryId");
+                    b.HasIndex("TemplateCategoryId")
+                        .HasDatabaseName("ix_dict_unit_task_item_template_category_id");
 
-                    b.HasIndex("UnitTaskId", "TemplateCategoryId");
+                    b.HasIndex("UnitTaskId", "TemplateCategoryId")
+                        .HasDatabaseName("ix_dict_unit_task_item_unit_task_id_template_category_id");
 
-                    b.ToTable("dict_unit_task_item", (string)null);
+                    b.ToTable("dict_unit_task_item", "dict", t =>
+                        {
+                            t.HasComment("Опис Завдання прив'язаний до Категорії шаблона документа");
+                        });
                 });
 
             modelBuilder.Entity("S5Server.Models.DictUnitType", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(250)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("comment");
 
                     b.Property<string>("ShortValue")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("short_value");
 
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("value");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_dict_unit_type");
 
                     b.HasIndex("Value")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_dict_unit_type_value");
 
-                    b.ToTable("dict_unit_type", (string)null);
+                    b.ToTable("dict_unit_type", "dict", t =>
+                        {
+                            t.HasComment("Тип підрозділу Бригада, Полк, Батальйон, Рота");
+                        });
                 });
 
             modelBuilder.Entity("S5Server.Models.DocumentTemplate", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT(36)");
-
-                    b.Property<byte[]>("Content")
-                        .IsRequired()
-                        .HasColumnType("BLOB");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(300)
-                        .HasColumnType("TEXT(300)");
-
-                    b.Property<bool>("IsPublished")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT(150)");
-
-                    b.Property<DateTime?>("PublishedAtUtc")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("TemplateCategoryId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
-
-                    b.Property<DateTime>("UpdatedAtUtc")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IsPublished");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.HasIndex("TemplateCategoryId");
-
-                    b.ToTable("document_templates", (string)null);
-                });
-
-            modelBuilder.Entity("S5Server.Models.DroneModelTask", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
-
-                    b.Property<string>("DroneModelId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
-
-                    b.Property<int>("Quantity")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(1);
-
-                    b.Property<string>("UnitTaskId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DroneModelId");
-
-                    b.HasIndex("UnitTaskId");
-
-                    b.HasIndex("UnitTaskId", "DroneModelId")
-                        .IsUnique();
-
-                    b.ToTable("drone_model_task", (string)null);
-                });
-
-            modelBuilder.Entity("S5Server.Models.Soldier", b =>
-                {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT(36)");
-
-                    b.Property<DateOnly?>("ArrivedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("AssignedUnitId")
-                        .HasColumnType("TEXT(36)");
-
-                    b.Property<DateOnly?>("BirthDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("ChangedBy")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("changed_by");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsPublished")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_published")
+                        .HasComment("Чернетка/Опубліковано");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTime?>("PublishedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at_utc");
+
+                    b.Property<string>("PublishedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("published_by");
+
+                    b.Property<Guid>("TemplateCategoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("template_category_id")
+                        .HasComment("Категория шаблона документа БР/БД...");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valid_from")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("Id")
+                        .HasName("pk_document_templates");
+
+                    b.HasIndex("TemplateCategoryId")
+                        .HasDatabaseName("ix_document_templates_template_category_id");
+
+                    b.ToTable("document_templates", "docs", t =>
+                        {
+                            t.HasComment("Шаблон документа HTML-format з якорями HandleBars");
+                        });
+                });
+
+            modelBuilder.Entity("S5Server.Models.DroneModelTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("DroneModelId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("drone_model_id");
+
+                    b.Property<int>("Quantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1)
+                        .HasColumnName("quantity");
+
+                    b.Property<Guid>("UnitTaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("unit_task_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_drone_model_task");
+
+                    b.HasIndex("DroneModelId")
+                        .HasDatabaseName("ix_drone_model_task_drone_model_id");
+
+                    b.HasIndex("UnitTaskId")
+                        .HasDatabaseName("ix_drone_model_task_unit_task_id");
+
+                    b.HasIndex("UnitTaskId", "DroneModelId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_drone_model_task_unit_task_id_drone_model_id");
+
+                    b.ToTable("drone_model_task", "docs", t =>
+                        {
+                            t.HasComment("Модель БПЛА (для завдань підрозділів)");
+                        });
+                });
+
+            modelBuilder.Entity("S5Server.Models.Soldier", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateOnly?>("ArrivedAt")
+                        .HasColumnType("date")
+                        .HasColumnName("arrived_at")
+                        .HasComment("Прибув");
+
+                    b.Property<Guid?>("AssignedUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assigned_unit_id")
+                        .HasComment("Приданий до підрозділу");
+
+                    b.Property<DateOnly?>("BirthDate")
+                        .HasColumnType("date")
+                        .HasColumnName("birth_date");
+
+                    b.Property<string>("ChangedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("changed_by");
 
                     b.Property<string>("Comment")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("comment");
 
                     b.Property<DateOnly?>("DepartedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date")
+                        .HasColumnName("departed_at")
+                        .HasComment("Вибув");
 
                     b.Property<int?>("ExternId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer")
+                        .HasColumnName("extern_id")
+                        .HasComment("Id з Імпульса, Армія- ...");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("first_name");
 
-                    b.Property<string>("InvolvedUnitId")
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid?>("InvolvedUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("involved_unit_id")
+                        .HasComment("Позаштатний підрозділ - Екіпаж/Група");
 
                     b.Property<string>("LastName")
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("last_name");
 
                     b.Property<string>("MidleName")
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("midle_name");
 
                     b.Property<string>("NickName")
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("nick_name");
 
-                    b.Property<string>("PositionId")
-                        .IsRequired()
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("PositionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("position_id")
+                        .HasComment("Посада");
 
-                    b.Property<string>("RankId")
-                        .IsRequired()
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("RankId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("rank_id")
+                        .HasComment("Звання");
 
-                    b.Property<string>("StateId")
-                        .IsRequired()
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("StateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("state_id")
+                        .HasComment("Статус: Звичайний, 200,300,500,Поранено,СЗЧ...");
 
-                    b.Property<string>("UnitId")
-                        .IsRequired()
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("UnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("unit_id")
+                        .HasComment("Штатний підрозділ");
 
                     b.Property<DateTime>("ValidFrom")
-                        .HasColumnType("TEXT");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valid_from")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_soldiers");
 
-                    b.HasIndex("AssignedUnitId");
+                    b.HasIndex("AssignedUnitId")
+                        .HasDatabaseName("ix_soldiers_assigned_unit_id");
 
-                    b.HasIndex("InvolvedUnitId");
+                    b.HasIndex("InvolvedUnitId")
+                        .HasDatabaseName("ix_soldiers_involved_unit_id");
 
-                    b.HasIndex("PositionId");
+                    b.HasIndex("PositionId")
+                        .HasDatabaseName("ix_soldiers_position_id");
 
-                    b.HasIndex("RankId");
+                    b.HasIndex("RankId")
+                        .HasDatabaseName("ix_soldiers_rank_id");
 
-                    b.HasIndex("StateId");
+                    b.HasIndex("StateId")
+                        .HasDatabaseName("ix_soldiers_state_id");
 
-                    b.HasIndex("UnitId");
+                    b.HasIndex("UnitId")
+                        .HasDatabaseName("ix_soldiers_unit_id");
 
-                    b.ToTable("soldiers", null, t =>
+                    b.ToTable("soldiers", "core", t =>
                         {
+                            t.HasComment("Особовий склад");
+
                             t.HasTrigger("trg_soldiers_delete_history");
 
                             t.HasTrigger("trg_soldiers_insert_history");
@@ -842,439 +1054,621 @@ namespace S5Server.Migrations
 
             modelBuilder.Entity("S5Server.Models.SoldierHist", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT(36)");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<DateOnly?>("ArrivedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date")
+                        .HasColumnName("arrived_at")
+                        .HasComment("Прибув до підрозділу Дата");
 
-                    b.Property<string>("AssignedUnitId")
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid?>("AssignedUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assigned_unit_id")
+                        .HasComment("Приданий до підрозділу");
 
                     b.Property<string>("AssignedUnitShortName")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("assigned_unit_short_name")
+                        .HasComment("Приданий до підрозділу");
 
                     b.Property<DateOnly?>("BirthDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date")
+                        .HasColumnName("birth_date");
 
                     b.Property<string>("ChangedBy")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("changed_by");
 
                     b.Property<string>("Comment")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("comment");
 
                     b.Property<DateOnly?>("DepartedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date")
+                        .HasColumnName("departed_at")
+                        .HasComment("Вибув з підрозділу Дата");
 
                     b.Property<int?>("ExternId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer")
+                        .HasColumnName("extern_id")
+                        .HasComment("Внешний ID (из Импульса, Армия+ и т.д.)");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("first_name");
+
+                    b.Property<Guid?>("InvolvedUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("involved_unit_id")
+                        .HasComment("Позаштатний підрозділ - Екіпаж/Група");
+
+                    b.Property<string>("InvolvedUnitShortName")
+                        .HasMaxLength(100)
+                        .HasColumnType("citext")
+                        .HasColumnName("involved_unit_short_name")
+                        .HasComment("Позаштатний підрозділ - Екіпаж/Група");
 
                     b.Property<string>("LastName")
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("last_name");
 
                     b.Property<string>("MidleName")
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("midle_name");
 
                     b.Property<string>("NickName")
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("nick_name")
+                        .HasComment("Позивний");
 
                     b.Property<string>("Operation")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("TEXT(10)");
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("operation");
 
-                    b.Property<string>("OperationalUnitId")
-                        .HasColumnType("TEXT(36)");
-
-                    b.Property<string>("OperationalUnitShortName")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
-
-                    b.Property<string>("PositionId")
-                        .IsRequired()
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("PositionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("position_id")
+                        .HasComment("Посада");
 
                     b.Property<string>("PositionValue")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("position_value")
+                        .HasComment("Посада");
 
-                    b.Property<string>("RankId")
-                        .IsRequired()
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("RankId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("rank_id")
+                        .HasComment("Звання");
 
                     b.Property<string>("RankShortValue")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("rank_short_value")
+                        .HasComment("Звання");
 
-                    b.Property<string>("SoldierId")
-                        .IsRequired()
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("SoldierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("soldier_id")
+                        .HasComment("Ссылка на оригинального бойца");
 
-                    b.Property<string>("StateId")
-                        .IsRequired()
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("StateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("state_id")
+                        .HasComment("Статус: Звичайний, 200,300,500,Поранено,СЗЧ...");
 
                     b.Property<string>("StateValue")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("state_value")
+                        .HasComment("Статус: Звичайний, 200,300,500,Поранено,СЗЧ...");
 
-                    b.Property<string>("UnitId")
-                        .IsRequired()
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("UnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("unit_id")
+                        .HasComment("Штатний підрозділ");
 
                     b.Property<string>("UnitShortName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("unit_short_name")
+                        .HasComment("Штатний підрозділ");
 
                     b.Property<DateTime>("ValidFrom")
-                        .HasColumnType("TEXT");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valid_from")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<DateTime?>("ValidTo")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valid_to");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_soldiers_hist");
 
-                    b.HasIndex("Operation");
+                    b.HasIndex("SoldierId")
+                        .HasDatabaseName("ix_soldiers_hist_soldier_id");
 
-                    b.HasIndex("SoldierId");
+                    b.HasIndex("UnitId")
+                        .HasDatabaseName("ix_soldiers_hist_unit_id");
 
-                    b.HasIndex("UnitId");
+                    b.HasIndex("SoldierId", "ValidFrom")
+                        .HasDatabaseName("ix_soldiers_hist_soldier_id_valid_from");
 
-                    b.HasIndex("SoldierId", "ValidFrom");
-
-                    b.ToTable("soldiers_hist", (string)null);
+                    b.ToTable("soldiers_hist", "history", t =>
+                        {
+                            t.HasComment("Особовий склад - історія");
+                        });
                 });
 
             modelBuilder.Entity("S5Server.Models.SoldierTask", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<DateOnly?>("ArrivedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date")
+                        .HasColumnName("arrived_at")
+                        .HasComment("Прибув до підрозділу Дата");
 
-                    b.Property<string>("AssignedUnitId")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid?>("AssignedUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assigned_unit_id")
+                        .HasComment("Приданий до підрозділу");
 
                     b.Property<string>("AssignedUnitShortName")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("assigned_unit_short_name")
+                        .HasComment("Приданий до підрозділу");
 
                     b.Property<string>("ChangedBy")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("changed_by");
 
                     b.Property<string>("Comment")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("comment");
 
                     b.Property<DateOnly?>("DepartedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date")
+                        .HasColumnName("departed_at")
+                        .HasComment("Вибув з підрозділу Дата");
 
                     b.Property<int?>("ExternId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer")
+                        .HasColumnName("extern_id")
+                        .HasComment("Внешний ID (из Импульса, Армия+ и т.д.)");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("first_name");
 
-                    b.Property<string>("InvolvedUnitId")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid?>("InvolvedUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("involved_unit_id")
+                        .HasComment("Позаштатний підрозділ - Екіпаж/Група");
 
                     b.Property<string>("InvolvedUnitShortName")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("involved_unit_short_name")
+                        .HasComment("Позаштатний підрозділ - Екіпаж/Група");
 
                     b.Property<string>("LastName")
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("last_name");
 
                     b.Property<string>("MidleName")
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("midle_name");
 
                     b.Property<string>("NickName")
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("nick_name")
+                        .HasComment("Позивний");
 
-                    b.Property<string>("PositionId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("PositionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("position_id")
+                        .HasComment("Посада");
 
                     b.Property<string>("PositionValue")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("position_value")
+                        .HasComment("Посада");
 
-                    b.Property<string>("RankId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("RankId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("rank_id")
+                        .HasComment("Звання");
 
                     b.Property<string>("RankShortValue")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("rank_short_value")
+                        .HasComment("Звання");
 
-                    b.Property<string>("SoldierId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("SoldierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("soldier_id")
+                        .HasComment("Ссылка на оригинального бойца");
 
-                    b.Property<string>("StateId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("StateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("state_id")
+                        .HasComment("Статус: Звичайний, 200,300,500,Поранено,СЗЧ...");
 
                     b.Property<string>("StateValue")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("state_value")
+                        .HasComment("Статус: Звичайний, 200,300,500,Поранено,СЗЧ...");
 
-                    b.Property<string>("UnitId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("UnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("unit_id")
+                        .HasComment("Штатний підрозділ");
 
                     b.Property<string>("UnitShortName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("unit_short_name")
+                        .HasComment("Штатний підрозділ");
 
-                    b.Property<string>("UnitTaskId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("UnitTaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("unit_task_id")
+                        .HasComment("Ссылка на UnitTask (задание подразделения)");
 
                     b.Property<DateTime>("ValidFrom")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SoldierId");
-
-                    b.HasIndex("UnitTaskId");
-
-                    b.HasIndex("UnitTaskId", "SoldierId")
-                        .IsUnique();
-
-                    b.ToTable("soldiers_task", (string)null);
-                });
-
-            modelBuilder.Entity("S5Server.Models.TVezhaUser<string>", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("AccessFailedCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Email")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("LastLoginDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("NormalizedEmail")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("NormalizedUserName")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PasswordHash")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("RegistrationDate")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valid_from")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("SoldierId")
-                        .IsRequired()
-                        .HasColumnType("TEXT(36)");
-
-                    b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UserName")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_soldiers_task");
 
                     b.HasIndex("SoldierId")
-                        .IsUnique();
+                        .HasDatabaseName("ix_soldiers_task_soldier_id");
 
-                    b.ToTable("TVezhaUser<string>");
+                    b.HasIndex("UnitTaskId")
+                        .HasDatabaseName("ix_soldiers_task_unit_task_id");
+
+                    b.HasIndex("UnitTaskId", "SoldierId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_soldiers_task_unit_task_id_soldier_id");
+
+                    b.ToTable("soldiers_task", "docs", t =>
+                        {
+                            t.HasComment("Снимок состояния бойца на момент назначения задачи подразделению");
+                        });
+                });
+
+            modelBuilder.Entity("S5Server.Models.TVezhaUser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("access_failed_count")
+                        .HasComment("Кількість невдалих спроб входу користувача");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text")
+                        .HasColumnName("concurrency_stamp");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)")
+                        .HasColumnName("email");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("email_confirmed");
+
+                    b.Property<DateTime?>("LastLoginDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_login_date")
+                        .HasComment("Дата/Час останнього успішного входу користувача");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("lockout_enabled")
+                        .HasComment("Блокування користувача дозволено");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lockout_end")
+                        .HasComment("Дата/Час до якого користувач блокований");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)")
+                        .HasColumnName("normalized_email");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)")
+                        .HasColumnName("normalized_user_name");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("text")
+                        .HasColumnName("password_hash");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("phone_number");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("phone_number_confirmed");
+
+                    b.Property<DateTime>("RegistrationDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("registration_date")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                        .HasComment("Дата/Час коли користувача створено");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("text")
+                        .HasColumnName("security_stamp");
+
+                    b.Property<Guid>("SoldierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("soldier_id")
+                        .HasComment("Посилання на відповідного бійця");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("two_factor_enabled");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)")
+                        .HasColumnName("user_name");
+
+                    b.HasKey("Id")
+                        .HasName("pk_users");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex");
+
+                    b.HasIndex("SoldierId")
+                        .IsUnique()
+                        .HasDatabaseName("aspnetusers_un_soldier_id");
+
+                    b.ToTable("users", "identity", t =>
+                        {
+                            t.HasComment("Користувачі системи");
+                        });
                 });
 
             modelBuilder.Entity("S5Server.Models.TemplateDataSet", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT(36)");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("DocDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("DocNumber")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
-
-                    b.Property<bool>("IsParentDocUsed")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(false);
-
-                    b.Property<bool>("IsPublished")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT(150)");
-
-                    b.Property<DateTime?>("ParentDocDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ParentDocNumber")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
-
-                    b.Property<DateTime?>("PublishedAtUtc")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("UpdatedAtUtc")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DocNumber");
-
-                    b.HasIndex("IsPublished");
-
-                    b.HasIndex("Name");
-
-                    b.HasIndex("DocDate", "DocNumber")
-                        .IsUnique();
-
-                    b.ToTable("template_data_sets", (string)null);
-                });
-
-            modelBuilder.Entity("S5Server.Models.Unit", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
-
-                    b.Property<string>("AssignedUnitId")
-                        .HasColumnType("TEXT(36)");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("ChangedBy")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<DateOnly>("DocDate")
+                        .HasColumnType("date")
+                        .HasColumnName("doc_date");
+
+                    b.Property<string>("DocNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("doc_number");
+
+                    b.Property<bool>("IsParentDocUsed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_parent_doc_used")
+                        .HasComment("Чи існує документ старшого начальника");
+
+                    b.Property<bool>("IsPublished")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_published")
+                        .HasComment("Чернетка/Опубліковано");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("name");
+
+                    b.Property<DateOnly?>("ParentDocDate")
+                        .HasColumnType("date")
+                        .HasColumnName("parent_doc_date");
+
+                    b.Property<string>("ParentDocNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("parent_doc_number");
+
+                    b.Property<DateTime?>("PublishedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at_utc");
+
+                    b.Property<string>("PublishedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("published_by");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valid_from")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("Id")
+                        .HasName("pk_template_data_sets");
+
+                    b.HasIndex("DocNumber")
+                        .HasDatabaseName("ix_template_data_sets_doc_number");
+
+                    b.HasIndex("DocDate", "DocNumber")
+                        .IsUnique()
+                        .HasDatabaseName("ix_template_data_sets_doc_date_doc_number");
+
+                    b.ToTable("template_data_sets", "docs", t =>
+                        {
+                            t.HasComment("Сохранённый набор данных для подстановки в шаблон документа (БР/БД)");
+                        });
+                });
+
+            modelBuilder.Entity("S5Server.Models.Unit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("AssignedUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assigned_unit_id")
+                        .HasComment("Приданий до підрозділу");
+
+                    b.Property<string>("ChangedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("changed_by");
 
                     b.Property<string>("Comment")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("comment");
 
-                    b.Property<string>("ForceTypeId")
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid?>("ForceTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("force_type_id");
 
                     b.Property<bool>("IsInvolved")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_involved")
+                        .HasComment("True - Позаштатний/Оперативний/Тимчасовий підрозділ");
 
                     b.Property<string>("MilitaryNumber")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("military_number");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("name");
 
                     b.Property<int>("OrderVal")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer")
+                        .HasColumnName("order_val");
 
-                    b.Property<string>("ParentId")
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("parent_id")
+                        .HasComment("Основний підрозділ");
 
-                    b.Property<string>("PersistentLocationId")
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid?>("PersistentLocationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("persistent_location_id")
+                        .HasComment("ППД (Постійне приміщення дислокації)");
 
                     b.Property<string>("ShortName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("short_name");
 
-                    b.Property<string>("UnitTypeId")
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid?>("UnitTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("unit_type_id");
 
                     b.Property<DateTime>("ValidFrom")
-                        .HasColumnType("TEXT");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valid_from")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_units");
 
-                    b.HasIndex("AssignedUnitId");
+                    b.HasIndex("AssignedUnitId")
+                        .HasDatabaseName("ix_units_assigned_unit_id");
 
-                    b.HasIndex("ForceTypeId");
+                    b.HasIndex("ForceTypeId")
+                        .HasDatabaseName("ix_units_force_type_id");
 
-                    b.HasIndex("ParentId");
+                    b.HasIndex("ParentId")
+                        .HasDatabaseName("ix_units_parent_id");
 
-                    b.HasIndex("PersistentLocationId");
+                    b.HasIndex("PersistentLocationId")
+                        .HasDatabaseName("ix_units_persistent_location_id");
 
-                    b.HasIndex("UnitTypeId");
+                    b.HasIndex("UnitTypeId")
+                        .HasDatabaseName("ix_units_unit_type_id");
 
-                    b.ToTable("units", null, t =>
+                    b.ToTable("units", "core", t =>
                         {
+                            t.HasComment("Підрозділи");
+
                             t.HasTrigger("trg_units_delete_history");
 
                             t.HasTrigger("trg_units_insert_history");
@@ -1285,272 +1679,335 @@ namespace S5Server.Migrations
 
             modelBuilder.Entity("S5Server.Models.UnitHist", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT(36)");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
-                    b.Property<string>("AssignedUnitId")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid?>("AssignedUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assigned_unit_id");
 
                     b.Property<string>("AssignedUnitShortName")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("assigned_unit_short_name");
 
                     b.Property<string>("ChangedBy")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("changed_by");
 
                     b.Property<string>("Comment")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("comment");
 
-                    b.Property<string>("ForceTypeId")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid?>("ForceTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("force_type_id");
 
                     b.Property<string>("ForceTypeShortValue")
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("force_type_short_value");
 
                     b.Property<bool>("IsInvolved")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_involved");
 
                     b.Property<string>("MilitaryNumber")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("military_number");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("name");
 
                     b.Property<string>("Operation")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("TEXT(10)");
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("operation");
 
                     b.Property<int>("OrderVal")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer")
+                        .HasColumnName("order_val");
 
-                    b.Property<string>("ParentId")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("parent_id");
 
                     b.Property<string>("ParentShortName")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("parent_short_name");
 
-                    b.Property<string>("PersistentLocationId")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid?>("PersistentLocationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("persistent_location_id");
 
                     b.Property<string>("PersistentLocationValue")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("persistent_location_value");
 
                     b.Property<string>("ShortName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("short_name");
 
-                    b.Property<string>("UnitId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("UnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("unit_id");
 
-                    b.Property<string>("UnitTypeId")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid?>("UnitTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("unit_type_id");
 
                     b.Property<string>("UnitTypeShortValue")
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT(50)");
+                        .HasColumnType("citext")
+                        .HasColumnName("unit_type_short_value");
 
                     b.Property<DateTime>("ValidFrom")
-                        .HasColumnType("TEXT");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valid_from")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<DateTime?>("ValidTo")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valid_to");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_units_hist");
 
-                    b.HasIndex("Operation");
+                    b.HasIndex("Operation")
+                        .HasDatabaseName("ix_units_hist_operation");
 
-                    b.HasIndex("UnitId");
+                    b.HasIndex("UnitId")
+                        .HasDatabaseName("ix_units_hist_unit_id");
 
-                    b.HasIndex("UnitId", "ValidFrom");
+                    b.HasIndex("UnitId", "ValidFrom")
+                        .HasDatabaseName("ix_units_hist_unit_id_valid_from");
 
-                    b.ToTable("units_hist", (string)null);
+                    b.ToTable("units_hist", "history", t =>
+                        {
+                            t.HasComment("Підрозділи - історія");
+                        });
                 });
 
             modelBuilder.Entity("S5Server.Models.UnitTask", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
-                    b.Property<string>("AreaId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("AreaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("area_id")
+                        .HasComment("РВЗ (Район виконання завдань)");
 
                     b.Property<string>("AssignedShortName")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("assigned_short_name")
+                        .HasComment("Приданий до підрозділу");
 
-                    b.Property<string>("AssignedUnitId")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid?>("AssignedUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assigned_unit_id")
+                        .HasComment("Приданий до підрозділу");
 
                     b.Property<string>("ChangedBy")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("changed_by");
 
-                    b.Property<string>("DataSetId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("DataSetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("data_set_id")
+                        .HasComment("Сохранённый набор данных для подстановки в шаблон документа (БР/БД)");
 
                     b.Property<bool>("IsInvolved")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_involved")
+                        .HasComment("True - Позаштатний/Оперативний/Тимчасовий підрозділ");
 
                     b.Property<bool>("IsPublished")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_published")
+                        .HasComment("Чернетка/Опубліковано");
 
-                    b.Property<string>("ParentId")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("parent_id");
 
                     b.Property<string>("ParentShortName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("parent_short_name");
 
-                    b.Property<string>("PersistentLocationId")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid?>("PersistentLocationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("persistent_location_id")
+                        .HasComment("ППД (Постійне приміщення дислокації)");
 
                     b.Property<string>("PersistentLocationValue")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("persistent_location_value")
+                        .HasComment("ППД (Постійне приміщення дислокації)");
 
                     b.Property<DateTime?>("PublishedAtUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at_utc");
 
-                    b.Property<string>("TaskId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("task_id")
+                        .HasComment("Завдання підрозділу для використання в документах БР/БД");
 
                     b.Property<string>("TaskValue")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("task_value")
+                        .HasComment("Завдання підрозділу для використання в документах БР/БД");
 
-                    b.Property<string>("UnitId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid>("UnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("unit_id")
+                        .HasComment("Штатний підрозділ");
 
                     b.Property<string>("UnitShortName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("citext")
+                        .HasColumnName("unit_short_name")
+                        .HasComment("Штатний підрозділ");
 
-                    b.Property<string>("UnitTypeId")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT(36)");
+                    b.Property<Guid?>("UnitTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("unit_type_id");
 
                     b.Property<string>("UnitTypeName")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT(100)");
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("unit_type_name");
 
                     b.Property<DateTime>("ValidFrom")
-                        .HasColumnType("TEXT");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valid_from")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_units_task");
 
-                    b.HasIndex("AreaId");
+                    b.HasIndex("AreaId")
+                        .HasDatabaseName("ix_units_task_area_id");
 
-                    b.HasIndex("AssignedUnitId");
+                    b.HasIndex("AssignedUnitId")
+                        .HasDatabaseName("ix_units_task_assigned_unit_id");
 
-                    b.HasIndex("DataSetId");
+                    b.HasIndex("DataSetId")
+                        .HasDatabaseName("ix_units_task_data_set_id");
 
-                    b.HasIndex("IsPublished");
+                    b.HasIndex("ParentId")
+                        .HasDatabaseName("ix_units_task_parent_id");
 
-                    b.HasIndex("ParentId");
+                    b.HasIndex("PersistentLocationId")
+                        .HasDatabaseName("ix_units_task_persistent_location_id");
 
-                    b.HasIndex("PersistentLocationId");
+                    b.HasIndex("TaskId")
+                        .HasDatabaseName("ix_units_task_task_id");
 
-                    b.HasIndex("TaskId");
+                    b.HasIndex("UnitId")
+                        .HasDatabaseName("ix_units_task_unit_id");
 
-                    b.HasIndex("UnitId");
-
-                    b.HasIndex("UnitTypeId");
+                    b.HasIndex("UnitTypeId")
+                        .HasDatabaseName("ix_units_task_unit_type_id");
 
                     b.HasIndex("UnitId", "TaskId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_units_task_unit_id_task_id");
 
-                    b.ToTable("units_task", (string)null);
+                    b.ToTable("units_task", "docs", t =>
+                        {
+                            t.HasComment("Снимок состояния подразделения на момент назначения задачи");
+                        });
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_role_claims_roles_role_id");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("S5Server.Models.TVezhaUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_user_claims_users_user_id");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("S5Server.Models.TVezhaUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_user_logins_users_user_id");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_user_roles_roles_role_id");
 
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("S5Server.Models.TVezhaUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_user_roles_users_user_id");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("S5Server.Models.TVezhaUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_user_tokens_users_user_id");
                 });
 
             modelBuilder.Entity("S5Server.Models.DictArea", b =>
@@ -1559,12 +2016,14 @@ namespace S5Server.Migrations
                         .WithMany("Areas")
                         .HasForeignKey("AreaTypeId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_dict_area_dict_area_type_area_type_id");
 
                     b.HasOne("S5Server.Models.DictCityCode", "CityCode")
                         .WithMany()
                         .HasForeignKey("CityCodeId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_dict_area_dict_city_code_city_code_id");
 
                     b.Navigation("AreaType");
 
@@ -1577,38 +2036,45 @@ namespace S5Server.Migrations
                         .WithMany("CityCodes")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_dict_city_code_dict_city_category_category_id");
 
                     b.HasOne("S5Server.Models.DictCityCode", "Level1")
                         .WithMany()
                         .HasForeignKey("Level1Id")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_dict_city_code_dict_city_code_level1id");
 
                     b.HasOne("S5Server.Models.DictCityCode", "Level2")
                         .WithMany()
                         .HasForeignKey("Level2Id")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_dict_city_code_dict_city_code_level2id");
 
                     b.HasOne("S5Server.Models.DictCityCode", "Level3")
                         .WithMany()
                         .HasForeignKey("Level3Id")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_dict_city_code_dict_city_code_level3id");
 
                     b.HasOne("S5Server.Models.DictCityCode", "Level4")
                         .WithMany()
                         .HasForeignKey("Level4Id")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_dict_city_code_dict_city_code_level4id");
 
                     b.HasOne("S5Server.Models.DictCityCode", "LevelExt")
                         .WithMany()
                         .HasForeignKey("LevelExtId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_dict_city_code_dict_city_code_level_ext_id");
 
                     b.HasOne("S5Server.Models.DictCityCode", "Parent")
                         .WithMany("Children")
                         .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_dict_city_code_dict_city_code_parent_id");
 
                     b.Navigation("Category");
 
@@ -1631,7 +2097,8 @@ namespace S5Server.Migrations
                         .WithMany("DroneModels")
                         .HasForeignKey("DroneTypeId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_dict_drone_model_dict_drone_type_drone_type_id");
 
                     b.Navigation("DroneType");
                 });
@@ -1642,7 +2109,8 @@ namespace S5Server.Migrations
                         .WithMany("UnitTasks")
                         .HasForeignKey("AreaTypeId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_dict_unit_task_dict_area_type_area_type_id");
 
                     b.Navigation("AreaType");
                 });
@@ -1653,13 +2121,15 @@ namespace S5Server.Migrations
                         .WithMany("UnitTaskItems")
                         .HasForeignKey("TemplateCategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_dict_unit_task_item_dict_template_categories_template_categ");
 
                     b.HasOne("S5Server.Models.DictUnitTask", "UnitTask")
                         .WithMany("UnitTaskItems")
                         .HasForeignKey("UnitTaskId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_dict_unit_task_item_dict_unit_task_unit_task_id");
 
                     b.Navigation("TemplateCategory");
 
@@ -1672,7 +2142,8 @@ namespace S5Server.Migrations
                         .WithMany()
                         .HasForeignKey("TemplateCategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_document_templates_dict_template_categories_template_catego");
 
                     b.Navigation("TemplateCategory");
                 });
@@ -1683,13 +2154,15 @@ namespace S5Server.Migrations
                         .WithMany()
                         .HasForeignKey("DroneModelId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_drone_model_task_dict_drone_model_drone_model_id");
 
                     b.HasOne("S5Server.Models.UnitTask", "UnitTask")
                         .WithMany("Means")
                         .HasForeignKey("UnitTaskId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_drone_model_task_units_task_unit_task_id");
 
                     b.Navigation("DroneModel");
 
@@ -1701,36 +2174,42 @@ namespace S5Server.Migrations
                     b.HasOne("S5Server.Models.Unit", "AssignedUnit")
                         .WithMany("AssignedSoldiers")
                         .HasForeignKey("AssignedUnitId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_soldiers_units_assigned_unit_id");
 
                     b.HasOne("S5Server.Models.Unit", "InvolvedUnit")
                         .WithMany("InvolvedSoldiers")
                         .HasForeignKey("InvolvedUnitId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_soldiers_units_involved_unit_id");
 
                     b.HasOne("S5Server.Models.DictPosition", "Position")
                         .WithMany()
                         .HasForeignKey("PositionId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_soldiers_dict_positions_position_id");
 
                     b.HasOne("S5Server.Models.DictRank", "Rank")
                         .WithMany()
                         .HasForeignKey("RankId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_soldiers_dict_rank_rank_id");
 
                     b.HasOne("S5Server.Models.DictSoldierState", "State")
                         .WithMany()
                         .HasForeignKey("StateId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_soldiers_dict_soldier_state_state_id");
 
                     b.HasOne("S5Server.Models.Unit", "Unit")
                         .WithMany("Soldiers")
                         .HasForeignKey("UnitId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_soldiers_units_unit_id");
 
                     b.Navigation("AssignedUnit");
 
@@ -1751,26 +2230,29 @@ namespace S5Server.Migrations
                         .WithMany()
                         .HasForeignKey("SoldierId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_soldiers_task_soldiers_soldier_id");
 
                     b.HasOne("S5Server.Models.UnitTask", "UnitTask")
                         .WithMany("SoldiersTask")
                         .HasForeignKey("UnitTaskId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_soldiers_task_units_task_unit_task_id");
 
                     b.Navigation("Soldier");
 
                     b.Navigation("UnitTask");
                 });
 
-            modelBuilder.Entity("S5Server.Models.TVezhaUser<string>", b =>
+            modelBuilder.Entity("S5Server.Models.TVezhaUser", b =>
                 {
                     b.HasOne("S5Server.Models.Soldier", "Soldier")
                         .WithOne("VezhaUser")
-                        .HasForeignKey("S5Server.Models.TVezhaUser<string>", "SoldierId")
+                        .HasForeignKey("S5Server.Models.TVezhaUser", "SoldierId")
                         .OnDelete(DeleteBehavior.SetNull)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("aspnetusers_soldiers_fk");
 
                     b.Navigation("Soldier");
                 });
@@ -1780,27 +2262,32 @@ namespace S5Server.Migrations
                     b.HasOne("S5Server.Models.Unit", "AssignedUnit")
                         .WithMany("AssignedUnits")
                         .HasForeignKey("AssignedUnitId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_units_units_assigned_unit_id");
 
                     b.HasOne("S5Server.Models.DictForcesType", "ForceType")
                         .WithMany()
                         .HasForeignKey("ForceTypeId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_units_dict_forces_type_force_type_id");
 
                     b.HasOne("S5Server.Models.Unit", "Parent")
                         .WithMany("ChildUnits")
                         .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_units_units_parent_id");
 
                     b.HasOne("S5Server.Models.DictArea", "PersistentLocation")
                         .WithMany()
                         .HasForeignKey("PersistentLocationId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_units_dict_area_persistent_location_id");
 
                     b.HasOne("S5Server.Models.DictUnitType", "UnitType")
                         .WithMany()
                         .HasForeignKey("UnitTypeId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_units_dict_unit_type_unit_type_id");
 
                     b.Navigation("AssignedUnit");
 
@@ -1818,46 +2305,54 @@ namespace S5Server.Migrations
                     b.HasOne("S5Server.Models.DictArea", "Area")
                         .WithMany()
                         .HasForeignKey("AreaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_units_task_dict_area_area_id");
 
                     b.HasOne("S5Server.Models.Unit", "AssignedUnit")
                         .WithMany()
                         .HasForeignKey("AssignedUnitId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_units_task_units_assigned_unit_id");
 
                     b.HasOne("S5Server.Models.TemplateDataSet", "DataSet")
                         .WithMany("UnitTasks")
                         .HasForeignKey("DataSetId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_units_task_template_data_sets_data_set_id");
 
                     b.HasOne("S5Server.Models.Unit", "Parent")
                         .WithMany()
                         .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_units_task_units_parent_id");
 
                     b.HasOne("S5Server.Models.DictArea", "PersistentLocation")
                         .WithMany()
                         .HasForeignKey("PersistentLocationId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_units_task_dict_area_persistent_location_id");
 
                     b.HasOne("S5Server.Models.DictUnitTask", "Task")
                         .WithMany()
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_units_task_dict_unit_task_task_id");
 
                     b.HasOne("S5Server.Models.Unit", "Unit")
                         .WithMany()
                         .HasForeignKey("UnitId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_units_task_units_unit_id");
 
                     b.HasOne("S5Server.Models.DictUnitType", "UnitType")
                         .WithMany()
                         .HasForeignKey("UnitTypeId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_units_task_dict_unit_type_unit_type_id");
 
                     b.Navigation("Area");
 
