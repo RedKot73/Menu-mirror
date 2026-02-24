@@ -8,7 +8,7 @@ namespace S5Server.Models;
 /// DTO для Району виконання завдань (РВЗ)
 /// </summary>
 public record DictAreaDto(
-    string Id,
+    Guid Id,
     /// <summary>
     /// Назва
     /// </summary>
@@ -17,7 +17,7 @@ public record DictAreaDto(
     /// <summary>
     /// Тип Району виконання завдань (РВЗ)
     /// </summary>
-    string AreaTypeId,
+    Guid AreaTypeId,
     /// <summary>
     /// Тип Району виконання завдань (РВЗ)
     /// </summary>
@@ -37,9 +37,10 @@ public record DictAreaCreateDto(
     /// <summary>
     /// Тип Району виконання завдань (РВЗ)
     /// </summary>
-    string AreaTypeId,
+    Guid AreaTypeId,
     /// <summary>
     /// Кодифікатор адмін-територіальних одиниць (опціонально)
+    /// Тут саме string оскільки формат UA01020000000022387
     /// </summary>
     string? CityCodeId,
     /// <summary>
@@ -57,7 +58,7 @@ public partial class DictArea : SimpleDictBase, ISimpleDict
     /// Тип Району виконання завдань (РВЗ)
     /// </summary>
     [Required]
-    public string AreaTypeId { get; set; } = default!;
+    public Guid AreaTypeId { get; set; } = default!;
 
     /// <summary>
     /// Тип Району виконання завдань (РВЗ)
@@ -68,6 +69,7 @@ public partial class DictArea : SimpleDictBase, ISimpleDict
     /// <summary>
     /// Запис Кодифікатору адміністративно-територіальних одиниць
     /// та територій територіальних громад
+    /// Тут саме string оскільки формат UA01020000000022387
     /// </summary>
     public string? CityCodeId { get; set; }
     
@@ -123,7 +125,7 @@ public static class DictAreaExtensions
     public static DictArea ToEntity(this DictAreaCreateDto dto) =>
         new()
         {
-            Id = Guid.NewGuid().ToString("D"),
+            Id = Guid.CreateVersion7(),
             Value = dto.Value.Trim(),
             Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim(),
             AreaTypeId = dto.AreaTypeId,

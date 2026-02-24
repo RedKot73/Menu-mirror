@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 namespace S5Server.Models
 {
     public record DictUnitTypeDto(
-        string Id,
+        Guid Id,
         string Value,
         string ShortValue,
         string? Comment);

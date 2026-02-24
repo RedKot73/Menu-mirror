@@ -8,28 +8,28 @@ namespace S5Server.Models;
 /// DTO для SoldierTask
 /// </summary>
 public record SoldierTaskDto(
-    string Id,
-    string UnitTaskId,
-    string SoldierId,
+    Guid Id,
+    Guid UnitTaskId,
+    Guid SoldierId,
     int? ExternId,
     string FirstName,
     string? MidleName,
     string? LastName,
     //DateOnly? BirthDate,
     string? NickName,
-    string UnitId,
+    Guid UnitId,
     string UnitShortName,
     DateOnly? ArrivedAt,
     DateOnly? DepartedAt,
-    string? AssignedUnitId,
+    Guid? AssignedUnitId,
     string? AssignedUnitShortName,
-    string? InvolvedUnitId,
+    Guid? InvolvedUnitId,
     string? InvolvedUnitShortName,
-    string RankId,
+    Guid RankId,
     string RankShortValue,
-    string PositionId,
+    Guid PositionId,
     string PositionValue,
-    string StateId,
+    Guid StateId,
     string StateValue,
     string? Comment,
     //DateOnly? ArrivedAt,
@@ -41,7 +41,7 @@ public record SoldierTaskDto(
 /// DTO для кількості бійців
 /// </summary>
 public record SoldierCountDto(
-    string UnitTaskId,
+    Guid UnitTaskId,
     int Count);
 
 /// <summary>
@@ -51,15 +51,13 @@ public record SoldierCountDto(
 public class SoldierTask
 {
     [Key]
-    [StringLength(36)]
-    public string Id { get; set; } = Guid.NewGuid().ToString("D");
+    public Guid Id { get; set; } = Guid.CreateVersion7();
 
     /// <summary>
     /// Ссылка на UnitTask (задание подразделения)
     /// </summary>
     [Required]
-    [StringLength(36)]
-    public string UnitTaskId { get; set; } = string.Empty;
+    public Guid UnitTaskId { get; set; } = default!;
 
     /// <summary>
     /// Ссылка на UnitTask
@@ -71,8 +69,7 @@ public class SoldierTask
     /// ID оригинального бойца
     /// </summary>
     [Required]
-    [StringLength(36)]
-    public string SoldierId { get; set; } = string.Empty;
+    public Guid SoldierId { get; set; } = default!;
 
     /// <summary>
     /// Ссылка на оригинального бойца
@@ -103,7 +100,9 @@ public class SoldierTask
         : $"{FirstName} {MName}.{LName}.";
 
     //public DateOnly? BirthDate { get; set; }
-
+    /// <summary>
+    /// Позивний
+    /// </summary>
     [StringLength(50)]
     public string? NickName { get; set; }
 
@@ -115,8 +114,7 @@ public class SoldierTask
     /// Підрозділ (ID)
     /// </summary>
     [Required]
-    [StringLength(36)]
-    public string UnitId { get; set; } = string.Empty;
+    public Guid UnitId { get; set; } = default!;
 
     /// <summary>
     /// Підрозділ (назва) - денормалізація
@@ -127,8 +125,7 @@ public class SoldierTask
     /// <summary>
     /// Приданий до підрозділу (ID)
     /// </summary>
-    [StringLength(36)]
-    public string? AssignedUnitId { get; set; }
+    public Guid? AssignedUnitId { get; set; }
 
     /// <summary>
     /// Приданий до підрозділу (назва) - денормалізація
@@ -139,8 +136,7 @@ public class SoldierTask
     /// <summary>
     /// Задіяний в підрозділі/екіпажі (ID)
     /// </summary>
-    [StringLength(36)]
-    public string? InvolvedUnitId { get; set; }
+    public Guid? InvolvedUnitId { get; set; }
 
     /// <summary>
     /// Задіяний в підрозділі/екіпажі (назва) - денормалізація
@@ -152,8 +148,7 @@ public class SoldierTask
     /// Звання (ID)
     /// </summary>
     [Required]
-    [StringLength(36)]
-    public string RankId { get; set; } = string.Empty;
+    public Guid RankId { get; set; } = default!;
 
     /// <summary>
     /// Звання (назва) - денормалізація
@@ -165,8 +160,7 @@ public class SoldierTask
     /// Посада (ID)
     /// </summary>
     [Required]
-    [StringLength(36)]
-    public string PositionId { get; set; } = string.Empty;
+    public Guid PositionId { get; set; } = default!;
 
     /// <summary>
     /// Посада (назва) - денормалізація
@@ -178,8 +172,7 @@ public class SoldierTask
     /// Статус (ID)
     /// </summary>
     [Required]
-    [StringLength(36)]
-    public string StateId { get; set; } = string.Empty;
+    public Guid StateId { get; set; } = default!;
 
     /// <summary>
     /// Статус (назва) - денормалізація
@@ -269,8 +262,8 @@ public static class SoldierTaskExtensions
     public static SoldierTaskDto ToDto(this Soldier soldier)
     {
         return new SoldierTaskDto(
-            string.Empty,
-            string.Empty,
+            Guid.Empty,
+            Guid.Empty,
             soldier.Id,
             soldier.ExternId,
             soldier.FirstName,
@@ -308,11 +301,11 @@ public static class SoldierTaskExtensions
     /// </summary>
     public static SoldierTask CreateSnapshot(
         this Soldier soldier,
-        string unitTaskId,
+        Guid unitTaskId,
         string changedBy) =>
         new()
         {
-            Id = Guid.NewGuid().ToString("D"),
+            Id = Guid.CreateVersion7(),
             UnitTaskId = unitTaskId,
             SoldierId = soldier.Id,
             ExternId = soldier.ExternId,

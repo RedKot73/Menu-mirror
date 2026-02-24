@@ -4,10 +4,10 @@ using System.ComponentModel.DataAnnotations;
 namespace S5Server.Models
 {
     public record DictDroneModelDto(
-        string Id,
+        Guid Id,
         string Value,
         string? Comment,
-        string DroneTypeId,
+        Guid DroneTypeId,
         string DroneTypeName)
     {
         public static DictDroneModelDto ToDto(DictDroneModel e) =>
@@ -29,7 +29,7 @@ namespace S5Server.Models
     public record DictDroneModelCreateDto(
         string Value,
         string? Comment,
-        string DroneTypeId);
+        Guid DroneTypeId);
 
     /// <summary>
     /// Модель БПЛА
@@ -38,7 +38,7 @@ namespace S5Server.Models
     public class DictDroneModel : SimpleDictBase, ISimpleDict
     {
         [Required]
-        public string DroneTypeId { get; set; } = default!;
+        public Guid DroneTypeId { get; set; } = default!;
         [Required]
         public DictDroneType DroneType { get; set; } = default!;
     }

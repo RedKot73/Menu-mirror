@@ -39,8 +39,8 @@ public class DictUnitTaskItemsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<DictUnitTaskItemDto>>> GetAll(
         [FromQuery] string? search,
-        [FromQuery] string? unitTaskId,
-        [FromQuery] string? templateCategoryId,
+        [FromQuery] Guid? unitTaskId,
+        [FromQuery] Guid? templateCategoryId,
         CancellationToken ct = default)
     {
         try
@@ -53,10 +53,10 @@ public class DictUnitTaskItemsController : ControllerBase
                 q = q.Where(x => x.Value.Contains(search));
             }
 
-            if (!string.IsNullOrWhiteSpace(unitTaskId))
+            if (unitTaskId.HasValueGuid())
                 q = q.Where(x => x.UnitTaskId == unitTaskId);
 
-            if (!string.IsNullOrWhiteSpace(templateCategoryId))
+            if (templateCategoryId.HasValueGuid())
                 q = q.Where(x => x.TemplateCategoryId == templateCategoryId);
 
             var list = await q
@@ -84,9 +84,9 @@ public class DictUnitTaskItemsController : ControllerBase
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<DictUnitTaskItemDto>> Get(string id, CancellationToken ct = default)
+    public async Task<ActionResult<DictUnitTaskItemDto>> Get(Guid id, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(id))
+        if (id == Guid.Empty)
             return BadRequest("id обов'язковий");
 
         try
@@ -126,10 +126,10 @@ public class DictUnitTaskItemsController : ControllerBase
         if (string.IsNullOrWhiteSpace(dto.Value))
             return BadRequest("Value не може бути порожнім");
 
-        if (string.IsNullOrWhiteSpace(dto.TemplateCategoryId))
+        if (dto.TemplateCategoryId == Guid.Empty)
             return BadRequest("TemplateCategoryId обов'язковий");
 
-        if (string.IsNullOrWhiteSpace(dto.UnitTaskId))
+        if (dto.UnitTaskId == Guid.Empty)
             return BadRequest("UnitTaskId обов'язковий");
 
         try
@@ -189,20 +189,23 @@ public class DictUnitTaskItemsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Update(
-        string id,
+        Guid id,
         [FromBody] DictUnitTaskItemDto dto,
         CancellationToken ct = default)
     {
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
+        if(id == Guid.Empty)
+            return BadRequest("id обов'язковий");
+
         if (string.IsNullOrWhiteSpace(dto.Value))
             return BadRequest("Value не може бути порожнім");
 
-        if (string.IsNullOrWhiteSpace(dto.TemplateCategoryId))
+        if (dto.TemplateCategoryId == Guid.Empty)
             return BadRequest("TemplateCategoryId обов'язковий");
 
-        if (string.IsNullOrWhiteSpace(dto.UnitTaskId))
+        if (dto.UnitTaskId == Guid.Empty)
             return BadRequest("UnitTaskId обов'язковий");
 
         try
@@ -270,9 +273,9 @@ public class DictUnitTaskItemsController : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(string id, CancellationToken ct = default)
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(id))
+        if (id == Guid.Empty)
             return BadRequest("id обов'язковий");
 
         try
@@ -304,10 +307,10 @@ public class DictUnitTaskItemsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IEnumerable<DictUnitTaskItemDto>>> GetByUnitTask(
-        string unitTaskId,
+        Guid unitTaskId,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(unitTaskId))
+        if (unitTaskId == Guid.Empty)
             return BadRequest("unitTaskId обов'язковий");
 
         try
@@ -340,10 +343,10 @@ public class DictUnitTaskItemsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IEnumerable<DictUnitTaskItemDto>>> GetByTemplateCategory(
-        string templateCategoryId,
+        Guid templateCategoryId,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(templateCategoryId))
+        if (templateCategoryId == Guid.Empty)
             return BadRequest("templateCategoryId обов'язковий");
 
         try
@@ -377,14 +380,14 @@ public class DictUnitTaskItemsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<DictUnitTaskItemDto>> GetTaskByTemplate(
-        string unitTaskId,
-        string templateCategoryId,
+        Guid unitTaskId,
+        Guid templateCategoryId,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(unitTaskId))
+        if (unitTaskId == Guid.Empty)
             return BadRequest("unitTaskId обов'язковий");
         
-        if (string.IsNullOrWhiteSpace(templateCategoryId))
+        if (templateCategoryId == Guid.Empty)
             return BadRequest("templateCategoryId обов'язковий");
 
         try
@@ -422,7 +425,7 @@ public class DictUnitTaskItemsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<LookupDto>>> Lookup(
         [FromQuery] string? term,
-        [FromQuery] string? unitTaskId,
+        [FromQuery] Guid? unitTaskId,
         [FromQuery] int limit = 10,
         CancellationToken ct = default)
     {
@@ -437,7 +440,7 @@ public class DictUnitTaskItemsController : ControllerBase
             
             var q = Query();
             
-            if (!string.IsNullOrWhiteSpace(unitTaskId))
+            if (unitTaskId.HasValueGuid())
                 q = q.Where(x => x.UnitTaskId == unitTaskId);
 
             var data = await q
@@ -467,18 +470,18 @@ public class DictUnitTaskItemsController : ControllerBase
     [HttpGet("sel_list")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<LookupDto>>> GetSelectList(
-        [FromQuery] string? unitTaskId,
-        [FromQuery] string? templateCategoryId,
+        [FromQuery] Guid? unitTaskId,
+        [FromQuery] Guid? templateCategoryId,
         CancellationToken ct = default)
     {
         try
         {
             var q = Query();
 
-            if (!string.IsNullOrWhiteSpace(unitTaskId))
+            if (unitTaskId.HasValueGuid())
                 q = q.Where(x => x.UnitTaskId == unitTaskId);
 
-            if (!string.IsNullOrWhiteSpace(templateCategoryId))
+            if (templateCategoryId.HasValueGuid())
                 q = q.Where(x => x.TemplateCategoryId == templateCategoryId);
 
             var data = await q

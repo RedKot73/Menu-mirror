@@ -7,7 +7,13 @@
     /// </summary>
     public class DictCityCodeTreeNode
     {
+        /// <summary>
+        /// Тут саме string оскільки формат UA01020000000022387
+        /// </summary>
         public string Id { get; set; } = default!;
+        /// <summary>
+        /// Тут саме string оскільки формат UA01020000000022387
+        /// </summary>
         public string? ParentId { get; set; }
         public DictCityCodeTreeNode? Parent { get; set; }
         
@@ -25,7 +31,7 @@
         /// «Х» – селища
         /// «В» – райони в містах
         /// </summary>
-        public string CategoryId { get; set; } = default!;
+        public Guid CategoryId { get; set; } = default!;
         
         /// <summary>
         /// Категорія об'єкта (об'єкт для завантаження повних даних)
@@ -42,9 +48,15 @@
     /// </summary>
     public record CityCodeTreeNodeDto
     {
+        /// <summary>
+        /// Тут саме string оскільки формат UA01020000000022387
+        /// </summary>
         public string Id { get; init; } = default!;
+        /// <summary>
+        /// Тут саме string оскільки формат UA01020000000022387
+        /// </summary>
         public string? ParentId { get; init; }
-        public string CategoryId { get; init; } = default!;
+        public Guid CategoryId { get; init; } = default!;
         public string? Category { get; init; }
         public string Value { get; init; } = string.Empty;
         public bool HasChildren { get; init; }
@@ -147,6 +159,7 @@
 
         /// <summary>
         /// Знаходить вузол у дереві за ID
+        /// Тут саме string оскільки формат UA01020000000022387
         /// </summary>
         public static DictCityCodeTreeNode? FindNode(this DictCityCodeTreeNode node, string id)
         {
@@ -165,6 +178,7 @@
 
         /// <summary>
         /// Знаходить вузол у списку дерев за ID
+        /// Тут саме string оскільки формат UA01020000000022387
         /// </summary>
         public static DictCityCodeTreeNode? FindNode(
             this IEnumerable<DictCityCodeTreeNode> nodes,
@@ -182,6 +196,7 @@
 
         /// <summary>
         /// Отримує шлях від кореня до вузла (breadcrumb)
+        /// Тут саме string оскільки формат UA01020000000022387
         /// </summary>
         /// <returns>Список вузлів від кореня до шуканого вузла</returns>
         public static List<DictCityCodeTreeNode> GetPath(

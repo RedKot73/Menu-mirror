@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using S5Server.Data;
 using S5Server.Models;
+using S5Server.Utils;
 
 namespace S5Server.Controllers;
 
@@ -81,6 +83,7 @@ public class DictCityCodeTreeController : ControllerBase
         [FromQuery] int maxDepth = 1,
         CancellationToken ct = default)
     {
+        // Тут саме string оскільки формат UA01020000000022387
         if (string.IsNullOrWhiteSpace(id))
             return BadRequest("id обов'язковий");
 
@@ -134,6 +137,7 @@ public class DictCityCodeTreeController : ControllerBase
         string id,
         CancellationToken ct = default)
     {
+        // Тут саме string оскільки формат UA01020000000022387
         if (string.IsNullOrWhiteSpace(id))
             return BadRequest("id обов'язковий");
 
@@ -184,7 +188,7 @@ public class DictCityCodeTreeController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<CityCodeTreeNodeDto>>> Search(
         [FromQuery] string search,
-        [FromQuery] string? categoryId,
+        [FromQuery] Guid? categoryId,
         CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(search))
@@ -199,7 +203,7 @@ public class DictCityCodeTreeController : ControllerBase
                 .AsQueryable();
 
             // Застосовуємо фільтр категорії якщо є
-            if (!string.IsNullOrWhiteSpace(categoryId))
+            if (categoryId.HasValueGuid())
                 query = query.Where(x => x.CategoryId == categoryId);
 
             var cityCodes = await query.ToListAsync(ct);
@@ -343,6 +347,7 @@ public class DictCityCodeTreeController : ControllerBase
         [FromQuery] int childrenDepth = 1,
         CancellationToken ct = default)
     {
+        // Тут саме string оскільки формат UA01020000000022387
         if (string.IsNullOrWhiteSpace(id))
             return BadRequest("id обов'язковий");
 

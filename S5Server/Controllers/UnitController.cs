@@ -52,7 +52,7 @@ public class UnitController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<UnitTreeItemDto>>> GetAll(
         [FromQuery] string? search,
-        [FromQuery] string? parentId,
+        [FromQuery] Guid? parentId,
         CancellationToken ct = default)
     {
         try
@@ -66,7 +66,7 @@ public class UnitController : ControllerBase
                 q = q.Where(x => x.ShortName.Contains(search) || x.Name.Contains(search));
             }
 
-            if (!string.IsNullOrWhiteSpace(parentId))
+            if (parentId.HasValueGuid())
                 q = q.Where(x => x.ParentId == parentId);
 
             q = QueryWithIncludes(q);
@@ -138,9 +138,9 @@ public class UnitController : ControllerBase
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<UnitDto>> Get(string id, CancellationToken ct = default)
+    public async Task<ActionResult<UnitDto>> Get(Guid id, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(id))
+        if (id == Guid.Empty)
             return BadRequest("id обов'язковий");
 
         try
@@ -247,12 +247,15 @@ public class UnitController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Update(
-        string id,
+        Guid id,
         [FromBody] UnitDto dto,
         CancellationToken ct = default)
     {
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
+
+        if (id == Guid.Empty)
+            return BadRequest("id обов'язковий");
 
         if (string.IsNullOrWhiteSpace(dto.Name))
             return BadRequest("Name не може бути порожнім");
@@ -316,9 +319,9 @@ public class UnitController : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(string id, CancellationToken ct = default)
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(id))
+        if (id == Guid.Empty)
             return BadRequest("id обов'язковий");
 
         try
@@ -348,9 +351,9 @@ public class UnitController : ControllerBase
     /// </summary>
     [HttpGet("{id}/has-children")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<bool>> HasChildren(string id, CancellationToken ct = default)
+    public async Task<ActionResult<bool>> HasChildren(Guid id, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(id))
+        if (id == Guid.Empty)
             return BadRequest("id обов'язковий");
 
         try
@@ -376,10 +379,10 @@ public class UnitController : ControllerBase
     [HttpGet("{id}/children")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<UnitDto>>> GetChildren(
-        string id,
+        Guid id,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(id))
+        if (id == Guid.Empty)
             return BadRequest("id обов'язковий");
 
         try
@@ -414,9 +417,9 @@ public class UnitController : ControllerBase
     /// </summary>
     [HttpGet("{id}/has-assigned")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<bool>> HasAssignedUnits(string id, CancellationToken ct = default)
+    public async Task<ActionResult<bool>> HasAssignedUnits(Guid id, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(id))
+        if (id == Guid.Empty)
             return BadRequest("id обов'язковий");
 
         try
@@ -442,10 +445,10 @@ public class UnitController : ControllerBase
     [HttpGet("{id}/assigned")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<UnitDto>>> GetAssignedUnits(
-        string id,
+        Guid id,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(id))
+        if (id == Guid.Empty)
             return BadRequest("id обов'язковий");
 
         try
@@ -483,14 +486,14 @@ public class UnitController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> AddExistsChild(
-        string parentId,
-        string childId,
+        Guid parentId,
+        Guid childId,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(parentId))
+        if (parentId == Guid.Empty)
             return BadRequest("parentId обов'язковий");
         
-        if (string.IsNullOrWhiteSpace(childId))
+        if (childId == Guid.Empty)
             return BadRequest("childId обов'язковий");
 
         if (parentId == childId)
@@ -527,14 +530,14 @@ public class UnitController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RemoveChild(
-        string parentId,
-        string childId,
+        Guid parentId,
+        Guid childId,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(parentId))
+        if (parentId == Guid.Empty)
             return BadRequest("parentId обов'язковий");
         
-        if (string.IsNullOrWhiteSpace(childId))
+        if (childId == Guid.Empty)
             return BadRequest("childId обов'язковий");
 
         try
@@ -568,14 +571,14 @@ public class UnitController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> AddAssignedUnit(
-        string unitId,
-        string assignedId,
+        Guid unitId,
+        Guid assignedId,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(unitId))
+        if (unitId == Guid.Empty)
             return BadRequest("unitId обов'язковий");
         
-        if (string.IsNullOrWhiteSpace(assignedId))
+        if (assignedId == Guid.Empty)
             return BadRequest("assignedId обов'язковий");
 
         if (unitId == assignedId)
@@ -612,14 +615,14 @@ public class UnitController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RemoveAssignedUnit(
-        string unitId,
-        string assignedId,
+        Guid unitId,
+        Guid assignedId,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(unitId))
+        if (unitId == Guid.Empty)
             return BadRequest("unitId обов'язковий");
         
-        if (string.IsNullOrWhiteSpace(assignedId))
+        if (assignedId == Guid.Empty)
             return BadRequest("assignedId обов'язковий");
 
         try
@@ -654,16 +657,17 @@ public class UnitController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> MoveUpDown(
-        string unitId,
+        Guid unitId,
         bool toUp,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(unitId))
+        if (unitId == Guid.Empty)
             return BadRequest("unitId обов'язковий");
 
         try
         {
-            var unit = await _set.AsTracking().FirstOrDefaultAsync(x => x.Id == unitId, ct);
+            var unit = await _set.AsTracking()
+                .FirstOrDefaultAsync(x => x.Id == unitId, ct);
             if (unit == null)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: "Підрозділ не знайдено");
 
@@ -694,16 +698,17 @@ public class UnitController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status423Locked)]
     public async Task<IActionResult> ImportSoldiers(
-        string unitId,
+        Guid unitId,
         [FromForm] IFormFile soldiers,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(unitId))
+        if (unitId == Guid.Empty)
             return BadRequest("unitId обов'язковий");
 
         try
         {
-            var unit = await _set.AsTracking().FirstOrDefaultAsync(x => x.Id == unitId, ct);
+            var unit = await _set.AsTracking()
+                .FirstOrDefaultAsync(x => x.Id == unitId, ct);
             if (unit == null)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: "Підрозділ не знайдено");
 
@@ -714,7 +719,9 @@ public class UnitController : ControllerBase
             if (!string.Equals(ext, ".xlsx", StringComparison.OrdinalIgnoreCase))
                 return BadRequest("Підтримується тільки формат .xlsx");
 
-            (bool started, ImportJob job, string? error) = Services.ImportSoldiers.TryStartBackground(unit, soldiers, ct);
+            (bool started,
+             ImportJob job,
+             string? error) = Services.ImportSoldiers.TryStartBackground(unit, soldiers, ct);
             if (!started)
                 return Problem(statusCode: 423, title: error ?? "Імпорт заблоковано");
             

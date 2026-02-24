@@ -3,13 +3,28 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
+using Npgsql;
+
 namespace S5Server.Utils
 {
     public static class ControllerFunctions
     {
-        //Id для записи БД представляющую отсутствующее значение
-        //public static readonly Guid NullGuid = new("00000000-0000-0000-0000-000000000001");
-        public static readonly string NullGuid = "00000000-0000-0000-0000-000000000001";
+        /// <summary>
+        /// Id для записи БД представляющую отсутствующее значение
+        /// </summary>
+        public static readonly Guid NullGuid = new("00000000-0000-0000-0000-000000000001");
+        //public static readonly string NullGuid = "00000000-0000-0000-0000-000000000001";
+
+        /// <summary>
+        /// Перевіряє чи Guid є null, Empty
+        /// </summary>
+        public static bool IsNullOrEmptyGuid(this Guid? guid) =>
+            !guid.HasValue || guid.Value == Guid.Empty;// || guid.Value == NullGuid;
+        /// <summary>
+        /// Перевіряє чи Guid має значення (не null, не Empty)
+        /// </summary>
+        public static bool HasValueGuid(this Guid? guid) => !guid.IsNullOrEmptyGuid();
+            //guid.HasValue && guid.Value != Guid.Empty;
 
         public static Dictionary<string, string> GetErrorsFromModelState(ModelStateDictionary modelState)
         {
@@ -87,12 +102,29 @@ namespace S5Server.Utils
             return false;
         }
 
-        // Общая проверка нарушения уникальности (SQLite + fallback по тексту ошибки)
         public static bool IsUniqueViolation(DbUpdateException ex)
+            => ex.InnerException is PostgresException pgEx &&
+               pgEx.SqlState == "23505";
+
+        public static ProblemDetails CreateUniqueViolationProblem(
+            DbUpdateException ex,
+            string? id = null)
         {
-            if (ex.InnerException is Microsoft.Data.Sqlite.SqliteException sqliteEx)
-                return sqliteEx.SqliteErrorCode == 19 && sqliteEx.SqliteExtendedErrorCode == 2067;
-            return ex.InnerException?.Message.Contains("UNIQUE", StringComparison.OrdinalIgnoreCase) == true;
+            var pgEx = ex.InnerException as PostgresException;
+
+            return new ProblemDetails
+            {
+                Status = 409,
+                Title = "Конфлікт унікальності",
+                Detail = "Запис з такими даними вже існує",
+                Extensions =
+            {
+                ["constraint"] = pgEx?.ConstraintName,
+                ["table"] = pgEx?.TableName,
+                ["column"] = pgEx?.ColumnName,
+                ["id"] = id
+            }
+            };
         }
     }
 }

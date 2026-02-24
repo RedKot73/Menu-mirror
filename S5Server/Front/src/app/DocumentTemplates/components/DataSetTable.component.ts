@@ -74,7 +74,7 @@ export class DataSetTableComponent implements OnInit {
     'docDate',
     'isPublished',
     'createdAtUtc',
-    'updatedAtUtc',
+    'validFrom',
   ];
   dataSource = new MatTableDataSource<TemplateDataSetDto>([]);
 

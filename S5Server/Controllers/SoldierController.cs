@@ -36,7 +36,7 @@ namespace S5Server.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<SoldierDto>>> GetAll(
             [FromQuery] string? search,
-            [FromQuery] string? unitId,
+            [FromQuery] Guid? unitId,
             [FromQuery] int? limit,
             CancellationToken ct = default)
         {
@@ -50,7 +50,7 @@ namespace S5Server.Controllers
                     q = q.Where(s => s.FirstName.Contains(search));
                 }
 
-                if (!string.IsNullOrWhiteSpace(unitId))
+                if (unitId.HasValueGuid())
                     q = q.Where(s => s.UnitId == unitId);
                 
                 if (limit is > 0 and <= 100)
@@ -84,10 +84,10 @@ namespace S5Server.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<SoldierDto>>> GetByUnit(
-            [FromQuery] string unitId,
+            [FromQuery] Guid unitId,
             CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(unitId))
+            if (unitId == Guid.Empty)
                 return BadRequest("unitId обов'язковий");
 
             try
@@ -132,12 +132,12 @@ namespace S5Server.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<SoldierDto>>> GetByAssigned(
-            [FromQuery] string assignedUnitId,
+            [FromQuery] Guid assignedUnitId,
             [FromQuery] string? search,
             [FromQuery] int? limit,
             CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(assignedUnitId))
+            if (assignedUnitId == Guid.Empty)
                 return BadRequest("assignedUnitId обов'язковий");
 
             try
@@ -178,21 +178,21 @@ namespace S5Server.Controllers
         /// <summary>
         /// Список військовослужбовців за оперативним підрозділом.
         /// </summary>
-        [HttpGet("by-operational")]
+        [HttpGet("by-involved")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<IEnumerable<SoldierDto>>> GetByOperational(
-            [FromQuery] string operationalUnitId,
+        public async Task<ActionResult<IEnumerable<SoldierDto>>> GetByInvolved(
+            [FromQuery] Guid involvedUnitId,
             [FromQuery] string? search,
             [FromQuery] int? limit,
             CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(operationalUnitId))
-                return BadRequest("operationalUnitId обов'язковий");
+            if (involvedUnitId == Guid.Empty)
+                return BadRequest("involvedUnitId обов'язковий");
 
             try
             {
-                var q = Query().Where(s => s.InvolvedUnitId == operationalUnitId);
+                var q = Query().Where(s => s.InvolvedUnitId == involvedUnitId);
 
                 if (!string.IsNullOrWhiteSpace(search))
                 {
@@ -220,7 +220,7 @@ namespace S5Server.Controllers
             {
                 if (_logger.IsEnabled(LogLevel.Error))
                     _logger.LogError(ex, "Помилка при отриманні Soldier за оперативним підрозділом OperationalUnitId={OperationalUnitId}",
-                        operationalUnitId);
+                        involvedUnitId);
                 return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
             }
         }
@@ -270,9 +270,9 @@ namespace S5Server.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<SoldierDto>> Get(string id, CancellationToken ct = default)
+        public async Task<ActionResult<SoldierDto>> Get(Guid id, CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(id))
+            if (id == Guid.Empty)
                 return BadRequest("id обов'язковий");
 
             try
@@ -309,16 +309,16 @@ namespace S5Server.Controllers
             if (string.IsNullOrWhiteSpace(dto.FirstName))
                 return BadRequest("FirstName не може бути порожнім");
             
-            if (string.IsNullOrWhiteSpace(dto.UnitId))
+            if (dto.UnitId == Guid.Empty)
                 return BadRequest("UnitId обов'язковий");
             
-            if (string.IsNullOrWhiteSpace(dto.RankId))
+            if (dto.RankId == Guid.Empty)
                 return BadRequest("RankId обов'язковий");
             
-            if (string.IsNullOrWhiteSpace(dto.PositionId))
+            if (dto.PositionId == Guid.Empty)
                 return BadRequest("PositionId обов'язковий");
             
-            if (string.IsNullOrWhiteSpace(dto.StateId))
+            if (dto.StateId == Guid.Empty)
                 return BadRequest("StateId обов'язковий");
 
             try
@@ -364,10 +364,13 @@ namespace S5Server.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<IActionResult> Update(
-            string id,
+            Guid id,
             [FromBody] SoldierDto dto,
             CancellationToken ct = default)
         {
+            if (id == Guid.Empty)
+                return BadRequest("id обов'язковий");
+
             if (!ModelState.IsValid)
                 return ValidationProblem(ModelState);
 
@@ -419,9 +422,9 @@ namespace S5Server.Controllers
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Delete(string id, CancellationToken ct = default)
+        public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(id))
+            if (id == Guid.Empty)
                 return BadRequest("id обов'язковий");
 
             try
@@ -454,16 +457,16 @@ namespace S5Server.Controllers
         }
 
         private async Task<ActionResult<SoldierDto>> SetUnit(
-            string id,
-            string? unitId, 
+            Guid id,
+            Guid? unitId, 
             UnitKind unitKind, 
             CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(id))
+            if (id == Guid.Empty)
                 return BadRequest("id обов'язковий");
 
             // UnitId не может быть пустым (обязательное поле)
-            if (string.IsNullOrWhiteSpace(unitId) && unitKind == UnitKind.UnitId)
+            if (unitId.IsNullOrEmptyGuid() && unitKind == UnitKind.UnitId)
                 return BadRequest("UnitId обов'язковий для переведення бійця");
 
             try
@@ -473,11 +476,11 @@ namespace S5Server.Controllers
                     return Problem(statusCode: 404, title: "Не знайдено", detail: "Боєць не знайдений");
 
                 // Нормализация: пустая строка -> null
-                var newUnitId = string.IsNullOrWhiteSpace(unitId) ? null : unitId;
+                var newUnitId = unitId.IsNullOrEmptyGuid() ? null : unitId;
                 switch (unitKind)
                 {
                     case UnitKind.UnitId:
-                        e.UnitId = newUnitId!; // ! т.к. проверили выше
+                        e.UnitId = newUnitId!.Value; // ! т.к. проверили выше
                         break;
                     case UnitKind.AssignedUnitId:
                         e.AssignedUnitId = newUnitId;
@@ -504,8 +507,12 @@ namespace S5Server.Controllers
             catch (Exception ex)
             {
                 if (_logger.IsEnabled(LogLevel.Error))
+                {
                     _logger.LogError(ex, "Помилка при зміні підрозділу Soldier Id={Id} UnitKind={UnitKind}",
                         id, unitKind);
+                    if (ex.InnerException != null)
+                        _logger.LogError(ex.InnerException.Message);
+                }
                 return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
             }
         }
@@ -518,8 +525,8 @@ namespace S5Server.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public Task<ActionResult<SoldierDto>> AssignAssigned(
-            string id, 
-            string? unitId, 
+            Guid id,
+            Guid? unitId, 
             CancellationToken ct = default)
             => SetUnit(id, unitId, UnitKind.AssignedUnitId, ct);
 
@@ -531,8 +538,8 @@ namespace S5Server.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public Task<ActionResult<SoldierDto>> AssignInvolved(
-            string id, 
-            string? unitId, 
+            Guid id,
+            Guid? unitId, 
             CancellationToken ct = default)
             => SetUnit(id, unitId, UnitKind.InvolvedUnitId, ct);
 
@@ -544,8 +551,8 @@ namespace S5Server.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public Task<ActionResult<SoldierDto>> Move(
-            string id, 
-            string newUnitId, 
+            Guid id,
+            Guid newUnitId, 
             CancellationToken ct = default)
             => SetUnit(id, newUnitId, UnitKind.UnitId, ct);
     }

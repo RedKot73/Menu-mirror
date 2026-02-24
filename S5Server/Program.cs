@@ -1,15 +1,18 @@
 ﻿using System.Globalization;
-using Microsoft.AspNetCore.Identity;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.AzureAppServices;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 using Npgsql;
-using Serilog;
 
 using S5Server.Data;
 using S5Server.Models;
+
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -77,8 +80,23 @@ if (string.IsNullOrEmpty(connectionString))
 
 ArgumentException.ThrowIfNullOrEmpty(connectionString);
 
+// ✅ Створити NpgsqlDataSourceBuilder
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+
+// ✅ Налаштувати обробку infinity
+dataSourceBuilder.EnableDynamicJson();
+
+// ✅ Конвертувати infinity → DateTime.MaxValue/MinValue
+dataSourceBuilder.ConnectionStringBuilder.Options = "-c DateStyle=ISO";
+
+// ✅ Увімкнути legacy behavior для timestamp
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
+var dataSource = dataSourceBuilder.Build();
+
+// ✅ Використати DataSource замість connectionString
 builder.Services.AddDbContext<MainDbContext>(options =>
-    options.UseNpgsql(connectionString)
+    options.UseNpgsql(dataSource)  // ← Замість connectionString!
         .UseSnakeCaseNamingConvention()
         .EnableSensitiveDataLogging(builder.Environment.IsDevelopment())
         .EnableDetailedErrors(builder.Environment.IsDevelopment()));

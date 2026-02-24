@@ -71,9 +71,9 @@ public class DictUnitTasksController : ControllerBase
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<DictUnitTaskDto>> Get(string id, CancellationToken ct = default)
+    public async Task<ActionResult<DictUnitTaskDto>> Get(Guid id, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(id))
+        if (id == Guid.Empty)
             return BadRequest("id обов'язковий");
 
         try
@@ -168,15 +168,19 @@ public class DictUnitTasksController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Update(
-        string id,
+        Guid id,
         [FromBody] DictUnitTaskDto dto,
         CancellationToken ct = default)
     {
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
+        if (id == Guid.Empty)
+            return BadRequest("id обов'язковий");
+
         if (string.IsNullOrWhiteSpace(dto.Value))
-            return BadRequest("Caption не може бути порожнім");
+            return BadRequest("Value не може бути порожнім");
+
         if (dto.Amount < 0)
             return BadRequest("Amount не може бути від'ємним");
 
@@ -229,9 +233,9 @@ public class DictUnitTasksController : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(string id, CancellationToken ct = default)
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(id))
+        if (id == Guid.Empty)
             return BadRequest("id обов'язковий");
 
         try
@@ -333,10 +337,10 @@ public class DictUnitTasksController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IEnumerable<DictUnitTaskItemDto>>> GetTaskItems(
-        string id,
+        Guid id,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(id))
+        if (id == Guid.Empty)
             return BadRequest("id обов'язковий");
 
         try
@@ -369,11 +373,11 @@ public class DictUnitTasksController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<DictUnitTaskItemDto>> CreateTaskItem(
-        string id,
+        Guid id,
         [FromBody] DictUnitTaskItemCreateDto dto,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(id))
+        if (id == Guid.Empty)
             return BadRequest("id обов'язковий");
 
         if (!ModelState.IsValid)

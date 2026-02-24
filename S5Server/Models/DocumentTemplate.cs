@@ -8,14 +8,14 @@ using S5Server.Utils;
 namespace S5Server.Models
 {
     public record TemplateDto(
-        string Id,
+        Guid Id,
         string Name,
         string? Description,
-        string TemplateCategoryId,
+        Guid TemplateCategoryId,
         string? TemplateCategoryName,
         bool IsPublished,
         DateTime CreatedAtUtc,
-        DateTime UpdatedAtUtc)
+        DateTime ValidFrom)
     {
         /// <summary>
         /// Converts a <see cref="DocumentTemplate"/> instance to its corresponding <see cref="TemplateDto"/>
@@ -32,7 +32,7 @@ namespace S5Server.Models
                 e.TemplateCategory?.ShortValue,
                 e.IsPublished,
                 e.CreatedAtUtc,
-                e.UpdatedAtUtc
+                e.ValidFrom
             );
 
         public static void ApplyDto(DocumentTemplate e, TemplateDto dto)
@@ -42,7 +42,7 @@ namespace S5Server.Models
             e.TemplateCategoryId = dto.TemplateCategoryId;
             e.IsPublished = dto.IsPublished;
             e.CreatedAtUtc = dto.CreatedAtUtc;
-            e.UpdatedAtUtc = dto.UpdatedAtUtc;
+            e.ValidFrom = dto.ValidFrom;
         }
     }
 
@@ -60,37 +60,32 @@ namespace S5Server.Models
     /// <param name="CreatedAtUtc">The UTC date and time when the template was created.</param>
     /// <param name="UpdatedAtUtc">The UTC date and time when the template was last updated.</param>
     public record TemplateDetailsDto(
-        string Id,
+        Guid Id,
         string Name,
         string? Description,
-        string TemplateCategoryId,
+        Guid TemplateCategoryId,
         string? TemplateCategoryName,
         bool IsPublished,
         DateTime? PublishedAtUtc,
         DateTime CreatedAtUtc,
-        DateTime UpdatedAtUtc);
+        DateTime ValidFrom);
 
     public record CreateTemplateDto(
         [Required] string Name,
         string? Description,
-        string TemplateCategoryId,
+        Guid TemplateCategoryId,
         bool IsPublished,
         IFormFile? File);
-    public record SetCategoryDto(string? TemplateCategoryId);
+    public record SetCategoryDto(Guid? TemplateCategoryId);
 
     /// <summary>
-    /// Represents a document template, including its content, format, metadata, and associated data sets.
+    /// Шаблон документа HTML-format з якорями HandleBars
     /// </summary>
-    /// <remarks>A document template defines the structure and content for generated documents in various
-    /// formats, such as HTML, plain text, DOCX, or PDF. Each template includes metadata, publication status, and can be
-    /// associated with a category and one or more data sets. The template's content is stored as a byte array, and the
-    /// format determines how the content is interpreted and delivered. Use the provided static methods to convert
-    /// between format values and their string or MIME type representations.</remarks>
     [Table("document_templates")]
     public class DocumentTemplate
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public string Id { get; set; } = Guid.NewGuid().ToString("D");
+        [Key]
+        public Guid Id { get; set; } = Guid.CreateVersion7();
 
         [StringLength(150), Required]
         public string Name { get; set; } = string.Empty;
@@ -98,12 +93,11 @@ namespace S5Server.Models
         [StringLength(300)]
         public string? Description { get; set; }
         [Required]
-        public byte[] Content { get; set; } = [];
+        public string Content { get; set; } = string.Empty;
         /// <summary>
         /// Категория шаблона документа
         /// </summary>
-        [StringLength(36)]
-        public string TemplateCategoryId { get; set; } = ControllerFunctions.NullGuid;
+        public Guid TemplateCategoryId { get; set; } = ControllerFunctions.NullGuid;
         /// <summary>
         /// Категория шаблона документа
         /// </summary>
@@ -115,7 +109,19 @@ namespace S5Server.Models
         /// </summary>
         public bool IsPublished { get; set; }
         public DateTime? PublishedAtUtc { get; set; }
+        [StringLength(100)]
+        public string? PublishedBy { get; set; }
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
+        /// <summary>
+        /// Кто внёс изменение (UserId или "ImportSystem")
+        /// </summary>
+        [StringLength(100), Required]
+        public string ChangedBy { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Дата начала действия записи
+        /// </summary>
+        [Required]
+        public DateTime ValidFrom { get; set; } = DateTime.UtcNow;
     }
 }

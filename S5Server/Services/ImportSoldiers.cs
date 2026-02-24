@@ -22,9 +22,9 @@ namespace S5Server.Services
         DateOnly? ArrivedAt,  //Прибув
         DateOnly? DepartedAt,  //Вибув
         //---------------------------
-        string UnitId,
-        string RankId,
-        string PositionId
+        Guid UnitId,
+        Guid RankId,
+        Guid PositionId
     )
     {
         public static Soldier ToEntity(ImportedSoldier soldier) => new()
@@ -102,14 +102,19 @@ namespace S5Server.Services
     public enum ImportJobStatus { NotActive, Running, Succeeded, Failed }
     public record ImportJob
     {
-        public string UnitId { get; set; } = string.Empty;
+        public Guid UnitId { get; set; } = default!;
         public ImportJobStatus Status { get; set; } = ImportJobStatus.NotActive;
         public DateTime StartedAtUtc { get; set; } = DateTime.UtcNow;
         public DateTime? FinishedAtUtc { get; set; }
         public string? Error { get; set; }
     }
 
-    public record ImportProgress(string? Sheet, ImportProgressStatus Status, int Processed, int Total, string? Message);
+    public record ImportProgress(
+        string? Sheet,
+        ImportProgressStatus Status,
+        int Processed,
+        int Total,
+        string? Message);
 
     public static class ImportSoldiers
     {
@@ -272,7 +277,10 @@ namespace S5Server.Services
                         .Where(t => t.ParentId == unit.Id && t.ShortName == sheet.Name)
                         .Select(t => t.Id)
                         .FirstOrDefaultAsync(ct);
-                    if (curUnitId == null)
+                    //надеемся что default(Guid) == Guid.Empty == 0
+                    //никогда не будет валидным Id в БД,
+                    //иначе нужно использовать другой способ обозначения "не найдено"
+                    if (curUnitId == default)
                     {
                         Report(new ImportProgress(sheet.Name, ImportProgressStatus.UnitNotFound, 0, 0, string.Empty));
                         lock (_resultLock)
@@ -344,20 +352,25 @@ namespace S5Server.Services
 
                         DateOnly? arrivedAt = null;
                         DateOnly? departedAt = null;
-                        if (ColArrived == "прибув") arrivedAt = DateOnly.FromDateTime(DateTime.Now);
-                        else if (ColArrived == "вибув") departedAt = DateOnly.FromDateTime(DateTime.Now);
+                        if (ColArrived == "прибув") arrivedAt = DateOnly.FromDateTime(DateTime.UtcNow);
+                        else if (ColArrived == "вибув") departedAt = DateOnly.FromDateTime(DateTime.UtcNow);
 
                         // Поиск RankId из кэша (сначала по ShortValue, потом по Value)
-                        string? rankId = null;
+                        var rankId = ControllerFunctions.NullGuid;
                         if (!string.IsNullOrWhiteSpace(ColRank))
                         {
-                            ranksByShortValue.TryGetValue(ColRank, out rankId);
-                            rankId ??= ranksByValue.GetValueOrDefault(ColRank);
+                            rankId = ranksByValue.TryGetValue(ColRank, out var vRankId) ? vRankId :
+                                ranksByValue.GetValueOrDefault(ColRank, ControllerFunctions.NullGuid);
                         }
                         // Поиск PositionId из кэша
-                        string? positionId = !string.IsNullOrWhiteSpace(ColPosition)
-                            ? positionsByValue.GetValueOrDefault(ColPosition)
-                            : ControllerFunctions.NullGuid;
+                        var positionId = ControllerFunctions.NullGuid;
+                        if (!string.IsNullOrWhiteSpace(ColPosition))
+                        {
+                            // ✅ ВИПРАВЛЕНО: використовуємо NullGuid як default
+                            positionId = positionsByValue.GetValueOrDefault(
+                                ColPosition,
+                                ControllerFunctions.NullGuid);
+                        }
 
                         var sldr = new ImportedSoldier(
                             FirstName: firstName,
@@ -371,10 +384,8 @@ namespace S5Server.Services
                             DepartedAt: departedAt,
                             //-----------------
                             UnitId: curUnitId,
-                            RankId: !string.IsNullOrWhiteSpace(rankId) ?
-                                rankId : ControllerFunctions.NullGuid,
-                            PositionId: !string.IsNullOrWhiteSpace(positionId) ?
-                                positionId : positionId = ControllerFunctions.NullGuid
+                            RankId: rankId,
+                            PositionId: positionId
                         );
 
                         ImportSoldierStatus? importSoldierStatus = null;
@@ -394,7 +405,7 @@ namespace S5Server.Services
                             if (soldier == null)
                             {
                                 soldier = ImportedSoldier.ToEntity(sldr);
-                                soldier.ValidFrom = DateTime.Now;
+                                soldier.ValidFrom = DateTime.UtcNow;
                                 soldier.ChangedBy = "ImportSoldiers";
 
                                 db.Soldiers.Add(soldier);
@@ -403,7 +414,7 @@ namespace S5Server.Services
                             else
                             if (sldr.Chnaged(soldier))
                             {
-                                soldier.ValidFrom = DateTime.Now;
+                                soldier.ValidFrom = DateTime.UtcNow;
                                 soldier.ChangedBy = "ImportSoldiers";
                                 db.Soldiers.Update(soldier);
                                 sldr.Update(soldier);
@@ -413,7 +424,7 @@ namespace S5Server.Services
                         else
                         if(sldr.Chnaged(soldier))
                         {
-                            soldier.ValidFrom = DateTime.Now;
+                            soldier.ValidFrom = DateTime.UtcNow;
                             soldier.ChangedBy = "ImportSoldiers";
                             db.Soldiers.Update(soldier);
                             sldr.Update(soldier);

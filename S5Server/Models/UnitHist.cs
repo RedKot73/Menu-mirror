@@ -7,22 +7,22 @@ namespace S5Server.Models;
 /// DTO для передачі UnitHist
 /// </summary>
 public record UnitHistDto(
-    string Id,
-    string UnitId,
-    string? ParentId,
+    Guid Id,
+    Guid UnitId,
+    Guid? ParentId,
     string? ParentShortName,
-    string? AssignedUnitId,
+    Guid? AssignedUnitId,
     string? AssignedUnitShortName,
     string Name,
     string ShortName,
     string? MilitaryNumber,
-    string? ForceTypeId,
+    Guid? ForceTypeId,
     string? ForceTypeShortValue,
-    string? UnitTypeId,
+    Guid? UnitTypeId,
     string? UnitTypeShortValue,
     int OrderVal,
     bool IsInvolved,
-    string? PersistentLocationId,
+    Guid? PersistentLocationId,
     string? PersistentLocationValue,
     string? Comment,
     string ChangedBy,
@@ -36,21 +36,19 @@ public record UnitHistDto(
 [Table("units_hist")]
 public class UnitHist
 {
-    [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public string Id { get; set; } = Guid.NewGuid().ToString("D");
+    [Key]
+    public Guid Id { get; set; } = Guid.CreateVersion7();
 
     /// <summary>
     /// ID оригінального підрозділу
     /// </summary>
     [Required]
-    [StringLength(36)]
-    public string UnitId { get; set; } = string.Empty;
+    public Guid UnitId { get; set; } = default!;
 
     /// <summary>
     /// Основний підрозділ (ID)
     /// </summary>
-    [StringLength(36)]
-    public string? ParentId { get; set; }
+    public Guid? ParentId { get; set; }
 
     /// <summary>
     /// Основний підрозділ (назва) - денормалізація
@@ -61,8 +59,7 @@ public class UnitHist
     /// <summary>
     /// Приданий до підрозділу (ID)
     /// </summary>
-    [StringLength(36)]
-    public string? AssignedUnitId { get; set; }
+    public Guid? AssignedUnitId { get; set; }
 
     /// <summary>
     /// Приданий до підрозділу (назва) - денормалізація
@@ -91,8 +88,7 @@ public class UnitHist
     /// <summary>
     /// Вид збройних сил (ID)
     /// </summary>
-    [StringLength(36)]
-    public string? ForceTypeId { get; set; }
+    public Guid? ForceTypeId { get; set; }
 
     /// <summary>
     /// Вид збройних сил (назва) - денормалізація
@@ -103,8 +99,7 @@ public class UnitHist
     /// <summary>
     /// Тип підрозділу (ID)
     /// </summary>
-    [StringLength(36)]
-    public string? UnitTypeId { get; set; }
+    public Guid? UnitTypeId { get; set; }
 
     /// <summary>
     /// Тип підрозділу (назва) - денормалізація
@@ -125,8 +120,7 @@ public class UnitHist
     /// <summary>
     /// ППД (Постійне приміщення дислокації) - ID
     /// </summary>
-    [StringLength(36)]
-    public string? PersistentLocationId { get; set; }
+    public Guid? PersistentLocationId { get; set; }
 
     /// <summary>
     /// ППД (назва) - денормалізація
@@ -206,7 +200,7 @@ public static class UnitHistExtensions
     public static UnitHist ToHistory(this Unit unit, string changedBy, string operation = "UPDATE") =>
         new()
         {
-            Id = Guid.NewGuid().ToString("D"),
+            Id = Guid.CreateVersion7(),
             UnitId = unit.Id,
             ParentId = unit.ParentId,
             ParentShortName = unit.Parent?.ShortName,

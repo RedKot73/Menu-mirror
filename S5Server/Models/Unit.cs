@@ -8,37 +8,37 @@ namespace S5Server.Models;
 /// DTO для створення підрозділу
 /// </summary>
 public record UnitCreateDto(
-    string? ParentId,
-    string? AssignedUnitId,
+    Guid? ParentId,
+    Guid? AssignedUnitId,
     string Name,
     string ShortName,
     string? MilitaryNumber,
-    string? ForceTypeId,
-    string? UnitTypeId,
+    Guid? ForceTypeId,
+    Guid? UnitTypeId,
     int OrderVal,
     bool IsInvolved,
-    string? PersistentLocationId,
+    Guid? PersistentLocationId,
     string? Comment);
 
 /// <summary>
 /// DTO для підрозділу
 /// </summary>
 public record UnitDto(
-    string Id,
-    string? ParentId,
+    Guid Id,
+    Guid? ParentId,
     string? ParentShortName,
-    string? AssignedUnitId,
+    Guid? AssignedUnitId,
     string? AssignedShortName,
     string Name,
     string ShortName,
     string? MilitaryNumber,
-    string? ForceTypeId,
+    Guid? ForceTypeId,
     string? ForceType,
-    string? UnitTypeId,
+    Guid? UnitTypeId,
     string? UnitType,
     bool IsInvolved,
     int OrderVal,
-    string? PersistentLocationId,
+    Guid? PersistentLocationId,
     string? PersistentLocation,
     string? Comment,
     // ✅ ДОДАНО
@@ -49,21 +49,21 @@ public record UnitDto(
 /// Розширений DTO для дерева: додає ознаку наявності дочірніх підрозділів
 /// </summary>
 public record UnitTreeItemDto(
-    string Id,
-    string? ParentId,
+    Guid Id,
+    Guid? ParentId,
     string? ParentShortName,
-    string? AssignedUnitId,
+    Guid? AssignedUnitId,
     string? AssignedShortName,
     string Name,
     string ShortName,
     string? MilitaryNumber,
-    string? ForceTypeId,
+    Guid? ForceTypeId,
     string? ForceType,
-    string? UnitTypeId,
+    Guid? UnitTypeId,
     string? UnitType,
     bool IsInvolved,
     int OrderVal,
-    string? PersistentLocationId,
+    Guid? PersistentLocationId,
     string? PersistentLocation,
     string? Comment,
     bool HasChildren,
@@ -106,23 +106,22 @@ public class Unit
     public const string Crew_GUID = "00000000-0000-0000-0000-000000000002";
 
     [Key]
-    [StringLength(36)]
-    public string Id { get; set; } = Guid.NewGuid().ToString("D");
+    public Guid Id { get; set; } = Guid.CreateVersion7();
 
     /// <summary>
     /// Основний підрозділ
     /// </summary>
-    public string? ParentId { get; set; }
+    public Guid? ParentId { get; set; }
     /// <summary>
     /// Основний підрозділ
     /// </summary>
     [ValidateNever]
-    public virtual Unit? Parent { get; set; }
+    public Unit? Parent { get; set; }
 
     /// <summary>
     /// Приданий до підрозділу
     /// </summary>
-    public string? AssignedUnitId { get; set; }
+    public Guid? AssignedUnitId { get; set; }
     /// <summary>
     /// Приданий до підрозділу
     /// </summary>
@@ -150,7 +149,7 @@ public class Unit
     /// <summary>
     /// Вид збройних сил Сухопутні, ДШВ, ВМС...
     /// </summary>
-    public string? ForceTypeId { get; set; }
+    public Guid? ForceTypeId { get; set; }
 
     /// <summary>
     /// Вид збройних сил
@@ -161,7 +160,7 @@ public class Unit
     /// <summary>
     /// Тип підрозділу Бригада, Полк, Батальйон, Рота
     /// </summary>
-    public string? UnitTypeId { get; set; }
+    public Guid? UnitTypeId { get; set; }
 
     /// <summary>
     /// Тип підрозділу Бригада, Полк, Батальйон, Рота
@@ -179,7 +178,7 @@ public class Unit
     /// <summary>
     /// ППД (Постійне приміщення дислокації)
     /// </summary>
-    public string? PersistentLocationId { get; set; }
+    public Guid? PersistentLocationId { get; set; }
 
     /// <summary>
     /// ППД
@@ -233,7 +232,7 @@ public class Unit
     /// Дата начала действия записи
     /// </summary>
     [Required]
-    public DateTime ValidFrom { get; set; } = DateTime.Now;
+    public DateTime ValidFrom { get; set; } = DateTime.UtcNow;
 }
 
 /// <summary>
@@ -327,7 +326,7 @@ public static class UnitExtensions
     public static Unit ToEntity(this UnitCreateDto dto) =>
         new()
         {
-            Id = Guid.NewGuid().ToString("D"),
+            Id = Guid.CreateVersion7(),
             ParentId = dto.ParentId,
             AssignedUnitId = dto.AssignedUnitId,
             Name = dto.Name.Trim(),

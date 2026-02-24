@@ -9,18 +9,18 @@ namespace S5Server.Models
     /// Опис Завдання прив"язаний до Категорії шаблона документа
     /// </summary>
     public record DictUnitTaskItemDto(
-        string Id,
+        Guid Id,
         string Value,
         string? Comment,
-        string TemplateCategoryId,
+        Guid TemplateCategoryId,
         string TemplateCategory,
-        string UnitTaskId);
+        Guid UnitTaskId);
 
     public record DictUnitTaskItemCreateDto(
         string Value,
         string? Comment,
-        string TemplateCategoryId,
-        string UnitTaskId);
+        Guid TemplateCategoryId,
+        Guid UnitTaskId);
 
     /// <summary>
     /// Опис Завдання прив"язаний до Категорії шаблона документа
@@ -31,8 +31,8 @@ namespace S5Server.Models
         /// <summary>
         /// Категория шаблона документа
         /// </summary>
-        [StringLength(36), Required]
-        public string TemplateCategoryId { get; set; } = default!;
+        [Required]
+        public Guid TemplateCategoryId { get; set; } = default!;
         /// <summary>
         /// Категория шаблона документа
         /// </summary>
@@ -41,8 +41,8 @@ namespace S5Server.Models
         /// <summary>
         /// Завдання підрозділу для використання в документах БР/БД
         /// </summary>
-        [StringLength(36), Required]
-        public string UnitTaskId { get; set; } = default!;
+        [Required]
+        public Guid UnitTaskId { get; set; } = default!;
         /// <summary>
         /// Завдання підрозділу для використання в документах БР/БД
         /// </summary>
@@ -86,7 +86,7 @@ namespace S5Server.Models
         public static DictUnitTaskItem ToEntity(this DictUnitTaskItemCreateDto dto) =>
             new()
             {
-                Id = Guid.NewGuid().ToString("D"),
+                Id = Guid.CreateVersion7(),
                 Value = dto.Value.Trim(),
                 Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim(),
                 TemplateCategoryId = dto.TemplateCategoryId,

@@ -4,21 +4,44 @@ using System.ComponentModel.DataAnnotations;
 
 namespace S5Server.Models;
 
+public record CreateUserDto(
+    Guid SoldierId,
+    string Email,
+    string Password,
+    bool? EmailConfirmed,
+    string[]? Roles
+);
+
+public record LoginDto(
+    string Email,
+    string Password,
+    bool RememberMe = false
+);
+
+public record ChangePasswordDto(
+    string CurrentPassword,
+    string NewPassword
+);
+
+public record SetLockoutDto(
+    bool Lock,
+    DateTimeOffset? LockoutEnd = null
+);
+
+public record CreateRoleDto(
+    string Name
+);
+
 /// <summary>
 /// Пользователь системы
 /// </summary>
-/// <typeparam name="TKey"></typeparam>
-[Display(Name = Caption)]
-public class TVezhaUser<TKey> : IdentityUser<TKey> where TKey : IEquatable<TKey>
+public class TVezhaUser : IdentityUser<Guid>
 {
-    public const string Caption = "Користувач";
-    public readonly string cnstCaption = Caption;
-
     /// <summary>
     /// Солдат
     /// </summary>
     [ForeignKey(nameof(Soldier))]
-    public string SoldierId { get; set; } = string.Empty;
+    public Guid SoldierId { get; set; } = default!;
 
     /// <summary>
     /// Солдат
@@ -30,17 +53,14 @@ public class TVezhaUser<TKey> : IdentityUser<TKey> where TKey : IEquatable<TKey>
     */
 
     /// <summary>
-    /// Дата створення користувача
+    /// Дата останнього входу
     /// </summary>
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    [Display(Name = "Надано доступ")]
-    public virtual DateTime? RegistrationDate { get; set; }
+    public DateTime? LastLoginDate { get; set; }
 
     /// <summary>
-    /// Дата останнього успішного входу
+    /// Дата реєстрації акаунту
     /// </summary>
-    [Display(Name = "Останній вхід")]
-    public virtual DateTime? LastLoginDate { get; set; }
+    public DateTime RegistrationDate { get; set; } = DateTime.UtcNow;
 
     /*
     /// <summary>

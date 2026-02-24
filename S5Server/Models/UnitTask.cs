@@ -8,32 +8,31 @@ namespace S5Server.Models;
 /// DTO для створення UnitTask
 /// </summary>
 public record UnitTaskCreateDto(
-    string DataSetId,
-    string UnitId,
-    string TaskId,
-    string AreaId/*,
-    List<DroneModelTaskCreateDto> Means*/);
+    Guid DataSetId,
+    Guid UnitId,
+    Guid TaskId,
+    Guid AreaId);
 
 /// <summary>
 /// DTO для UnitTask (БЕЗ деталей - Master-Detail Pattern)
 /// </summary>
 public record UnitTaskDto(
-    string Id,
-    string DataSetId,
-    string UnitId,
+    Guid Id,
+    Guid DataSetId,
+    Guid UnitId,
     string UnitShortName,
-    string? ParentId,
+    Guid? ParentId,
     string ParentShortName,
-    string? AssignedUnitId,
+    Guid? AssignedUnitId,
     string? AssignedShortName,
-    string? UnitTypeId,
+    Guid? UnitTypeId,
     string? UnitTypeName,
     bool IsInvolved,
-    string? PersistentLocationId,
+    Guid? PersistentLocationId,
     string? PersistentLocationValue,
-    string TaskId,
+    Guid TaskId,
     string TaskValue,
-    string AreaId,
+    Guid AreaId,
     string? AreaValue,          // ✅ ДОДАНО: назва району
     int MeansCount,             // ✅ ДОДАНО: кількість засобів
     bool IsPublished,
@@ -48,14 +47,13 @@ public record UnitTaskDto(
 public class UnitTask
 {
     [Key]
-    [StringLength(36)]
-    public string Id { get; set; } = Guid.NewGuid().ToString("D");
+    public Guid Id { get; set; } = Guid.CreateVersion7();
 
     /// <summary>
     /// Сохранённый набор данных для подстановки в шаблон документа (БР/БД)
     /// </summary>
-    [Required, StringLength(36)]
-    public string DataSetId { get; set; } = default!;
+    [Required]
+    public Guid DataSetId { get; set; } = default!;
     /// <summary>
     /// Сохранённый набор данных для подстановки в шаблон документа (БР/БД)
     /// </summary>
@@ -66,8 +64,8 @@ public class UnitTask
     /// <summary>
     /// Підрозділ (організаційно-штатна бойова одиниця)
     /// </summary>
-    [Required, StringLength(36)]
-    public string UnitId { get; set; } = default!;
+    [Required]
+    public Guid UnitId { get; set; } = default!;
     /// <summary>
     /// Підрозділ (організаційно-штатна бойова одиниця)
     /// </summary>
@@ -82,15 +80,14 @@ public class UnitTask
     /// <summary>
     /// Основний підрозділ
     /// </summary>
-    [StringLength(36)]
-    public string? ParentId { get; set; }
+    public Guid? ParentId { get; set; }
     /// <summary>
     /// Основний підрозділ
     /// </summary>
     [ValidateNever]
     public Unit? Parent { get; set; }
     /// <summary>
-    /// Скорочена назва підрозділу
+    /// Основний підрозділ
     /// </summary>
     [StringLength(100), Required(ErrorMessage = UIConstant.RequiredMsg)]
     public string ParentShortName { get; set; } = string.Empty;
@@ -98,8 +95,7 @@ public class UnitTask
     /// <summary>
     /// Приданий до підрозділу
     /// </summary>
-    [StringLength(36)]
-    public string? AssignedUnitId { get; set; }
+    public Guid? AssignedUnitId { get; set; }
     /// <summary>
     /// Приданий до підрозділу
     /// </summary>
@@ -114,8 +110,7 @@ public class UnitTask
     /// <summary>
     /// Тип підрозділу Бригада, Полк, Батальйон, Рота
     /// </summary>
-    [StringLength(36)]
-    public string? UnitTypeId { get; set; }
+    public Guid? UnitTypeId { get; set; }
     /// <summary>
     /// Тип підрозділу Бригада, Полк, Батальйон, Рота
     /// </summary>
@@ -128,15 +123,14 @@ public class UnitTask
     public string? UnitTypeName { get; set; }
 
     /// <summary>
-    /// True - Оперативний/Тимчасовий підрозділ
+    /// True - Позаштатний/Оперативний/Тимчасовий підрозділ
     /// </summary>
     public bool IsInvolved { get; set; } = false;
 
     /// <summary>
     /// ППД (Постійне приміщення дислокації)
     /// </summary>
-    [StringLength(36)]
-    public string? PersistentLocationId { get; set; }
+    public Guid? PersistentLocationId { get; set; }
 
     /// <summary>
     /// ППД
@@ -159,8 +153,8 @@ public class UnitTask
     /// <summary>
     /// Завдання підрозділу для використання в документах БР/БД
     /// </summary>
-    [Required, StringLength(36)]
-    public string TaskId { get; set; } = default!;
+    [Required]
+    public Guid TaskId { get; set; } = default!;
     /// <summary>
     /// Завдання підрозділу для використання в документах БР/БД
     /// </summary>
@@ -175,8 +169,8 @@ public class UnitTask
     /// <summary>
     /// Район виконання завдань (РВЗ)
     /// </summary>
-    [Required, StringLength(36)]
-    public string AreaId { get; set; } = default!;
+    [Required]
+    public Guid AreaId { get; set; } = default!;
     /// <summary>
     /// Район виконання завдань (РВЗ)
     /// </summary>
@@ -206,7 +200,7 @@ public class UnitTask
     /// Дата начала действия записи
     /// </summary>
     [Required]
-    public DateTime ValidFrom { get; set; } = DateTime.Now;
+    public DateTime ValidFrom { get; set; } = DateTime.UtcNow;
 }
 
 /// <summary>
@@ -224,13 +218,13 @@ public static class UnitTaskExtensions
     /// <param name="changedBy">Хто публікує</param>
     public static UnitTask CreateSnapshot(
         this Unit unit,
-        string dataSetId,
-        string taskId,
-        string areaId,
+        Guid dataSetId,
+        Guid taskId,
+        Guid areaId,
         string changedBy) =>
         new()
         {
-            Id = Guid.NewGuid().ToString("D"),
+            Id = Guid.CreateVersion7(),
             DataSetId = dataSetId,
             UnitId = unit.Id,
             UnitShortName = unit.ShortName,

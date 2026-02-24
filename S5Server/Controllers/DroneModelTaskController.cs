@@ -37,7 +37,7 @@ public class DroneModelTaskController : ControllerBase
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<DroneModelTaskDto>>> GetAll(
-        [FromQuery] string? unitTaskId,
+        [FromQuery] Guid? unitTaskId,
         //[FromQuery] string? droneModelId,
         CancellationToken ct = default)
     {
@@ -46,7 +46,7 @@ public class DroneModelTaskController : ControllerBase
             var query = Query()
                 .Include(t => t.DroneModel.DroneType).AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(unitTaskId))
+            if (unitTaskId.HasValueGuid())
                 query = query.Where(x => x.UnitTaskId == unitTaskId);
             /*
             if (!string.IsNullOrWhiteSpace(droneModelId))
@@ -78,10 +78,10 @@ public class DroneModelTaskController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<DroneModelTaskDto>> Get(
-        string id, 
+        Guid id, 
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(id))
+        if (id == Guid.Empty)
             return BadRequest("id обов'язковий");
 
         try
@@ -114,10 +114,10 @@ public class DroneModelTaskController : ControllerBase
     [HttpGet("by-unit-task/{unitTaskId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<DroneModelTaskDto>>> GetByUnitTask(
-        string unitTaskId,
+        Guid unitTaskId,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(unitTaskId))
+        if (unitTaskId == Guid.Empty)
             return BadRequest("unitTaskId обов'язковий");
 
         try
@@ -159,10 +159,10 @@ public class DroneModelTaskController : ControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        if (string.IsNullOrWhiteSpace(dto.UnitTaskId))
+        if (dto.UnitTaskId == Guid.Empty)
             return BadRequest("UnitTaskId обов'язковий");
 
-        if (string.IsNullOrWhiteSpace(dto.DroneModelId))
+        if (dto.DroneModelId == Guid.Empty)
             return BadRequest("DroneModelId обов'язковий");
 
         if (dto.Quantity < 1)
@@ -247,14 +247,17 @@ public class DroneModelTaskController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<DroneModelTaskDto>> Update(
-        string id,
+        Guid id,
         [FromBody] DroneModelTaskUpSertDto dto,  // ✅ Використовуємо UpdateDto
         CancellationToken ct = default)
     {
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        if (string.IsNullOrWhiteSpace(dto.DroneModelId))
+        if (id == Guid.Empty)
+            return BadRequest("id обов'язковий");
+
+        if (dto.DroneModelId == Guid.Empty)
             return BadRequest("DroneModelId обов'язковий");
 
         if (dto.Quantity < 1)
@@ -328,9 +331,9 @@ public class DroneModelTaskController : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(string id, CancellationToken ct = default)
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(id))
+        if (id == Guid.Empty)
             return BadRequest("id обов'язковий");
 
         try
@@ -365,10 +368,10 @@ public class DroneModelTaskController : ControllerBase
     [HttpDelete("by-unit-task/{unitTaskId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeleteByUnitTask(
-        string unitTaskId, 
+        Guid unitTaskId, 
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(unitTaskId))
+        if (unitTaskId == Guid.Empty)
             return BadRequest("unitTaskId обов'язковий");
 
         try
@@ -451,11 +454,11 @@ public class DroneModelTaskController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<BulkSaveResult>> BulkSave(
-        string unitTaskId,
+        Guid unitTaskId,
         [FromBody] List<DroneModelTaskUpSertDto> dtos,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(unitTaskId))
+        if (unitTaskId == Guid.Empty)
             return BadRequest("unitTaskId обов'язковий");
 
         if (!ModelState.IsValid)
@@ -526,7 +529,7 @@ public class DroneModelTaskController : ControllerBase
                         // CREATE
                         var newMean = new DroneModelTask
                         {
-                            Id = Guid.NewGuid().ToString("D"),
+                            Id = Guid.CreateVersion7(),
                             UnitTaskId = unitTaskId,
                             DroneModelId = dto.DroneModelId,
                             Quantity = dto.Quantity

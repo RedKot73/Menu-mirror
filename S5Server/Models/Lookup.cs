@@ -3,13 +3,13 @@
     // DTO для передачи в списки выбора
     // Можно использовать record, т.к. это только для чтения
     public record LookupDto(
-        string Id,
+        Guid Id,
         string Value
     );
 
     public class Lookup
     {
-        public string Id { get; set; } = default!;
+        public Guid Id { get; set; } = default!;
         string Value { get; set; } = string.Empty;
     }
 }

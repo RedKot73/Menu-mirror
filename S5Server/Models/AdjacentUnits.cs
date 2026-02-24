@@ -13,8 +13,8 @@ namespace S5Server.Models
         public const string Caption = "Суміжний підрозділ";
         public readonly string cnstCaption = Caption;
 
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public string Id { get; set; } = Guid.NewGuid().ToString();
+        [Key]
+        public Guid Id { get; set; } = Guid.CreateVersion7();
 
         [ForeignKey(nameof(Unit))]
         public string FirstUnitId { get; set; } = string.Empty;

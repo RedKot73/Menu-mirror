@@ -28,9 +28,9 @@ public class UnitTaskController : ControllerBase
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
-        [FromQuery] string? dataSetId,
-        [FromQuery] string? unitId,
-        [FromQuery] string? taskId,
+        [FromQuery] Guid? dataSetId,
+        [FromQuery] Guid? unitId,
+        [FromQuery] Guid? taskId,
         CancellationToken ct = default)
     {
         try
@@ -42,13 +42,13 @@ public class UnitTaskController : ControllerBase
                 .AsQueryable();
 
             // Фільтри
-            if (!string.IsNullOrWhiteSpace(dataSetId))
+            if (dataSetId.HasValueGuid())
                 baseQuery = baseQuery.Where(t => t.DataSetId == dataSetId);
 
-            if (!string.IsNullOrWhiteSpace(unitId))
+            if (unitId.HasValueGuid())
                 baseQuery = baseQuery.Where(t => t.UnitId == unitId);
 
-            if (!string.IsNullOrWhiteSpace(taskId))
+            if (taskId.HasValueGuid())
                 baseQuery = baseQuery.Where(t => t.TaskId == taskId);
 
             // ✅ 1️⃣ Published: БЕЗ Unit (snapshot)
@@ -118,8 +118,11 @@ public class UnitTaskController : ControllerBase
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<UnitTaskDto>> Get(string id, CancellationToken ct = default)
+    public async Task<ActionResult<UnitTaskDto>> Get(Guid id, CancellationToken ct = default)
     {
+        if (id == Guid.Empty)
+            return BadRequest("Id обов'язковий");
+
         try
         {
             var task = await _set
@@ -315,10 +318,13 @@ public class UnitTaskController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Update(
-        string id,
+        Guid id,
         [FromBody] UnitTaskDto dto,
         CancellationToken ct = default)
     {
+        if (id == Guid.Empty)
+            return BadRequest("Id обов'язковий");
+
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
@@ -386,8 +392,11 @@ public class UnitTaskController : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(string id, CancellationToken ct = default)
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
     {
+        if (id == Guid.Empty)
+            return BadRequest("Id обов'язковий");
+
         try
         {
             var task = await _set
@@ -422,8 +431,11 @@ public class UnitTaskController : ControllerBase
     [HttpPost("{id}/publish/{set_publish}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Publish(string id, bool set_publish, CancellationToken ct = default)
+    public async Task<IActionResult> Publish(Guid id, bool set_publish, CancellationToken ct = default)
     {
+        if (id == Guid.Empty)
+            return BadRequest("Id обов'язковий");
+
         try
         {
             var task = await _set

@@ -8,9 +8,9 @@ namespace S5Server.Models;
 /// DTO для DroneModelTask
 /// </summary>
 public record DroneModelTaskDto(
-    string Id,
-    string UnitTaskId,
-    string DroneModelId,
+    Guid Id,
+    Guid UnitTaskId,
+    Guid DroneModelId,
     string DroneModelValue,
     string DroneTypeName,
     int Quantity);
@@ -19,8 +19,8 @@ public record DroneModelTaskDto(
 /// DTO для оновлення DroneModelTask
 /// </summary>
 public record DroneModelTaskUpSertDto(
-    string UnitTaskId,
-    string DroneModelId,
+    Guid UnitTaskId,
+    Guid DroneModelId,
     int Quantity);
 /// <summary>
 /// Результат масового збереження/оновлення
@@ -39,15 +39,13 @@ public record BulkSaveResult(
 public class DroneModelTask
 {
     [Key]
-    [StringLength(36)]
-    public string Id { get; set; } = Guid.NewGuid().ToString("D");
+    public Guid Id { get; set; } = Guid.CreateVersion7();
 
     /// <summary>
     /// Завдання підрозділу
     /// </summary>
     [Required]
-    [StringLength(36)]
-    public string UnitTaskId { get; set; } = default!;
+    public Guid UnitTaskId { get; set; } = default!;
 
     /// <summary>
     /// Завдання підрозділу
@@ -59,8 +57,7 @@ public class DroneModelTask
     /// Модель БПЛА
     /// </summary>
     [Required]
-    [StringLength(36)]
-    public string DroneModelId { get; set; } = default!;
+    public Guid DroneModelId { get; set; } = default!;
 
     /// <summary>
     /// Модель БПЛА
@@ -98,7 +95,7 @@ public static class DroneModelTaskExtensions
     public static DroneModelTask FromCreateDto(this DroneModelTaskUpSertDto dto) =>
         new()
         {
-            Id = Guid.NewGuid().ToString("D"),
+            Id = Guid.CreateVersion7(),
             UnitTaskId = dto.UnitTaskId,
             DroneModelId = dto.DroneModelId,
             Quantity = dto.Quantity

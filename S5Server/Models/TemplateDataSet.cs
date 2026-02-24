@@ -7,17 +7,17 @@ namespace S5Server.Models;
 /// DTO для читання TemplateDataSet (БЕЗ деталей)
 /// </summary>
 public record TemplateDataSetDto(
-    string Id,
+    Guid Id,
     bool IsParentDocUsed,
     string? ParentDocNumber,
-    DateTime? ParentDocDate,
+    DateOnly? ParentDocDate,
     string Name,
     string DocNumber,
-    DateTime DocDate,
+    DateOnly DocDate,
     bool IsPublished,
     DateTime? PublishedAtUtc,
     DateTime CreatedAtUtc,
-    DateTime? UpdatedAtUtc);
+    DateTime ValidFrom);
 
 /// <summary>
 /// DTO для оновлення TemplateDataSet
@@ -25,10 +25,10 @@ public record TemplateDataSetDto(
 public record TemplateDataSetUpSertDto(
     bool IsParentDocUsed,
     string? ParentDocNumber,
-    DateTime? ParentDocDate,
+    DateOnly? ParentDocDate,
     string Name,
     string DocNumber,
-    DateTime DocDate,
+    DateOnly DocDate,
     bool IsPublished);
 
 /// <summary>
@@ -37,8 +37,8 @@ public record TemplateDataSetUpSertDto(
 [Table("template_data_sets")]
 public class TemplateDataSet
 {
-    [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public string Id { get; set; } = Guid.NewGuid().ToString("D");
+    [Key]
+    public Guid Id { get; set; } = Guid.CreateVersion7();
 
     /// <summary>
     /// Чи існує документ старшого начальника
@@ -54,7 +54,7 @@ public class TemplateDataSet
     /// <summary>
     /// Дата документу старшого начальника
     /// </summary>
-    public DateTime? ParentDocDate { get; set; }  // ✅ Nullable
+    public DateOnly? ParentDocDate { get; set; }  // ✅ Nullable
 
     [StringLength(150), Required]
     public string Name { get; set; } = string.Empty;
@@ -69,7 +69,7 @@ public class TemplateDataSet
     /// Дата документу
     /// </summary>
     [Required]
-    public DateTime DocDate { get; set; }
+    public DateOnly DocDate { get; set; }
 
     /// <summary>
     /// Список завдань підрозділів
@@ -82,9 +82,22 @@ public class TemplateDataSet
     /// </summary>
     public bool IsPublished { get; set; }
     public DateTime? PublishedAtUtc { get; set; }
+    [StringLength(100)]
+    public string? PublishedBy { get; set; }
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
-    public DateTime? UpdatedAtUtc { get; set; }
+
+    /// <summary>
+    /// Кто внёс изменение (UserId или "ImportSystem")
+    /// </summary>
+    [StringLength(100), Required]
+    public string ChangedBy { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Дата начала действия записи
+    /// </summary>
+    [Required]
+    public DateTime ValidFrom { get; set; } = DateTime.UtcNow;
 }
 
 /// <summary>
@@ -95,10 +108,10 @@ public static class TemplateDataSetExtensions
     /// <summary>
     /// Створює TemplateDataSet з DTO
     /// </summary>
-    public static TemplateDataSet FromCreateDto(this TemplateDataSetUpSertDto dto) =>
+    public static TemplateDataSet FromCreateDto(this TemplateDataSetUpSertDto dto, string changedBy) =>
         new()
         {
-            Id = Guid.NewGuid().ToString("D"),
+            Id = Guid.CreateVersion7(),
             IsParentDocUsed = dto.IsParentDocUsed,
             ParentDocNumber = dto.ParentDocNumber,
             ParentDocDate = dto.ParentDocDate,
@@ -106,7 +119,9 @@ public static class TemplateDataSetExtensions
             DocNumber = dto.DocNumber.Trim(),
             DocDate = dto.DocDate,
             IsPublished = dto.IsPublished,
-            CreatedAtUtc = DateTime.UtcNow
+            CreatedAtUtc = DateTime.UtcNow,
+            ValidFrom = DateTime.UtcNow,
+            ChangedBy = changedBy
         };
 
     /// <summary>
@@ -124,7 +139,7 @@ public static class TemplateDataSetExtensions
             ds.IsPublished,
             ds.PublishedAtUtc,
             ds.CreatedAtUtc,
-            ds.UpdatedAtUtc);
+            ds.ValidFrom);
 
     /// <summary>
     /// Перевірка чи змінились дані
@@ -141,17 +156,19 @@ public static class TemplateDataSetExtensions
     /// <summary>
     /// Змінити статус публікації
     /// </summary>
-    public static void Publish(this TemplateDataSet ds, bool setPublish)
+    public static void Publish(this TemplateDataSet ds, bool setPublish, string changedBy)
     {
         ds.IsPublished = setPublish;
         ds.PublishedAtUtc = setPublish ? DateTime.UtcNow : null;
-        ds.UpdatedAtUtc = DateTime.UtcNow;
+        ds.ValidFrom = DateTime.UtcNow;
+        ds.ValidFrom = DateTime.UtcNow;
+        ds.ChangedBy = changedBy;
     }
 
     /// <summary>
     /// Оновити поля з DTO
     /// </summary>
-    public static void UpdateFrom(this TemplateDataSet ds, TemplateDataSetUpSertDto dto)
+    public static void UpdateFrom(this TemplateDataSet ds, TemplateDataSetUpSertDto dto, string changedBy)
     {
         var publishStateChanged = ds.IsPublished != dto.IsPublished;
 
@@ -166,7 +183,8 @@ public static class TemplateDataSetExtensions
         if (publishStateChanged)
             ds.PublishedAtUtc = dto.IsPublished ? DateTime.UtcNow : null;
 
-        ds.UpdatedAtUtc = DateTime.UtcNow;
+        ds.ValidFrom = DateTime.UtcNow;
+        ds.ChangedBy = changedBy;
     }
 
     /// <summary>

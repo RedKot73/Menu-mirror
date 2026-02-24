@@ -8,27 +8,27 @@ namespace S5Server.Models
     /// DTO для передачи SoldierHist
     /// </summary>
     public record SoldierHistDto(
-        string Id,
-        string SoldierId,
+        Guid Id,
+        Guid SoldierId,
         string FirstName,
         string? MidleName,
         string? LastName,
         string Fio,
         DateOnly? BirthDate,
         string? NickName,
-        string UnitId,
+        Guid UnitId,
         string UnitShortName,
         DateOnly? ArrivedAt,
         DateOnly? DepartedAt,
-        string? AssignedUnitId,
+        Guid? AssignedUnitId,
         string? AssignedUnitShortName,
-        string? OperationalUnitId,
+        Guid? OperationalUnitId,
         string? OperationalUnitShortName,
-        string RankId,
+        Guid RankId,
         string RankShortValue,
-        string PositionId,
+        Guid PositionId,
         string PositionValue,
-        string StateId,
+        Guid StateId,
         string StateValue,
         string? Comment,
         string ChangedBy,
@@ -53,8 +53,8 @@ namespace S5Server.Models
                 e.DepartedAt,
                 e.AssignedUnitId,
                 e.AssignedUnitShortName,
-                e.OperationalUnitId,
-                e.OperationalUnitShortName,
+                e.InvolvedUnitId,
+                e.InvolvedUnitShortName,
                 e.RankId,
                 e.RankShortValue,
                 e.PositionId,
@@ -75,11 +75,11 @@ namespace S5Server.Models
     [Table("soldiers_hist")]
     public class SoldierHist
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public string Id { get; set; } = Guid.NewGuid().ToString();
+        [Key]
+        public Guid Id { get; set; } = Guid.CreateVersion7();
 
         [Required]
-        public string SoldierId { get; set; } = string.Empty;
+        public Guid SoldierId { get; set; } = default!;
 
         public int? ExternId { get; set; }
 
@@ -105,35 +105,35 @@ namespace S5Server.Models
 
         // Гибридный подход: Id + денормализованные значения (без FK constraints)
         [Required]
-        public string UnitId { get; set; } = string.Empty;
+        public Guid UnitId { get; set; } = default!;
 
         [StringLength(100), Required]
         public string UnitShortName { get; set; } = string.Empty;
 
-        public string? AssignedUnitId { get; set; }
+        public Guid? AssignedUnitId { get; set; }
 
         [StringLength(100)]
         public string? AssignedUnitShortName { get; set; }
 
-        public string? OperationalUnitId { get; set; }
+        public Guid? InvolvedUnitId { get; set; }
 
         [StringLength(100)]
-        public string? OperationalUnitShortName { get; set; }
+        public string? InvolvedUnitShortName { get; set; }
 
         [Required]
-        public string RankId { get; set; } = string.Empty;
+        public Guid RankId { get; set; } = default!;
 
         [StringLength(50), Required]
         public string RankShortValue { get; set; } = string.Empty;
 
         [Required]
-        public string PositionId { get; set; } = string.Empty;
+        public Guid PositionId { get; set; } = default!;
 
         [StringLength(100), Required]
         public string PositionValue { get; set; } = string.Empty;
 
         [Required]
-        public string StateId { get; set; } = string.Empty;
+        public Guid StateId { get; set; } = default!;
 
         [StringLength(50), Required]
         public string StateValue { get; set; } = string.Empty;

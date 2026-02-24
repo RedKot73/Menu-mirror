@@ -551,7 +551,7 @@ export class UnitsTaskEditorComponent {
           ...currentDataSet,
           isPublished: isPublished,
           publishedAtUtc: isPublished ? new Date().toISOString() : undefined,
-          updatedAtUtc: new Date().toISOString(),
+          validFrom: new Date().toISOString(),
         });
 
         const statusText = isPublished ? 'опубліковано' : 'знято з публікації';

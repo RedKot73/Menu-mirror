@@ -7,7 +7,7 @@ using S5Server.Utils;
 namespace S5Server.Controllers;
 
 public record DictRankDto(
-    string Id,
+    Guid Id,
     string Value,
     string ShortValue,
     string? Comment,
@@ -81,7 +81,7 @@ public class DictRankController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<DictRankDto>> Get(string id, CancellationToken ct = default)
+    public async Task<ActionResult<DictRankDto>> Get(Guid id, CancellationToken ct = default)
     {
         var e = await Query().FirstOrDefaultAsync(x => x.Id == id, ct);
         return e is null ? NotFound() : Ok(ToDto(e));
@@ -97,7 +97,7 @@ public class DictRankController : ControllerBase
 
         var entity = new DictRank
         {
-            Id = Guid.NewGuid().ToString("D"),
+            Id = Guid.CreateVersion7(),
             Value = dto.Value.Trim(),
             ShortValue = dto.ShortValue.Trim(),
             Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim(),
@@ -121,12 +121,20 @@ public class DictRankController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(string id, [FromBody] DictRankDto dto,
+    public async Task<IActionResult> Update(Guid id, [FromBody] DictRankDto dto,
         CancellationToken ct = default)
     {
-        if (dto is null) return BadRequest("Пустое тело запроса.");
-        if (string.IsNullOrWhiteSpace(dto.Value)) return BadRequest("Value не может быть пустым.");
-        if (string.IsNullOrWhiteSpace(dto.ShortValue)) return BadRequest("ShortValue не может быть пустым.");
+        if (id == Guid.Empty)
+            return BadRequest("id обов'язковий");
+
+        if (dto is null)
+            return BadRequest("Пустое тело запроса.");
+
+        if (string.IsNullOrWhiteSpace(dto.Value))
+            return BadRequest("Value не может быть пустым.");
+
+        if (string.IsNullOrWhiteSpace(dto.ShortValue))
+            return BadRequest("ShortValue не может быть пустым.");
 
         var e = await _set.AsTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
         if (e is null) return NotFound();
@@ -150,7 +158,7 @@ public class DictRankController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(string id, CancellationToken ct = default)
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
     {
         var e = await _set.FirstOrDefaultAsync(x => x.Id == id, ct);
         if (e is null) return NotFound();

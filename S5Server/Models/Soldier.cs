@@ -9,26 +9,26 @@ namespace S5Server.Models
     /// DTO для передачи Soldier
     /// </summary>
     public record SoldierDto(
-        string Id,
+        Guid Id,
         string FirstName,
         string? MidleName,
         string? LastName,
         string Fio,
         DateOnly? BirthDate,
         string? NickName,
-        string UnitId,
+        Guid UnitId,
         string UnitShortName,
         DateOnly? ArrivedAt,
         DateOnly? DepartedAt,
-        string? AssignedUnitId,
+        Guid? AssignedUnitId,
         string? AssignedUnitShortName,
-        string? OperationalUnitId,
-        string? OperationalUnitShortName,
-        string RankId,
+        Guid? InvolvedUnitId,
+        string? InvolvedUnitShortName,
+        Guid RankId,
         string RankShortValue,
-        string PositionId,
+        Guid PositionId,
         string PositionValue,
-        string StateId,
+        Guid StateId,
         string StateValue,
         string? Comment,
         /// <summary>
@@ -50,28 +50,27 @@ namespace S5Server.Models
         string? LastName,
         DateOnly? BirthDate,
         string? NickName,
-        string UnitId,
-        string? AssignedUnitId,
-        string? OperationalUnitId,
+        Guid UnitId,
+        Guid? AssignedUnitId,
+        Guid? InvolvedUnitId,
         DateOnly ArrivedAt,
         DateOnly? DepartedAt,
-        string RankId,
-        string PositionId,
-        string StateId,
+        Guid RankId,
+        Guid PositionId,
+        Guid StateId,
         string? Comment
     );
 
     /// <summary>
-    /// Боєць
+    /// Особовий склад
     /// </summary>
     [Table("soldiers")]
     public class Soldier
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public string Id { get; set; } = Guid.NewGuid().ToString();
+        [Key]
+        public Guid Id { get; set; } = Guid.CreateVersion7();
         /// <summary>
-        /// Из Ипульса, Армия- и тд.
-        /// Gets or sets the external identifier associated with the entity.
+        /// Id з Імпульса, Армія- и тд.
         /// </summary>
         public int? ExternId { get; set; }
 
@@ -103,7 +102,7 @@ namespace S5Server.Models
         /// </summary>
         [ForeignKey(nameof(Unit)),
             Required(ErrorMessage = UIConstant.RequiredMsg)]
-        public string UnitId { get; set; } = string.Empty;
+        public Guid UnitId { get; set; } = default!;
 
         /// <summary>
         /// Підрозділ
@@ -116,7 +115,7 @@ namespace S5Server.Models
         /// Приданий до підрозділу
         /// </summary>
         [ForeignKey(nameof(AssignedUnit))]
-        public string? AssignedUnitId { get; set; }
+        public Guid? AssignedUnitId { get; set; }
         /// <summary>
         /// Приданий до підрозділу
         /// </summary>
@@ -126,7 +125,7 @@ namespace S5Server.Models
         /// <summary>
         /// Задіяний в підрозділі/екіпажі
         /// </summary>
-        public string? InvolvedUnitId { get; set; }
+        public Guid? InvolvedUnitId { get; set; }
         /// <summary>
         /// Задіяний в підрозділі/екіпажі
         /// </summary>
@@ -136,7 +135,7 @@ namespace S5Server.Models
         /// Звання
         /// </summary>
         [ForeignKey(nameof(DictRank))]
-        public string RankId { get; set; } = string.Empty;
+        public Guid RankId { get; set; } = default!;
 
         /// <summary>
         /// Звання
@@ -148,7 +147,7 @@ namespace S5Server.Models
         /// Посада
         /// </summary>
         [ForeignKey(nameof(DictPosition))]
-        public string PositionId { get; set; } = string.Empty;
+        public Guid PositionId { get; set; } = default!;
 
         /// <summary>
         /// Посада
@@ -157,10 +156,10 @@ namespace S5Server.Models
         public DictPosition Position { get; set; } = default!;
 
         /// <summary>
-        /// Статус: Звичайний, 200, 300, 500....
+        /// Статус: Звичайний, 200,300,500,Поранено,СЗЧ...
         /// </summary>
         [ForeignKey(nameof(DictSoldierState)), Display(Name = "Статус")]
-        public string StateId { get; set; } = string.Empty;
+        public Guid StateId { get; set; } = default!;
         /// <summary>
         /// Статус: Звичайний, 200, 300, 500....
         /// </summary>
@@ -175,7 +174,7 @@ namespace S5Server.Models
         public string VezhaUserId { get; set; } = string.Empty;
         */
         //[ValidateNever, InverseProperty("Soldier"), Display(Name = "Мережевий аккаунт")]
-        public TVezhaUser<string>? VezhaUser { get; set; }
+        public TVezhaUser? VezhaUser { get; set; }
 
         /// <summary>
         /// Коментар
@@ -205,7 +204,7 @@ namespace S5Server.Models
         /// Дата начала действия записи
         /// </summary>
         [Required]
-        public DateTime ValidFrom { get; set; } = DateTime.Now;
+        public DateTime ValidFrom { get; set; } = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -269,7 +268,7 @@ namespace S5Server.Models
                 ArrivedAt = soldierDto.ArrivedAt,
                 DepartedAt = soldierDto.DepartedAt,
                 AssignedUnitId = soldierDto.AssignedUnitId,
-                InvolvedUnitId = soldierDto.OperationalUnitId,
+                InvolvedUnitId = soldierDto.InvolvedUnitId,
                 RankId = soldierDto.RankId,
                 PositionId = soldierDto.PositionId,
                 StateId = soldierDto.StateId,
@@ -292,7 +291,7 @@ namespace S5Server.Models
             e.ArrivedAt == dto.ArrivedAt &&
             e.DepartedAt == dto.DepartedAt &&
             e.AssignedUnitId == dto.AssignedUnitId &&
-            e.InvolvedUnitId == dto.OperationalUnitId &&
+            e.InvolvedUnitId == dto.InvolvedUnitId &&
             e.RankId == dto.RankId &&
             e.PositionId == dto.PositionId &&
             e.StateId == dto.StateId &&
@@ -314,7 +313,7 @@ namespace S5Server.Models
             e.ArrivedAt = dto.ArrivedAt;
             e.DepartedAt = dto.DepartedAt;
             e.AssignedUnitId = dto.AssignedUnitId;
-            e.InvolvedUnitId = dto.OperationalUnitId;
+            e.InvolvedUnitId = dto.InvolvedUnitId;
             e.RankId = dto.RankId;
             e.PositionId = dto.PositionId;
             e.StateId = dto.StateId;

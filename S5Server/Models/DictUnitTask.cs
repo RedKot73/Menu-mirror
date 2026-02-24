@@ -9,7 +9,7 @@ namespace S5Server.Models
     /// Завдання підрозділу для використання в документах БР/БД
     /// </summary>
     public record DictUnitTaskDto(
-        string Id,
+        Guid Id,
         /// <summary>
         /// Назва
         /// </summary>
@@ -26,7 +26,7 @@ namespace S5Server.Models
         /// <summary>
         /// Тип Напрямку ЛБЗ
         /// </summary>
-        string AreaTypeId,
+        Guid AreaTypeId,
         /// <summary>
         /// Тип Напрямку ЛБЗ
         /// </summary>
@@ -42,7 +42,7 @@ namespace S5Server.Models
         /// <summary>
         /// Тип Напрямку ЛБЗ
         /// </summary>
-        string AreaTypeId,
+        Guid AreaTypeId,
         bool WithMeans = false
         );
 
@@ -53,8 +53,7 @@ namespace S5Server.Models
     public class DictUnitTask
     {
         [Key]
-        [StringLength(36)]
-        public string Id { get; set; } = Guid.NewGuid().ToString("D");
+        public Guid Id { get; set; } = Guid.CreateVersion7();
 
         /// <summary>
         /// Назва
@@ -80,7 +79,7 @@ namespace S5Server.Models
         /// Тип Напрямку ЛБЗ
         /// </summary>
         [Required]
-        public string AreaTypeId { get; set; } = default!;
+        public Guid AreaTypeId { get; set; } = default!;
         /// <summary>
         /// Тип Напрямку ЛБЗ
         /// </summary>
@@ -137,7 +136,7 @@ namespace S5Server.Models
         public static DictUnitTask ToEntity(this DictUnitTaskCreateDto dto) =>
             new()
             {
-                Id = Guid.NewGuid().ToString("D"),
+                Id = Guid.CreateVersion7(),
                 Value = dto.Value.Trim(),
                 Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim(),
                 Amount = dto.Amount,

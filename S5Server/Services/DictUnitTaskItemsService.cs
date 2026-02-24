@@ -33,8 +33,8 @@ namespace S5Server.Services
         /// </summary>
         public static async Task<DictUnitTaskItemDto?> GetByTaskAndTemplate(
             MainDbContext db,
-            string unitTaskId,
-            string templateCategoryId,
+            Guid unitTaskId,
+            Guid templateCategoryId,
             CancellationToken ct = default)
         {
             var set = db.DictUnitTaskItems;
@@ -50,7 +50,7 @@ namespace S5Server.Services
         /// </summary>
         public static async Task<List<DictUnitTaskItemDto>> GetByUnitTaskId(
             MainDbContext db,
-            string unitTaskId,
+            Guid unitTaskId,
             CancellationToken ct = default)
         {
             var set = db.DictUnitTaskItems;
@@ -67,7 +67,7 @@ namespace S5Server.Services
         /// </summary>
         public static async Task<bool> Update(
             MainDbContext db,
-            string id,
+            Guid id,
             DictUnitTaskItemDto dto,
             CancellationToken ct = default)
         {
@@ -90,7 +90,7 @@ namespace S5Server.Services
         /// </summary>
         public static async Task<bool> Delete(
             MainDbContext db,
-            string id,
+            Guid id,
             CancellationToken ct = default)
         {
             var set = db.DictUnitTaskItems;
@@ -109,7 +109,7 @@ namespace S5Server.Services
         /// </summary>
         public static async Task<bool> HasItems(
             MainDbContext db,
-            string unitTaskId,
+            Guid unitTaskId,
             CancellationToken ct = default)
         {
             return await db.DictUnitTaskItems

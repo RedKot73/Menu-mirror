@@ -8,11 +8,23 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 namespace S5Server.Models
 {
     /// <summary>
+    /// DTO для передачи в списки выбора
+    /// Тут Id саме string оскільки формат UA01020000000022387
+    /// </summary>
+    public record CityCodeLookupDto(
+        string Id,
+        string Value
+    );
+
+    /// <summary>
     /// Запис Кодифікатору адміністративно-територіальних одиниць
     /// та територій територіальних громад
     /// </summary>
     public record CityCodeCreateDto
     {
+        /// <summary>
+        /// Тут саме string оскільки формат UA01020000000022387
+        /// </summary>
         public string? ParentId { get; set; }
         /// <summary>
         /// Автономна Республіка Крим, області, міста, що мають спеціальний статус
@@ -79,7 +91,7 @@ namespace S5Server.Models
         [Required]
         public string Category { get; set; } = default!;
         [Required]
-        public string CategoryId { get; set; } = default!;
+        public Guid CategoryId { get; set; } = default!;
         /// <summary>
         /// Назва
         /// </summary>
@@ -92,6 +104,9 @@ namespace S5Server.Models
     /// </summary>
     public record CityCodeDto : CityCodeCreateDto
     {
+        /// <summary>
+        /// Тут саме string оскільки формат UA01020000000022387
+        /// </summary>
         [Required]
         public string Id { get; set; } = default!;
         public bool HasChildren = false;
@@ -177,10 +192,14 @@ namespace S5Server.Models
     {
         public const string RootCityCode = "UA00000000000000000";
 
+        /// <summary>
+        /// Тут саме string оскільки формат UA01020000000022387
+        /// </summary>
         [Key]
-        [StringLength(36)]
-        public string Id { get; set; } = string.Empty;//Guid.NewGuid().ToString("D");
-        [StringLength(36)]
+        public string Id { get; set; } = Guid.NewGuid().ToString("D");//"UA01000000000013043"
+        /// <summary>
+        /// Тут саме string оскільки формат UA01020000000022387
+        /// </summary>
         public string? ParentId { get; set; }
         [ValidateNever]
         public DictCityCode Parent { get; set; } = default!;
@@ -189,19 +208,12 @@ namespace S5Server.Models
         /// Автономна Республіка Крим, області, міста, що мають спеціальний статус
         /// </summary>
         [Required]
-        public string Level1Id { get; set; } = string.Empty;
+        public string Level1Id { get; set; } = string.Empty;//"UA01020000000022387"
         /// <summary>
         /// Автономна Республіка Крим, області, міста, що мають спеціальний статус
         /// </summary>
         [ValidateNever]
         public DictCityCode Level1 { get; set; } = default!;
-        /// <summary>
-        /// Автономна Республіка Крим, області, міста, що мають спеціальний статус
-        /// </summary>
-        /*
-        [NotMapped, JsonIgnore]
-        public IReadOnlyList<DictCityCode> Levels1 { get; set; } = [];
-        */
 
         /// <summary>
         /// райони в областях та Автономній Республіці Крим
@@ -212,10 +224,7 @@ namespace S5Server.Models
         /// </summary>
         [ValidateNever]
         public DictCityCode? Level2 { get; set; }
-        /*
-        [NotMapped, JsonIgnore]
-        public IReadOnlyList<DictCityCode> Levels2 { get; set; } = [];
-        */
+
         /// <summary>
         /// території територіальних громад в областях,
         /// територіальні громади Автономної Республіки Крим
@@ -282,7 +291,7 @@ namespace S5Server.Models
         /// «В» – райони в містах
         /// </summary>
         [Required]
-        public string CategoryId { get; set; } = default!;
+        public Guid CategoryId { get; set; } = default!;
         /// <summary>
         /// Категорія об’єкта
         /// «О» – Автономна Республіка Крим, області

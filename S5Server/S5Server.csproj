@@ -13,6 +13,7 @@
     <!-- ✅ Додаткові оптимізації -->
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+    <UserSecretsId>ef5aa0a8-6487-4a74-9cf5-ef0d2e7090bd</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -82,14 +83,11 @@
     <ItemGroup>
       <AngularFiles Include="Front\dist\Menu\browser\**\*.*" />
     </ItemGroup>
-    <Copy SourceFiles="@(AngularFiles)" 
-          DestinationFolder="$(PublishDir)wwwroot\%(RecursiveDir)" 
-          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(AngularFiles)" DestinationFolder="$(PublishDir)wwwroot\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
 
   <ItemGroup>
-    <Content Include="Front\dist\Menu\browser\**\*.*" 
-             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Front\dist\Menu\browser\**\*.*" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

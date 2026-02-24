@@ -61,8 +61,11 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<SimpleDictDto>> Get(string id, CancellationToken ct = default)
+    public async Task<ActionResult<SimpleDictDto>> Get(Guid id, CancellationToken ct = default)
     {
+        if (id == Guid.Empty)
+            return BadRequest("id обов'язковий");
+
         try
         {
             var e = await Query().FirstOrDefaultAsync(x => x.Id == id, ct);
@@ -133,10 +136,13 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<ActionResult<SimpleDictDto>> Update(string id,
+    public async Task<ActionResult<SimpleDictDto>> Update(Guid id,
         [FromBody] SimpleDictDto dto,
         CancellationToken ct = default)
     {
+        if (id == Guid.Empty)
+            return BadRequest("id обов'язковий");
+
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
@@ -188,9 +194,12 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(string id,
+    public async Task<IActionResult> Delete(Guid id,
         CancellationToken ct = default)
     {
+        if (id == Guid.Empty)
+            return BadRequest("id обов'язковий");
+
         try
         {
             var e = await _set.FirstOrDefaultAsync(x => x.Id == id, ct);

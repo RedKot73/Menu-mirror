@@ -17,7 +17,7 @@ export interface TemplateDataSetDto {
   isPublished: boolean;
   publishedAtUtc?: string; // ISO date string
   createdAtUtc: string; // ISO date string
-  updatedAtUtc?: string; // ISO date string
+  validFrom: string; // ISO date string
 }
 
 /**

@@ -110,6 +110,7 @@ public class DictCityCodesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CityCodeDto>> Get(string id, CancellationToken ct = default)
     {
+        // Тут саме string оскільки формат cityCodeId = UA01020000000022387
         if (string.IsNullOrWhiteSpace(id))
             return BadRequest("id обов'язковий");
 
@@ -138,6 +139,7 @@ public class DictCityCodesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CityCodeDto>> GetCityCodeInfo(string id, CancellationToken ct = default)
     {
+        // Тут саме string оскільки формат cityCodeId = UA01020000000022387
         if (string.IsNullOrWhiteSpace(id))
             return BadRequest("id обов'язковий");
 
@@ -190,7 +192,7 @@ public class DictCityCodesController : ControllerBase
         if (string.IsNullOrWhiteSpace(dto.Value))
             return BadRequest("Value не може бути порожнім");
 
-        if (string.IsNullOrWhiteSpace(dto.CategoryId))
+        if (dto.CategoryId == Guid.Empty)
             return BadRequest("CityCategoryId обов'язковий");
 
         try
@@ -254,10 +256,13 @@ public class DictCityCodesController : ControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
+        if(string.IsNullOrWhiteSpace(id))
+            return BadRequest("id обов'язковий");
+
         if (string.IsNullOrWhiteSpace(dto.Value))
             return BadRequest("Value не може бути порожнім");
 
-        if (string.IsNullOrWhiteSpace(dto.CategoryId))
+        if (dto.CategoryId == Guid.Empty)
             return BadRequest("Category обов'язковий");
 
         try
@@ -322,6 +327,7 @@ public class DictCityCodesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(string id, CancellationToken ct = default)
     {
+        // Тут саме string оскільки формат cityCodeId = UA01020000000022387
         if (string.IsNullOrWhiteSpace(id))
             return BadRequest("id обов'язковий");
 
@@ -352,9 +358,9 @@ public class DictCityCodesController : ControllerBase
     /// </summary>
     [HttpGet("lookup")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<LookupDto>>> Lookup(
+    public async Task<ActionResult<IEnumerable<CityCodeLookupDto>>> Lookup(
         [FromQuery] string? term,
-        [FromQuery] string? cityCategoryId,
+        [FromQuery] Guid? cityCategoryId,
         [FromQuery] int limit = 10,
         CancellationToken ct = default)
     {
@@ -367,14 +373,14 @@ public class DictCityCodesController : ControllerBase
         {
             var q = Query();
 
-            if (!string.IsNullOrWhiteSpace(cityCategoryId))
+            if (cityCategoryId.HasValueGuid())
                 q = q.Where(x => x.CategoryId == cityCategoryId);
 
             var data = await q
                 .Where(x => x.Value.Contains(term))
                 .OrderBy(x => x.Value)
                 .Take(limit)
-                .Select(x => new LookupDto(x.Id, $"{x.Value} {x.Category.ShortValue}"))
+                .Select(x => new CityCodeLookupDto(x.Id, $"{x.Value} {x.Category.ShortValue}"))
                 .ToListAsync(ct);
 
             return Ok(data);
@@ -396,20 +402,20 @@ public class DictCityCodesController : ControllerBase
     /// </summary>
     [HttpGet("sel_list")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<LookupDto>>> GetSelectList(
-        [FromQuery] string? cityCategoryId,
+    public async Task<ActionResult<IEnumerable<CityCodeLookupDto>>> GetSelectList(
+        [FromQuery] Guid? cityCategoryId,
         CancellationToken ct = default)
     {
         try
         {
             var q = Query();
 
-            if (!string.IsNullOrWhiteSpace(cityCategoryId))
+            if (cityCategoryId.HasValueGuid())
                 q = q.Where(x => x.CategoryId == cityCategoryId);
 
             var data = await q
                 .OrderBy(x => x.Value)
-                .Select(x => new LookupDto(x.Id, x.Value))
+                .Select(x => new CityCodeLookupDto(x.Id, x.Value))
                 .ToListAsync(ct);
 
             return Ok(data);
@@ -432,10 +438,10 @@ public class DictCityCodesController : ControllerBase
     [HttpGet("by-category/{cityCategoryId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<CityCodeDto>>> GetByCategory(
-        string cityCategoryId,
+        Guid cityCategoryId,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(cityCategoryId))
+        if (cityCategoryId == Guid.Empty)
             return BadRequest("cityCategoryId обов'язковий");
 
         try
@@ -470,6 +476,7 @@ public class DictCityCodesController : ControllerBase
         string level1,
         CancellationToken ct = default)
     {
+        // Тут саме string оскільки формат level1 - level3 = UA01020000000022387
         if (string.IsNullOrWhiteSpace(level1))
             return BadRequest("level1 обов'язковий");
 

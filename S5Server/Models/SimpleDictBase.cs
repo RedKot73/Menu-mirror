@@ -4,7 +4,7 @@ namespace S5Server.Models
 {
     // DTO для внешнего API
     public record SimpleDictDto(
-        [Required, StringLength(40)] string Id,
+        [Required] Guid Id,
         [Required, StringLength(100)] string Value,
         string? Comment)
     {
@@ -17,17 +17,15 @@ namespace S5Server.Models
 
     public interface ISimpleDict
     {
-        string Id { get; set; }
+        Guid Id { get; set; }
         string Value { get; set; }
         string? Comment { get; set; }
     }
 
     public abstract class SimpleDictBase : ISimpleDict
     {
-        // 36 символов формата 8-4-4-4-12 (GUID "D"). Если допускаете иные строки, можно убрать атрибут.
         [Key]
-        [StringLength(36)]
-        public string Id { get; set; } = Guid.NewGuid().ToString("D");
+        public Guid Id { get; set; } = Guid.CreateVersion7();
 
         [StringLength(100), Required(ErrorMessage = UIConstant.RequiredMsg)]
         public string Value { get; set; } = string.Empty;
@@ -45,7 +43,7 @@ namespace S5Server.Models
     /// DTO для справочников с ShortValue
     /// </summary>
     public record ShortDictDto(
-        [Required, StringLength(40)] string Id,
+        [Required] Guid Id,
         [Required, StringLength(100)] string Value,
         [Required, StringLength(50)] string ShortValue,
         string? Comment);
@@ -91,7 +89,7 @@ namespace S5Server.Models
         public static T ToEntity<T>(this SimpleDictCreateDto dto) where T : SimpleDictBase, new() =>
             new()
             {
-                Id = Guid.NewGuid().ToString("D"),
+                Id = Guid.CreateVersion7(),
                 Value = dto.Value.Trim(),
                 Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim()
             };
@@ -148,7 +146,7 @@ namespace S5Server.Models
         public static T ToEntity<T>(this ShortDictCreateDto dto) where T : ShortDictBase, new() =>
             new()
             {
-                Id = Guid.NewGuid().ToString("D"),
+                Id = Guid.CreateVersion7(),
                 Value = dto.Value.Trim(),
                 ShortValue = dto.ShortValue.Trim(),
                 Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim()

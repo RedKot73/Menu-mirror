@@ -35,11 +35,11 @@ public class SoldierTaskController : ControllerBase
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<SoldierTaskDto>>> GetAll(
-        [FromQuery] string unitTaskId,
+        [FromQuery] Guid unitTaskId,
         //[FromQuery] string? unitId,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(unitTaskId))
+        if (unitTaskId == Guid.Empty)
             return BadRequest("unitTaskId обов'язковий");
 
         try
@@ -108,10 +108,10 @@ public class SoldierTaskController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IEnumerable<SoldierTaskDto>>> GetAllByUnitId(
-        string unitId,
+        Guid unitId,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(unitId))
+        if (unitId == Guid.Empty)
             return BadRequest("unitId обов'язковий");
 
         try
@@ -163,10 +163,10 @@ public class SoldierTaskController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<List<SoldierTaskDto>>> Get(
-        string id,
+        Guid id,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(id))
+        if (id == Guid.Empty)
             return BadRequest("id обов'язковий");
 
         try
@@ -235,10 +235,10 @@ public class SoldierTaskController : ControllerBase
     [HttpDelete("by-unit-task/{unitTaskId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeleteByUnitTask(
-        string unitTaskId,
+        Guid unitTaskId,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(unitTaskId))
+        if (unitTaskId == Guid.Empty)
             return BadRequest("unitTaskId обов'язковий");
 
         try
@@ -280,10 +280,10 @@ public class SoldierTaskController : ControllerBase
     [HttpGet("count/{unitTaskId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<SoldierCountDto>> GetCount(
-        string unitTaskId,
+        Guid unitTaskId,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(unitTaskId))
+        if (unitTaskId == Guid.Empty)
             return BadRequest("unitTaskId обов'язковий");
 
         try

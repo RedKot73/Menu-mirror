@@ -90,10 +90,10 @@
         </ng-container>
 
         <!-- Updated Date Column -->
-        <ng-container matColumnDef="updatedAtUtc">
+        <ng-container matColumnDef="validFrom">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Оновлено</th>
           <td mat-cell *matCellDef="let dataSet">
-            {{ formatDate(dataSet.updatedAtUtc) }}
+            {{ formatDate(dataSet.validFrom) }}
           </td>
         </ng-container>
 

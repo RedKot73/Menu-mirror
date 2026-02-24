@@ -33,7 +33,7 @@ namespace S5Server.Controllers
             {
                 var list = await _set.AsNoTracking()
                     .Include(t => t.TemplateCategory)
-                    .OrderByDescending(t => t.UpdatedAtUtc)
+                    .OrderByDescending(t => t.ValidFrom)
                     .Select(t => TemplateDto.ToDto(t))
                     .ToListAsync(ct);
 
@@ -54,7 +54,7 @@ namespace S5Server.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<TemplateDto>> GetById(string id, CancellationToken ct = default)
+        public async Task<ActionResult<TemplateDto>> GetById(Guid id, CancellationToken ct = default)
         {
             try
             {
@@ -93,16 +93,12 @@ namespace S5Server.Controllers
 
             try
             {
-                byte[] content = [];
-                if (dto.File is null)
-                {
-                    content = Encoding.UTF8.GetBytes("<i>No Content</i>");
-                }
-                else
+                string content = "<i>No Content</i>";
+                if (dto.File != null && dto.File.Length > 0)
                 {
                     using var ms = new MemoryStream();
                     await dto.File.CopyToAsync(ms, ct);
-                    content = ms.ToArray();
+                    content = ms.ToString() ?? string.Empty;
                 }
 
                 var entity = new DocumentTemplate
@@ -113,7 +109,8 @@ namespace S5Server.Controllers
                     TemplateCategoryId = dto.TemplateCategoryId,
                     IsPublished = dto.IsPublished,
                     CreatedAtUtc = DateTime.UtcNow,
-                    UpdatedAtUtc = DateTime.UtcNow
+                    ValidFrom = DateTime.UtcNow,
+                    ChangedBy = User.Identity?.Name ?? "System"
                 };
 
                 _set.Add(entity);
@@ -154,7 +151,7 @@ namespace S5Server.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<IActionResult> Update(
-            string id,
+            Guid id,
             [FromForm] CreateTemplateDto dto,
             CancellationToken ct = default)
         {
@@ -171,14 +168,14 @@ namespace S5Server.Controllers
             {
                 using var ms = new MemoryStream();
                 await dto.File.CopyToAsync(ms, ct);
-                var content = ms.ToArray();
-                t.Content = content;
+                t.Content = ms.ToString() ?? string.Empty;
             }
 
             t.Name = dto.Name.Trim();
             t.Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim();
             t.IsPublished = dto.IsPublished;
-            t.UpdatedAtUtc = DateTime.UtcNow;
+            t.ValidFrom = DateTime.UtcNow;
+            t.ChangedBy = User.Identity?.Name ?? "System";
 
             try
             {
@@ -213,7 +210,7 @@ namespace S5Server.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> SetCategory(string id,
+        public async Task<IActionResult> SetCategory(Guid id,
             [FromBody] SetCategoryDto dto,
             CancellationToken ct = default)
         {
@@ -223,9 +220,9 @@ namespace S5Server.Controllers
                 if (t == null)
                     return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
 
-                var newCatId = string.IsNullOrWhiteSpace(dto.TemplateCategoryId)
+                var newCatId = dto.TemplateCategoryId.IsNullOrEmptyGuid()
                     ? ControllerFunctions.NullGuid
-                    : dto.TemplateCategoryId!.Trim();
+                    : dto.TemplateCategoryId!.Value;
 
                 if (newCatId != ControllerFunctions.NullGuid)
                 {
@@ -237,7 +234,9 @@ namespace S5Server.Controllers
                 }
 
                 t.TemplateCategoryId = newCatId;
-                t.UpdatedAtUtc = DateTime.UtcNow;
+                t.ValidFrom = DateTime.UtcNow;
+                t.ChangedBy = User.Identity?.Name ?? "System";
+
                 await _db.SaveChangesAsync(ct);
                 return NoContent();
             }
@@ -256,7 +255,7 @@ namespace S5Server.Controllers
         [HttpPost("{id}/publish")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Publish(string id, CancellationToken ct = default)
+        public async Task<IActionResult> Publish(Guid id, CancellationToken ct = default)
         {
             try
             {
@@ -268,7 +267,9 @@ namespace S5Server.Controllers
 
                 t.IsPublished = true;
                 t.PublishedAtUtc = DateTime.UtcNow;
-                t.UpdatedAtUtc = DateTime.UtcNow;
+                t.ValidFrom = DateTime.UtcNow;
+                t.ChangedBy = User.Identity?.Name ?? "System";
+
                 await _db.SaveChangesAsync(ct);
                 return NoContent();
             }
@@ -287,7 +288,7 @@ namespace S5Server.Controllers
         [HttpPost("{id}/unpublish")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Unpublish(string id, CancellationToken ct = default)
+        public async Task<IActionResult> Unpublish(Guid id, CancellationToken ct = default)
         {
             try
             {
@@ -299,7 +300,9 @@ namespace S5Server.Controllers
 
                 t.IsPublished = false;
                 t.PublishedAtUtc = null;
-                t.UpdatedAtUtc = DateTime.UtcNow;
+                t.ValidFrom = DateTime.UtcNow;
+                t.ChangedBy = User.Identity?.Name ?? "System";
+
                 await _db.SaveChangesAsync(ct);
                 return NoContent();
             }
@@ -318,7 +321,7 @@ namespace S5Server.Controllers
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Delete(string id, CancellationToken ct = default)
+        public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
         {
             try
             {
@@ -345,7 +348,7 @@ namespace S5Server.Controllers
         [HttpGet("{id}/download")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Download(string id, CancellationToken ct = default)
+        public async Task<IActionResult> Download(Guid id, CancellationToken ct = default)
         {
             try
             {
@@ -372,7 +375,7 @@ namespace S5Server.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Produces("text/plain")]
-        public async Task<IActionResult> GetTemplateContent(string id, CancellationToken ct = default)
+        public async Task<IActionResult> GetTemplateContent(Guid id, CancellationToken ct = default)
         {
             try
             {
@@ -382,8 +385,7 @@ namespace S5Server.Controllers
                 if (t == null)
                     return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
 
-                var text = Encoding.UTF8.GetString(t.Content);
-                return Content(text, "text/plain; charset=utf-8");
+                return Content(t.Content, "text/plain; charset=utf-8");
             }
             catch (OperationCanceledException)
             {
@@ -408,7 +410,7 @@ namespace S5Server.Controllers
         [HttpPut("{id}/content")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> SaveTemplateContent(string id,
+        public async Task<IActionResult> SaveTemplateContent(Guid id,
             [FromBody] SaveTemplateContentRequest req, CancellationToken ct = default)
         {
             try
@@ -419,8 +421,10 @@ namespace S5Server.Controllers
                 if (t == null)
                     return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
 
-                t.Content = Encoding.UTF8.GetBytes(req.Content);
-                t.UpdatedAtUtc = DateTime.UtcNow;
+                t.Content = req.Content;
+                t.ValidFrom = DateTime.UtcNow;
+                t.ChangedBy = User.Identity?.Name ?? "System";
+
                 await _db.SaveChangesAsync(ct);
 
                 return Ok(t);

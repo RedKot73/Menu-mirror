@@ -63,8 +63,11 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ShortDictDto>> Get(string id, CancellationToken ct = default)
+    public async Task<ActionResult<ShortDictDto>> Get(Guid id, CancellationToken ct = default)
     {
+        if (id == Guid.Empty)
+            return BadRequest("id обов'язковий");
+
         try
         {
             var e = await Query().FirstOrDefaultAsync(x => x.Id == id, ct);
@@ -144,10 +147,12 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<ShortDictDto>> Update(
-        string id,
+        Guid id,
         [FromBody] ShortDictDto dto,
         CancellationToken ct = default)
     {
+        if (id == Guid.Empty)
+            return BadRequest("id обов'язковий");
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
         if (dto is null)
@@ -205,8 +210,11 @@ public abstract class ShortDictApiController<TEntity> : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(string id, CancellationToken ct = default)
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
     {
+        if (id == Guid.Empty)
+            return BadRequest("id обов'язковий");
+
         try
         {
             var e = await _set.FirstOrDefaultAsync(x => x.Id == id, ct);
