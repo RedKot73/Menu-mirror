@@ -511,7 +511,7 @@ namespace S5Server.Controllers
                     _logger.LogError(ex, "Помилка при зміні підрозділу Soldier Id={Id} UnitKind={UnitKind}",
                         id, unitKind);
                     if (ex.InnerException != null)
-                        _logger.LogError(ex.InnerException.Message);
+                        _logger.LogError("Inner exception {Msg}", ex.InnerException.Message);
                 }
                 return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
             }
