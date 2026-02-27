@@ -6,10 +6,10 @@ namespace S5Server.Data
     {
         public const string ConfigKey = "PrimaryConnection";
 
-        public string Host { get; set; } = "localhost";
+        public string DB_Host { get; set; } = "localhost";
         public string DB_Username { get; set; } = string.Empty;
         public string DB_Password { get; set; } = string.Empty;
-        public string Database { get; set; } = string.Empty;
+        public string DB_Name { get; set; } = string.Empty;
 
         public int Port { get; set; } = 5432;
 

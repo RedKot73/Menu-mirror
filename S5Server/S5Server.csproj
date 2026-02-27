@@ -14,6 +14,7 @@
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
     <UserSecretsId>ef5aa0a8-6487-4a74-9cf5-ef0d2e7090bd</UserSecretsId>
+    <ApplicationInsightsResourceId>/subscriptions/f44d35d7-4673-40fa-a517-790afdd81e69/resourceGroups/S5_ResGroup/providers/microsoft.insights/components/S5Server20260224141205</ApplicationInsightsResourceId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,6 +30,7 @@
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- PostgreSQL + Entity Framework Core -->
     <!-- ═══════════════════════════════════════════════════════════ -->
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="3.0.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
     <PackageReference Include="EFCore.NamingConventions" Version="10.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.3" />
@@ -44,6 +46,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.16.0" />
+    <PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="5.0.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.16.0" />
 
     <!-- ═══════════════════════════════════════════════════════════ -->

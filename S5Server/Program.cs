@@ -3,8 +3,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging.AzureAppServices;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 using Npgsql;
@@ -31,67 +29,51 @@ Log.Logger = new LoggerConfiguration()
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
 
+// ✅ Application Insights отримає логи через вбудовану інтеграцію ASP.NET Core
 builder.Host.UseSerilog();
 
-// ✅ Azure App Service Diagnostics (тільки для production)
-if (!builder.Environment.IsDevelopment())
+// ✅ Application Insights (тільки для production/Azure)
+if (builder.Environment.IsProduction())
 {
-    builder.Logging.AddAzureWebAppDiagnostics();
-    
-    builder.Services.Configure<AzureFileLoggerOptions>(options =>
-    {
-        options.FileName = "s5server";
-        options.FileSizeLimit = 10 * 1024 * 1024; // 10 MB
-        options.RetainedFileCountLimit = 3;       // Останні 3 файли
-    });
-    
-    builder.Services.Configure<AzureBlobLoggerOptions>(options =>
-    {
-        options.BlobName = "s5server.log";
-    });
+    builder.Services.AddApplicationInsightsTelemetry();
 }
 
-// ✅ PostgreSQL
 var pgConnConfig = new DBConfig();
 builder.Configuration.GetSection(DBConfig.ConfigKey).Bind(pgConnConfig);
-
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-if (string.IsNullOrEmpty(connectionString))
+var connBuilder = new NpgsqlConnectionStringBuilder
 {
-    var connBuilder = new NpgsqlConnectionStringBuilder
-    {
-        Database = pgConnConfig.Database,
-        Host = pgConnConfig.Host,
-        Username = pgConnConfig.DB_Username,//vAppBuilder.Configuration["Adm"],
-        Password = pgConnConfig.DB_Password,//builder.Configuration["Password"],//
-        CommandTimeout = pgConnConfig.CommandTimeout,
-        Timeout = pgConnConfig.Timeout,
-        Port = pgConnConfig.Port,
-        SearchPath = pgConnConfig.SearchPath,
+    Database = pgConnConfig.DB_Name,
+    Host = pgConnConfig.DB_Host,
+    Username = pgConnConfig.DB_Username,
+    Password = pgConnConfig.DB_Password,
+    CommandTimeout = pgConnConfig.CommandTimeout,
+    Timeout = pgConnConfig.Timeout,
+    Port = pgConnConfig.Port,
+    SearchPath = pgConnConfig.SearchPath,
 
-        SslMode = builder.Environment.IsDevelopment()
-            ? SslMode.Prefer      // Dev: опціонально
-            : SslMode.Require,    // Prod: обов'язково
-        Timezone = "UTC",
-        Encoding = "UTF8"
-    };
-    connectionString = connBuilder.ConnectionString;
-}
-
+    SslMode = builder.Environment.IsDevelopment()
+        ? SslMode.Prefer      // Dev: опціонально
+        : SslMode.Require,    // Prod: обов'язково
+    Timezone = "UTC",
+    Encoding = "UTF8"
+};
+var connectionString = connBuilder.ConnectionString;
 ArgumentException.ThrowIfNullOrEmpty(connectionString);
-
-// ✅ Створити NpgsqlDataSourceBuilder
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-
 // ✅ Налаштувати обробку infinity
 dataSourceBuilder.EnableDynamicJson();
-
 // ✅ Конвертувати infinity → DateTime.MaxValue/MinValue
 dataSourceBuilder.ConnectionStringBuilder.Options = "-c DateStyle=ISO";
-
 // ✅ Увімкнути legacy behavior для timestamp
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
+if (builder.Environment.IsProduction())
+{
+    // Аналог TrustServerCertificate = true
+    dataSourceBuilder.UseSslClientAuthenticationOptionsCallback(options =>
+    {
+        options.RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => true;
+    });
+}
 var dataSource = dataSourceBuilder.Build();
 
 // ✅ Використати DataSource замість connectionString
@@ -190,7 +172,6 @@ app.UseSerilogRequestLogging(options =>
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-    //app.UseMigrationsEndPoint();
 }
 else
 {
