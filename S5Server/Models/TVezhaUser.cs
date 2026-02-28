@@ -1,19 +1,19 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
 
 namespace S5Server.Models;
 
 public record CreateUserDto(
     Guid SoldierId,
-    string Email,
+    string UserName,
+    string? Email,
     string Password,
     bool? EmailConfirmed,
     string[]? Roles
 );
 
 public record LoginDto(
-    string Email,
+    string UserName,  
     string Password,
     bool RememberMe = false
 );

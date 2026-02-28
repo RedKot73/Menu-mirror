@@ -1,29 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using S5Server.Data;
 using S5Server.Models;
 using S5Server.Utils;
 
 namespace S5Server.Controllers;
 
-public record DictRankDto(
-    Guid Id,
-    string Value,
-    string ShortValue,
-    string? Comment,
-    string? NatoCode,
-    string? Category,
-    string? SubCategory,
-    int OrderVal);
-public record DictRankCreateDto(
-    string Value,
-    string ShortValue,
-    string? Comment,
-    string? NatoCode,
-    string? Category,
-    string? SubCategory,
-    int OrderVal);
-
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class DictRankController : ControllerBase

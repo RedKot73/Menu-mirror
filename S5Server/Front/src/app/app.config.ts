@@ -5,8 +5,9 @@ import {
   LOCALE_ID,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { MAT_DATE_FORMATS, provideNativeDateAdapter } from '@angular/material/core';
+import { authInterceptor } from './auth/auth.interceptor';
 
 import { routes } from './app.routes';
 
@@ -28,7 +29,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(),
+    provideHttpClient(withInterceptors([authInterceptor])),
     { provide: LOCALE_ID, useValue: 'uk-UA' },
     { provide: MAT_DATE_FORMATS, useValue: MY_NATIVE_FORMATS }, // Принудительно задаем формат
     provideNativeDateAdapter(), // Это современный способ регистрации DateAdapter

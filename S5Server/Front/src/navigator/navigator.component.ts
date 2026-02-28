@@ -1,30 +1,39 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
+import { AuthService } from '../app/auth/auth.service';
 
 @Component({
   selector: 'app-navigator',
   template: `
     <mat-toolbar>
-      <button matButton [matMenuTriggerFor]="dictionaries">Довідники</button>
-      <button matButton routerLink="/DocumentDataSet" routerLinkActive="active-link">
-        Дані документів
-      </button>
+      @if (auth.isAuthenticated()) {
+        <button matButton [matMenuTriggerFor]="dictionaries">Довідники</button>
+        <button matButton routerLink="/DocumentDataSet" routerLinkActive="active-link">
+          Дані документів
+        </button>
 
-      <button matButton routerLink="/templates" routerLinkActive="active-link">
-        Шаблони документів
-      </button>
+        <button matButton routerLink="/templates" routerLinkActive="active-link">
+          Шаблони документів
+        </button>
 
-      <button matButton routerLink="/units" routerLinkActive="active-link">Підрозділи</button>
-      <button matButton routerLink="/personnel" routerLinkActive="active-link">
-        Особовий склад
-      </button>
-      <button matButton routerLink="/orders" routerLinkActive="active-link">Розпорядження</button>
-      <button matButton routerLink="/reports" routerLinkActive="active-link">Донесення</button>
-      <button matButton routerLink="/users" routerLinkActive="active-link">Користувачі</button>
-      <button matButton routerLink="/login" routerLinkActive="active-link">Вхід в систему</button>
+        <button matButton routerLink="/units" routerLinkActive="active-link">Підрозділи</button>
+        <button matButton routerLink="/personnel" routerLinkActive="active-link">
+          Особовий склад
+        </button>
+        <button matButton routerLink="/orders" routerLinkActive="active-link">Розпорядження</button>
+        <button matButton routerLink="/reports" routerLinkActive="active-link">Донесення</button>
+        <button matButton routerLink="/users" routerLinkActive="active-link">Користувачі</button>
+
+        <span class="spacer"></span>
+        <span class="user-info">{{ auth.displayName() }}</span>
+        <button matButton (click)="onLogout()">Вийти</button>
+      } @else {
+        <span class="spacer"></span>
+        <button matButton routerLink="/login" routerLinkActive="active-link">Вхід в систему</button>
+      }
 
       <mat-menu #dictionaries="matMenu">
         <button mat-menu-item [matMenuTriggerFor]="dictDroneForces">Сили безпілотних систем</button>
@@ -86,6 +95,16 @@ import { MatMenuModule } from '@angular/material/menu';
       background: lightcyan;
     }
 
+    .spacer {
+      flex: 1;
+    }
+
+    .user-info {
+      font-size: 14px;
+      margin-right: 8px;
+      opacity: 0.8;
+    }
+
     .active-link {
       background-color: #1976d2 !important;
       color: white !important;
@@ -115,4 +134,10 @@ import { MatMenuModule } from '@angular/material/menu';
   `,
   imports: [RouterLink, RouterLinkActive, MatToolbarModule, MatButtonModule, MatMenuModule],
 })
-export class NavigatorComponent {}
+export class NavigatorComponent {
+  readonly auth = inject(AuthService);
+
+  onLogout(): void {
+    this.auth.logout().subscribe();
+  }
+}

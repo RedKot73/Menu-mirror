@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using S5Server.Data;
@@ -8,6 +9,7 @@ namespace S5Server.Controllers;
 /// <summary>
 /// Типи Напрямку ЛБЗ
 /// </summary>
+[Authorize]
 [ApiController]
 [Route("api/dict-area-types")]
 public class DictAreaTypesController : ShortDictApiController<DictAreaType>

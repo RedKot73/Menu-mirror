@@ -1,11 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using S5Server.Data;
 using S5Server.Models;
 using S5Server.Utils;
 
 namespace S5Server.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/templ_data")]
 public class TemplateDataSetController : ControllerBase

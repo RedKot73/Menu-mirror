@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using S5Server.Data;
 using S5Server.Models;
 using S5Server.Utils;
@@ -9,6 +11,7 @@ namespace S5Server.Controllers;
 /// <summary>
 /// Контролер для управління моделями БПЛА в завданнях підрозділів
 /// </summary>
+[Authorize]
 [ApiController]
 [Route("api/drone-model-tasks")]
 public class DroneModelTaskController : ControllerBase

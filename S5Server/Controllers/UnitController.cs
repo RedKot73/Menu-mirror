@@ -1,13 +1,17 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Threading.Channels;
+
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using S5Server.Data;
 using S5Server.Models;
 using S5Server.Services;
 using S5Server.Utils;
-using System.Threading.Channels;
 
 namespace S5Server.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class UnitController : ControllerBase

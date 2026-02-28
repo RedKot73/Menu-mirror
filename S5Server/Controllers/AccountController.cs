@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -291,7 +292,7 @@ public class AccountController : ControllerBase
             // 4. Створення нового користувача
             var user = new TVezhaUser
             {
-                UserName = dto.Email,
+                UserName = dto.UserName,
                 Email = dto.Email,
                 SoldierId = dto.SoldierId,
                 RegistrationDate = DateTime.UtcNow,
@@ -364,18 +365,45 @@ public class AccountController : ControllerBase
     {
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
+        /*Принудительное создание первого пользователя когда в системе нет никого
+        // 4. Створення нового користувача
+        var sldrId = Guid.Parse("06501ce2-3c5a-4732-9a1b-b7b780269682");
+        var usr = new TVezhaUser
+        {
+            UserName = dto.UserName,
+            Email = string.Empty,
+            SoldierId = sldrId,
+            RegistrationDate = DateTime.UtcNow,
+            EmailConfirmed = true
+        };
 
+        var result = await _userManager.CreateAsync(usr, dto.Password);
+
+        if (!result.Succeeded)
+        {
+            if (_logger.IsEnabled(LogLevel.Warning))
+                _logger.LogWarning(
+                    "Помилка створення користувача SoldierId={SoldierId}: {Errors}",
+                    sldrId,
+                    string.Join(", ", result.Errors.Select(e => e.Description)));
+
+            return Problem(
+                statusCode: 400,
+                title: "Помилка створення користувача",
+                detail: string.Join("; ", result.Errors.Select(e => e.Description)));
+        }
+        */
         try
         {
-            var user = await _userManager.FindByEmailAsync(dto.Email);
+            var user = await _userManager.FindByNameAsync(dto.UserName);
             if (user == null)
             {
                 if (_logger.IsEnabled(LogLevel.Warning))
-                    _logger.LogWarning("Спроба входу з невідомим email: {Email}", dto.Email);
+                    _logger.LogWarning("Спроба входу з невідомим UserName: {UserName}", dto.UserName);
 
                 return Problem(
                     statusCode: 401,
-                    title: "Неправильний email або пароль");
+                    title: "Неправильний Login або пароль");
             }
 
             // Перевірка на блокування
@@ -408,7 +436,7 @@ public class AccountController : ControllerBase
 
                 return Problem(
                     statusCode: 401,
-                    title: "Неправильний email або пароль");
+                    title: "Неправильний Login або пароль");
             }
 
             await _userManager.ResetAccessFailedCountAsync(user);
@@ -440,7 +468,7 @@ public class AccountController : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Помилка входу Email={Email}", dto.Email);
+                _logger.LogError(ex, "Помилка входу Email={Email}", dto.UserName);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -832,5 +860,54 @@ public class AccountController : ControllerBase
                     userId, roleName);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
+    }
+
+    /// <summary>
+    /// Отримати інформацію про поточного авторизованого користувача
+    /// </summary>
+    [HttpGet("me")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetCurrentUser(CancellationToken ct = default)
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var user = await _users
+            .AsNoTracking()
+            .Include(u => u.Soldier)
+                .ThenInclude(s => s.Rank)
+            .Include(u => u.Soldier)
+                .ThenInclude(s => s.Position)
+            .Include(u => u.Soldier)
+                .ThenInclude(s => s.Unit)
+            .FirstOrDefaultAsync(u => u.Id == Guid.Parse(userId), ct);
+
+        if (user == null)
+            return Unauthorized();
+
+        var roles = await _userManager.GetRolesAsync(user);
+
+        return Ok(new
+        {
+            user.Id,
+            user.UserName,
+            user.Email,
+            user.SoldierId,
+            user.LastLoginDate,
+            Soldier = new
+            {
+                user.Soldier.Id,
+                user.Soldier.FirstName,
+                user.Soldier.MidleName,
+                user.Soldier.LastName,
+                Rank = user.Soldier.Rank?.ShortValue,
+                Position = user.Soldier.Position?.Value,
+                Unit = user.Soldier.Unit?.ShortName
+            },
+            Roles = roles
+        });
     }
 }

@@ -2,6 +2,7 @@ using System.Threading.Channels;
 
 using DocumentFormat.OpenXml.Wordprocessing;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,6 +16,7 @@ namespace S5Server.Controllers;
 /// <summary>
 /// Кодифікатор адміністративно-територіальних одиниць та територій територіальних громад
 /// </summary>
+[Authorize]
 [ApiController]
 [Route("api/dict-city-codes")]
 public class DictCityCodesController : ControllerBase

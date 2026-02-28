@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using S5Server.Data;
@@ -8,6 +9,7 @@ using S5Server.Utils;
 
 namespace S5Server.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/dict-unit-task-items")]
 public class DictUnitTaskItemsController : ControllerBase

@@ -1,5 +1,4 @@
-using DocumentFormat.OpenXml.Office2010.Excel;
-
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,6 +11,7 @@ namespace S5Server.Controllers;
 /// <summary>
 /// Контролер для управління знімками бійців у завданнях підрозділів
 /// </summary>
+[Authorize]
 [ApiController]
 [Route("api/soldier-tasks")]
 public class SoldierTaskController : ControllerBase

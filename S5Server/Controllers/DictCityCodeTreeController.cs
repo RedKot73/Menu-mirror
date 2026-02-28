@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +11,7 @@ namespace S5Server.Controllers;
 /// <summary>
 /// Контролер для роботи з деревом кодифікатора адміністративно-територіальних одиниць
 /// </summary>
+[Authorize]
 [ApiController]
 [Route("api/dict-city-code-tree")]
 public class DictCityCodeTreeController : ControllerBase
