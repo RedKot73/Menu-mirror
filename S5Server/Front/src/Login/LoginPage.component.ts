@@ -6,7 +6,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../app/auth/auth.service';
+import { UsersService } from '../app/auth/users.service';
+import {
+  ChangePasswordDialogComponent,
+  ChangePasswordDialogData,
+} from './dialogs/ChangePasswordDialog.component';
 
 @Component({
   selector: 's5-page-login',
@@ -63,6 +70,8 @@ import { AuthService } from '../app/auth/auth.service';
     MatButtonModule,
     MatCheckboxModule,
     MatProgressSpinnerModule,
+    MatDialogModule,
+    MatSnackBarModule,
   ],
   styles: [
     `
@@ -94,6 +103,9 @@ import { AuthService } from '../app/auth/auth.service';
 export class LoginPage {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
+  private usersService = inject(UsersService);
 
   readonly isLoading = signal(false);
   readonly errorMessage = signal('');
@@ -127,8 +139,10 @@ export class LoginPage {
         },
         error: (err) => {
           this.isLoading.set(false);
-          if (err.status === 401) {
-            this.errorMessage.set('Неправильний email або пароль');
+          if (err.status === 403 && err.error?.requirePasswordChange) {
+            this.openForceChangePassword(err.error.userId, login!);
+          } else if (err.status === 401) {
+            this.errorMessage.set('Неправильний логін або пароль');
           } else if (err.status === 423) {
             const detail = err.error?.detail ?? 'Обліковий запис заблокований';
             this.errorMessage.set(detail);
@@ -137,5 +151,38 @@ export class LoginPage {
           }
         },
       });
+  }
+
+  private openForceChangePassword(userId: string, userName: string): void {
+    this.errorMessage.set('Необхідно змінити пароль для продовження роботи');
+
+    const dialogRef = this.dialog.open(ChangePasswordDialogComponent, {
+      width: '400px',
+      disableClose: true,
+      data: { userName } as ChangePasswordDialogData,
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.isLoading.set(true);
+        this.usersService.changePassword(userId, result).subscribe({
+          next: () => {
+            this.errorMessage.set('');
+            this.snackBar.open('Пароль успішно змінено. Увійдіть з новим паролем.', 'OK', {
+              duration: 5000,
+            });
+            // Update the password field with the new password and re-login
+            this.loginForm.patchValue({ password: result.newPassword });
+            this.isLoading.set(false);
+            this.onSubmit();
+          },
+          error: (err) => {
+            this.isLoading.set(false);
+            const msg = err.error?.detail || 'Помилка зміни пароля';
+            this.errorMessage.set(msg);
+          },
+        });
+      }
+    });
   }
 }

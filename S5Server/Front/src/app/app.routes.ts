@@ -1,13 +1,5 @@
 import { Routes } from '@angular/router';
-import { Component } from '@angular/core';
 import { authGuard } from './auth/auth.guard';
-
-@Component({
-  selector: 'app-page-users',
-  standalone: true,
-  template: '<h2>Користувачі</h2><p>Сторінка "Користувачі" (заглушка)</p>',
-})
-class UsersPage {}
 
 export const routes: Routes = [
   {
@@ -140,7 +132,12 @@ export const routes: Routes = [
       import('../app/DocumentTemplates/DocTemplatesTree.page').then((m) => m.DocTemplatesTree),
     canActivate: [authGuard],
   },
-  { path: 'users', title: 'Користувачі', component: UsersPage, canActivate: [authGuard] },
+  {
+    path: 'users',
+    title: 'Користувачі',
+    loadComponent: () => import('../Login/Users.page').then((m) => m.UsersPage),
+    canActivate: [authGuard],
+  },
   {
     path: 'login',
     title: 'Вхід в систему',

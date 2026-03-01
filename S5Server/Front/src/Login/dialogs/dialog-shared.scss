@@ -1,0 +1,30 @@
+.dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 320px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.error-text {
+  color: var(--mat-warn-color, #f44336);
+  font-size: 12px;
+  margin: -4px 0 4px 0;
+}
+
+.hint-text {
+  color: #666;
+  font-size: 12px;
+  margin: -4px 0 8px 0;
+}
+
+.validation-errors {
+  margin: -4px 0 4px 0;
+}
+
+.icon-success {
+  color: #4caf50;
+}

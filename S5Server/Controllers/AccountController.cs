@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 using S5Server.Data;
@@ -39,6 +40,21 @@ public class AccountController : ControllerBase
         _logger = logger;
     }
 
+    private IQueryable<TVezhaUser> UsersQuery() => _users
+        .AsNoTracking()
+        .Include(u => u.Soldier)
+            .ThenInclude(s => s.Rank)
+        .Include(u => u.Soldier)
+            .ThenInclude(s => s.Position)
+        .Include(u => u.Soldier)
+            .ThenInclude(s => s.Unit)
+        .Include(u => u.Soldier)
+            .ThenInclude(s => s.State)
+        .Include(u => u.Soldier)
+            .ThenInclude(s => s.AssignedUnit)
+        .Include(u => u.Soldier)
+            .ThenInclude(s => s.InvolvedUnit);
+
     /// <summary>
     /// Отримати всіх користувачів
     /// </summary>
@@ -50,7 +66,9 @@ public class AccountController : ControllerBase
     {
         try
         {
-            var query = _users
+            var query = UsersQuery();
+            /*
+                _users
                 .AsNoTracking()
                 .Include(u => u.Soldier)
                     .ThenInclude(s => s.Rank)
@@ -58,7 +76,14 @@ public class AccountController : ControllerBase
                     .ThenInclude(s => s.Position)
                 .Include(u => u.Soldier)
                     .ThenInclude(s => s.Unit)
+                .Include(u => u.Soldier)
+                    .ThenInclude(s => s.State)
+                .Include(u => u.Soldier)
+                    .ThenInclude(s => s.AssignedUnit)
+                .Include(u => u.Soldier)
+                    .ThenInclude(s => s.InvolvedUnit)
                 .AsQueryable();
+            */
 
             if (includeInactive != true)
             {
@@ -68,33 +93,10 @@ public class AccountController : ControllerBase
             var users = await query
                 .OrderBy(u => u.Soldier.LastName)
                 .ThenBy(u => u.Soldier.FirstName)
+                .Select(u => u.ToDto())
                 .ToListAsync(ct);
-
-            var result = users.Select(u => new
-            {
-                u.Id,
-                u.UserName,
-                u.Email,
-                u.EmailConfirmed,
-                u.PhoneNumber,
-                u.LastLoginDate,
-                u.RegistrationDate,
-                u.LockoutEnd,
-                IsLocked = u.LockoutEnd.HasValue && u.LockoutEnd > DateTimeOffset.UtcNow,
-                u.AccessFailedCount,
-                Soldier = new
-                {
-                    u.Soldier.Id,
-                    u.Soldier.FirstName,
-                    u.Soldier.MidleName,
-                    u.Soldier.LastName,
-                    Rank = u.Soldier.Rank?.ShortValue,
-                    Position = u.Soldier.Position?.Value,
-                    Unit = u.Soldier.Unit?.ShortName
-                }
-            }).ToList();
-
-            return Ok(result);
+            
+            return Ok(users);
         }
         catch (OperationCanceledException)
         {
@@ -121,7 +123,9 @@ public class AccountController : ControllerBase
 
         try
         {
-            var user = await _users
+            var user = await UsersQuery()
+                /*
+                _users
                 .AsNoTracking()
                 .Include(u => u.Soldier)
                     .ThenInclude(s => s.Rank)
@@ -129,7 +133,13 @@ public class AccountController : ControllerBase
                     .ThenInclude(s => s.Position)
                 .Include(u => u.Soldier)
                     .ThenInclude(s => s.Unit)
-                        .ThenInclude(u => u.Parent)
+                .Include(u => u.Soldier)
+                    .ThenInclude(s => s.State)
+                .Include(u => u.Soldier)
+                    .ThenInclude(s => s.AssignedUnit)
+                .Include(u => u.Soldier)
+                    .ThenInclude(s => s.InvolvedUnit)
+                */
                 .FirstOrDefaultAsync(u => u.Id == id, ct);
 
             if (user == null)
@@ -138,35 +148,8 @@ public class AccountController : ControllerBase
                     title: "Не знайдено",
                     detail: $"Користувача з ID '{id}' не знайдено");
 
-            var result = new
-            {
-                user.Id,
-                user.UserName,
-                user.Email,
-                user.EmailConfirmed,
-                user.PhoneNumber,
-                user.PhoneNumberConfirmed,
-                user.TwoFactorEnabled,
-                user.LastLoginDate,
-                user.RegistrationDate,
-                user.LockoutEnd,
-                user.LockoutEnabled,
-                IsLocked = user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow,
-                user.AccessFailedCount,
-                Soldier = new
-                {
-                    user.Soldier.Id,
-                    user.Soldier.FirstName,
-                    user.Soldier.MidleName,
-                    user.Soldier.LastName,
-                    user.Soldier.BirthDate,
-                    user.Soldier.NickName,
-                    Rank = user.Soldier.Rank?.ShortValue,
-                    Position = user.Soldier.Position?.Value,
-                    Unit = user.Soldier.Unit?.ShortName,
-                    ParentUnit = user.Soldier.Unit?.Parent?.ShortName
-                }
-            };
+            var roles = await _userManager.GetRolesAsync(user);
+            var result = user.ToDto(roles);
 
             return Ok(result);
         }
@@ -195,7 +178,9 @@ public class AccountController : ControllerBase
 
         try
         {
-            var user = await _users
+            var user = await UsersQuery()
+                /*
+                _users
                 .AsNoTracking()
                 .Include(u => u.Soldier)
                     .ThenInclude(s => s.Rank)
@@ -203,6 +188,7 @@ public class AccountController : ControllerBase
                     .ThenInclude(s => s.Position)
                 .Include(u => u.Soldier)
                     .ThenInclude(s => s.Unit)
+                */
                 .FirstOrDefaultAsync(u => u.SoldierId == soldierId, ct);
 
             if (user == null)
@@ -211,7 +197,10 @@ public class AccountController : ControllerBase
                     title: "Не знайдено",
                     detail: $"Користувача для військовослужбовця '{soldierId}' не знайдено");
 
-            return Ok(new { user.Id, user.UserName, user.Email });
+            var roles = await _userManager.GetRolesAsync(user);
+            var result = user.ToDto(roles);
+
+            return Ok(result);
         }
         catch (OperationCanceledException)
         {
@@ -260,6 +249,8 @@ public class AccountController : ControllerBase
             var existingUser = await _users
                 .FirstOrDefaultAsync(u => u.SoldierId == dto.SoldierId, ct);
 
+            ct.ThrowIfCancellationRequested();
+
             if (existingUser != null)
             {
                 if (_logger.IsEnabled(LogLevel.Warning))
@@ -280,13 +271,17 @@ public class AccountController : ControllerBase
             }
 
             // 3. Перевірка чи Email вже використовується
-            var emailExists = await _userManager.FindByEmailAsync(dto.Email);
+            var email = dto.Email?.Trim();
+            var emailExists = string.IsNullOrEmpty(email) ? null : await _userManager.FindByEmailAsync(email);
+
+            ct.ThrowIfCancellationRequested();
+
             if (emailExists != null)
             {
                 return Problem(
                     statusCode: 409,
                     title: "Конфлікт",
-                    detail: $"Email '{dto.Email}' вже використовується");
+                    detail: $"Email '{email}' вже використовується");
             }
 
             // 4. Створення нового користувача
@@ -296,7 +291,9 @@ public class AccountController : ControllerBase
                 Email = dto.Email,
                 SoldierId = dto.SoldierId,
                 RegistrationDate = DateTime.UtcNow,
-                EmailConfirmed = dto.EmailConfirmed ?? false
+                EmailConfirmed = dto.EmailConfirmed ?? false,
+                RequirePasswordChange = true // Змінити пароль при першому вході
+                //LastPasswordChangeDate = DateTime.UtcNow
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);
@@ -317,8 +314,8 @@ public class AccountController : ControllerBase
 
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation(
-                    "Створено користувача UserId={UserId}, Email={Email}, SoldierId={SoldierId}",
-                    user.Id, user.Email, user.SoldierId);
+                    "Створено користувача UserId={UserId}, UserName={UserName}, SoldierId={SoldierId}",
+                    user.Id, user.UserName, user.SoldierId);
 
             // 5. Додати до ролей (якщо вказані)
             if (dto.Roles?.Length > 0)
@@ -328,15 +325,8 @@ public class AccountController : ControllerBase
 
             return CreatedAtAction(
                 nameof(Get),
-                new { id = user.Id },
-                new
-                {
-                    user.Id,
-                    user.UserName,
-                    user.Email,
-                    user.SoldierId,
-                    user.RegistrationDate
-                });
+                user.Id,
+                user.ToDto());
         }
         catch (OperationCanceledException)
         {
@@ -346,8 +336,8 @@ public class AccountController : ControllerBase
         {
             if (_logger.IsEnabled(LogLevel.Error))
                 _logger.LogError(ex,
-                    "Помилка створення користувача Email={Email}, SoldierId={SoldierId}",
-                    dto.Email, dto.SoldierId);
+                    "Помилка створення користувача UserName={UserName}, SoldierId={SoldierId}",
+                    dto.UserName, dto.SoldierId);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -356,6 +346,7 @@ public class AccountController : ControllerBase
     /// Вхід в систему
     /// </summary>
     [HttpPost("login")]
+    [EnableRateLimiting("login")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status423Locked)]
@@ -395,6 +386,8 @@ public class AccountController : ControllerBase
         */
         try
         {
+            ct.ThrowIfCancellationRequested();
+
             var user = await _userManager.FindByNameAsync(dto.UserName);
             if (user == null)
             {
@@ -424,6 +417,27 @@ public class AccountController : ControllerBase
                     });
             }
 
+            ct.ThrowIfCancellationRequested();
+
+            // Перевірка чи потрібна зміна пароля
+            if (user.RequirePasswordChange)
+            {                
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation(
+                        "Користувач UserId={UserId} потребує зміни пароля",
+                        user.Id);
+
+                return Problem(
+                    statusCode: 403,
+                    title: "Потрібна зміна пароля",
+                    detail: "Для продовження роботи необхідно змінити пароль",
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["requirePasswordChange"] = true,
+                        ["userId"] = user.Id
+                    });
+            }
+
             var passwordValid = await _userManager.CheckPasswordAsync(user, dto.Password);
             if (!passwordValid)
             {
@@ -448,18 +462,13 @@ public class AccountController : ControllerBase
 
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation(
-                    "Успішний вхід UserId={UserId}, Email={Email}",
-                    user.Id, user.Email);
+                    "Успішний вхід UserId={UserId}, UserName={UserName}",
+                    user.Id, user.UserName);
 
-            return Ok(new
-            {
-                user.Id,
-                user.UserName,
-                user.Email,
-                user.SoldierId,
-                user.LastLoginDate,
-                Roles = await _userManager.GetRolesAsync(user)
-            });
+            var roles = await _userManager.GetRolesAsync(user);
+            var result = user.ToInfoDto(roles, includeSoldier: false);
+
+            return Ok(result);
         }
         catch (OperationCanceledException)
         {
@@ -468,7 +477,7 @@ public class AccountController : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Помилка входу Email={Email}", dto.UserName);
+                _logger.LogError(ex, "Помилка входу UserName={UserName}", dto.UserName);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -524,6 +533,8 @@ public class AccountController : ControllerBase
                     title: "Не знайдено",
                     detail: $"Користувача з ID '{id}' не знайдено");
 
+            ct.ThrowIfCancellationRequested();
+
             var result = await _userManager.ChangePasswordAsync(
                 user, dto.CurrentPassword, dto.NewPassword);
 
@@ -539,6 +550,12 @@ public class AccountController : ControllerBase
                     title: "Помилка зміни пароля",
                     detail: string.Join("; ", result.Errors.Select(e => e.Description)));
             }
+            ct.ThrowIfCancellationRequested();
+
+            // Оновлюємо дату зміни пароля та скидаємо прапорець RequirePasswordChange
+            user.LastPasswordChangeDate = DateTime.UtcNow;
+            user.RequirePasswordChange = false;
+            await _userManager.UpdateAsync(user);
 
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("Змінено пароль UserId={UserId}", id);
@@ -553,6 +570,115 @@ public class AccountController : ControllerBase
         {
             if (_logger.IsEnabled(LogLevel.Error))
                 _logger.LogError(ex, "Помилка зміни пароля UserId={Id}", id);
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+    /// <summary>
+    /// Змінити ім'я користувача
+    /// </summary>
+    [HttpPost("{id}/change-username")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ChangeUsername(
+        Guid id,
+        [FromBody] ChangeUsernameDto dto,
+        CancellationToken ct = default)
+    {
+        if (id == Guid.Empty)
+            return BadRequest("Id обов'язковий");
+
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        try
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+                return Problem(
+                    statusCode: 404,
+                    title: "Не знайдено",
+                    detail: $"Користувача з ID '{id}' не знайдено");
+
+            ct.ThrowIfCancellationRequested();
+
+            // Перевірка поточного пароля для безпеки
+            var passwordValid = await _userManager.CheckPasswordAsync(user, dto.CurrentPassword);
+            if (!passwordValid)
+            {
+                if (_logger.IsEnabled(LogLevel.Warning))
+                    _logger.LogWarning(
+                        "Невдала спроба зміни імені користувача UserId={UserId}: неправильний пароль",
+                        id);
+
+                return Problem(
+                    statusCode: 400,
+                    title: "Неправильний пароль",
+                    detail: "Для зміни імені користувача потрібно ввести правильний поточний пароль");
+            }
+
+            var newUserName = dto.NewUserName.Trim();
+
+            // Перевірка чи нове ім'я відрізняється від поточного
+            if (string.Equals(user.UserName, newUserName, StringComparison.Ordinal))
+            {
+                return Problem(
+                    statusCode: 400,
+                    title: "Некоректні дані",
+                    detail: "Нове ім'я користувача співпадає з поточним");
+            }
+
+            ct.ThrowIfCancellationRequested();
+
+            // Перевірка доступності нового імені
+            var existingUser = await _userManager.FindByNameAsync(newUserName);
+            if (existingUser != null)
+            {
+                if (_logger.IsEnabled(LogLevel.Warning))
+                    _logger.LogWarning(
+                        "Спроба змінити ім'я користувача UserId={UserId} на вже зайняте '{NewUserName}'",
+                        id, newUserName);
+
+                return Problem(
+                    statusCode: 409,
+                    title: "Конфлікт",
+                    detail: $"Ім'я користувача '{newUserName}' вже використовується");
+            }
+
+            // Зміна імені користувача
+            var oldUserName = user.UserName;
+            var result = await _userManager.SetUserNameAsync(user, newUserName);
+
+            if (!result.Succeeded)
+            {
+                if (_logger.IsEnabled(LogLevel.Warning))
+                    _logger.LogWarning(
+                        "Помилка зміни імені користувача UserId={UserId}: {Errors}",
+                        id, string.Join(", ", result.Errors.Select(e => e.Description)));
+
+                return Problem(
+                    statusCode: 400,
+                    title: "Помилка зміни імені користувача",
+                    detail: string.Join("; ", result.Errors.Select(e => e.Description)));
+            }
+
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation(
+                    "Змінено ім'я користувача UserId={UserId}: '{OldUserName}' -> '{NewUserName}'",
+                    id, oldUserName, newUserName);
+
+            return NoContent();
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка зміни імені користувача UserId={Id}", id);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -579,6 +705,8 @@ public class AccountController : ControllerBase
                     statusCode: 404,
                     title: "Не знайдено",
                     detail: $"Користувача з ID '{id}' не знайдено");
+
+            ct.ThrowIfCancellationRequested();
 
             DateTimeOffset? lockoutEnd = dto.Lock
                 ? (dto.LockoutEnd ?? DateTimeOffset.UtcNow.AddYears(100))
@@ -633,6 +761,8 @@ public class AccountController : ControllerBase
                     title: "Не знайдено",
                     detail: $"Користувача з ID '{id}' не знайдено");
 
+            ct.ThrowIfCancellationRequested();
+
             var result = await _userManager.DeleteAsync(user);
 
             if (!result.Succeeded)
@@ -645,8 +775,8 @@ public class AccountController : ControllerBase
 
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation(
-                    "Видалено користувача UserId={UserId}, Email={Email}, SoldierId={SoldierId}",
-                    id, user.Email, user.SoldierId);
+                    "Видалено користувача UserId={UserId}, UserName={UserName}, SoldierId={SoldierId}",
+                    id, user.UserName, user.SoldierId);
 
             return NoContent();
         }
@@ -674,12 +804,7 @@ public class AccountController : ControllerBase
             var roles = await _db.Set<IdentityRole<Guid>>()
                 .AsNoTracking()
                 .OrderBy(r => r.Name)
-                .Select(r => new
-                {
-                    r.Id,
-                    r.Name,
-                    r.NormalizedName
-                })
+                .Select(r => new LookupDto(r.Id, r.Name ?? string.Empty))
                 .ToListAsync(ct);
 
             return Ok(roles);
@@ -720,6 +845,8 @@ public class AccountController : ControllerBase
 
             var result = await _roleManager.CreateAsync(role);
 
+            ct.ThrowIfCancellationRequested();
+
             if (!result.Succeeded)
             {
                 return Problem(
@@ -732,7 +859,7 @@ public class AccountController : ControllerBase
                 _logger.LogInformation("Створено роль RoleId={RoleId}, Name={Name}",
                     role.Id, role.Name);
 
-            return CreatedAtAction(nameof(GetAllRoles), new { id = role.Id }, role);
+            return CreatedAtAction(nameof(GetAllRoles), role.Id, role);
         }
         catch (OperationCanceledException)
         {
@@ -769,6 +896,8 @@ public class AccountController : ControllerBase
                     statusCode: 404,
                     title: "Не знайдено",
                     detail: $"Користувача '{userId}' не знайдено");
+
+            ct.ThrowIfCancellationRequested();
 
             if (!await _roleManager.RoleExistsAsync(roleName))
                 return Problem(
@@ -831,6 +960,8 @@ public class AccountController : ControllerBase
                     title: "Не знайдено",
                     detail: $"Користувача '{userId}' не знайдено");
 
+            ct.ThrowIfCancellationRequested();
+
             var result = await _userManager.RemoveFromRoleAsync(user, roleName);
 
             if (!result.Succeeded)
@@ -871,43 +1002,427 @@ public class AccountController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetCurrentUser(CancellationToken ct = default)
     {
-        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
-        var user = await _users
-            .AsNoTracking()
-            .Include(u => u.Soldier)
-                .ThenInclude(s => s.Rank)
-            .Include(u => u.Soldier)
-                .ThenInclude(s => s.Position)
-            .Include(u => u.Soldier)
-                .ThenInclude(s => s.Unit)
-            .FirstOrDefaultAsync(u => u.Id == Guid.Parse(userId), ct);
-
-        if (user == null)
-            return Unauthorized();
-
-        var roles = await _userManager.GetRolesAsync(user);
-
-        return Ok(new
+        try
         {
-            user.Id,
-            user.UserName,
-            user.Email,
-            user.SoldierId,
-            user.LastLoginDate,
-            Soldier = new
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var user = await UsersQuery()
+                /*
+                _users
+                .AsNoTracking()
+                .Include(u => u.Soldier)
+                    .ThenInclude(s => s.Rank)
+                .Include(u => u.Soldier)
+                    .ThenInclude(s => s.Position)
+                .Include(u => u.Soldier)
+                    .ThenInclude(s => s.Unit)
+                */
+                .FirstOrDefaultAsync(u => u.Id == Guid.Parse(userId), ct);
+
+            if (user == null)
+                return Unauthorized();
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var result = user.ToInfoDto(roles, includeSoldier: true);
+
+            return Ok(result);
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка отримання поточного користувача");
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+    /// <summary>
+    /// Отримати вимоги до пароля
+    /// </summary>
+    [HttpGet("password-requirements")]
+    [AllowAnonymous]
+    [ProducesResponseType<PasswordRequirementsDto>(StatusCodes.Status200OK)]
+    public IActionResult GetPasswordRequirements()
+    {
+        try
+        {
+            var options = _userManager.Options.Password;
+            var result = new PasswordRequirementsDto(
+                options.RequiredLength,
+                options.RequireDigit,
+                options.RequireLowercase,
+                options.RequireUppercase,
+                options.RequireNonAlphanumeric,
+                options.RequiredUniqueChars
+            );
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка отримання вимог до пароля");
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+    private readonly string[] error = ["Пароль обов'язковий"];
+    /// <summary>
+    /// Перевірити валідність пароля
+    /// </summary>
+    [HttpPost("validate-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ValidatePassword(
+        [FromBody] ValidatePasswordDto dto)
+    {
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        if (string.IsNullOrWhiteSpace(dto.Password))
+            return BadRequest(new { IsValid = false, Errors = error });
+
+        try
+        {
+            // Створюємо тимчасового користувача для валідації
+            var tempUser = new TVezhaUser
             {
-                user.Soldier.Id,
-                user.Soldier.FirstName,
-                user.Soldier.MidleName,
-                user.Soldier.LastName,
-                Rank = user.Soldier.Rank?.ShortValue,
-                Position = user.Soldier.Position?.Value,
-                Unit = user.Soldier.Unit?.ShortName
-            },
-            Roles = roles
-        });
+                UserName = dto.UserName ?? "temp_user",
+                Email = dto.Email ?? "temp@validation.local"
+            };
+
+            var errors = new List<string>();
+
+            // Перевіряємо пароль через всі налаштовані валідатори
+            foreach (var validator in _userManager.PasswordValidators)
+            {
+                var result = await validator.ValidateAsync(_userManager, tempUser, dto.Password);
+                if (!result.Succeeded)
+                {
+                    errors.AddRange(result.Errors.Select(e => e.Description));
+                }
+            }
+
+            return Ok(new
+            {
+                IsValid = errors.Count == 0,
+                Errors = errors
+            });
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка валідації пароля");
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+    /// <summary>
+    /// Перевірити доступність імені користувача
+    /// </summary>
+    [HttpPost("check-username")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CheckUsername(
+        [FromBody] CheckUsernameDto dto,
+        CancellationToken ct = default)
+    {
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        if (string.IsNullOrWhiteSpace(dto.UserName))
+            return BadRequest(new { IsAvailable = false, Message = "UserName обов'язковий" });
+
+        try
+        {
+            var userName = dto.UserName.Trim();
+
+            // Перевіряємо чи існує користувач з таким іменем
+            var existingUser = await _userManager.FindByNameAsync(userName);
+
+            ct.ThrowIfCancellationRequested();
+
+            // Якщо користувач не знайдений - ім'я вільне
+            if (existingUser == null)
+            {
+                return Ok(new
+                {
+                    IsAvailable = true,
+                    Message = $"Ім'я '{userName}' доступне"
+                });
+            }
+
+            // Якщо це перевірка при оновленні - виключаємо поточного користувача
+            if (dto.ExcludeUserId.HasValue && existingUser.Id == dto.ExcludeUserId.Value)
+            {
+                return Ok(new
+                {
+                    IsAvailable = true,
+                    Message = "Це ваше поточне ім'я"
+                });
+            }
+
+            // Ім'я зайняте
+            return Ok(new
+            {
+                IsAvailable = false,
+                Message = $"Ім'я '{userName}' вже використовується"
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка перевірки доступності UserName");
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+    /// <summary>
+    /// Перевірити доступність email
+    /// </summary>
+    [HttpPost("check-email")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CheckEmail(
+        [FromBody] CheckEmailDto dto,
+        CancellationToken ct = default)
+    {
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        if (string.IsNullOrWhiteSpace(dto.Email))
+            return BadRequest(new { IsAvailable = false, Message = "Email обов'язковий" });
+
+        try
+        {
+            var email = dto.Email.Trim();
+
+            // Перевіряємо чи існує користувач з таким email
+            var existingUser = await _userManager.FindByEmailAsync(email);
+
+            ct.ThrowIfCancellationRequested();
+
+            // Якщо користувач не знайдений - email вільний
+            if (existingUser == null)
+            {
+                return Ok(new
+                {
+                    IsAvailable = true,
+                    Message = $"Email '{email}' доступний"
+                });
+            }
+
+            // Якщо це перевірка при оновленні - виключаємо поточного користувача
+            if (dto.ExcludeUserId.HasValue && existingUser.Id == dto.ExcludeUserId.Value)
+            {
+                return Ok(new
+                {
+                    IsAvailable = true,
+                    Message = "Це ваш поточний email"
+                });
+            }
+
+            return Ok(new
+            {
+                IsAvailable = false,
+                Message = $"Email '{email}' вже використовується"
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка перевірки доступності Email");
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+    /// <summary>
+    /// [АДМІН] Скинути пароль користувача без знання поточного
+    /// </summary>
+    [HttpPost("{id}/admin-reset-password")]
+    //[Authorize(Roles = "Admin")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> AdminResetPassword(
+        Guid id,
+        [FromBody] AdminResetPasswordDto dto,
+        CancellationToken ct = default)
+    {
+        if (id == Guid.Empty)
+            return BadRequest("Id обов'язковий");
+
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        try
+        {
+            // Отримуємо ім'я адміністратора
+            var adminName = User.Identity?.Name ?? "Unknown Admin";
+
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+                return Problem(
+                    statusCode: 404,
+                    title: "Не знайдено",
+                    detail: $"Користувача з ID '{id}' не знайдено");
+
+            ct.ThrowIfCancellationRequested();
+
+            // Видаляємо старий пароль і встановлюємо новий
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, dto.NewPassword);
+
+            if (!result.Succeeded)
+            {
+                if (_logger.IsEnabled(LogLevel.Warning))
+                    _logger.LogWarning(
+                        "Помилка адміністративного скидання пароля UserId={UserId}, Admin={AdminName}: {Errors}",
+                        id, adminName, string.Join(", ", result.Errors.Select(e => e.Description)));
+
+                return Problem(
+                    statusCode: 400,
+                    title: "Помилка скидання пароля",
+                    detail: string.Join("; ", result.Errors.Select(e => e.Description)));
+            }
+
+            // Встановлюємо прапорець RequirePasswordChange згідно з DTO
+            user.RequirePasswordChange = dto.RequirePasswordChange;
+            user.LastPasswordChangeDate = DateTime.UtcNow;
+            await _userManager.UpdateAsync(user);
+
+            if (_logger.IsEnabled(LogLevel.Warning))
+                _logger.LogWarning(
+                    "Адміністративне скидання пароля: UserId={UserId}, UserName={UserName}, Admin={AdminName}, RequireChange={RequireChange}",
+                    id, user.UserName, adminName, dto.RequirePasswordChange);
+
+            return NoContent();
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка адміністративного скидання пароля UserId={Id}", id);
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+    /// <summary>
+    /// [АДМІН] Змінити ім'я користувача без знання пароля
+    /// </summary>
+    [HttpPost("{id}/admin-change-username")]
+    //[Authorize(Roles = "Admin")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> AdminChangeUsername(
+        Guid id,
+        [FromBody] AdminChangeUsernameDto dto,
+        CancellationToken ct = default)
+    {
+        if (id == Guid.Empty)
+            return BadRequest("Id обов'язковий");
+
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        try
+        {
+            var adminName = User.Identity?.Name ?? "Unknown Admin";
+
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+                return Problem(
+                    statusCode: 404,
+                    title: "Не знайдено",
+                    detail: $"Користувача з ID '{id}' не знайдено");
+
+            ct.ThrowIfCancellationRequested();
+
+            var newUserName = dto.NewUserName.Trim();
+            var oldUserName = user.UserName;
+
+            // Перевірка чи нове ім'я відрізняється від поточного
+            if (string.Equals(oldUserName, newUserName, StringComparison.Ordinal))
+            {
+                return Problem(
+                    statusCode: 400,
+                    title: "Некоректні дані",
+                    detail: "Нове ім'я користувача співпадає з поточним");
+            }
+
+            // Перевірка доступності нового імені
+            var existingUser = await _userManager.FindByNameAsync(newUserName);
+            if (existingUser != null)
+            {
+                if (_logger.IsEnabled(LogLevel.Warning))
+                    _logger.LogWarning(
+                        "Адмін {AdminName} спробував змінити ім'я користувача UserId={UserId} на вже зайняте '{NewUserName}'",
+                        adminName, id, newUserName);
+
+                return Problem(
+                    statusCode: 409,
+                    title: "Конфлікт",
+                    detail: $"Ім'я користувача '{newUserName}' вже використовується");
+            }
+
+            // Зміна імені користувача
+            var result = await _userManager.SetUserNameAsync(user, newUserName);
+
+            if (!result.Succeeded)
+            {
+                if (_logger.IsEnabled(LogLevel.Warning))
+                    _logger.LogWarning(
+                        "Помилка адміністративної зміни імені користувача UserId={UserId}: {Errors}",
+                        id, string.Join(", ", result.Errors.Select(e => e.Description)));
+
+                return Problem(
+                    statusCode: 400,
+                    title: "Помилка зміни імені користувача",
+                    detail: string.Join("; ", result.Errors.Select(e => e.Description)));
+            }
+
+            var admin = User.Identity?.Name ?? "Unknown Admin";
+            if (_logger.IsEnabled(LogLevel.Warning))
+                _logger.LogWarning(
+                    "Адміністративна зміна імені: UserId={UserId}, '{OldUserName}' -> '{NewUserName}', Admin={AdminName}",
+                    id, oldUserName, newUserName, admin);
+
+            return NoContent();
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка адміністративної зміни імені користувача UserId={Id}", id);
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
     }
 }

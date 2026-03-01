@@ -119,6 +119,14 @@ namespace S5Server.Data
                     .HasColumnType("uuid")
                     .HasColumnName("soldier_id")
                     .HasComment("Посилання на відповідного бійця");
+                entity.Property(e => e.LastPasswordChangeDate)
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("last_password_change_date")
+                    .HasComment("Дата/Час останньої зміни пароля (для моніторингу та безпеки)");
+                entity.Property(e => e.RequirePasswordChange)
+                    .HasColumnType("boolean")
+                    .HasColumnName("require_password_change")
+                    .HasComment("При наступному вході вимагати зміну пароля (наприклад, після адміністративного скидання)");
 
                 entity.HasOne(u => u.Soldier)
                       .WithOne(s => s.VezhaUser)

@@ -7,10 +7,10 @@ import { CommonModule } from '@angular/common';
 export interface ConfirmDialogData {
     title?: string;
     message: string;
-    confirmText?: string;   // по умолчанию: 'ОК' / 'Удалить'
-    cancelText?: string;    // по умолчанию: 'Отмена'
-    color?: 'primary' | 'accent' | 'warn'; // цвет кнопки подтверждения
-    icon?: string;          // например: 'warning'
+    confirmText?: string;   // за замовчуванням: 'ОК' / 'Видалити'
+    cancelText?: string;    // за замовчуванням: 'Відмінити'
+    color?: 'primary' | 'accent' | 'warn'; // колір кнопки підтвердження
+    icon?: string;          // наприклад: 'warning'
 }
 
 @Component({
@@ -23,7 +23,7 @@ export interface ConfirmDialogData {
         @if(data.icon){
             <mat-icon class="icon" [ngClass]="data.color || 'warn'">{{ data.icon }}</mat-icon>
         }
-      {{ data.title || 'Подтверждение' }}
+      {{ data.title || 'Підтвердження' }}
     </h2>
 
     <div mat-dialog-content class="content">

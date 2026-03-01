@@ -1,5 +1,7 @@
 /** Модели аутентификации — соответствуют серверным DTO */
 
+import { SoldierDto } from '../Soldier/services/soldier.service';
+
 export interface LoginDto {
   userName: string;
   password: string;
@@ -12,14 +14,8 @@ export interface AuthUser {
   email: string;
   soldierId: string;
   lastLoginDate: string | null;
+  requirePasswordChange: boolean;
+  lastPasswordChangeDate: string | null;
   roles: string[];
-  soldier?: {
-    id: string;
-    firstName: string;
-    midleName: string;
-    lastName: string;
-    rank: string | null;
-    position: string | null;
-    unit: string | null;
-  };
+  soldier?: SoldierDto;
 }

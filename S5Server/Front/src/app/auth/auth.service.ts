@@ -26,7 +26,7 @@ export class AuthService {
       return u?.userName ?? '';
     }
     const s = u.soldier;
-    return [s.rank, s.lastName, s.firstName].filter(Boolean).join(' ');
+    return [s.rankShortValue, s.firstName, s.midleName, s.lastName].filter(Boolean).join(' ');
   });
 
   /** Вхід в систему */
