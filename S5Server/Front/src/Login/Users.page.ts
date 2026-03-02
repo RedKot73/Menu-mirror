@@ -14,15 +14,15 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { MasterDetailLayoutComponent } from '../app/shared/components/MasterDetailLayout.component';
-import {
-  UsersService,
-  UserListItem,
-  RoleDto,
-} from '../app/auth/users.service';
+import { UsersService, UserListItem } from '../app/auth/users.service';
 import { CreateUserDialogComponent } from './dialogs/CreateUserDialog.component';
-import { ChangePasswordDialogComponent } from './dialogs/ChangePasswordDialog.component';
-import { ChangeLoginDialogComponent } from './dialogs/ChangeLoginDialog.component';
+import { ChangePasswordDialogComponent, ChangePasswordDialogData } from './dialogs/ChangePasswordDialog.component';
+import {
+  ChangeLoginDialogComponent,
+  ChangeLoginDialogData,
+} from './dialogs/ChangeLoginDialog.component';
 import { ConfirmDialogComponent } from '../app/dialogs/ConfirmDialog.component';
+import { LookupDto } from '../app/shared/models/lookup.models';
 
 @Component({
   selector: 'app-users-page',
@@ -52,7 +52,7 @@ export class UsersPage implements OnInit {
 
   readonly users = signal<UserListItem[]>([]);
   readonly selectedUser = signal<UserListItem | null>(null);
-  readonly allRoles = signal<RoleDto[]>([]);
+  readonly allRoles = signal<LookupDto[]>([]);
   readonly showInactive = signal(false);
 
   /** Ролі вибраного користувача */
@@ -61,7 +61,7 @@ export class UsersPage implements OnInit {
   /** Ролі, які ще можна додати */
   readonly availableRoles = computed(() => {
     const assigned = new Set(this.userRoles());
-    return this.allRoles().filter(r => !assigned.has(r.name!));
+    return this.allRoles().filter((r) => !assigned.has(r.value));
   });
 
   ngOnInit(): void {
@@ -71,20 +71,21 @@ export class UsersPage implements OnInit {
 
   loadUsers(): void {
     this.usersService.getAll(this.showInactive()).subscribe({
-      next: list => this.users.set(list),
+      next: (list) => this.users.set(list),
       error: () => this.notify('Помилка завантаження користувачів'),
     });
   }
 
   selectUser(user: UserListItem): void {
     this.selectedUser.set(user);
+    this.loadUserRoles(user.id);
   }
 
   // ── Roles ─────────────────────────────
 
   private loadRoles(): void {
     this.usersService.getAllRoles().subscribe({
-      next: roles => this.allRoles.set(roles),
+      next: (roles) => this.allRoles.set(roles),
     });
   }
 
@@ -108,7 +109,7 @@ export class UsersPage implements OnInit {
 
     this.usersService.addUserToRole(userId, roleName).subscribe({
       next: () => {
-        this.userRoles.update(roles => [...roles, roleName]);
+        this.userRoles.update((roles) => [...roles, roleName]);
         this.notify(`Роль "${roleName}" додано`);
       },
       error: () => this.notify('Помилка додавання ролі'),
@@ -123,7 +124,7 @@ export class UsersPage implements OnInit {
 
     this.usersService.removeUserFromRole(userId, roleName).subscribe({
       next: () => {
-        this.userRoles.update(roles => roles.filter(r => r !== roleName));
+        this.userRoles.update((roles) => roles.filter((r) => r !== roleName));
         this.notify(`Роль "${roleName}" видалено`);
       },
       error: () => this.notify('Помилка видалення ролі'),
@@ -137,14 +138,14 @@ export class UsersPage implements OnInit {
       width: '480px',
       data: { roles: this.allRoles() },
     });
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.usersService.create(result).subscribe({
           next: () => {
             this.notify('Користувача створено');
             this.loadUsers();
           },
-          error: err => {
+          error: (err) => {
             const msg = err.error?.detail || 'Помилка створення користувача';
             this.notify(msg);
           },
@@ -153,7 +154,12 @@ export class UsersPage implements OnInit {
     });
   }
 
-  onChangePassword(): void {
+  /** Зміна пароля користувача
+   * Якщо adminChange = true, то це адміністративна зміна логіну без підтвердження поточного пароля.
+   * Використовується для примусового скидання логіну користувача адміністратором.
+   * Якщо false (за замовчуванням), то користувач повинен ввести свій поточний пароль для підтвердження зміни логіну.
+   */
+  onChangePassword(adminChange: boolean = false): void {
     const user = this.selectedUser();
     if (!user) {
       return;
@@ -161,22 +167,39 @@ export class UsersPage implements OnInit {
 
     const dialogRef = this.dialog.open(ChangePasswordDialogComponent, {
       width: '400px',
-      data: { userName: user.userName },
+      data: { userName: user.userName, adminChange } as ChangePasswordDialogData,
     });
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.usersService.changePassword(user.id, result).subscribe({
-          next: () => this.notify('Пароль змінено'),
-          error: err => {
-            const msg = err.error?.detail || 'Помилка зміни пароля';
-            this.notify(msg);
-          },
-        });
+        if (adminChange) {
+          this.usersService.adminResetPassword(user.id, result).subscribe({
+            next: () => {
+              this.notify('Пароль змінено');
+              this.loadUsers();
+            },
+            error: (err) => {
+              const msg = err.error?.detail || 'Помилка зміни пароля';
+              this.notify(msg);
+            },
+          });
+        } else {
+          this.usersService.changePassword(user.id, result).subscribe({
+            next: () => this.notify('Пароль змінено'),
+            error: (err) => {
+              const msg = err.error?.detail || 'Помилка зміни пароля';
+              this.notify(msg);
+            },
+          });
+        }
       }
     });
   }
-
-  onChangeLogin(): void {
+  /** Зміна логіну користувача
+   * Якщо adminChange = true, то це адміністративна зміна логіну без підтвердження поточного пароля.
+   * Використовується для примусового скидання логіну користувача адміністратором.
+   * Якщо false (за замовчуванням), то користувач повинен ввести свій поточний пароль для підтвердження зміни логіну.
+   */
+  onChangeLogin(adminChange: boolean = false): void {
     const user = this.selectedUser();
     if (!user) {
       return;
@@ -184,24 +207,38 @@ export class UsersPage implements OnInit {
 
     const dialogRef = this.dialog.open(ChangeLoginDialogComponent, {
       width: '400px',
-      data: { userId: user.id, userName: user.userName },
+      data: { userId: user.id, userName: user.userName, adminChange } as ChangeLoginDialogData,
     });
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.usersService.changeUsername(user.id, result).subscribe({
-          next: () => {
-            this.notify('Логін змінено');
-            this.loadUsers();
-          },
-          error: err => {
-            const msg = err.error?.detail || 'Помилка зміни логіну';
-            this.notify(msg);
-          },
-        });
+        if (adminChange) {
+          this.usersService.adminChangeUsername(user.id, result.newUserName).subscribe({
+            next: () => {
+              this.notify('Логін змінено');
+              this.loadUsers();
+            },
+            error: (err) => {
+              const msg = err.error?.detail || 'Помилка зміни логіну';
+              this.notify(msg);
+            },
+          });
+        } else {
+          this.usersService.changeUsername(user.id, result).subscribe({
+            next: () => {
+              this.notify('Логін змінено');
+              this.loadUsers();
+            },
+            error: (err) => {
+              const msg = err.error?.detail || 'Помилка зміни логіну';
+              this.notify(msg);
+            },
+          });
+        }
       }
     });
   }
 
+  /** Блокування/розблокування користувача */
   onToggleLockout(lock: boolean): void {
     const user = this.selectedUser();
     if (!user) {
@@ -216,7 +253,7 @@ export class UsersPage implements OnInit {
         message: `Ви впевнені, що хочете ${action} користувача "${user.userName}"?`,
       },
     });
-    dialogRef.afterClosed().subscribe(confirmed => {
+    dialogRef.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
         this.usersService.setLockout(user.id, { lock }).subscribe({
           next: () => {
@@ -230,6 +267,7 @@ export class UsersPage implements OnInit {
     });
   }
 
+  /** Видалення користувача */
   onDeleteUser(): void {
     const user = this.selectedUser();
     if (!user) {
@@ -244,7 +282,7 @@ export class UsersPage implements OnInit {
         color: 'warn',
       },
     });
-    dialogRef.afterClosed().subscribe(confirmed => {
+    dialogRef.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
         this.usersService.delete(user.id).subscribe({
           next: () => {

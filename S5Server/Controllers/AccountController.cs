@@ -290,6 +290,7 @@ public class AccountController : ControllerBase
                 UserName = dto.UserName,
                 Email = dto.Email,
                 SoldierId = dto.SoldierId,
+                Soldier = soldier,
                 RegistrationDate = DateTime.UtcNow,
                 EmailConfirmed = dto.EmailConfirmed ?? false,
                 RequirePasswordChange = true // Змінити пароль при першому вході
@@ -828,7 +829,7 @@ public class AccountController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateRole(
-        [FromBody] CreateRoleDto dto,
+        [FromBody] LookupDto dto,
         CancellationToken ct = default)
     {
         if (!ModelState.IsValid)
@@ -839,8 +840,8 @@ public class AccountController : ControllerBase
             var role = new IdentityRole<Guid>
             {
                 Id = Guid.NewGuid(),
-                Name = dto.Name,
-                NormalizedName = dto.Name.ToUpperInvariant()
+                Name = dto.Value,
+                NormalizedName = dto.Value.ToUpperInvariant()
             };
 
             var result = await _roleManager.CreateAsync(role);
@@ -868,7 +869,7 @@ public class AccountController : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Помилка створення ролі Name={Name}", dto.Name);
+                _logger.LogError(ex, "Помилка створення ролі Name={Name}", dto.Value);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }

@@ -17,16 +17,17 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import {
-  RoleDto,
   CreateUserDto,
   UsersService,
   PasswordRequirements,
 } from '../../app/auth/users.service';
 import { SoldierSelectDialogComponent } from '../../app/dialogs/SoldierSelect-dialog.component';
 import { SoldierDto } from '../../app/Soldier/services/soldier.service';
+import { SoldierUtils } from '../../app/Soldier/soldier.utils';
+import { LookupDto } from '../../app/shared/models/lookup.models';
 
 export interface CreateUserDialogData {
-  roles: RoleDto[];
+  roles: LookupDto[];
 }
 
 @Component({
@@ -46,15 +47,19 @@ export interface CreateUserDialogData {
   template: `
     <h2 mat-dialog-title>Створити користувача</h2>
     <mat-dialog-content class="dialog-content">
-      <div class="soldier-field">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Військовослужбовець</mat-label>
           <input matInput [value]="soldierDisplay" readonly required />
+          <button
+            mat-icon-button
+            matSuffix
+            color="primary"
+            (click)="openSoldierSelect()"
+            matTooltip="Вибрати"
+          >
+            <mat-icon>person_search</mat-icon>
+          </button>
         </mat-form-field>
-        <button mat-icon-button color="primary" (click)="openSoldierSelect()" matTooltip="Вибрати">
-          <mat-icon>person_search</mat-icon>
-        </button>
-      </div>
 
       <!-- Логін з перевіркою доступності -->
       <mat-form-field appearance="outline" class="full-width">
@@ -130,7 +135,7 @@ export interface CreateUserDialogData {
         <mat-label>Роль</mat-label>
         <mat-select [(ngModel)]="selectedRole">
           @for (role of data.roles; track role.id) {
-            <mat-option [value]="role.name">{{ role.name }}</mat-option>
+            <mat-option [value]="role.value">{{ role.value }}</mat-option>
           }
         </mat-select>
       </mat-form-field>
@@ -147,14 +152,6 @@ export interface CreateUserDialogData {
     `
       .dialog-content {
         min-width: 360px;
-      }
-      .soldier-field {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-      }
-      .soldier-field .full-width {
-        flex: 1;
       }
     `,
   ],
@@ -267,7 +264,7 @@ export class CreateUserDialogComponent implements OnInit, OnDestroy {
     }
     const s = this.selectedSoldier;
     const rank = s.rankShortValue ? s.rankShortValue + ' ' : '';
-    return `${rank}${s.fio} (${s.unitShortName})`;
+    return `${rank}${this.formatFIO(s)} (${s.unitShortName})`;
   }
 
   openSoldierSelect(): void {
@@ -279,6 +276,9 @@ export class CreateUserDialogComponent implements OnInit, OnDestroy {
       if (soldier) {
         this.selectedSoldier = soldier;
         this.model.soldierId = soldier.id;
+        if (!this.model.userName) {
+          this.model.userName = soldier.nickName || '';
+        }
       }
     });
   }
@@ -325,5 +325,9 @@ export class CreateUserDialogComponent implements OnInit, OnDestroy {
       parts.push('спецсимвол');
     }
     return parts.length ? 'Вимоги: ' + parts.join(', ') : '';
+  }
+
+  formatFIO(item: SoldierDto): string {
+    return SoldierUtils.formatFIO(item.firstName, item.midleName, item.lastName);
   }
 }

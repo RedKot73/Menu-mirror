@@ -17,6 +17,7 @@ import {
 
 export interface ChangePasswordDialogData {
   userName: string;
+  adminChange: boolean; // Чи це адміністративна зміна логіну (без поточного пароля)
 }
 
 @Component({
@@ -38,10 +39,12 @@ export interface ChangePasswordDialogData {
         Користувач: <strong>{{ data.userName }}</strong>
       </p>
 
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Поточний пароль</mat-label>
-        <input matInput type="password" [(ngModel)]="model.currentPassword" required />
-      </mat-form-field>
+      @if (!data.adminChange) {
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Пароль користувача</mat-label>
+          <input matInput type="password" [(ngModel)]="model.currentPassword" required />
+        </mat-form-field>
+      }
 
       <!-- Новий пароль з перевіркою вимог -->
       <mat-form-field appearance="outline" class="full-width">
@@ -158,8 +161,9 @@ export class ChangePasswordDialogComponent implements OnInit, OnDestroy {
   }
 
   get canSave(): boolean {
+    const passwordOk = this.data.adminChange || !!this.model.currentPassword;
     return (
-      !!this.model.currentPassword &&
+      passwordOk &&
       !!this.model.newPassword &&
       this.passwordValid &&
       this.model.newPassword === this.confirmPassword

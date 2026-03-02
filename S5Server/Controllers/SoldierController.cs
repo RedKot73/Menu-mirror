@@ -367,7 +367,7 @@ public class SoldierController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Update(
         Guid id,
-        [FromBody] SoldierDto dto,
+        [FromBody] SoldierCreateDto dto,
         CancellationToken ct = default)
     {
         if (id == Guid.Empty)

@@ -77,14 +77,24 @@
           </mat-card-header>
           <mat-card-content>
             <div class="actions-row">
-              <button mat-stroked-button (click)="onChangePassword()">
+              <button mat-stroked-button (click)="onChangePassword(false)">
                 <mat-icon>key</mat-icon>
                 Змінити пароль
               </button>
-              <button mat-stroked-button (click)="onChangeLogin()">
-                <mat-icon>key</mat-icon>
+              <button mat-stroked-button (click)="onChangeLogin(false)">
+                <mat-icon>edit</mat-icon>
                 Змінити Логін
               </button>
+
+              <button mat-stroked-button (click)="onChangePassword(true)">
+                <mat-icon>lock_reset</mat-icon>
+                Скинути пароль
+              </button>
+              <button mat-stroked-button (click)="onChangeLogin(true)">
+                <mat-icon>manage_accounts</mat-icon>
+                Скинути Логін
+              </button>
+
               @if (user.isLocked) {
                 <button mat-stroked-button color="primary" (click)="onToggleLockout(false)">
                   <mat-icon>lock_open</mat-icon>
@@ -178,7 +188,7 @@
                 <mat-label>Додати роль</mat-label>
                 <mat-select #roleSelect>
                   @for (role of availableRoles(); track role.id) {
-                    <mat-option [value]="role.name">{{ role.name }}</mat-option>
+                    <mat-option [value]="role.value">{{ role.value }}</mat-option>
                   }
                 </mat-select>
               </mat-form-field>
@@ -198,7 +208,7 @@
     } @else {
       <div class="no-selection">
         <mat-icon>person_search</mat-icon>
-        <p>Оберіть користувача зі списку</p>
+        <p>Оберіть користувача з переліку</p>
       </div>
     }
   </div>

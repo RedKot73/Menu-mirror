@@ -5,6 +5,7 @@ import { catchError } from 'rxjs/operators';
 
 import { SoldierDto } from '../Soldier/services/soldier.service';
 import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
+import { LookupDto } from '../shared/models/lookup.models';
 
 // ── Models ──────────────────────────────────────────────────
 
@@ -60,13 +61,13 @@ export interface AdminResetPasswordDto {
 export interface AdminChangeUsernameDto {
   newUserName: string;
 }
-
+/*
 export interface RoleDto {
   id: string;
   name: string;
   normalizedName: string;
 }
-
+*/
 export interface CreateRoleDto {
   name: string;
 }
@@ -279,8 +280,8 @@ export class UsersService {
    * Отримати всі ролі
    * GET /api/account/roles
    */
-  getAllRoles(): Observable<RoleDto[]> {
-    return this.http.get<RoleDto[]>(`${this.baseUrl}/roles`).pipe(
+  getAllRoles(): Observable<LookupDto[]> {
+    return this.http.get<LookupDto[]>(`${this.baseUrl}/roles`).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
@@ -295,8 +296,8 @@ export class UsersService {
    * Створити роль
    * POST /api/account/roles
    */
-  createRole(dto: CreateRoleDto): Observable<RoleDto> {
-    return this.http.post<RoleDto>(`${this.baseUrl}/roles`, dto).pipe(
+  createRole(dto: CreateRoleDto): Observable<LookupDto> {
+    return this.http.post<LookupDto>(`${this.baseUrl}/roles`, dto).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося створити роль');
         return throwError(() => new Error(message));

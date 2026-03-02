@@ -5,13 +5,13 @@ import { catchError } from 'rxjs/operators';
 
 import { LookupDto } from '../../shared/models/lookup.models';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
+import { toDateOnly } from '../../shared/utils/date.utils';
 
 export interface SoldierDto {
   id: string;
   firstName: string;
   midleName?: string;
   lastName?: string;
-  fio: string;
   birthDate?: Date;
   nickName?: string;
   unitId: string;
@@ -56,6 +56,16 @@ export interface SoldierCreateDto {
 export class SoldierService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/Soldier';
+
+  /** Підготовка DTO до відправки: Date → DateOnly string */
+  private prepareForServer(dto: SoldierCreateDto): Record<string, unknown> {
+    return {
+      ...dto,
+      birthDate: toDateOnly(dto.birthDate),
+      arrivedAt: toDateOnly(dto.arrivedAt),
+      departedAt: toDateOnly(dto.departedAt),
+    };
+  }
 
   createItemsSignal() {
     return signal<SoldierDto[]>([]);
@@ -133,11 +143,7 @@ export class SoldierService {
    * Отримати перелік за оперативним підрозділом
    * GET /api/Soldier/by-involved?involvedUnitId={id}&search={search}&limit={limit}
    */
-  getByInvolved(
-    involvedUnitId: string,
-    search?: string,
-    limit?: number,
-  ): Observable<SoldierDto[]> {
+  getByInvolved(involvedUnitId: string, search?: string, limit?: number): Observable<SoldierDto[]> {
     let params = new HttpParams();
     params = params.set('involvedUnitId', involvedUnitId);
     if (search) {
@@ -199,7 +205,7 @@ export class SoldierService {
    * POST /api/Soldier
    */
   create(item: SoldierCreateDto): Observable<SoldierDto> {
-    return this.http.post<SoldierDto>(this.baseUrl, item).pipe(
+    return this.http.post<SoldierDto>(this.baseUrl, this.prepareForServer(item)).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
@@ -214,8 +220,8 @@ export class SoldierService {
    * Оновити військовослужбовця
    * PUT /api/Soldier/{id}
    */
-  update(id: string, item: SoldierDto): Observable<void> {
-    return this.http.put<void>(`${this.baseUrl}/${id}`, item).pipe(
+  update(id: string, item: SoldierCreateDto): Observable<void> {
+    return this.http.put<void>(`${this.baseUrl}/${id}`, this.prepareForServer(item)).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,

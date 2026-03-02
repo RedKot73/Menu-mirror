@@ -17,6 +17,7 @@ import {
 export interface ChangeLoginDialogData {
   userId: string;
   userName: string;
+  adminChange: boolean; // Чи це адміністративна зміна логіну (без поточного пароля)
 }
 
 @Component({
@@ -59,11 +60,13 @@ export interface ChangeLoginDialogData {
         }
       </mat-form-field>
 
+      @if(!data.adminChange) {
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Поточний пароль</mat-label>
+        <mat-label>Пароль користувача</mat-label>
         <input matInput type="password" [(ngModel)]="model.currentPassword" required />
         <mat-hint>Для підтвердження зміни логіну</mat-hint>
       </mat-form-field>
+      }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button mat-dialog-close>Скасувати</button>
@@ -134,10 +137,11 @@ export class ChangeLoginDialogComponent implements OnInit, OnDestroy {
   }
 
   get canSave(): boolean {
+    const passwordOk = this.data.adminChange || !!this.model.currentPassword;
     return (
       !!this.model.newUserName &&
       this.userNameAvailable &&
-      !!this.model.currentPassword
+      passwordOk
     );
   }
 

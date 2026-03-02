@@ -19,7 +19,11 @@ import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { SlicePipe, DatePipe, AsyncPipe } from '@angular/common';
 import { Observable } from 'rxjs';
 
-import { SoldierDialogComponent } from '../dialogs/SoldierDialog';
+import {
+  SoldierDialogComponent,
+  SoldierDialogData,
+  SoldierDialogResult,
+} from '../dialogs/SoldierDialog.component';
 import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
 import { SoldierService, SoldierDto } from '../Soldier/services/soldier.service';
 import { UnitService } from '../Unit/services/unit.service';
@@ -33,6 +37,7 @@ import {
   isRecoveryStatus,
   UnitTag,
 } from '../Soldier/Soldier.constant';
+import { SoldierUtils } from '../Soldier/soldier.utils';
 import { InlineEditManager, EditMode } from '../Soldier/InlineEditManager.class';
 
 export type Soldier = SoldierDto;
@@ -88,7 +93,7 @@ export class PersonnelPage implements AfterViewInit {
   readonly UnitTag = UnitTag;
 
   inlineEdit = new InlineEditManager((mode: EditMode, term: string) =>
-    this.unitService.lookup(term, 20)
+    this.unitService.lookup(term, 20),
   );
 
   displayLookupFn = (unit: LookupDto | null): string => (unit ? unit.value : '');
@@ -119,33 +124,28 @@ export class PersonnelPage implements AfterViewInit {
     const dialogRef = this.dialog.open(SoldierDialogComponent, {
       width: '600px',
       data: {
-        id: '',
-        fio: '',
-        nickName: '',
-        rankId: undefined,
-        positionId: undefined,
-        stateId: undefined,
-        unitId: undefined,
-        assignedUnitId: undefined,
-        operationalUnitId: undefined,
-        arrivedAt: new Date(),
-        departedAt: null,
-        comment: '',
-      },
+        model: {
+          firstName: '',
+          unitId: '',
+          arrivedAt: new Date(),
+          rankId: '',
+          positionId: '',
+          stateId: '',
+        },
+      } as SoldierDialogData,
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
+    dialogRef.afterClosed().subscribe((result: SoldierDialogResult | undefined) => {
       if (result) {
-        this.soldierService.create(result).subscribe({
+        this.soldierService.create(result.model).subscribe({
           next: () => {
             this.reload();
             this.snackBar.open('Бійця успішно створено', 'Закрити', { duration: 3000 });
           },
           error: (error) => {
-            console.error('Помилка створення бійця:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка створення бійця'
+              'Помилка створення бійця',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
@@ -158,21 +158,37 @@ export class PersonnelPage implements AfterViewInit {
   edit(soldier: Soldier) {
     const dialogRef = this.dialog.open(SoldierDialogComponent, {
       width: '600px',
-      data: { ...soldier },
+      data: {
+        id: soldier.id,
+        model: {
+          firstName: soldier.firstName,
+          midleName: soldier.midleName,
+          lastName: soldier.lastName,
+          nickName: soldier.nickName,
+          unitId: soldier.unitId,
+          arrivedAt: soldier.arrivedAt,
+          departedAt: soldier.departedAt,
+          assignedUnitId: soldier.assignedUnitId,
+          involvedUnitId: soldier.involvedUnitId,
+          rankId: soldier.rankId,
+          positionId: soldier.positionId,
+          stateId: soldier.stateId,
+          comment: soldier.comment,
+        },
+      } as SoldierDialogData,
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
+    dialogRef.afterClosed().subscribe((result: SoldierDialogResult | undefined) => {
       if (result) {
-        this.soldierService.update(soldier.id, result).subscribe({
+        this.soldierService.update(soldier.id, result.model).subscribe({
           next: () => {
             this.reload();
             this.snackBar.open('Бійця успішно оновлено', 'Закрити', { duration: 3000 });
           },
           error: (error) => {
-            console.error('Помилка оновлення бійця:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка оновлення бійця'
+              'Помилка оновлення бійця',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
@@ -189,7 +205,7 @@ export class PersonnelPage implements AfterViewInit {
       autoFocus: false,
       data: {
         title: 'Видалення бійця',
-        message: `Ви впевнені, що хочете видалити бійця "${soldier.fio}"?`,
+        message: `Ви впевнені, що хочете видалити бійця "${this.formatFIO(soldier)}"?`,
         confirmText: 'Видалити',
         cancelText: 'Відмінити',
         color: 'warn',
@@ -208,7 +224,7 @@ export class PersonnelPage implements AfterViewInit {
             console.error('Помилка видалення бійця:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка видалення бійця'
+              'Помилка видалення бійця',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
@@ -280,7 +296,7 @@ export class PersonnelPage implements AfterViewInit {
         console.error('Помилка оновлення підрозділу:', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
-          'Помилка оновлення підрозділу'
+          'Помилка оновлення підрозділу',
         );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
@@ -304,5 +320,9 @@ export class PersonnelPage implements AfterViewInit {
       default:
         return '';
     }
+  }
+
+  formatFIO(item: SoldierDto): string {
+    return SoldierUtils.formatFIO(item.firstName, item.midleName, item.lastName);
   }
 }

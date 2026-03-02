@@ -188,10 +188,6 @@ public record SetLockoutDto(
     DateTimeOffset? LockoutEnd = null
 );
 
-public record CreateRoleDto(
-    string Name
-);
-
 /// <summary>
 /// Повна інформація про користувача
 /// </summary>
@@ -291,7 +287,7 @@ public static class TVezhaUserExtensions
     public static UserDto ToDto(this TVezhaUser user, IList<string>? roles = null)
     {
         ArgumentNullException.ThrowIfNull(user);
-        ArgumentNullException.ThrowIfNull(roles);
+        ArgumentNullException.ThrowIfNull(user.Soldier);
 
         return new UserDto(
             user.Id,
@@ -310,7 +306,7 @@ public static class TVezhaUserExtensions
             user.RequirePasswordChange,
             user.LastPasswordChangeDate,
             user.Soldier.ToSoldierDto(),
-            roles
+            roles ?? []
         );
     }
 

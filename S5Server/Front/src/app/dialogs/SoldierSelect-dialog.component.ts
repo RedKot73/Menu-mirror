@@ -11,8 +11,9 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
-import { SoldierDto, SoldierService } from '../Soldier/services/soldier.service';
 import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
+import { SoldierDto, SoldierService } from '../Soldier/services/soldier.service';
+import { SoldierUtils } from '../Soldier/soldier.utils';
 
 export interface SoldierSelectDialogData {
   /** Фільтр по підрозділу (опціонально) */
@@ -87,7 +88,7 @@ export interface SoldierSelectDialogData {
 
               <ng-container matColumnDef="fio">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header>ПІБ</th>
-                <td mat-cell *matCellDef="let item">{{ item.fio }}</td>
+                <td mat-cell *matCellDef="let item">{{ formatFIO(item) }}</td>
               </ng-container>
 
               <ng-container matColumnDef="nickName">
@@ -294,5 +295,9 @@ export class SoldierSelectDialogComponent {
 
   onCancel() {
     this.dialogRef.close();
+  }
+
+  formatFIO(item: SoldierDto): string {
+    return SoldierUtils.formatFIO(item.firstName, item.midleName, item.lastName);
   }
 }
