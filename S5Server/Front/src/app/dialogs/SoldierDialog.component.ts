@@ -1,24 +1,29 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { FormsModule, FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { FormsModule } from '@angular/forms';
+import {
+  MatDialogModule,
+  MatDialogRef,
+  MatDialog,
+  MAT_DIALOG_DATA,
+} from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDatepickerModule, MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { provideNativeDateAdapter } from '@angular/material/core';
-import { AsyncPipe } from '@angular/common';
-import { forkJoin, Observable, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, startWith, finalize } from 'rxjs/operators';
+import { forkJoin } from 'rxjs';
 
 import { SoldierCreateDto } from '../Soldier/services/soldier.service';
-import { UnitService } from '../Unit/services/unit.service';
+import { UnitDto, UnitService } from '../Unit/services/unit.service';
 import { DictRankService } from '../../ServerService/dictRanks.service';
 import { DictPositionService } from '../../ServerService/dictPosition.service';
 import { DictSoldierStatesService } from '../../ServerService/dictSoldierStates.service';
 import { LookupDto } from '../shared/models/lookup.models';
 import { DateMaskDirective } from '../shared/directives/date-mask.directive';
+import { UnitSelectDialogComponent } from './UnitSelect-dialog.component';
 
 /** Дані, що передаються у діалог */
 export interface SoldierDialogData {
@@ -38,15 +43,14 @@ export interface SoldierDialogResult {
   selector: 'app-soldier-dialog',
   imports: [
     FormsModule,
-    ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatSelectModule,
-    MatAutocompleteModule,
+    MatIconModule,
+    MatTooltipModule,
     MatDatepickerModule,
-    AsyncPipe,
     DateMaskDirective,
   ],
   providers: [provideNativeDateAdapter()],
@@ -73,76 +77,59 @@ export interface SoldierDialogResult {
         <input matInput [(ngModel)]="model.nickName" />
       </mat-form-field>
 
-      <!-- Підрозділ (автокомпліт) -->
+      <!-- Підрозділ -->
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Підрозділ</mat-label>
-        <input
-          matInput
-          [formControl]="unitControl"
-          [matAutocomplete]="unitAuto"
-          placeholder="Основний підрозділ"
-          required
-        />
-        <mat-autocomplete
-          #unitAuto="matAutocomplete"
-          [displayWith]="displayLookup"
-          (optionSelected)="onUnitSelected($event.option.value)"
+        <input matInput [value]="unitDisplay" readonly required />
+        <button
+          mat-icon-button
+          matSuffix
+          color="primary"
+          (click)="openUnitSelect('unit')"
+          matTooltip="Вибрати підрозділ"
         >
-          @if (loadingUnit) {
-            <mat-option disabled>Завантаження...</mat-option>
-          }
-          @for (unit of filteredUnits | async; track unit.id) {
-            <mat-option [value]="unit">{{ unit.value }}</mat-option>
-          }
-        </mat-autocomplete>
+          <mat-icon>domain</mat-icon>
+        </button>
       </mat-form-field>
 
-      <!-- Приданий до підрозділу (автокомпліт) -->
+      <!-- Приданий до підрозділу -->
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Приданий до підрозділу</mat-label>
-        <input
-          matInput
-          [formControl]="assignedUnitControl"
-          [matAutocomplete]="assignedAuto"
-          placeholder="Приданий до підрозділу"
-        />
-        <mat-autocomplete
-          #assignedAuto="matAutocomplete"
-          [displayWith]="displayLookup"
-          (optionSelected)="onAssignedUnitSelected($event.option.value)"
+        <input matInput [value]="assignedUnitDisplay" readonly />
+        <button
+          mat-icon-button
+          matSuffix
+          color="primary"
+          (click)="openUnitSelect('assigned')"
+          matTooltip="Вибрати підрозділ"
         >
-          <mat-option [value]="null">Не приданий</mat-option>
-          @if (loadingAssigned) {
-            <mat-option disabled>Завантаження...</mat-option>
-          }
-          @for (unit of filteredAssigned | async; track unit.id) {
-            <mat-option [value]="unit">{{ unit.value }}</mat-option>
-          }
-        </mat-autocomplete>
+          <mat-icon>domain</mat-icon>
+        </button>
+        @if (model.assignedUnitId) {
+          <button mat-icon-button matSuffix (click)="clearUnit('assigned')" matTooltip="Очистити">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
       </mat-form-field>
 
-      <!-- Екіпаж/Група (автокомпліт) -->
+      <!-- Екіпаж/Група -->
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Екіпаж/Група</mat-label>
-        <input
-          matInput
-          [formControl]="involvedUnitControl"
-          [matAutocomplete]="involvedAuto"
-          placeholder="Екіпаж/Група"
-        />
-        <mat-autocomplete
-          #involvedAuto="matAutocomplete"
-          [displayWith]="displayLookup"
-          (optionSelected)="onInvolvedUnitSelected($event.option.value)"
+        <input matInput [value]="involvedUnitDisplay" readonly />
+        <button
+          mat-icon-button
+          matSuffix
+          color="primary"
+          (click)="openUnitSelect('involved')"
+          matTooltip="Вибрати підрозділ"
         >
-          <mat-option [value]="null">Не призначено</mat-option>
-          @if (loadingInvolved) {
-            <mat-option disabled>Завантаження...</mat-option>
-          }
-          @for (unit of filteredInvolved | async; track unit.id) {
-            <mat-option [value]="unit">{{ unit.value }}</mat-option>
-          }
-        </mat-autocomplete>
+          <mat-icon>domain</mat-icon>
+        </button>
+        @if (model.involvedUnitId) {
+          <button mat-icon-button matSuffix (click)="clearUnit('involved')" matTooltip="Очистити">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
@@ -235,6 +222,7 @@ export interface SoldierDialogResult {
 })
 export class SoldierDialogComponent implements OnInit {
   private dialogRef = inject(MatDialogRef<SoldierDialogComponent>);
+  private dialog = inject(MatDialog);
   private unitService = inject(UnitService);
   private dictRankService = inject(DictRankService);
   private dictPositionService = inject(DictPositionService);
@@ -248,29 +236,13 @@ export class SoldierDialogComponent implements OnInit {
   dictPositions: LookupDto[] = [];
   dictStates: LookupDto[] = [];
 
-  // Автокомпліт: підрозділ
-  unitControl = new FormControl<LookupDto | string | null>(null);
-  filteredUnits!: Observable<LookupDto[]>;
-  loadingUnit = false;
-
-  // Автокомпліт: приданий підрозділ
-  assignedUnitControl = new FormControl<LookupDto | string | null>(null);
-  filteredAssigned!: Observable<LookupDto[]>;
-  loadingAssigned = false;
-
-  // Автокомпліт: екіпаж/група
-  involvedUnitControl = new FormControl<LookupDto | string | null>(null);
-  filteredInvolved!: Observable<LookupDto[]>;
-  loadingInvolved = false;
+  // Назви підрозділів для відображення
+  unitDisplay = '';
+  assignedUnitDisplay = '';
+  involvedUnitDisplay = '';
 
   constructor() {
-    // Створюємо копію моделі, щоб не мутувати вхідні дані
     this.model = { ...this.data.model };
-
-    // Налаштовуємо автокомпліт для всіх трьох підрозділів
-    this.filteredUnits = this.buildUnitAutocomplete(this.unitControl, 'loadingUnit');
-    this.filteredAssigned = this.buildUnitAutocomplete(this.assignedUnitControl, 'loadingAssigned');
-    this.filteredInvolved = this.buildUnitAutocomplete(this.involvedUnitControl, 'loadingInvolved');
   }
 
   ngOnInit(): void {
@@ -296,61 +268,63 @@ export class SoldierDialogComponent implements OnInit {
   private loadExistingUnits(): void {
     if (this.model.unitId) {
       this.unitService.getById(this.model.unitId).subscribe((unit) => {
-        const lookup: LookupDto = { id: unit.id, value: unit.shortName || unit.name };
-        this.unitControl.setValue(lookup);
+        this.unitDisplay = unit.shortName || unit.name;
       });
     }
     if (this.model.assignedUnitId) {
       this.unitService.getById(this.model.assignedUnitId).subscribe((unit) => {
-        const lookup: LookupDto = { id: unit.id, value: unit.shortName || unit.name };
-        this.assignedUnitControl.setValue(lookup);
+        this.assignedUnitDisplay = unit.shortName || unit.name;
       });
     }
     if (this.model.involvedUnitId) {
       this.unitService.getById(this.model.involvedUnitId).subscribe((unit) => {
-        const lookup: LookupDto = { id: unit.id, value: unit.shortName || unit.name };
-        this.involvedUnitControl.setValue(lookup);
+        this.involvedUnitDisplay = unit.shortName || unit.name;
       });
     }
   }
 
-  // ── Автокомпліт ───────────────────────
+  // ── Вибір підрозділу через діалог ─────
 
-  /** Спільна фабрика потоку автокомпліту для підрозділів */
-  private buildUnitAutocomplete(
-    control: FormControl<LookupDto | string | null>,
-    loadingFlag: 'loadingUnit' | 'loadingAssigned' | 'loadingInvolved',
-  ): Observable<LookupDto[]> {
-    return control.valueChanges.pipe(
-      startWith(''),
-      debounceTime(300),
-      distinctUntilChanged(),
-      switchMap((value) => {
-        const term = typeof value === 'string' ? value : value?.value ?? '';
-        if (term && term.length >= 2) {
-          this[loadingFlag] = true;
-          return this.unitService
-            .lookup(term, 10)
-            .pipe(finalize(() => (this[loadingFlag] = false)));
+  openUnitSelect(field: 'unit' | 'assigned' | 'involved'): void {
+    const titles: Record<string, string> = {
+      unit: 'Вибір підрозділу',
+      assigned: 'Приданий до підрозділу',
+      involved: 'Екіпаж/Група',
+    };
+    const dialogRef = this.dialog.open(UnitSelectDialogComponent, {
+      width: '900px',
+      maxHeight: '90vh',
+      data: { title: titles[field] },
+    });
+    dialogRef.afterClosed().subscribe((unit: UnitDto | undefined) => {
+      if (unit) {
+        const display = unit.shortName || unit.name;
+        switch (field) {
+          case 'unit':
+            this.model.unitId = unit.id;
+            this.unitDisplay = display;
+            break;
+          case 'assigned':
+            this.model.assignedUnitId = unit.id;
+            this.assignedUnitDisplay = display;
+            break;
+          case 'involved':
+            this.model.involvedUnitId = unit.id;
+            this.involvedUnitDisplay = display;
+            break;
         }
-        return of([]);
-      }),
-    );
+      }
+    });
   }
 
-  /** Функція відображення для mat-autocomplete */
-  displayLookup = (item: LookupDto | null): string => (item ? item.value : '');
-
-  onUnitSelected(unit: LookupDto | null): void {
-    this.model.unitId = unit?.id ?? '';
-  }
-
-  onAssignedUnitSelected(unit: LookupDto | null): void {
-    this.model.assignedUnitId = unit?.id ?? undefined;
-  }
-
-  onInvolvedUnitSelected(unit: LookupDto | null): void {
-    this.model.involvedUnitId = unit?.id ?? undefined;
+  clearUnit(field: 'assigned' | 'involved'): void {
+    if (field === 'assigned') {
+      this.model.assignedUnitId = undefined;
+      this.assignedUnitDisplay = '';
+    } else {
+      this.model.involvedUnitId = undefined;
+      this.involvedUnitDisplay = '';
+    }
   }
 
   // ── Дати ──────────────────────────────

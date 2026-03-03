@@ -210,12 +210,13 @@ namespace S5Server.Services
 
         public static async Task DoImportSoldiers(Unit unit, byte[] soldiersData, CancellationToken ct = default)
         {
-            ArgumentNullException.ThrowIfNull(_current,
-                "Внутрішня помилка серверу - завдання не знайдено");
-            ArgumentNullException.ThrowIfNull(_dbFactory,
-                "IDbContextFactory<MainDbContext> не сконфигурован. Вызовите ImportSoldiers.ConfigureDbFactory(...) при старте приложения.");
             try
             {
+                ArgumentNullException.ThrowIfNull(_current,
+                    "Внутрішня помилка серверу - завдання не знайдено");
+                ArgumentNullException.ThrowIfNull(_dbFactory,
+                    "IDbContextFactory<MainDbContext> не сконфигурован. Вызовите ImportSoldiers.ConfigureDbFactory(...) при старте приложения.");
+
                 await using var db = await _dbFactory.CreateDbContextAsync(ct);
                 // Кэшируем справочники в память для всех листов
                 var ranksByValue = await db.DictRanks

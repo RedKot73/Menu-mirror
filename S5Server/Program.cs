@@ -76,11 +76,17 @@ if (builder.Environment.IsProduction())
 var dataSource = dataSourceBuilder.Build();
 
 // ✅ Використати DataSource замість connectionString
-builder.Services.AddDbContext<MainDbContext>(options =>
+builder.Services.AddPooledDbContextFactory<MainDbContext>(options =>
     options.UseNpgsql(dataSource)  // ← Замість connectionString!
         .UseSnakeCaseNamingConvention()
         .EnableSensitiveDataLogging(builder.Environment.IsDevelopment())
-        .EnableDetailedErrors(builder.Environment.IsDevelopment()));
+        .EnableDetailedErrors(builder.Environment.IsDevelopment())
+        .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+builder.Services.AddScoped<MainDbContext>(sp =>
+{
+    var factory = sp.GetRequiredService<IDbContextFactory<MainDbContext>>();
+    return factory.CreateDbContext();
+});
 
 // ✅ Identity
 builder.Services.AddIdentity<TVezhaUser, IdentityRole<Guid>>(options =>
@@ -169,30 +175,14 @@ builder.Services.AddCors(options =>
     });
 });
 
-// ✅ JWT Authentication
-/*
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
-    };
-});
-*/
-
 var app = builder.Build();
+
+// ✅ Конфігурація фонових сервісів
+{
+    var factory = app.Services.GetRequiredService<IDbContextFactory<MainDbContext>>();
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    S5Server.Services.ImportSoldiers.Configure(factory, logger);
+}
 
 app.UseSerilogRequestLogging(options =>
 {
@@ -241,12 +231,14 @@ CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 try
 {
     Log.Information("Starting S5Server");
+    /*
     // ✅ Seed roles при запуску
     using (var scope = app.Services.CreateScope())
     {
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
         await DbInitializer.SeedRoles(roleManager);
     }
+    */
     app.Run();
 }
 catch (Exception ex)

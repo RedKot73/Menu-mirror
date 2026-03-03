@@ -1177,7 +1177,7 @@ namespace S5Server.Data
                 entity.HasOne(e => e.Soldier)
                     .WithMany()
                     .HasForeignKey(e => e.SoldierId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 // Індекси
                 entity.HasIndex(e => e.UnitTaskId);
