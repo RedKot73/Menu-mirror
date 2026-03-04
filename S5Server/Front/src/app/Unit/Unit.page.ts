@@ -28,7 +28,7 @@ import { UnitTableComponent } from './UnitTable.component';
 import { UnitContentComponent } from './UnitContent.component';
 import { UnitTreeNode } from './unit-tree-node.component';
 import { UnitDialogComponent } from '../dialogs/UnitDialog';
-import { OperationalUnitDialogComponent } from '../dialogs/OperationalUnitDialog';
+import { InvolvedUnitDialogComponent } from '../dialogs/InvolvedUnitDialog';
 import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
 import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -423,8 +423,8 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
   /**
    * Додає оперативний підрозділ до вузла
    */
-  addOperationalChild(node: UnitTreeNode | UnitDto) {
-    const dialogRef = this.dialog.open(OperationalUnitDialogComponent, {
+  addInvolvedChild(node: UnitTreeNode | UnitDto) {
+    const dialogRef = this.dialog.open(InvolvedUnitDialogComponent, {
       width: '600px',
       data: {
         id: '',
@@ -527,10 +527,10 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
-   * Редактирует оперативное подразделение
+   * Редагує оперативний підрозділ
    */
   private editInvolvedUnit(node: UnitTreeNode | UnitDto) {
-    const dialogRef = this.dialog.open(OperationalUnitDialogComponent, {
+    const dialogRef = this.dialog.open(InvolvedUnitDialogComponent, {
       width: '600px',
       data: { ...node },
     });

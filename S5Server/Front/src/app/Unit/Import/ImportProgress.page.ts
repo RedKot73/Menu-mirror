@@ -14,10 +14,10 @@ import {
   MatAutocompleteModule,
   MatAutocompleteSelectedEvent,
 } from '@angular/material/autocomplete';
-import { ReactiveFormsModule, FormControl } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { signal } from '@angular/core';
-import { Observable, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { take, finalize } from 'rxjs/operators';
 
 import {
@@ -30,8 +30,7 @@ import {
 
 import { SoldierService, SoldierDto } from '../../Soldier/services/soldier.service';
 import { UnitService } from '../services/unit.service';
-import { LookupDto } from '../../shared/models/lookup.models';
-import { InlineEditManager, EditColumn } from '../../Soldier/InlineEditManager.class';
+import { InlineEditManager, EditColumn, resolveUnitOperation } from '../../Soldier/InlineEditManager.class';
 import { UnitTag } from '../../Soldier/Soldier.constant';
 
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
@@ -76,7 +75,7 @@ export class ImportProgressPage implements OnInit, OnDestroy {
     'stateValue',
     'unitShortName',
     'assignedUnitShortName',
-    'operationalUnitShortName',
+    'involvedUnitShortName',
     'arrivedAt',
     'departedAt',
     'birthDate',
@@ -99,8 +98,6 @@ export class ImportProgressPage implements OnInit, OnDestroy {
   inlineEdit = new InlineEditManager((column: EditColumn, term: string) =>
     this.unitService.lookup(term, column === UnitTag.InvolvedId),
   );
-
-  displayLookupFn = (unit: LookupDto | null): string => (unit ? unit.value : '');
 
   // Експортуємо enum для використання в шаблоні
   ImportProgressStatus = ImportProgressStatus;
@@ -305,72 +302,37 @@ export class ImportProgressPage implements OnInit, OnDestroy {
     this.router.navigate(['/units']);
   }
 
-  // === Inline edit helpers (одна колонка / рядок за раз) ===
-  isEditing(soldierId: string, column: EditColumn): boolean {
-    return this.inlineEdit.isMode(soldierId, column);
+  // === Inline edit helpers ===
+  startEditing(soldier: SoldierDto, column: EditColumn) {
+    this.inlineEdit.startEdit(soldier.id, column, InlineEditManager.getInitialValue(soldier, column));
   }
 
-  startEditing(soldierId: string, column: EditColumn, initialValue: string | null) {
-    this.inlineEdit.clearOthers(soldierId);
-    this.inlineEdit.ensure(soldierId, column, initialValue);
+  getControl(soldier: SoldierDto, column: EditColumn) {
+    return this.inlineEdit.getFormControl(
+      soldier.id,
+      column,
+      InlineEditManager.getInitialValue(soldier, column),
+    );
   }
 
-  cancelEditing(soldierId: string) {
-    this.inlineEdit.clear(soldierId);
-  }
-
-  getControl(soldierId: string, column: EditColumn, initialValue: string | null): FormControl {
-    return this.inlineEdit.ensure(soldierId, column, initialValue).control;
-  }
-
-  getOptions(soldierId: string): Observable<LookupDto[]> {
-    return this.inlineEdit.options(soldierId);
-  }
-
-  isLoading(soldierId: string): boolean {
-    return this.inlineEdit.loading(soldierId);
-  }
-
-  onSelect(
-    soldierId: string,
-    column: EditColumn,
-    event: MatAutocompleteSelectedEvent,
-    soldier: { id: string },
-  ) {
-    const selectedUnit: LookupDto | null = event.option.value;
-    let successMessage = '';
-    let operation: Observable<SoldierDto> | null = null;
-
-    switch (column) {
-      case UnitTag.UnitId:
-        if (!selectedUnit) {
-          return;
-        }
-        successMessage = 'Підрозділ оновлено';
-        operation = this.soldierService.move(soldier.id, selectedUnit.id);
-        break;
-      case UnitTag.AssignedId:
-        successMessage = 'Придання оновлено';
-        operation = this.soldierService.assignAssigned(soldier.id, selectedUnit?.id || null);
-        break;
-      case UnitTag.InvolvedId:
-        successMessage = 'Екіпаж/Група оновлено';
-        operation = this.soldierService.assignInvolved(soldier.id, selectedUnit?.id || null);
-        break;
-    }
-
-    if (!operation) {
+  onSelect(soldier: SoldierDto, column: EditColumn, event: MatAutocompleteSelectedEvent) {
+    const result = resolveUnitOperation(
+      this.soldierService,
+      soldier.id,
+      column,
+      event.option.value,
+    );
+    if (!result) {
       return;
     }
 
-    operation.subscribe({
+    result.operation.subscribe({
       next: (updated) => {
-        this.inlineEdit.clear(soldierId);
+        this.inlineEdit.clear(soldier.id);
         this.patchSoldier(updated);
-        this.snackBar.open(successMessage, 'Закрити', { duration: 2000 });
+        this.snackBar.open(result.message, 'Закрити', { duration: 2000 });
       },
       error: (error) => {
-        console.error('Помилка оновлення підрозділу:', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
           'Помилка оновлення підрозділу',
@@ -378,26 +340,6 @@ export class ImportProgressPage implements OnInit, OnDestroy {
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
     });
-  }
-
-  getInitialValue(
-    soldier: {
-      unitShortName?: string;
-      assignedUnitShortName?: string;
-      involvedUnitShortName?: string;
-    },
-    column: EditColumn,
-  ): string {
-    switch (column) {
-      case UnitTag.UnitId:
-        return soldier.unitShortName || '';
-      case UnitTag.AssignedId:
-        return soldier.assignedUnitShortName || '';
-      case UnitTag.InvolvedId:
-        return soldier.involvedUnitShortName || '';
-      default:
-        return '';
-    }
   }
 
   private patchSoldier(updated: SoldierDto) {

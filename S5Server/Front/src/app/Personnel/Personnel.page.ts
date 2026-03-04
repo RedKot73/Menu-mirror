@@ -15,9 +15,8 @@ import {
   MatAutocompleteModule,
   MatAutocompleteSelectedEvent,
 } from '@angular/material/autocomplete';
-import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SlicePipe, DatePipe, AsyncPipe } from '@angular/common';
-import { Observable } from 'rxjs';
 
 import {
   SoldierDialogComponent,
@@ -27,7 +26,6 @@ import {
 import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
 import { SoldierService, SoldierDto } from '../Soldier/services/soldier.service';
 import { UnitService } from '../Unit/services/unit.service';
-import { LookupDto } from '../shared/models/lookup.models';
 import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import {
@@ -37,7 +35,7 @@ import {
   UnitTag,
 } from '../Soldier/Soldier.constant';
 import { SoldierUtils } from '../Soldier/soldier.utils';
-import { InlineEditManager, EditColumn } from '../Soldier/InlineEditManager.class';
+import { InlineEditManager, EditColumn, resolveUnitOperation } from '../Soldier/InlineEditManager.class';
 
 @Component({
   selector: 'app-personnel-page',
@@ -65,9 +63,9 @@ import { InlineEditManager, EditColumn } from '../Soldier/InlineEditManager.clas
   styleUrls: ['./Personnel.page.scss', '../Soldier/Soldier.component.scss'],
 })
 export class PersonnelPage implements AfterViewInit {
-  soldierService = inject(SoldierService);
-  unitService = inject(UnitService);
-  dialog = inject(MatDialog);
+  private soldierService = inject(SoldierService);
+  private unitService = inject(UnitService);
+  private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
 
   items = this.soldierService.createItemsSignal();
@@ -81,7 +79,7 @@ export class PersonnelPage implements AfterViewInit {
     'stateValue',
     'unitShortName',
     'assignedUnitShortName',
-    'operationalUnitShortName',
+    'involvedUnitShortName',
     'arrivedAt',
     'departedAt',
     'comment',
@@ -92,8 +90,6 @@ export class PersonnelPage implements AfterViewInit {
   inlineEdit = new InlineEditManager((column: EditColumn, term: string) =>
     this.unitService.lookup(term, column === UnitTag.InvolvedId),
   );
-
-  displayLookupFn = (unit: LookupDto | null): string => (unit ? unit.value : '');
 
   // Методы для проверки статусов
   isSevereStatus = isSevereStatus;
@@ -217,7 +213,6 @@ export class PersonnelPage implements AfterViewInit {
             this.snackBar.open('Бійця успішно видалено', 'Закрити', { duration: 3000 });
           },
           error: (error) => {
-            console.error('Помилка видалення бійця:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
               'Помилка видалення бійця',
@@ -229,67 +224,41 @@ export class PersonnelPage implements AfterViewInit {
     });
   }
 
-  // === Inline edit helpers (single-mode per row) ===
-  isEditing(soldierId: string, column: EditColumn): boolean {
-    return this.inlineEdit.isMode(soldierId, column);
-  }
-
+  // === Inline edit helpers ===
   startEditing(soldier: SoldierDto, column: EditColumn) {
-    this.inlineEdit.clearOthers(soldier.id);
-    this.inlineEdit.ensure(soldier.id, column, this.getInitialValue(soldier, column));
+    this.inlineEdit.startEdit(
+      soldier.id,
+      column,
+      InlineEditManager.getInitialValue(soldier, column),
+    );
   }
 
-  cancelEditing(soldierId: string) {
-    this.inlineEdit.clear(soldierId);
-  }
-
-  getControl(soldier: SoldierDto, column: EditColumn): FormControl<string | LookupDto | null> {
-    return this.inlineEdit.ensure(soldier.id, column, this.getInitialValue(soldier, column)).control;
-  }
-
-  getOptions(soldierId: string): Observable<LookupDto[]> {
-    return this.inlineEdit.options(soldierId);
-  }
-
-  isLoading(soldierId: string): boolean {
-    return this.inlineEdit.loading(soldierId);
+  getControl(soldier: SoldierDto, column: EditColumn) {
+    return this.inlineEdit.getFormControl(
+      soldier.id,
+      column,
+      InlineEditManager.getInitialValue(soldier, column),
+    );
   }
 
   onSelect(soldier: SoldierDto, column: EditColumn, event: MatAutocompleteSelectedEvent) {
-    const selectedUnit: LookupDto | null = event.option.value;
-    let successMessage = '';
-    let operation: Observable<SoldierDto> | null = null;
-
-    switch (column) {
-      case UnitTag.UnitId:
-        if (!selectedUnit) {
-          return;
-        }
-        successMessage = 'Підрозділ оновлено';
-        operation = this.soldierService.move(soldier.id, selectedUnit.id);
-        break;
-      case UnitTag.AssignedId:
-        successMessage = 'Придання оновлено';
-        operation = this.soldierService.assignAssigned(soldier.id, selectedUnit?.id || null);
-        break;
-      case UnitTag.InvolvedId:
-        successMessage = 'Екіпаж/Група оновлено';
-        operation = this.soldierService.assignInvolved(soldier.id, selectedUnit?.id || null);
-        break;
-    }
-
-    if (!operation) {
+    const result = resolveUnitOperation(
+      this.soldierService,
+      soldier.id,
+      column,
+      event.option.value,
+    );
+    if (!result) {
       return;
     }
 
-    operation.subscribe({
+    result.operation.subscribe({
       next: (updated) => {
         this.applyRow(updated);
         this.inlineEdit.clear(soldier.id);
-        this.snackBar.open(successMessage, 'Закрити', { duration: 2000 });
+        this.snackBar.open(result.message, 'Закрити', { duration: 2000 });
       },
       error: (error) => {
-        console.error('Помилка оновлення підрозділу:', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
           'Помилка оновлення підрозділу',
@@ -303,19 +272,6 @@ export class PersonnelPage implements AfterViewInit {
     const next = this.items().map((s) => (s.id === updated.id ? updated : s));
     this.items.set(next);
     this.dataSource.data = next;
-  }
-
-  private getInitialValue(soldier: SoldierDto, column: EditColumn): string | null {
-    switch (column) {
-      case UnitTag.UnitId:
-        return soldier.unitShortName || '';
-      case UnitTag.AssignedId:
-        return soldier.assignedUnitShortName || '';
-      case UnitTag.InvolvedId:
-        return soldier.involvedUnitShortName || '';
-      default:
-        return '';
-    }
   }
 
   formatFIO(item: SoldierDto): string {

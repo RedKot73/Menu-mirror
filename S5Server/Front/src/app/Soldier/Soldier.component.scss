@@ -86,88 +86,88 @@
 // Стили для inline редактирования assignedUnit
 .assigned-unit-cell,
 .unit-cell,
-.operational-unit-cell {
-  padding: 4px 8px !important;
+.involved-unit-cell {
+    padding: 4px 8px !important;
 
-  .view-mode {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    min-height: 32px;
-
-    .unit-text {
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .edit-btn {
-      width: 28px;
-      height: 28px;
-      line-height: 28px;
-      opacity: 0;
-      transition: opacity 0.2s;
-
-      mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-        line-height: 18px;
-      }
-    }
-
-    &:hover .edit-btn {
-      opacity: 1;
-    }
-  }
-
-  .edit-mode {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-
-    .cancel-btn {
-      width: 28px;
-      height: 28px;
-      line-height: 28px;
-      flex-shrink: 0;
-
-      mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-        line-height: 18px;
-      }
-    }
-  }
-
-  .inline-field {
-    flex: 1;
-    margin: 0;
-    font-size: 14px;
-
-    ::ng-deep {
-      .mat-mdc-text-field-wrapper {
-        padding: 0;
-      }
-
-      .mat-mdc-form-field-flex {
-        padding: 4px 8px;
+    .view-mode {
+        display: flex;
+        align-items: center;
+        gap: 4px;
         min-height: 32px;
-      }
 
-      .mat-mdc-form-field-infix {
-        padding-top: 4px;
-        padding-bottom: 4px;
-        min-height: 24px;
-      }
+        .unit-text {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-      .mat-mdc-form-field-subscript-wrapper {
-        display: none;
-      }
+        .edit-btn {
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            opacity: 0;
+            transition: opacity 0.2s;
+
+            mat-icon {
+                font-size: 18px;
+                width: 18px;
+                height: 18px;
+                line-height: 18px;
+            }
+        }
+
+        &:hover .edit-btn {
+            opacity: 1;
+        }
     }
-  }
+
+    .edit-mode {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        .cancel-btn {
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            flex-shrink: 0;
+
+            mat-icon {
+                font-size: 18px;
+                width: 18px;
+                height: 18px;
+                line-height: 18px;
+            }
+        }
+    }
+
+    .inline-field {
+        flex: 1;
+        margin: 0;
+        font-size: 14px;
+
+        ::ng-deep {
+            .mat-mdc-text-field-wrapper {
+                padding: 0;
+            }
+
+            .mat-mdc-form-field-flex {
+                padding: 4px 8px;
+                min-height: 32px;
+            }
+
+            .mat-mdc-form-field-infix {
+                padding-top: 4px;
+                padding-bottom: 4px;
+                min-height: 24px;
+            }
+
+            .mat-mdc-form-field-subscript-wrapper {
+                display: none;
+            }
+        }
+    }
 }
 
 // Responsive table

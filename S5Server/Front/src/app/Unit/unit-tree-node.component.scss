@@ -15,6 +15,10 @@
     flex-shrink: 0;
 }
 
+.leaf-node {
+    opacity: 0.85;
+}
+
 .leaf-spacer {
     width: 48px; /* Ширина кнопки toggle + margin для листовых узлов */
     flex-shrink: 0;
@@ -54,9 +58,14 @@
     flex-wrap: wrap;
     font-size: 12px;
     color: #666;
+
+        .involved-icon {
+            color: #1976d2;
+            vertical-align: middle;
+        }
 }
 
-.force-type, .unit-type {
+.unit-type {
     background: #e3f2fd;
     color: #1976d2;
     padding: 2px 6px;

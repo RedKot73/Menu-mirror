@@ -38,8 +38,6 @@ namespace S5Server.Services
             UnitId = soldier.UnitId,
             ArrivedAt = soldier.ArrivedAt,
             DepartedAt = soldier.DepartedAt,
-            //AssignedUnitId = AssignedUnitId,
-            //OperationalUnitId = OperationalUnitId,
             RankId = soldier.RankId,
             PositionId = soldier.PositionId,
             StateId = ControllerFunctions.NullGuid,

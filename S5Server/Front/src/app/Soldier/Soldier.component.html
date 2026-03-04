@@ -99,12 +99,12 @@
           />
           <mat-autocomplete
             #unitAuto="matAutocomplete"
-            [displayWith]="displayLookupFn"
-            (optionSelected)="onSelect(soldier.id, UnitTag.UnitId, $event)"
+            [displayWith]="inlineEdit.displayLookupFn"
+            (optionSelected)="onSelect(soldier, UnitTag.UnitId, $event)"
           >
-            @if (isLoading(soldier.id)) {
+            @if (inlineEdit.loading(soldier.id)) {
             <mat-option disabled>Завантаження...</mat-option>
-            } @for (unit of getOptions(soldier.id) | async; track unit.id) {
+            } @for (unit of inlineEdit.options(soldier.id) | async; track unit.id) {
             <mat-option [value]="unit">{{ unit.value }}</mat-option>
             }
           </mat-autocomplete>
@@ -112,7 +112,7 @@
         <button
           mat-icon-button
           class="cancel-btn"
-          (click)="cancelEditing(soldier.id)"
+          (click)="inlineEdit.clear(soldier.id)"
           matTooltip="Відмінити"
         >
           <mat-icon>close</mat-icon>
@@ -154,13 +154,13 @@
           />
           <mat-autocomplete
             #assignedAuto="matAutocomplete"
-            [displayWith]="displayLookupFn"
-            (optionSelected)="onSelect(soldier.id, UnitTag.AssignedId, $event)"
+            [displayWith]="inlineEdit.displayLookupFn"
+            (optionSelected)="onSelect(soldier, UnitTag.AssignedId, $event)"
           >
             <mat-option [value]="null">Не приданий</mat-option>
-            @if (isLoading(soldier.id)) {
+            @if (inlineEdit.loading(soldier.id)) {
             <mat-option disabled>Завантаження...</mat-option>
-            } @for (unit of getOptions(soldier.id) | async; track unit.id) {
+            } @for (unit of inlineEdit.options(soldier.id) | async; track unit.id) {
             <mat-option [value]="unit">{{ unit.value }}</mat-option>
             }
           </mat-autocomplete>
@@ -168,7 +168,7 @@
         <button
           mat-icon-button
           class="cancel-btn"
-          (click)="cancelEditing(soldier.id)"
+          (click)="inlineEdit.clear(soldier.id)"
           matTooltip="Відмінити"
         >
           <mat-icon>close</mat-icon>
@@ -193,10 +193,10 @@
     </td>
   </ng-container>
 
-  <!-- Operational Unit Column -->
-  <ng-container matColumnDef="operationalUnitShortName">
+  <!-- Involved Unit Column -->
+  <ng-container matColumnDef="involvedUnitShortName">
     <th mat-header-cell *matHeaderCellDef mat-sort-header>Екіпаж/Група</th>
-    <td mat-cell *matCellDef="let soldier" class="operational-unit-cell">
+    <td mat-cell *matCellDef="let soldier" class="involved-unit-cell">
       @if (isEditing(soldier.id, UnitTag.InvolvedId)) {
       <!-- Режим редактирования -->
       <div class="edit-mode">
@@ -210,13 +210,13 @@
           />
           <mat-autocomplete
             #involvedAuto="matAutocomplete"
-            [displayWith]="displayLookupFn"
-            (optionSelected)="onSelect(soldier.id, UnitTag.InvolvedId, $event)"
+            [displayWith]="inlineEdit.displayLookupFn"
+            (optionSelected)="onSelect(soldier, UnitTag.InvolvedId, $event)"
           >
             <mat-option [value]="null">Не призначено</mat-option>
-            @if (isLoading(soldier.id)) {
+            @if (inlineEdit.loading(soldier.id)) {
             <mat-option disabled>Завантаження...</mat-option>
-            } @for (unit of getOptions(soldier.id) | async; track unit.id) {
+            } @for (unit of inlineEdit.options(soldier.id) | async; track unit.id) {
             <mat-option [value]="unit">{{ unit.value }}</mat-option>
             }
           </mat-autocomplete>
@@ -224,7 +224,7 @@
         <button
           mat-icon-button
           class="cancel-btn"
-          (click)="cancelEditing(soldier.id)"
+          (click)="inlineEdit.clear(soldier.id)"
           matTooltip="Відмінити"
         >
           <mat-icon>close</mat-icon>

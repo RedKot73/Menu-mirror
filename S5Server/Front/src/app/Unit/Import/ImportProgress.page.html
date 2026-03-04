@@ -136,32 +136,24 @@
             <ng-container matColumnDef="unitShortName">
               <th mat-header-cell *matHeaderCellDef mat-sort-header>Підрозділ</th>
               <td mat-cell *matCellDef="let item" class="unit-cell">
-                @if (isEditing(item.soldier.id, UnitTag.UnitId)) {
+                @if (inlineEdit.isMode(item.soldier.id, UnitTag.UnitId)) {
                 <div class="edit-mode">
                   <mat-form-field appearance="outline" class="inline-field">
                     <input
                       type="text"
                       matInput
-                      [formControl]="
-                        getControl(
-                          item.soldier.id,
-                          UnitTag.UnitId,
-                          getInitialValue(item.soldier, UnitTag.UnitId)
-                        )
-                      "
+                      [formControl]="getControl(item.soldier, UnitTag.UnitId)"
                       [matAutocomplete]="unitAuto"
                       placeholder="Основний підрозділ"
                     />
                     <mat-autocomplete
                       #unitAuto="matAutocomplete"
-                      [displayWith]="displayLookupFn"
-                      (optionSelected)="
-                        onSelect(item.soldier.id, UnitTag.UnitId, $event, item.soldier)
-                      "
+                      [displayWith]="inlineEdit.displayLookupFn"
+                      (optionSelected)="onSelect(item.soldier, UnitTag.UnitId, $event)"
                     >
-                      @if (isLoading(item.soldier.id)) {
+                      @if (inlineEdit.loading(item.soldier.id)) {
                       <mat-option disabled>Завантаження...</mat-option>
-                      } @for (unit of getOptions(item.soldier.id) | async; track unit.id) {
+                      } @for (unit of inlineEdit.options(item.soldier.id) | async; track unit.id) {
                       <mat-option [value]="unit">{{ unit.value }}</mat-option>
                       }
                     </mat-autocomplete>
@@ -169,7 +161,7 @@
                   <button
                     mat-icon-button
                     class="cancel-btn"
-                    (click)="cancelEditing(item.soldier.id)"
+                    (click)="inlineEdit.clear(item.soldier.id)"
                     matTooltip="Відмінити"
                   >
                     <mat-icon>close</mat-icon>
@@ -181,13 +173,7 @@
                   <button
                     mat-icon-button
                     class="edit-btn"
-                    (click)="
-                      startEditing(
-                        item.soldier.id,
-                        UnitTag.UnitId,
-                        getInitialValue(item.soldier, UnitTag.UnitId)
-                      )
-                    "
+                    (click)="startEditing(item.soldier, UnitTag.UnitId)"
                     matTooltip="Редагувати"
                   >
                     <mat-icon>edit</mat-icon>
@@ -200,33 +186,25 @@
             <ng-container matColumnDef="assignedUnitShortName">
               <th mat-header-cell *matHeaderCellDef mat-sort-header>Приданий до</th>
               <td mat-cell *matCellDef="let item" class="assigned-unit-cell">
-                @if (isEditing(item.soldier.id, UnitTag.AssignedId)) {
+                @if (inlineEdit.isMode(item.soldier.id, UnitTag.AssignedId)) {
                 <div class="edit-mode">
                   <mat-form-field appearance="outline" class="inline-field">
                     <input
                       type="text"
                       matInput
-                      [formControl]="
-                        getControl(
-                          item.soldier.id,
-                          UnitTag.AssignedId,
-                          getInitialValue(item.soldier, UnitTag.AssignedId)
-                        )
-                      "
+                      [formControl]="getControl(item.soldier, UnitTag.AssignedId)"
                       [matAutocomplete]="assignedAuto"
                       placeholder="Не приданий"
                     />
                     <mat-autocomplete
                       #assignedAuto="matAutocomplete"
-                      [displayWith]="displayLookupFn"
-                      (optionSelected)="
-                        onSelect(item.soldier.id, UnitTag.AssignedId, $event, item.soldier)
-                      "
+                      [displayWith]="inlineEdit.displayLookupFn"
+                      (optionSelected)="onSelect(item.soldier, UnitTag.AssignedId, $event)"
                     >
                       <mat-option [value]="null">Не приданий</mat-option>
-                      @if (isLoading(item.soldier.id)) {
+                      @if (inlineEdit.loading(item.soldier.id)) {
                       <mat-option disabled>Завантаження...</mat-option>
-                      } @for (unit of getOptions(item.soldier.id) | async; track unit.id) {
+                      } @for (unit of inlineEdit.options(item.soldier.id) | async; track unit.id) {
                       <mat-option [value]="unit">{{ unit.value }}</mat-option>
                       }
                     </mat-autocomplete>
@@ -234,7 +212,7 @@
                   <button
                     mat-icon-button
                     class="cancel-btn"
-                    (click)="cancelEditing(item.soldier.id)"
+                    (click)="inlineEdit.clear(item.soldier.id)"
                     matTooltip="Відмінити"
                   >
                     <mat-icon>close</mat-icon>
@@ -246,13 +224,7 @@
                   <button
                     mat-icon-button
                     class="edit-btn"
-                    (click)="
-                      startEditing(
-                        item.soldier.id,
-                        UnitTag.AssignedId,
-                        getInitialValue(item.soldier, UnitTag.AssignedId)
-                      )
-                    "
+                    (click)="startEditing(item.soldier, UnitTag.AssignedId)"
                     matTooltip="Редагувати"
                   >
                     <mat-icon>edit</mat-icon>
@@ -262,36 +234,28 @@
               </td>
             </ng-container>
 
-            <ng-container matColumnDef="operationalUnitShortName">
+            <ng-container matColumnDef="involvedUnitShortName">
               <th mat-header-cell *matHeaderCellDef mat-sort-header>Екіпаж/Група</th>
-              <td mat-cell *matCellDef="let item" class="operational-unit-cell">
-                @if (isEditing(item.soldier.id, UnitTag.InvolvedId)) {
+              <td mat-cell *matCellDef="let item" class="involved-unit-cell">
+                @if (inlineEdit.isMode(item.soldier.id, UnitTag.InvolvedId)) {
                 <div class="edit-mode">
                   <mat-form-field appearance="outline" class="inline-field">
                     <input
                       type="text"
                       matInput
-                      [formControl]="
-                        getControl(
-                          item.soldier.id,
-                          UnitTag.InvolvedId,
-                          getInitialValue(item.soldier, UnitTag.InvolvedId)
-                        )
-                      "
-                      [matAutocomplete]="operationalAuto"
+                      [formControl]="getControl(item.soldier, UnitTag.InvolvedId)"
+                      [matAutocomplete]="involvedAuto"
                       placeholder="Не призначено"
                     />
                     <mat-autocomplete
-                      #operationalAuto="matAutocomplete"
-                      [displayWith]="displayLookupFn"
-                      (optionSelected)="
-                        onSelect(item.soldier.id, UnitTag.InvolvedId, $event, item.soldier)
-                      "
+                      #involvedAuto="matAutocomplete"
+                      [displayWith]="inlineEdit.displayLookupFn"
+                      (optionSelected)="onSelect(item.soldier, UnitTag.InvolvedId, $event)"
                     >
                       <mat-option [value]="null">Не призначено</mat-option>
-                      @if (isLoading(item.soldier.id)) {
+                      @if (inlineEdit.loading(item.soldier.id)) {
                       <mat-option disabled>Завантаження...</mat-option>
-                      } @for (unit of getOptions(item.soldier.id) | async; track unit.id) {
+                      } @for (unit of inlineEdit.options(item.soldier.id) | async; track unit.id) {
                       <mat-option [value]="unit">{{ unit.value }}</mat-option>
                       }
                     </mat-autocomplete>
@@ -299,7 +263,7 @@
                   <button
                     mat-icon-button
                     class="cancel-btn"
-                    (click)="cancelEditing(item.soldier.id)"
+                    (click)="inlineEdit.clear(item.soldier.id)"
                     matTooltip="Відмінити"
                   >
                     <mat-icon>close</mat-icon>
@@ -307,17 +271,11 @@
                 </div>
                 } @else {
                 <div class="view-mode">
-                  <span class="unit-text">{{ item.soldier.operationalUnitShortName || '-' }}</span>
+                  <span class="unit-text">{{ item.soldier.involvedUnitShortName || '-' }}</span>
                   <button
                     mat-icon-button
                     class="edit-btn"
-                    (click)="
-                      startEditing(
-                        item.soldier.id,
-                        UnitTag.InvolvedId,
-                        getInitialValue(item.soldier, UnitTag.InvolvedId)
-                      )
-                    "
+                    (click)="startEditing(item.soldier, UnitTag.InvolvedId)"
                     matTooltip="Редагувати"
                   >
                     <mat-icon>edit</mat-icon>

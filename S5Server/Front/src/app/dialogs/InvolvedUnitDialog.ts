@@ -20,7 +20,7 @@ import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
 import { PPD_AREA_TYPE_GUID } from '../Unit/unit.constants';
 
 @Component({
-  selector: 'app-operational-unit-dialog',
+  selector: 'app-involved-unit-dialog',
   imports: [
     MatFormFieldModule,
     MatInputModule,
@@ -32,10 +32,10 @@ import { PPD_AREA_TYPE_GUID } from '../Unit/unit.constants';
     AsyncPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './OperationalUnitDialog.html',
-  styleUrl: './OperationalUnitDialog.scss',
+  templateUrl: './InvolvedUnitDialog.html',
+  styleUrl: './InvolvedUnitDialog.scss',
 })
-export class OperationalUnitDialogComponent implements OnInit {
+export class InvolvedUnitDialogComponent implements OnInit {
   private dictAreasService = inject(DictAreasService);
   private snackBar = inject(MatSnackBar);
 
@@ -47,7 +47,7 @@ export class OperationalUnitDialogComponent implements OnInit {
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: UnitDto,
-    private ref: MatDialogRef<OperationalUnitDialogComponent>,
+    private ref: MatDialogRef<InvolvedUnitDialogComponent>,
   ) {
     // Синхронізуємо name з shortName
     if (data.shortName) {

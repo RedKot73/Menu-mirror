@@ -92,7 +92,7 @@ export class UnitTableComponent implements AfterViewInit {
   constructor() {
     // Объединенный effect для фильтрации по типу и поиску
     effect(() => {
-      // Сначала фильтруем по типу (all/regular/operational)
+      // Сначала фильтруем по типу (all/regular/involved)
       const filteredUnits = this.applyFilter(this.units());
       this.dataSource.data = filteredUnits;
 
