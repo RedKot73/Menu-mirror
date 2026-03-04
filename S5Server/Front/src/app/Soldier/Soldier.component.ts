@@ -5,8 +5,7 @@ import {
   AfterViewInit,
   effect,
   input,
-  model,
-  output,
+  signal,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -67,23 +66,20 @@ export { UnitTag };
   styleUrl: './Soldier.component.scss',
 })
 export class SoldiersComponent implements AfterViewInit {
-  soldierService = inject(SoldierService);
-  unitService = inject(UnitService);
-  private snackBar = inject(MatSnackBar);
+  private soldierService = inject(SoldierService);
+  private unitService = inject(UnitService);
 
   // Делаем UnitTag доступным в шаблоне
   readonly UnitTag = UnitTag;
 
-  //Поточна вкладка підрозділу
-  //currentUnitTab = input<number>(UnitTag.UnitId);
-  // Input для ID подразделения (единый для всех вкладок)
+  private snackBar = inject(MatSnackBar);
+
+  // Input для ID подразделения
   unitId = input<string | null>(null);
   // Режим тільки для читання
   isReadOnly = input<boolean>(false);
-  // Дані для відображення (двостороння прив'язка)
-  items = model<SoldierDto[]>([]);
-  // Подія для запиту перезавантаження даних батьківським компонентом
-  reloadRequested = output<void>();
+  // Дані для відображення
+  items = signal<SoldierDto[]>([]);
 
   dataSource = new MatTableDataSource<SoldierDto>([]);
   displayedColumns: string[] = [];
@@ -103,7 +99,17 @@ export class SoldiersComponent implements AfterViewInit {
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor() {
-    // Обновляем displayedColumns на основе isReadOnly
+    // Завантажуємо дані при зміні підрозділу
+    effect(() => {
+      const id = this.unitId();
+      if (id) {
+        this.loadSoldiers(id);
+      } else {
+        this.items.set([]);
+      }
+    });
+
+    // Оновлюємо displayedColumns на основі isReadOnly
     effect(() => {
       const baseColumns = [
         'unitTag',
@@ -133,8 +139,23 @@ export class SoldiersComponent implements AfterViewInit {
   }
 
   reload() {
-    // Уведомляємо батьківський компонент про необхідність перезавантаження
-    this.reloadRequested.emit();
+    const id = this.unitId();
+    if (id) {
+      this.loadSoldiers(id);
+    }
+  }
+
+  private loadSoldiers(unitId: string) {
+    this.soldierService.getByUnit(unitId).subscribe({
+      next: (data) => this.items.set(data),
+      error: (error) => {
+        const errorMessage = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Помилка завантаження особового складу',
+        );
+        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      },
+    });
   }
 
   // CREATE
@@ -307,7 +328,7 @@ export class SoldiersComponent implements AfterViewInit {
     return this.inlineEdit.loading(soldierId);
   }
 
-  onSelect(soldier: SoldierDto, column: EditColumn, event: MatAutocompleteSelectedEvent) {
+  onSelect(soldierId: string, column: EditColumn, event: MatAutocompleteSelectedEvent) {
     const selectedUnit: LookupDto | null = event.option.value;
     let successMessage = '';
     let operation: Observable<SoldierDto> | null = null;
@@ -318,15 +339,15 @@ export class SoldiersComponent implements AfterViewInit {
           return;
         }
         successMessage = 'Підрозділ оновлено';
-        operation = this.soldierService.move(soldier.id, selectedUnit.id);
+        operation = this.soldierService.move(soldierId, selectedUnit.id);
         break;
       case UnitTag.AssignedId:
         successMessage = 'Придання оновлено';
-        operation = this.soldierService.assignAssigned(soldier.id, selectedUnit?.id || null);
+        operation = this.soldierService.assignAssigned(soldierId, selectedUnit?.id || null);
         break;
       case UnitTag.InvolvedId:
         successMessage = 'Екіпаж/Група оновлено';
-        operation = this.soldierService.assignInvolved(soldier.id, selectedUnit?.id || null);
+        operation = this.soldierService.assignInvolved(soldierId, selectedUnit?.id || null);
         break;
     }
 
@@ -337,7 +358,8 @@ export class SoldiersComponent implements AfterViewInit {
     operation.subscribe({
       next: (updated) => {
         this.updateRow(updated);
-        this.inlineEdit.clear(soldier.id);
+        this.inlineEdit.clear(soldierId);
+        this.reload();
         this.snackBar.open(successMessage, 'Закрити', { duration: 2000 });
       },
       error: (error) => {

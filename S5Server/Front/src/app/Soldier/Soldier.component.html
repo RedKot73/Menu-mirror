@@ -100,7 +100,7 @@
           <mat-autocomplete
             #unitAuto="matAutocomplete"
             [displayWith]="displayLookupFn"
-            (optionSelected)="onSelect(soldier, UnitTag.UnitId, $event)"
+            (optionSelected)="onSelect(soldier.id, UnitTag.UnitId, $event)"
           >
             @if (isLoading(soldier.id)) {
             <mat-option disabled>Завантаження...</mat-option>
@@ -155,7 +155,7 @@
           <mat-autocomplete
             #assignedAuto="matAutocomplete"
             [displayWith]="displayLookupFn"
-            (optionSelected)="onSelect(soldier, UnitTag.AssignedId, $event)"
+            (optionSelected)="onSelect(soldier.id, UnitTag.AssignedId, $event)"
           >
             <mat-option [value]="null">Не приданий</mat-option>
             @if (isLoading(soldier.id)) {
@@ -211,7 +211,7 @@
           <mat-autocomplete
             #involvedAuto="matAutocomplete"
             [displayWith]="displayLookupFn"
-            (optionSelected)="onSelect(soldier, UnitTag.InvolvedId, $event)"
+            (optionSelected)="onSelect(soldier.id, UnitTag.InvolvedId, $event)"
           >
             <mat-option [value]="null">Не призначено</mat-option>
             @if (isLoading(soldier.id)) {
