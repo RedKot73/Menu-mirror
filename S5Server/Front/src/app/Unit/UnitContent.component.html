@@ -82,48 +82,11 @@
           <div class="section-content">
             <app-page-soldiers
               [(items)]="soldiers"
-              [currentUnitTab]="unitTag.UnitId"
               (reloadRequested)="reloadSoldiers()"
             ></app-page-soldiers>
           </div>
         </mat-expansion-panel>
       }
-
-      <!-- Придані військовослужбовці -->
-      <mat-expansion-panel class="unit-section-panel">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            <mat-icon color="accent">assignment_ind</mat-icon>
-            Придані військовослужбовці
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-
-        <div class="section-content">
-          <app-page-soldiers
-            [(items)]="assignedSoldiers"
-            [currentUnitTab]="unitTag.AssignedId"
-            (reloadRequested)="reloadAssignedSoldiers()"
-          ></app-page-soldiers>
-        </div>
-      </mat-expansion-panel>
-
-      <!-- Оперативні військовослужбовці -->
-      <mat-expansion-panel class="unit-section-panel">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            <mat-icon color="accent">groups</mat-icon>
-            Задіяні військовослужбовці
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-
-        <div class="section-content">
-          <app-page-soldiers
-            [(items)]="involvedSoldiers"
-            [currentUnitTab]="unitTag.InvolvedId"
-            (reloadRequested)="reloadInvolvedSoldiers()"
-          ></app-page-soldiers>
-        </div>
-      </mat-expansion-panel>
 
       <!-- Дополнительные секции с expansion panels -->
       <mat-expansion-panel class="unit-section-panel">

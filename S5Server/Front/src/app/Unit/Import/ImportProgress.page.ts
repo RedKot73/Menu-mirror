@@ -31,7 +31,7 @@ import {
 import { SoldierService, SoldierDto } from '../../Soldier/services/soldier.service';
 import { UnitService } from '../services/unit.service';
 import { LookupDto } from '../../shared/models/lookup.models';
-import { InlineEditManager, EditMode } from '../../Soldier/InlineEditManager.class';
+import { InlineEditManager, EditColumn } from '../../Soldier/InlineEditManager.class';
 import { UnitTag } from '../../Soldier/Soldier.constant';
 
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
@@ -96,8 +96,8 @@ export class ImportProgressPage implements OnInit, OnDestroy {
 
   readonly UnitTag = UnitTag;
 
-  inlineEdit = new InlineEditManager((mode: EditMode, term: string) =>
-    this.unitService.lookup(term, 20)
+  inlineEdit = new InlineEditManager((column: EditColumn, term: string) =>
+    this.unitService.lookup(term, column === UnitTag.InvolvedId),
   );
 
   displayLookupFn = (unit: LookupDto | null): string => (unit ? unit.value : '');
@@ -191,7 +191,7 @@ export class ImportProgressPage implements OnInit, OnDestroy {
               finalize(() => {
                 // Завжди скидаємо флаг, незалежно від результату
                 this.isLoadingUnits = false;
-              })
+              }),
             )
             .subscribe({
               next: (units: string[]) => {
@@ -273,7 +273,7 @@ export class ImportProgressPage implements OnInit, OnDestroy {
           this.snackBar.open(
             `Помилка імпорту: ${response.error || 'Невідома помилка'}`,
             'Закрити',
-            { duration: 7000 }
+            { duration: 7000 },
           );
           this.hasFailed.set(true);
         }
@@ -284,12 +284,12 @@ export class ImportProgressPage implements OnInit, OnDestroy {
           this.snackBar.open(
             'Імпорт вже виконується. Зачекайте завершення поточної операції.',
             'Закрити',
-            { duration: 5000 }
+            { duration: 5000 },
           );
         } else {
           const errorMessage = S5App_ErrorHandler.handleHttpError(
             error,
-            'Помилка імпорту особового складу'
+            'Помилка імпорту особового складу',
           );
           this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
         }
@@ -306,21 +306,21 @@ export class ImportProgressPage implements OnInit, OnDestroy {
   }
 
   // === Inline edit helpers (одна колонка / рядок за раз) ===
-  isEditing(soldierId: string, mode: EditMode): boolean {
-    return this.inlineEdit.isMode(soldierId, mode);
+  isEditing(soldierId: string, column: EditColumn): boolean {
+    return this.inlineEdit.isMode(soldierId, column);
   }
 
-  startEditing(soldierId: string, mode: EditMode, initialValue: string | null) {
+  startEditing(soldierId: string, column: EditColumn, initialValue: string | null) {
     this.inlineEdit.clearOthers(soldierId);
-    this.inlineEdit.ensure(soldierId, mode, initialValue);
+    this.inlineEdit.ensure(soldierId, column, initialValue);
   }
 
   cancelEditing(soldierId: string) {
     this.inlineEdit.clear(soldierId);
   }
 
-  getControl(soldierId: string, mode: EditMode, initialValue: string | null): FormControl {
-    return this.inlineEdit.ensure(soldierId, mode, initialValue).control;
+  getControl(soldierId: string, column: EditColumn, initialValue: string | null): FormControl {
+    return this.inlineEdit.ensure(soldierId, column, initialValue).control;
   }
 
   getOptions(soldierId: string): Observable<LookupDto[]> {
@@ -333,15 +333,15 @@ export class ImportProgressPage implements OnInit, OnDestroy {
 
   onSelect(
     soldierId: string,
-    mode: EditMode,
+    column: EditColumn,
     event: MatAutocompleteSelectedEvent,
-    soldier: { id: string }
+    soldier: { id: string },
   ) {
     const selectedUnit: LookupDto | null = event.option.value;
     let successMessage = '';
     let operation: Observable<SoldierDto> | null = null;
 
-    switch (mode) {
+    switch (column) {
       case UnitTag.UnitId:
         if (!selectedUnit) {
           return;
@@ -373,7 +373,7 @@ export class ImportProgressPage implements OnInit, OnDestroy {
         console.error('Помилка оновлення підрозділу:', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
-          'Помилка оновлення підрозділу'
+          'Помилка оновлення підрозділу',
         );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
@@ -386,9 +386,9 @@ export class ImportProgressPage implements OnInit, OnDestroy {
       assignedUnitShortName?: string;
       involvedUnitShortName?: string;
     },
-    mode: EditMode
+    column: EditColumn,
   ): string {
-    switch (mode) {
+    switch (column) {
       case UnitTag.UnitId:
         return soldier.unitShortName || '';
       case UnitTag.AssignedId:
@@ -404,7 +404,7 @@ export class ImportProgressPage implements OnInit, OnDestroy {
     const next = this.completedSheets().map((unit) => ({
       ...unit,
       importedSoldiers: unit.importedSoldiers.map((entry) =>
-        entry.soldier.id === updated.id ? { ...entry, soldier: updated } : entry
+        entry.soldier.id === updated.id ? { ...entry, soldier: updated } : entry,
       ),
     }));
 

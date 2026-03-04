@@ -31,16 +31,13 @@ import { LookupDto } from '../shared/models/lookup.models';
 import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import {
-  isCriticalStatus,
   isSevereStatus,
   isProblematicStatus,
   isRecoveryStatus,
   UnitTag,
 } from '../Soldier/Soldier.constant';
 import { SoldierUtils } from '../Soldier/soldier.utils';
-import { InlineEditManager, EditMode } from '../Soldier/InlineEditManager.class';
-
-export type Soldier = SoldierDto;
+import { InlineEditManager, EditColumn } from '../Soldier/InlineEditManager.class';
 
 @Component({
   selector: 'app-personnel-page',
@@ -74,7 +71,7 @@ export class PersonnelPage implements AfterViewInit {
   private snackBar = inject(MatSnackBar);
 
   items = this.soldierService.createItemsSignal();
-  dataSource = new MatTableDataSource<Soldier>([]);
+  dataSource = new MatTableDataSource<SoldierDto>([]);
   displayedColumns = [
     'menu',
     'fio',
@@ -92,14 +89,13 @@ export class PersonnelPage implements AfterViewInit {
 
   readonly UnitTag = UnitTag;
 
-  inlineEdit = new InlineEditManager((mode: EditMode, term: string) =>
-    this.unitService.lookup(term, 20),
+  inlineEdit = new InlineEditManager((column: EditColumn, term: string) =>
+    this.unitService.lookup(term, column === UnitTag.InvolvedId),
   );
 
   displayLookupFn = (unit: LookupDto | null): string => (unit ? unit.value : '');
 
   // Методы для проверки статусов
-  isCriticalStatus = isCriticalStatus;
   isSevereStatus = isSevereStatus;
   isProblematicStatus = isProblematicStatus;
   isRecoveryStatus = isRecoveryStatus;
@@ -155,7 +151,7 @@ export class PersonnelPage implements AfterViewInit {
   }
 
   // UPDATE
-  edit(soldier: Soldier) {
+  edit(soldier: SoldierDto) {
     const dialogRef = this.dialog.open(SoldierDialogComponent, {
       width: '600px',
       data: {
@@ -198,7 +194,7 @@ export class PersonnelPage implements AfterViewInit {
   }
 
   // DELETE
-  delete(soldier: Soldier) {
+  delete(soldier: SoldierDto) {
     const ref = this.dialog.open(ConfirmDialogComponent, {
       width: '360px',
       maxWidth: '95vw',
@@ -234,21 +230,21 @@ export class PersonnelPage implements AfterViewInit {
   }
 
   // === Inline edit helpers (single-mode per row) ===
-  isEditing(soldierId: string, mode: EditMode): boolean {
-    return this.inlineEdit.isMode(soldierId, mode);
+  isEditing(soldierId: string, column: EditColumn): boolean {
+    return this.inlineEdit.isMode(soldierId, column);
   }
 
-  startEditing(soldier: Soldier, mode: EditMode) {
+  startEditing(soldier: SoldierDto, column: EditColumn) {
     this.inlineEdit.clearOthers(soldier.id);
-    this.inlineEdit.ensure(soldier.id, mode, this.getInitialValue(soldier, mode));
+    this.inlineEdit.ensure(soldier.id, column, this.getInitialValue(soldier, column));
   }
 
-  cancelEditing(soldier: Soldier) {
-    this.inlineEdit.clear(soldier.id);
+  cancelEditing(soldierId: string) {
+    this.inlineEdit.clear(soldierId);
   }
 
-  getControl(soldier: Soldier, mode: EditMode): FormControl<string | LookupDto | null> {
-    return this.inlineEdit.ensure(soldier.id, mode, this.getInitialValue(soldier, mode)).control;
+  getControl(soldier: SoldierDto, column: EditColumn): FormControl<string | LookupDto | null> {
+    return this.inlineEdit.ensure(soldier.id, column, this.getInitialValue(soldier, column)).control;
   }
 
   getOptions(soldierId: string): Observable<LookupDto[]> {
@@ -259,12 +255,12 @@ export class PersonnelPage implements AfterViewInit {
     return this.inlineEdit.loading(soldierId);
   }
 
-  onSelect(soldier: Soldier, mode: EditMode, event: MatAutocompleteSelectedEvent) {
+  onSelect(soldier: SoldierDto, column: EditColumn, event: MatAutocompleteSelectedEvent) {
     const selectedUnit: LookupDto | null = event.option.value;
     let successMessage = '';
     let operation: Observable<SoldierDto> | null = null;
 
-    switch (mode) {
+    switch (column) {
       case UnitTag.UnitId:
         if (!selectedUnit) {
           return;
@@ -309,8 +305,8 @@ export class PersonnelPage implements AfterViewInit {
     this.dataSource.data = next;
   }
 
-  private getInitialValue(soldier: Soldier, mode: EditMode): string | null {
-    switch (mode) {
+  private getInitialValue(soldier: SoldierDto, column: EditColumn): string | null {
+    switch (column) {
       case UnitTag.UnitId:
         return soldier.unitShortName || '';
       case UnitTag.AssignedId:

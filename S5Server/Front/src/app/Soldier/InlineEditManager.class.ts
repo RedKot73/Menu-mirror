@@ -1,17 +1,21 @@
 import { FormControl } from '@angular/forms';
 import { Observable, of } from 'rxjs';
-import { debounceTime, switchMap, startWith, finalize } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, startWith, finalize } from 'rxjs/operators';
 import { LookupDto } from '../shared/models/lookup.models';
 import { UnitTag } from './Soldier.constant';
 
 /**
- * Режими редагування для інлайн-редагування.
+ * Можливі колонки для інлайн-редагування.
  */
-export type EditMode = typeof UnitTag.UnitId | typeof UnitTag.AssignedId | typeof UnitTag.InvolvedId;
+export type EditColumn =
+  | typeof UnitTag.UnitId
+  | typeof UnitTag.AssignedId
+  | typeof UnitTag.InvolvedId;
 
 export interface RowEditState {
-  mode: EditMode;
+  column: EditColumn;
   control: FormControl<string | LookupDto | null>;
+  /** Поточні опції для автозаповнення */
   options$: Observable<LookupDto[]>;
   loading: boolean;
 }
@@ -21,24 +25,28 @@ export interface RowEditState {
  */
 export class InlineEditManager {
   constructor(
-    private lookupFn: (mode: EditMode, term: string, soldierId: string) => Observable<LookupDto[]>
+    private lookupFn: (
+      column: EditColumn,
+      term: string,
+      soldierId: string,
+    ) => Observable<LookupDto[]>,
   ) {}
 
   /** Стан інлайн-редагування для кожного рядка, ключ - soldierId */
   private state = new Map<string, RowEditState>();
 
-  /** */
-  ensure(soldierId: string, mode: EditMode, initialValue: string | null): RowEditState {
+  /** Забезпечує стан інлайн-редагування для заданого солдата та колонки */
+  ensure(soldierId: string, column: EditColumn, initialValue: string | null): RowEditState {
     const existing = this.state.get(soldierId);
-    if (existing && existing.mode === mode) {
+    if (existing && existing.column === column) {
       return existing;
     }
 
-    return this.start(soldierId, mode, initialValue);
+    return this.start(soldierId, column, initialValue);
   }
 
-  isMode(soldierId: string, mode: EditMode): boolean {
-    return this.state.get(soldierId)?.mode === mode;
+  isMode(soldierId: string, column: EditColumn): boolean {
+    return this.state.get(soldierId)?.column === column;
   }
 
   options(soldierId: string): Observable<LookupDto[]> {
@@ -53,6 +61,7 @@ export class InlineEditManager {
     this.state.delete(soldierId);
   }
 
+  /** Очищує стан інлайн-редагування для всіх солдатів, крім вказаного */
   clearOthers(exceptSoldierId: string) {
     for (const key of Array.from(this.state.keys())) {
       if (key !== exceptSoldierId) {
@@ -68,12 +77,13 @@ export class InlineEditManager {
     }
   }
 
-  private start(soldierId: string, mode: EditMode, initialValue: string | null): RowEditState {
+  private start(soldierId: string, column: EditColumn, initialValue: string | null): RowEditState {
     const control = new FormControl<string | LookupDto | null>(initialValue ?? '');
 
     const options$ = control.valueChanges.pipe(
       startWith(initialValue ?? ''),
       debounceTime(300),
+      distinctUntilChanged(),
       switchMap((value: string | LookupDto | null) => {
         const term = this.extractTerm(value);
 
@@ -83,13 +93,13 @@ export class InlineEditManager {
         }
 
         this.setLoading(soldierId, true);
-        return this.lookupFn(mode, term, soldierId).pipe(
-          finalize(() => this.setLoading(soldierId, false))
+        return this.lookupFn(column, term, soldierId).pipe(
+          finalize(() => this.setLoading(soldierId, false)),
         );
-      })
+      }),
     );
 
-    const nextState: RowEditState = { mode, control, options$, loading: false };
+    const nextState: RowEditState = { column: column, control, options$, loading: false };
     this.state.set(soldierId, nextState);
     return nextState;
   }

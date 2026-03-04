@@ -114,7 +114,7 @@ export class UnitDialogComponent implements OnInit {
         if (searchTerm && searchTerm.length >= 2) {
           this.isLoadingParents = true;
           return this.unitService
-            .lookup(searchTerm, 10)
+            .lookup(searchTerm, false)
             .pipe(finalize(() => (this.isLoadingParents = false)));
         }
         return of([]);
@@ -136,7 +136,7 @@ export class UnitDialogComponent implements OnInit {
         if (searchTerm && searchTerm.length >= 2) {
           this.isLoadingAssigned = true;
           return this.unitService
-            .lookup(searchTerm, 10)
+            .lookup(searchTerm, false)
             .pipe(finalize(() => (this.isLoadingAssigned = false)));
         }
         return of([]);

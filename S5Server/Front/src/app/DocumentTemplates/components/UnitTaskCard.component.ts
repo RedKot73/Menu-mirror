@@ -50,7 +50,6 @@ import {
   SoldierCountDto,
 } from '../../DocumentDataSet/services/soldierTask.service';
 import {
-  isCriticalStatus,
   isSevereStatus,
   isProblematicStatus,
   isRecoveryStatus,
@@ -142,7 +141,6 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild(MatSort) sort!: MatSort;
 
   // Методи для перевірки статусів
-  isCriticalStatus = isCriticalStatus;
   isSevereStatus = isSevereStatus;
   isProblematicStatus = isProblematicStatus;
   isRecoveryStatus = isRecoveryStatus;

@@ -24,7 +24,9 @@ export class SoldierUtils {
     const mInitial = this.getFirstLetter(midleName);
     const lInitial = this.getFirstLetter(lastName);
 
-    return `${firstName} ${mInitial}.${lInitial}.`;
+    // Збираємо ініціали, пропускаючи відсутні
+    const initials = [mInitial, lInitial].filter(Boolean).join('.');
+    return initials ? `${firstName} ${initials}.` : firstName;
   }
 
   /**

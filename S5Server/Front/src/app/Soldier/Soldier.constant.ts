@@ -8,30 +8,20 @@ export const SoldierStatusIds = {
 } as const;
 
 export const UnitTag = {
-  /** Смотрим на вкладку Штатний ОС */
+  /** Колонка Штатний ОС */
   UnitId: 1,
-  /** Смотрим на вкладку Приданий ОС */
+  /** Колонка Приданий ОС */
   AssignedId: 2,
-  /** Смотрим на вкладку Оперативний ОС */
+  /** Колонка Оперативний ОС */
   InvolvedId: 4,
-  /** Смотрим на вкладку Все ОС
-   * UnitTag.UnitId | UnitTag.AssignedId | UnitTag.InvolvedId
-   */
-  AllId: 7,
 } as const;
-
-/**
- * Перевіряє чи статус є критичним (загиблий)
- */
-export function isCriticalStatus(stateId: string): boolean {
-  return stateId === SoldierStatusIds.KILLED || stateId === SoldierStatusIds.WOUNDED;
-}
 
 /**
  * Перевіряє чи статус є тяжким (поранений, в полоні тощо)
  */
 export function isSevereStatus(stateId: string): boolean {
   return (
+    stateId === SoldierStatusIds.KILLED ||
     stateId === SoldierStatusIds.WOUNDED ||
     stateId === SoldierStatusIds.MISSING ||
     stateId === SoldierStatusIds.CAPTURED

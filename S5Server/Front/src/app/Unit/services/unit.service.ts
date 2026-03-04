@@ -1,7 +1,8 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import { Observable, of, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+
 import { LookupDto } from '../../shared/models/lookup.models';
 import { SoldierDto } from '../../Soldier/services/soldier.service';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
@@ -78,30 +79,31 @@ export interface UnitDataSetDto {
   involvedSoldiers: SoldierDto[];
 }
 
-export type HttpGetParams = Record<string, string | number | boolean>;
-
 @Injectable({
   providedIn: 'root',
 })
 export class UnitService {
-  readonly api = '/api/Unit';
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = '/api/Unit';
 
   createItemsSignal() {
     return signal<UnitDto[]>([]);
   }
 
-  // CRUD операции
+  /**
+   * Отримати всі підрозділи (з фільтрацією)
+   * GET /api/Unit?search={search}&parentId={parentId}
+   */
   getAll(search?: string, parentId?: string): Observable<UnitDto[]> {
-    const params: HttpGetParams = {};
+    let params = new HttpParams();
     if (search) {
-      params['search'] = search;
+      params = params.set('search', search);
     }
     if (parentId) {
-      params['parentId'] = parentId;
+      params = params.set('parentId', parentId);
     }
 
-    return this.http.get<UnitDto[]>(this.api, { params }).pipe(
+    return this.http.get<UnitDto[]>(this.baseUrl, { params }).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося отримати підрозділи');
         return throwError(() => new Error(message));
@@ -109,17 +111,20 @@ export class UnitService {
     );
   }
 
-  // Специальный метод для дерева с ленивой загрузкой
+  /**
+   * Отримати елементи дерева з ленівим завантаженням
+   * GET /api/Unit?search={search}&parentId={parentId}
+   */
   getTreeItems(search?: string, parentId?: string): Observable<UnitTreeItemDto[]> {
-    const params: HttpGetParams = {};
+    let params = new HttpParams();
     if (search) {
-      params['search'] = search;
+      params = params.set('search', search);
     }
     if (parentId !== undefined) {
-      params['parentId'] = parentId;
+      params = params.set('parentId', parentId);
     }
 
-    return this.http.get<UnitTreeItemDto[]>(this.api, { params }).pipe(
+    return this.http.get<UnitTreeItemDto[]>(this.baseUrl, { params }).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
@@ -130,8 +135,12 @@ export class UnitService {
     );
   }
 
+  /**
+   * Отримати підрозділ за ID
+   * GET /api/Unit/{id}
+   */
   getById(id: string): Observable<UnitDto> {
-    return this.http.get<UnitDto>(`${this.api}/${id}`).pipe(
+    return this.http.get<UnitDto>(`${this.baseUrl}/${id}`).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося отримати підрозділ');
         return throwError(() => new Error(message));
@@ -139,8 +148,12 @@ export class UnitService {
     );
   }
 
+  /**
+   * Створити підрозділ
+   * POST /api/Unit
+   */
   create(item: UnitCreateDto): Observable<UnitDto> {
-    return this.http.post<UnitDto>(this.api, item).pipe(
+    return this.http.post<UnitDto>(this.baseUrl, item).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося створити підрозділ');
         return throwError(() => new Error(message));
@@ -148,8 +161,12 @@ export class UnitService {
     );
   }
 
+  /**
+   * Оновити підрозділ
+   * PUT /api/Unit/{id}
+   */
   update(id: string, item: UnitDto): Observable<void> {
-    return this.http.put<void>(`${this.api}/${id}`, item).pipe(
+    return this.http.put<void>(`${this.baseUrl}/${id}`, item).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося оновити підрозділ');
         return throwError(() => new Error(message));
@@ -157,8 +174,12 @@ export class UnitService {
     );
   }
 
+  /**
+   * Видалити підрозділ
+   * DELETE /api/Unit/{id}
+   */
   delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.api}/${id}`).pipe(
+    return this.http.delete<void>(`${this.baseUrl}/${id}`).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося видалити підрозділ');
         return throwError(() => new Error(message));
@@ -166,9 +187,12 @@ export class UnitService {
     );
   }
 
-  // Методы для работы с иерархией
+  /**
+   * Перевірити наявність дочірніх підрозділів
+   * GET /api/Unit/{id}/has-children
+   */
   hasChildren(id: string): Observable<boolean> {
-    return this.http.get<boolean>(`${this.api}/${id}/has-children`).pipe(
+    return this.http.get<boolean>(`${this.baseUrl}/${id}/has-children`).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
@@ -179,8 +203,12 @@ export class UnitService {
     );
   }
 
+  /**
+   * Отримати дочірні підрозділи
+   * GET /api/Unit/{id}/children
+   */
   getChildren(id: string): Observable<UnitDto[]> {
-    return this.http.get<UnitDto[]>(`${this.api}/${id}/children`).pipe(
+    return this.http.get<UnitDto[]>(`${this.baseUrl}/${id}/children`).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
@@ -191,8 +219,12 @@ export class UnitService {
     );
   }
 
+  /**
+   * Перевірити наявність приданих підрозділів
+   * GET /api/Unit/{id}/has-assigned
+   */
   hasAssignedUnits(id: string): Observable<boolean> {
-    return this.http.get<boolean>(`${this.api}/${id}/has-assigned`).pipe(
+    return this.http.get<boolean>(`${this.baseUrl}/${id}/has-assigned`).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
@@ -203,8 +235,12 @@ export class UnitService {
     );
   }
 
+  /**
+   * Отримати придані підрозділи
+   * GET /api/Unit/{id}/assigned
+   */
   getAssignedUnits(id: string): Observable<UnitDto[]> {
-    return this.http.get<UnitDto[]>(`${this.api}/${id}/assigned`).pipe(
+    return this.http.get<UnitDto[]>(`${this.baseUrl}/${id}/assigned`).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
@@ -215,21 +251,30 @@ export class UnitService {
     );
   }
 
-  // Методы для управления дочерними подразделениями
+  /**
+   * Додати існуючий дочірній підрозділ
+   * POST /api/Unit/{parentId}/add-exists-child/{childId}
+   */
   addExistingChild(parentId: string, childId: string): Observable<void> {
-    return this.http.post<void>(`${this.api}/${parentId}/add-exists-child/${childId}`, {}).pipe(
-      catchError((error: HttpErrorResponse) => {
-        const message = S5App_ErrorHandler.handleHttpError(
-          error,
-          'Не вдалося додати дочірній підрозділ',
-        );
-        return throwError(() => new Error(message));
-      }),
-    );
+    return this.http
+      .post<void>(`${this.baseUrl}/${parentId}/add-exists-child/${childId}`, {})
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          const message = S5App_ErrorHandler.handleHttpError(
+            error,
+            'Не вдалося додати дочірній підрозділ',
+          );
+          return throwError(() => new Error(message));
+        }),
+      );
   }
 
+  /**
+   * Прибрати дочірній підрозділ
+   * POST /api/Unit/{parentId}/remove-child/{childId}
+   */
   removeChild(parentId: string, childId: string): Observable<void> {
-    return this.http.post<void>(`${this.api}/${parentId}/remove-child/${childId}`, {}).pipe(
+    return this.http.post<void>(`${this.baseUrl}/${parentId}/remove-child/${childId}`, {}).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
@@ -240,9 +285,12 @@ export class UnitService {
     );
   }
 
-  // Методы для управления приданными подразделениями
+  /**
+   * Додати приданий підрозділ
+   * POST /api/Unit/{unitId}/add-assigned/{assignedId}
+   */
   addAssignedUnit(unitId: string, assignedId: string): Observable<void> {
-    return this.http.post<void>(`${this.api}/${unitId}/add-assigned/${assignedId}`, {}).pipe(
+    return this.http.post<void>(`${this.baseUrl}/${unitId}/add-assigned/${assignedId}`, {}).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
@@ -253,8 +301,12 @@ export class UnitService {
     );
   }
 
+  /**
+   * Прибрати приданий підрозділ
+   * POST /api/Unit/{unitId}/remove-assigned/{assignedId}
+   */
   removeAssignedUnit(unitId: string, assignedId: string): Observable<void> {
-    return this.http.post<void>(`${this.api}/${unitId}/remove-assigned/${assignedId}`, {}).pipe(
+    return this.http.post<void>(`${this.baseUrl}/${unitId}/remove-assigned/${assignedId}`, {}).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
@@ -265,35 +317,53 @@ export class UnitService {
     );
   }
 
-  //Работают по разному, не путать
-  // GET /api/.../lookup - Получить список для автозаполнения
-  // GET /api/.../sel_list - Получить список для селекта
-  lookup(term: string, limit: number = 10): Observable<LookupDto[]> {
-    const params = { term, limit: limit.toString() };
-    return this.http.get<LookupDto[]>(`${this.api}/lookup`, { params }).pipe(
+  /**
+   * Lookup для автокомпліту
+   * GET /api/Unit/lookup?term={term}&isInvolved={isInvolved}
+   */
+  lookup(term: string, isInvolved?: boolean): Observable<LookupDto[]> {
+    if (!term?.trim()) { return of([]); }
+
+    let params = new HttpParams();
+    params = params.set('term', term);
+    if (isInvolved !== undefined) {
+      params = params.set('isInvolved', isInvolved.toString());
+    }
+
+    return this.http.get<LookupDto[]>(`${this.baseUrl}/lookup`, { params }).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося завантажити список');
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося виконати пошук підрозділів',
+        );
         return throwError(() => new Error(message));
       }),
     );
   }
 
-  //Работают по разному, не путать
-  // GET /api/.../lookup - Получить список для автозаполнения
-  // GET /api/.../sel_list - Получить список для селекта
+  /**
+   * Отримати перелік для селекту
+   * GET /api/Unit/sel_list
+   */
   getSelectList(): Observable<LookupDto[]> {
-    return this.http.get<LookupDto[]>(`${this.api}/sel_list`).pipe(
+    return this.http.get<LookupDto[]>(`${this.baseUrl}/sel_list`).pipe(
       catchError((error: HttpErrorResponse) => {
-        const message = S5App_ErrorHandler.handleHttpError(error, 'Не вдалося завантажити список');
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося завантажити список підрозділів',
+        );
         return throwError(() => new Error(message));
       }),
     );
   }
 
+  /**
+   * Змінити порядок підрозділу (вгору/вниз)
+   * POST /api/Unit/{id}/moveUpDown/{toUp}
+   */
   moveUpDown(id: string, moveUp: boolean): Observable<void> {
-    // POST /api/Unit/{unitId}/moveUpDown/{toUp}
     return this.http
-      .post<void>(`${this.api}/${id}/moveUpDown/${moveUp ? 'true' : 'false'}`, {})
+      .post<void>(`${this.baseUrl}/${id}/moveUpDown/${moveUp ? 'true' : 'false'}`, {})
       .pipe(
         catchError((error: HttpErrorResponse) => {
           const message = S5App_ErrorHandler.handleHttpError(

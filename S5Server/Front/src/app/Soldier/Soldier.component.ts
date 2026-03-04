@@ -15,8 +15,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatOptionModule } from '@angular/material/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
@@ -33,7 +31,7 @@ import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
 import { UnitService } from '../Unit/services/unit.service';
 import { LookupDto } from '../shared/models/lookup.models';
 import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
-import { InlineEditManager, EditMode } from './InlineEditManager.class';
+import { InlineEditManager, EditColumn } from './InlineEditManager.class';
 import {
   SoldierDialogComponent,
   SoldierDialogData,
@@ -41,18 +39,10 @@ import {
 } from '../dialogs/SoldierDialog.component';
 import { SoldierService, SoldierDto } from './services/soldier.service';
 import { SoldierUtils } from '../Soldier/soldier.utils';
-import {
-  isCriticalStatus,
-  isSevereStatus,
-  isProblematicStatus,
-  isRecoveryStatus,
-  UnitTag,
-} from './Soldier.constant';
+import { isSevereStatus, isProblematicStatus, isRecoveryStatus, UnitTag } from './Soldier.constant';
 
 // Re-export для использования в других компонентах
 export { UnitTag };
-
-export type Soldier = SoldierDto;
 
 @Component({
   selector: 'app-page-soldiers',
@@ -63,8 +53,6 @@ export type Soldier = SoldierDto;
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
-    MatOptionModule,
     MatTooltipModule,
     MatMenuModule,
     MatDividerModule,
@@ -87,7 +75,7 @@ export class SoldiersComponent implements AfterViewInit {
   readonly UnitTag = UnitTag;
 
   //Поточна вкладка підрозділу
-  currentUnitTab = input<number>(UnitTag.UnitId);
+  //currentUnitTab = input<number>(UnitTag.UnitId);
   // Input для ID подразделения (единый для всех вкладок)
   unitId = input<string | null>(null);
   // Режим тільки для читання
@@ -97,22 +85,17 @@ export class SoldiersComponent implements AfterViewInit {
   // Подія для запиту перезавантаження даних батьківським компонентом
   reloadRequested = output<void>();
 
-  dataSource = new MatTableDataSource<Soldier>([]);
+  dataSource = new MatTableDataSource<SoldierDto>([]);
   displayedColumns: string[] = [];
   dialog = inject(MatDialog);
 
-  inlineEdit = new InlineEditManager((mode: EditMode, term: string) =>
-    this.unitService.lookup(term, 20),
+  inlineEdit = new InlineEditManager((column: EditColumn, term: string) =>
+    this.unitService.lookup(term, column === UnitTag.InvolvedId),
   );
 
   displayLookupFn = (unit: LookupDto | null): string => (unit ? unit.value : '');
 
-  // Фильтры
-  //searchText = '';
-  //selectedAssignedUnitId: string | null = null;
-
   // Методы для проверки статусов (делаем доступными в шаблоне)
-  isCriticalStatus = isCriticalStatus;
   isSevereStatus = isSevereStatus;
   isProblematicStatus = isProblematicStatus;
   isRecoveryStatus = isRecoveryStatus;
@@ -123,6 +106,7 @@ export class SoldiersComponent implements AfterViewInit {
     // Обновляем displayedColumns на основе isReadOnly
     effect(() => {
       const baseColumns = [
+        'unitTag',
         'fio',
         'nickName',
         'rankShortValue',
@@ -153,12 +137,6 @@ export class SoldiersComponent implements AfterViewInit {
     this.reloadRequested.emit();
   }
 
-  /*
-  onSearchChange(searchText: string) {
-    this.searchText = searchText;
-    this.reload();
-  }
-*/
   // CREATE
   add() {
     const openDialog = () => {
@@ -206,7 +184,7 @@ export class SoldiersComponent implements AfterViewInit {
   }
 
   // UPDATE
-  edit(soldier: Soldier) {
+  edit(soldier: SoldierDto) {
     const dialogRef = this.dialog.open(SoldierDialogComponent, {
       width: '600px',
       data: {
@@ -249,7 +227,7 @@ export class SoldiersComponent implements AfterViewInit {
   }
 
   // DELETE
-  delete(soldier: Soldier) {
+  delete(soldier: SoldierDto) {
     const ref = this.dialog.open(ConfirmDialogComponent, {
       width: '360px',
       maxWidth: '95vw',
@@ -272,7 +250,6 @@ export class SoldiersComponent implements AfterViewInit {
             this.snackBar.open('Бійця успішно видалено', 'Закрити', { duration: 3000 });
           },
           error: (error) => {
-            console.error('Помилка видалення бійця:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
               'Помилка видалення бійця',
@@ -284,73 +261,42 @@ export class SoldiersComponent implements AfterViewInit {
     });
   }
 
-  unassign(soldier: Soldier) {
-    // Clear assignment based on current tab
-    const isAssignedTab = this.currentUnitTab() === UnitTag.AssignedId;
-    const title = 'Вилучення бійця';
-    const message = `Ви впевнені, що хочете вилучити бійця "${this.formatFIO(soldier)}" з переліку?`;
-
-    const ref = this.dialog.open(ConfirmDialogComponent, {
-      width: '360px',
-      maxWidth: '95vw',
-      autoFocus: false,
-      data: {
-        title,
-        message,
-        confirmText: 'Вилучити',
-        cancelText: 'Відмінити',
-        color: 'warn',
-        icon: 'warning',
-      },
-    });
-
-    ref.afterClosed().subscribe((confirmed) => {
-      if (confirmed) {
-        const operation = isAssignedTab
-          ? this.soldierService.assignAssigned(soldier.id, null)
-          : this.soldierService.assignInvolved(soldier.id, null);
-
-        operation.subscribe({
-          next: (updated) => {
-            this.updateRow(updated);
-            const success = isAssignedTab
-              ? 'Бійця вилучено з переліку приданих'
-              : 'Бійця вилучено з оперативного підрозділу';
-            this.snackBar.open(success, 'Закрити', { duration: 3000 });
-          },
-          error: (error) => {
-            console.error('Помилка вилучення бійця:', error);
-            const errorMessage = S5App_ErrorHandler.handleHttpError(
-              error,
-              'Помилка вилучення бійця',
-            );
-            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-          },
-        });
-      }
-    });
+  unitTagTitle(soldier: SoldierDto): string {
+    switch (this.unitId()) {
+      case soldier.unitId:
+        return '';
+      case soldier.assignedUnitId:
+        return 'Приданий';
+      case soldier.involvedUnitId:
+        return 'Задіяний';
+      default:
+        return ''; // За замовчуванням
+    }
   }
 
   // === Inline edit helpers (single-mode per row) ===
-  isEditing(soldierId: string, mode: EditMode): boolean {
+  isEditing(soldierId: string, column: EditColumn): boolean {
     // В режимі readonly редагування неможливе
     if (this.isReadOnly()) {
       return false;
     }
-    return this.inlineEdit.isMode(soldierId, mode);
+
+    return this.inlineEdit.isMode(soldierId, column);
   }
 
-  startEditing(soldier: Soldier, mode: EditMode) {
+  startEditing(soldier: SoldierDto, column: EditColumn) {
     this.inlineEdit.clearOthers(soldier.id);
-    this.inlineEdit.ensure(soldier.id, mode, this.getInitialValue(soldier, mode));
+
+    this.inlineEdit.ensure(soldier.id, column, this.getInitialValue(soldier, column));
   }
 
-  cancelEditing(soldier: Soldier) {
-    this.inlineEdit.clear(soldier.id);
+  cancelEditing(soldierId: string) {
+    this.inlineEdit.clear(soldierId);
   }
 
-  getControl(soldier: Soldier, mode: EditMode): FormControl<string | LookupDto | null> {
-    return this.inlineEdit.ensure(soldier.id, mode, this.getInitialValue(soldier, mode)).control;
+  getControl(soldier: SoldierDto, column: EditColumn): FormControl<string | LookupDto | null> {
+    return this.inlineEdit.ensure(soldier.id, column, this.getInitialValue(soldier, column))
+      .control;
   }
 
   getOptions(soldierId: string): Observable<LookupDto[]> {
@@ -361,12 +307,12 @@ export class SoldiersComponent implements AfterViewInit {
     return this.inlineEdit.loading(soldierId);
   }
 
-  onSelect(soldier: Soldier, mode: EditMode, event: MatAutocompleteSelectedEvent) {
+  onSelect(soldier: SoldierDto, column: EditColumn, event: MatAutocompleteSelectedEvent) {
     const selectedUnit: LookupDto | null = event.option.value;
     let successMessage = '';
     let operation: Observable<SoldierDto> | null = null;
 
-    switch (mode) {
+    switch (column) {
       case UnitTag.UnitId:
         if (!selectedUnit) {
           return;
@@ -411,8 +357,8 @@ export class SoldiersComponent implements AfterViewInit {
     this.items.set(next);
   }
 
-  private getInitialValue(soldier: Soldier, mode: EditMode): string | null {
-    switch (mode) {
+  private getInitialValue(soldier: SoldierDto, column: EditColumn): string | null {
+    switch (column) {
       case UnitTag.UnitId:
         return soldier.unitShortName || '';
       case UnitTag.AssignedId:

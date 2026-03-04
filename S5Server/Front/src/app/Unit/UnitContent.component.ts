@@ -1,4 +1,4 @@
-import { Component, input, /*output,*/ inject, effect, computed } from '@angular/core';
+import { Component, input, /*output,*/ inject, effect } from '@angular/core';
 import { signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -7,7 +7,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { UnitDto } from './services/unit.service';
-import { SoldiersComponent, UnitTag } from '../Soldier/Soldier.component';
+import { SoldiersComponent } from '../Soldier/Soldier.component';
 import { SoldierService, SoldierDto } from '../Soldier/services/soldier.service';
 import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
 
@@ -31,31 +31,17 @@ export class UnitContentComponent {
 
   // Входные свойства
   selectedUnit = input<UnitDto | null>(null);
-  unitTag = UnitTag;
 
-  // Дані особового складу для кожної вкладки
   soldiers = signal<SoldierDto[]>([]);
-  assignedSoldiers = signal<SoldierDto[]>([]);
-  involvedSoldiers = signal<SoldierDto[]>([]);
-
-  // Віртуальне властивість - об'єднаний масив всього особового складу
-  // Автоматично оновлюється при зміні будь-якого з вихідних масивів
-  allSoldiers = computed(() => [
-    ...this.soldiers(),
-    ...this.assignedSoldiers(),
-    ...this.involvedSoldiers(),
-  ]);
 
   constructor() {
     // Завантажуємо дані при зміні підрозділу
     effect(() => {
       const unit = this.selectedUnit();
       if (unit?.id) {
-        this.loadSoldiers();
+        this.reloadSoldiers();
       } else {
         this.soldiers.set([]);
-        this.assignedSoldiers.set([]);
-        this.involvedSoldiers.set([]);
       }
     });
   }
@@ -77,48 +63,5 @@ export class UnitContentComponent {
         },
       });
     }
-  }
-
-  reloadAssignedSoldiers(): void {
-    const unit = this.selectedUnit();
-    if (unit?.id) {
-      this.soldierService.getByAssigned(unit.id).subscribe({
-        next: (data: SoldierDto[]) => this.assignedSoldiers.set(data),
-        error: (error) => {
-          console.error('Помилка завантаження приданих:', error);
-          const errorMessage = S5App_ErrorHandler.handleHttpError(
-            error,
-            'Помилка завантаження приданих військовослужбовців'
-          );
-          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-        },
-      });
-    }
-  }
-
-  reloadInvolvedSoldiers(): void {
-    const unit = this.selectedUnit();
-    if (unit?.id) {
-      this.soldierService.getByInvolved(unit.id).subscribe({
-        next: (data: SoldierDto[]) => this.involvedSoldiers.set(data),
-        error: (error) => {
-          console.error('Помилка завантаження задіяних:', error);
-          const errorMessage = S5App_ErrorHandler.handleHttpError(
-            error,
-            'Помилка завантаження задіяних військовослужбовців'
-          );
-          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-        },
-      });
-    }
-  }
-
-  private loadSoldiers(): void {
-    // Особовий склад (основний)
-    this.reloadSoldiers();
-    // Особовий склад (приданий)
-    this.reloadAssignedSoldiers();
-    // Особовий склад (задіяний)
-    this.reloadInvolvedSoldiers();
   }
 }

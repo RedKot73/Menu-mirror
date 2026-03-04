@@ -102,23 +102,23 @@ public class UnitController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<LookupDto>>> Lookup(
         [FromQuery] string? term,
-        [FromQuery] int limit = 10,
+        [FromQuery] bool? isInvolved = null,
         CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(term))
             return Ok(Array.Empty<LookupDto>());
 
-        if (limit is < 1 or > 100) limit = 10;
-
         try
         {
             term = term.Trim();
+            var q = Query()
+                .Where(t => t.ShortName.Contains(term));
+            if (isInvolved != null)
+                q = q.Where(t => t.IsInvolved == isInvolved);
 
-            var data = await Query()
-                .Where(x => x.ShortName.Contains(term) || x.Name.Contains(term))
+            var data = await q
                 .OrderBy(x => x.OrderVal)
                 .ThenBy(x => x.ShortName)
-                .Take(limit)
                 .Select(x => x.ToLookupDto())
                 .ToListAsync(ct);
 
