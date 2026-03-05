@@ -276,8 +276,9 @@ export class CreateUserDialogComponent implements OnInit, OnDestroy {
       if (soldier) {
         this.selectedSoldier = soldier;
         this.model.soldierId = soldier.id;
-        if (!this.model.userName) {
-          this.model.userName = soldier.nickName || '';
+        if (!this.model.userName && soldier.nickName) {
+          this.model.userName = soldier.nickName;
+          this.onUserNameChange(soldier.nickName);
         }
       }
     });

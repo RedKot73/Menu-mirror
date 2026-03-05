@@ -69,21 +69,21 @@
     </mat-card>
 
     <mat-accordion class="sections-accordion">
-        <!-- Особовий склад -->
-        <mat-expansion-panel class="unit-section-panel">
-          <mat-expansion-panel-header>
-            <mat-panel-title>
-              <mat-icon color="primary">group</mat-icon>
-              Особовий склад
-            </mat-panel-title>
-          </mat-expansion-panel-header>
+      <!-- Особовий склад -->
+      <mat-expansion-panel class="unit-section-panel" (opened)="soldiersPanelOpened.set(true)">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon color="primary">group</mat-icon>
+            Особовий склад
+          </mat-panel-title>
+        </mat-expansion-panel-header>
 
-          <div class="section-content">
-            <app-page-soldiers
-              [unitId]="unit.id"
-            ></app-page-soldiers>
-          </div>
-        </mat-expansion-panel>
+        <div class="section-content">
+          @if (soldiersPanelOpened()) {
+            <app-page-soldiers [unitId]="unit.id"></app-page-soldiers>
+          }
+        </div>
+      </mat-expansion-panel>
 
       <!-- Дополнительные секции с expansion panels -->
       <mat-expansion-panel class="unit-section-panel">

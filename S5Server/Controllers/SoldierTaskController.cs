@@ -30,7 +30,9 @@ public class SoldierTaskController : ControllerBase
     }
 
     /// <summary>
-    /// Отримати список бійців з можливістю фільтрації
+    /// Отримати перелік бійців з:
+    /// Підрозділу, якщо завдання не опубліковане (з актуальними даними Soldier)
+    /// Snapshot, якщо завдання опубліковане (збережені дані Soldier на момент публікації)
     /// </summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -46,7 +48,7 @@ public class SoldierTaskController : ControllerBase
         {
             var unitTask = await _db.UnitTasks
                 .AsNoTracking()
-                .Select(t => new { t.Id, t.IsPublished })
+                .Select(t => new { t.Id, t.IsPublished, t.UnitId })
                 .FirstOrDefaultAsync(t => t.Id == unitTaskId, ct);
             if (unitTask is null)
                 return Problem(
@@ -54,26 +56,17 @@ public class SoldierTaskController : ControllerBase
                     title: "Не знайдено",
                     detail: $"Завдання підрозділу з ID '{unitTaskId}' не знайдено");
 
-            var query = _set.AsNoTracking();//.AsQueryable();
+            List<SoldierTaskDto> result = [];
             if (!unitTask.IsPublished)
             {
-                // ✅ Unpublished: завантажити актуальні дані Soldier
-                query = query
-                    .Include(s => s.Soldier)
-                        .ThenInclude(soldier => soldier.Unit)
-                    .Include(s => s.Soldier)
-                        .ThenInclude(soldier => soldier.AssignedUnit)
-                    .Include(s => s.Soldier)
-                        .ThenInclude(soldier => soldier.InvolvedUnit)
-                    .Include(s => s.Soldier)
-                        .ThenInclude(soldier => soldier.Rank)
-                    .Include(s => s.Soldier)
-                        .ThenInclude(soldier => soldier.Position)
-                    .Include(s => s.Soldier)
-                        .ThenInclude(soldier => soldier.State);
+                result = await _db.Soldiers.GetUnionQuery(unitTask.UnitId)
+                    .Select(s => s.ToSoldierTaskDto())
+                    .ToListAsync(ct);
+                return Ok(result);
             }
 
-            var items = await query
+            result = await _set.AsNoTracking()
+                .Select(s => s.ToDto())
                 .Where(s => s.UnitTaskId == unitTaskId)
                 .OrderBy(s => s.FirstName)
                 .ThenBy(s => s.MidleName)
@@ -81,11 +74,6 @@ public class SoldierTaskController : ControllerBase
                 .ThenBy(s => s.RankShortValue)
                 .ToListAsync(ct);
 
-            // 4️⃣ ToDto з Smart Logic
-            var result = items
-                .Select(s => s.ToDto(unitTask.IsPublished))  // ✅ Передаємо IsPublished
-                .ToList();
-
             return Ok(result);
         }
         catch (OperationCanceledException)
@@ -101,46 +89,40 @@ public class SoldierTaskController : ControllerBase
     }
 
     /// <summary>
-    /// Отримати список бійців з можливістю фільтрації
-    /// для не збереженого UnitTask по unitId
+    /// Отримати перелік бійців підрозділу
+    /// (для створення нового UnitTask)
     /// </summary>
     [HttpGet("by-unit/{unitId}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<IEnumerable<SoldierTaskDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IEnumerable<SoldierTaskDto>>> GetAllByUnitId(
-        Guid unitId,
+        [FromRoute] Guid unitId,
         CancellationToken ct = default)
     {
         if (unitId == Guid.Empty)
-            return BadRequest("unitId обов'язковий");
+            return BadRequest(new { Error = "unitId обов'язковий" });
 
         try
         {
-            // ✅ Перевірка існування Unit
-            var unitExists = await _db.Units
-                .AsNoTracking()
-                .AnyAsync(u => u.Id == unitId, ct);
-
-            if (!unitExists)
-                return Problem(
-                    statusCode: 404,
-                    title: "Не знайдено",
-                    detail: $"Підрозділ з ID '{unitId}' не знайдено");
-
-            var query = SoldierService.GetQuery(_db.Soldiers);
-
-            var items = await query
-                .Where(s => s.UnitId == unitId)
-                .OrderBy(s => s.FirstName)
-                .ThenBy(s => s.MidleName)
-                .ThenBy(s => s.LastName)
-                .ThenBy(s => s.Rank.ShortValue)
+            // ✅ Оптимізація: перевірка після запиту солдат
+            var result = await _db.Soldiers.GetUnionQuery(unitId)
+                .Select(s => s.ToSoldierTaskDto())
                 .ToListAsync(ct);
 
-            // 4️⃣ ToDto з Smart Logic
-            var result = items
-                .Select(s => s.ToDto())
-                .ToList();
+            // ✅ Перевірка існування Unit тільки якщо нема солдат
+            if (result.Count == 0)
+            {
+                var unitExists = await _db.Units
+                    .AsNoTracking()
+                    .AnyAsync(u => u.Id == unitId, ct);
+
+                if (!unitExists)
+                    return Problem(
+                        statusCode: 404,
+                        title: "Не знайдено",
+                        detail: $"Підрозділ з ID '{unitId}' не знайдено");
+            }
 
             return Ok(result);
         }
@@ -151,13 +133,13 @@ public class SoldierTaskController : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Помилка при отриманні списку SoldierTask");
+                _logger.LogError(ex, "Помилка при отриманні переліку SoldierTask для UnitId={UnitId}", unitId);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
 
     /// <summary>
-    /// Отримати бійця за ID
+    /// Отримати опубліковані завдання бійця за ID
     /// </summary>
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -171,49 +153,16 @@ public class SoldierTaskController : ControllerBase
 
         try
         {
-            // ✅ 1️⃣ Published: БЕЗ Soldier (snapshot)
-            var publishedQuery = _set
+            // Шукаємо тільки в опублікованих завданнях,
+            // щоб не тягнути зайві дані Soldier для неопублікованих
+            var result = await _set
                 .AsNoTracking()
                 .Include(s => s.UnitTask)
                 .Where(s => s.SoldierId == id && s.UnitTask.IsPublished)
                 .OrderByDescending(s => s.UnitTask.PublishedAtUtc)
-                .ThenBy(s => s.ValidFrom);
-
-            // ✅ 2️⃣ Unpublished: З актуальними даними Soldier
-            var unpublishedQuery = _set
-                .AsNoTracking()
-                .Include(s => s.UnitTask)
-                .Include(s => s.Soldier)
-                    .ThenInclude(soldier => soldier!.Unit)
-                .Include(s => s.Soldier)
-                    .ThenInclude(soldier => soldier!.AssignedUnit)
-                .Include(s => s.Soldier)
-                    .ThenInclude(soldier => soldier!.InvolvedUnit)
-                .Include(s => s.Soldier)
-                    .ThenInclude(soldier => soldier!.Rank)
-                .Include(s => s.Soldier)
-                    .ThenInclude(soldier => soldier!.Position)
-                .Include(s => s.Soldier)
-                    .ThenInclude(soldier => soldier!.State)
-                .Where(s => s.SoldierId == id && !s.UnitTask.IsPublished)
-                .OrderByDescending(s => s.ValidFrom);
-
-            // ✅ Виконати запити
-            var published = await publishedQuery.ToListAsync(ct);
-            var unpublished = await unpublishedQuery.ToListAsync(ct);
-
-            if (published.Count == 0 && unpublished.Count == 0)
-                return Problem(
-                    statusCode: 404,
-                    title: "Не знайдено",
-                    detail: $"Не знайдено завдань для бійця з SoldierId='{id}'");
-
-            // ✅ 3️⃣ Об'єднати з Smart Logic
-            var result = published
-                .Select(s => s.ToDto(isPublished: true))
-                .Concat(unpublished.Select(s => s.ToDto(isPublished: false)))
-                .OrderByDescending(dto => dto.ValidFrom)
-                .ToList();
+                .ThenBy(s => s.ValidFrom)
+                .Select(s => s.ToDto())
+                .ToListAsync(ct);
 
             return Ok(result);
         }
@@ -231,24 +180,64 @@ public class SoldierTaskController : ControllerBase
 
     /// <summary>
     /// Видалити всіх бійців для конкретного завдання
+    /// (тільки для неопублікованих завдань)
     /// </summary>
     [HttpDelete("by-unit-task/{unitTaskId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> DeleteByUnitTask(
-        Guid unitTaskId,
+        [FromRoute] Guid unitTaskId,
         CancellationToken ct = default)
     {
         if (unitTaskId == Guid.Empty)
-            return BadRequest("unitTaskId обов'язковий");
+            return BadRequest(new { Error = "unitTaskId обов'язковий" });
 
         try
         {
+            // ✅ Валідація бізнес-логіки: НЕ можна видаляти snapshot'и опублікованих завдань
+            var unitTask = await _db.UnitTasks
+                .AsNoTracking()
+                .Select(t => new { t.Id, t.IsPublished })
+                .FirstOrDefaultAsync(t => t.Id == unitTaskId, ct);
+
+            if (unitTask is null)
+                return Problem(
+                    statusCode: 404,
+                    title: "Не знайдено",
+                    detail: $"Завдання підрозділу з ID '{unitTaskId}' не знайдено");
+
+            if (unitTask.IsPublished)
+            {
+                if (_logger.IsEnabled(LogLevel.Warning))
+                    _logger.LogWarning(
+                        "Спроба видалення snapshot'ів для опублікованого завдання UnitTaskId={UnitTaskId}",
+                        unitTaskId);
+
+                return Problem(
+                    statusCode: 409,
+                    title: "Конфлікт",
+                    detail: "Не можна видаляти snapshot'и опублікованих завдань",
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["unitTaskId"] = unitTaskId,
+                        ["isPublished"] = true
+                    });
+            }
+
             var entities = await _set
                 .Where(s => s.UnitTaskId == unitTaskId)
                 .ToListAsync(ct);
 
             if (entities.Count == 0)
+            {
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation(
+                        "Немає SoldierTask для видалення UnitTaskId={UnitTaskId}",
+                        unitTaskId);
                 return NoContent();
+            }
 
             _set.RemoveRange(entities);
             await _db.SaveChangesAsync(ct);

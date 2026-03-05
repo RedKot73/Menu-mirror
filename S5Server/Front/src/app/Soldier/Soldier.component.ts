@@ -270,19 +270,6 @@ export class SoldiersComponent implements AfterViewInit {
     });
   }
 
-  unitTagTitle(soldier: SoldierDto): string {
-    switch (this.unitId()) {
-      case soldier.unitId:
-        return '';
-      case soldier.assignedUnitId:
-        return 'Приданий';
-      case soldier.involvedUnitId:
-        return 'Задіяний';
-      default:
-        return ''; // За замовчуванням
-    }
-  }
-
   // === Inline edit helpers ===
   isEditing(soldierId: string, column: EditColumn): boolean {
     return !this.isReadOnly() && this.inlineEdit.isMode(soldierId, column);
@@ -336,6 +323,19 @@ export class SoldiersComponent implements AfterViewInit {
     const current = this.items();
     const next = current.map((s) => (s.id === updated.id ? updated : s));
     this.items.set(next);
+  }
+
+  unitTagTitle(soldier: SoldierDto): string {
+    switch (this.unitId()) {
+      case soldier.unitId:
+        return '';
+      case soldier.assignedUnitId:
+        return 'Приданий';
+      case soldier.involvedUnitId:
+        return 'Задіяний';
+      default:
+        return ''; // За замовчуванням
+    }
   }
 
   formatFIO(item: SoldierDto): string {

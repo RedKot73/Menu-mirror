@@ -214,42 +214,39 @@ public static class SoldierTaskExtensions
     /// Конвертує SoldierTask у DTO
     /// Smart: Published = snapshot, Unpublished = actual from Soldier
     /// </summary>
-    public static SoldierTaskDto ToDto(this SoldierTask soldierTask, bool isPublished)
+    public static SoldierTaskDto ToDto(this SoldierTask soldierTask)
     {
-        // ✅ ЛОГІКА: Якщо unpublished і Soldier завантажено — взяти актуальні дані
-        var useActualData = !isPublished && soldierTask.Soldier != null;
-
         return new SoldierTaskDto(
             soldierTask.Id,
             soldierTask.UnitTaskId,
             soldierTask.SoldierId,
             soldierTask.ExternId,
-            useActualData ? soldierTask.Soldier!.FirstName : soldierTask.FirstName,
-            useActualData ? soldierTask.Soldier!.MidleName : soldierTask.MidleName,
-            useActualData ? soldierTask.Soldier!.LastName : soldierTask.LastName,
-            useActualData ? soldierTask.Soldier!.NickName : soldierTask.NickName,
+            soldierTask.FirstName,
+            soldierTask.MidleName,
+            soldierTask.LastName,
+            soldierTask.NickName,
             // Unit
-            useActualData ? soldierTask.Soldier!.UnitId : soldierTask.UnitId,
-            useActualData ? soldierTask.Soldier!.Unit?.ShortName ?? string.Empty : soldierTask.UnitShortName,
+            soldierTask.UnitId,
+            soldierTask.UnitShortName,
             //
-            useActualData ? soldierTask.Soldier!.ArrivedAt : soldierTask.ArrivedAt,
-            useActualData ? soldierTask.Soldier!.DepartedAt : soldierTask.DepartedAt,
+            soldierTask.ArrivedAt,
+            soldierTask.DepartedAt,
             // AssignedUnit
-            useActualData ? soldierTask.Soldier!.AssignedUnitId : soldierTask.AssignedUnitId,
-            useActualData ? soldierTask.Soldier!.AssignedUnit?.ShortName : soldierTask.AssignedUnitShortName,
+            soldierTask.AssignedUnitId,
+            soldierTask.AssignedUnitShortName,
             // InvolvedUnit
-            useActualData ? soldierTask.Soldier!.InvolvedUnitId : soldierTask.InvolvedUnitId,
-            useActualData ? soldierTask.Soldier!.InvolvedUnit?.ShortName : soldierTask.InvolvedUnitShortName,
+            soldierTask.InvolvedUnitId,
+            soldierTask.InvolvedUnitShortName,
             // Rank
-            useActualData ? soldierTask.Soldier!.RankId : soldierTask.RankId,
-            useActualData ? soldierTask.Soldier!.Rank?.ShortValue ?? string.Empty : soldierTask.RankShortValue,
+            soldierTask.RankId,
+            soldierTask.RankShortValue,
             // Position
-            useActualData ? soldierTask.Soldier!.PositionId : soldierTask.PositionId,
-            useActualData ? soldierTask.Soldier!.Position?.Value ?? string.Empty : soldierTask.PositionValue,
+            soldierTask.PositionId,
+            soldierTask.PositionValue,
             // State
-            useActualData ? soldierTask.Soldier!.StateId : soldierTask.StateId,
-            useActualData ? soldierTask.Soldier!.State?.Value ?? string.Empty : soldierTask.StateValue,
-            useActualData ? soldierTask.Soldier!.Comment : soldierTask.Comment,
+            soldierTask.StateId,
+            soldierTask.StateValue,
+            soldierTask.Comment,
             soldierTask.ChangedBy,
             soldierTask.ValidFrom);
     }
@@ -259,7 +256,7 @@ public static class SoldierTaskExtensions
     /// для випадку коли UnitTask ще не опубліковано
     /// і потрібно показати актуальні дані бійця
     /// </summary>
-    public static SoldierTaskDto ToDto(this Soldier soldier)
+    public static SoldierTaskDto ToSoldierTaskDto(this Soldier soldier)
     {
         return new SoldierTaskDto(
             Guid.Empty,

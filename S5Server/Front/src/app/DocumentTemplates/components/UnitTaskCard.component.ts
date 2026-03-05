@@ -109,6 +109,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   soldiers = signal<SoldierTaskDto[]>([]);
   soldierDataSource = new MatTableDataSource<SoldierTaskDto>([]);
   soldierDisplayedColumns: string[] = [
+    'unitTag',
     'fio',
     'nickName',
     'rankShortValue',
@@ -123,6 +124,7 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   ];
   soldierCount = signal<number>(0);
   isLoadingSoldiers = signal<boolean>(false);
+  soldiersPanelOpened = signal(false);
 
   // Дані засобів (Master-Detail)
   means = signal<DroneModelTaskDto[]>([]);
@@ -220,6 +222,14 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /**
+   * Обробник відкриття панелі особового складу (ленива ініціалізація)
+   */
+  onSoldiersPanelOpened(): void {
+    this.soldiersPanelOpened.set(true);
+    this.reloadSoldiers();
   }
 
   /**
@@ -751,5 +761,19 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
 
   getSoldierFIO(soldier: SoldierTaskDto): string {
     return SoldierUtils.formatFIO(soldier.firstName, soldier.midleName, soldier.lastName);
+  }
+
+  unitTagTitle(soldier: SoldierTaskDto): string {
+    const unitId = this.unitTask.unitId;
+    switch (unitId) {
+      case soldier.unitId:
+        return '';
+      case soldier.assignedUnitId:
+        return 'Приданий';
+      case soldier.involvedUnitId:
+        return 'Задіяний';
+      default:
+        return ''; // За замовчуванням
+    }
   }
 }

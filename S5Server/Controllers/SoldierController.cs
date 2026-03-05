@@ -25,7 +25,7 @@ public class SoldierController : ControllerBase
         _logger = logger;
     }
 
-    private IQueryable<Soldier> Query() => SoldierService.GetQuery(_set);
+    //private IQueryable<Soldier> Query() => SoldierService.GetQuery(_set);
 
     /// <summary>
     /// Список військовослужбовців з фільтрацією.
@@ -44,7 +44,7 @@ public class SoldierController : ControllerBase
     {
         try
         {
-            var q = Query();
+            var q = _set.GetQuery();
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -94,10 +94,12 @@ public class SoldierController : ControllerBase
 
         try
         {
-            var qry1 = _set.Where(s => s.UnitId == unitId);
-            var qry2 = _set.Where(s => s.AssignedUnitId == unitId);
-            var qry3 = _set.Where(s => s.InvolvedUnitId == unitId);
-            var result = await (qry1
+            //var qry1 = _set.Where(s => s.UnitId == unitId);
+            //var qry2 = _set.Where(s => s.AssignedUnitId == unitId);
+            //var qry3 = _set.Where(s => s.InvolvedUnitId == unitId);
+            var result = await _set.GetUnionQuery(unitId)
+                /*
+                (qry1
                 .Union(qry2)
                 .Union(qry3))
                 .Include(s => s.Unit)
@@ -109,6 +111,7 @@ public class SoldierController : ControllerBase
                 .OrderBy(s => s.FirstName)
                 .ThenBy(s => s.MidleName)
                 .ThenBy(s => s.LastName)
+                */
                 .Select(s => s.ToSoldierDto())
                 .ToListAsync(ct);
             return Ok(result);
@@ -144,7 +147,7 @@ public class SoldierController : ControllerBase
 
         try
         {
-            var q = Query().Where(s => s.AssignedUnitId == assignedUnitId);
+            var q = _set.GetQuery().Where(s => s.AssignedUnitId == assignedUnitId);
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -194,7 +197,7 @@ public class SoldierController : ControllerBase
 
         try
         {
-            var q = Query().Where(s => s.InvolvedUnitId == involvedUnitId);
+            var q = _set.GetQuery().Where(s => s.InvolvedUnitId == involvedUnitId);
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -246,7 +249,7 @@ public class SoldierController : ControllerBase
         {
             term = term.Trim();
 
-            var data = await Query()
+            var data = await _set.GetQuery()
                 .Where(s => s.FirstName.Contains(term))
                 .OrderBy(s => s.FirstName)
                 .ThenBy(s => s.MidleName)
@@ -279,7 +282,7 @@ public class SoldierController : ControllerBase
 
         try
         {
-            var s = await Query().FirstOrDefaultAsync(s => s.Id == id, ct);
+            var s = await _set.GetQuery().FirstOrDefaultAsync(s => s.Id == id, ct);
             if (s == null)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
             
@@ -330,7 +333,7 @@ public class SoldierController : ControllerBase
             _set.Add(entity);
             await _db.SaveChangesAsync(ct);
 
-            entity = await Query().FirstAsync(s => s.Id == entity.Id, ct);
+            entity = await _set.GetQuery().FirstAsync(s => s.Id == entity.Id, ct);
             return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity.ToSoldierDto());
         }
         catch (OperationCanceledException)
@@ -496,7 +499,7 @@ public class SoldierController : ControllerBase
             await _db.SaveChangesAsync(ct);
 
             // Перезагружаем с навигационными свойствами
-            var updated = await Query().FirstOrDefaultAsync(s => s.Id == id, ct);
+            var updated = await _set.GetQuery().FirstOrDefaultAsync(s => s.Id == id, ct);
             if (updated == null)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: "Боєць не знайдений після збереження");
 

@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
@@ -24,4 +24,7 @@ import { SoldiersComponent } from '../Soldier/Soldier.component';
 export class UnitContentComponent {
   // Вхідні властивості
   selectedUnit = input<UnitDto | null>(null);
+
+  /** Ленива ініціалізація панелі особового складу */
+  soldiersPanelOpened = signal(false);
 }

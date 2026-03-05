@@ -67,23 +67,6 @@ public class AccountController : ControllerBase
         try
         {
             var query = UsersQuery();
-            /*
-                _users
-                .AsNoTracking()
-                .Include(u => u.Soldier)
-                    .ThenInclude(s => s.Rank)
-                .Include(u => u.Soldier)
-                    .ThenInclude(s => s.Position)
-                .Include(u => u.Soldier)
-                    .ThenInclude(s => s.Unit)
-                .Include(u => u.Soldier)
-                    .ThenInclude(s => s.State)
-                .Include(u => u.Soldier)
-                    .ThenInclude(s => s.AssignedUnit)
-                .Include(u => u.Soldier)
-                    .ThenInclude(s => s.InvolvedUnit)
-                .AsQueryable();
-            */
 
             if (includeInactive != true)
             {
@@ -124,22 +107,6 @@ public class AccountController : ControllerBase
         try
         {
             var user = await UsersQuery()
-                /*
-                _users
-                .AsNoTracking()
-                .Include(u => u.Soldier)
-                    .ThenInclude(s => s.Rank)
-                .Include(u => u.Soldier)
-                    .ThenInclude(s => s.Position)
-                .Include(u => u.Soldier)
-                    .ThenInclude(s => s.Unit)
-                .Include(u => u.Soldier)
-                    .ThenInclude(s => s.State)
-                .Include(u => u.Soldier)
-                    .ThenInclude(s => s.AssignedUnit)
-                .Include(u => u.Soldier)
-                    .ThenInclude(s => s.InvolvedUnit)
-                */
                 .FirstOrDefaultAsync(u => u.Id == id, ct);
 
             if (user == null)
@@ -179,16 +146,6 @@ public class AccountController : ControllerBase
         try
         {
             var user = await UsersQuery()
-                /*
-                _users
-                .AsNoTracking()
-                .Include(u => u.Soldier)
-                    .ThenInclude(s => s.Rank)
-                .Include(u => u.Soldier)
-                    .ThenInclude(s => s.Position)
-                .Include(u => u.Soldier)
-                    .ThenInclude(s => s.Unit)
-                */
                 .FirstOrDefaultAsync(u => u.SoldierId == soldierId, ct);
 
             if (user == null)
@@ -236,7 +193,7 @@ public class AccountController : ControllerBase
         {
             // 1. Перевірка чи Soldier існує
             var soldier = await _soldiers
-                .AsNoTracking()
+                .AsTracking()//иначе EF думает что это новая сущность и пытается ее вставить в БД
                 .FirstOrDefaultAsync(s => s.Id == dto.SoldierId, ct);
 
             if (soldier == null)
@@ -326,8 +283,8 @@ public class AccountController : ControllerBase
 
             return CreatedAtAction(
                 nameof(Get),
-                user.Id,
-                user.ToDto());
+                new { id = user.Id },
+                user.ToDto(dto.Roles));
         }
         catch (OperationCanceledException)
         {
@@ -823,6 +780,43 @@ public class AccountController : ControllerBase
     }
 
     /// <summary>
+    /// Отримати роль за ID
+    /// </summary>
+    [HttpGet("roles/{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetRole(Guid id, CancellationToken ct = default)
+    {
+        if (id == Guid.Empty)
+            return BadRequest("Id обов'язковий");
+
+        try
+        {
+            var role = await _db.Set<IdentityRole<Guid>>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.Id == id, ct);
+
+            if (role == null)
+                return Problem(
+                    statusCode: 404,
+                    title: "Не знайдено",
+                    detail: $"Роль з ID '{id}' не знайдено");
+
+            return Ok(new LookupDto(role.Id, role.Name ?? string.Empty));
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка отримання ролі Id={Id}", id);
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+    /// <summary>
     /// Створити роль
     /// </summary>
     [HttpPost("roles")]
@@ -840,7 +834,7 @@ public class AccountController : ControllerBase
             var role = new IdentityRole<Guid>
             {
                 Id = Guid.NewGuid(),
-                Name = dto.Value,
+                Name = dto.Value.Trim(),
                 NormalizedName = dto.Value.ToUpperInvariant()
             };
 
@@ -860,7 +854,10 @@ public class AccountController : ControllerBase
                 _logger.LogInformation("Створено роль RoleId={RoleId}, Name={Name}",
                     role.Id, role.Name);
 
-            return CreatedAtAction(nameof(GetAllRoles), role.Id, role);
+            return CreatedAtAction(
+                nameof(GetRole),
+                new { id = role.Id },
+                new LookupDto(role.Id, role.Name ?? string.Empty));
         }
         catch (OperationCanceledException)
         {
@@ -1010,16 +1007,6 @@ public class AccountController : ControllerBase
                 return Unauthorized();
 
             var user = await UsersQuery()
-                /*
-                _users
-                .AsNoTracking()
-                .Include(u => u.Soldier)
-                    .ThenInclude(s => s.Rank)
-                .Include(u => u.Soldier)
-                    .ThenInclude(s => s.Position)
-                .Include(u => u.Soldier)
-                    .ThenInclude(s => s.Unit)
-                */
                 .FirstOrDefaultAsync(u => u.Id == Guid.Parse(userId), ct);
 
             if (user == null)

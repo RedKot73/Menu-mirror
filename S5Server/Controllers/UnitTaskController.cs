@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 using S5Server.Data;
 using S5Server.Models;
+using S5Server.Services;
 using S5Server.Utils;
 
 namespace S5Server.Controllers;
@@ -243,7 +244,8 @@ public class UnitTaskController : ControllerBase
             _set.Add(unitTask);
 
             // 7. Завантажити бійців підрозділу
-            var soldiers = await _db.Soldiers
+            var soldiers = await _db.Soldiers.GetUnionQuery(dto.UnitId)
+                /*
                 .AsNoTracking()
                 .Include(s => s.Unit)
                 .Include(s => s.AssignedUnit)
@@ -252,6 +254,7 @@ public class UnitTaskController : ControllerBase
                 .Include(s => s.Position)
                 .Include(s => s.State)
                 .Where(s => s.UnitId == dto.UnitId)
+                */
                 .ToListAsync(ct);
 
             // 8. Створити знімки бійців
