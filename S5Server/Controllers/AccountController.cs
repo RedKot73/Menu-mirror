@@ -59,6 +59,7 @@ public class AccountController : ControllerBase
     /// Отримати всіх користувачів
     /// </summary>
     [HttpGet]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] bool? includeInactive,
@@ -97,6 +98,7 @@ public class AccountController : ControllerBase
     /// Отримати користувача за ID
     /// </summary>
     [HttpGet("{id}")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Get(Guid id, CancellationToken ct = default)
@@ -136,6 +138,7 @@ public class AccountController : ControllerBase
     /// Отримати користувача за Soldier ID
     /// </summary>
     [HttpGet("by-soldier/{soldierId}")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetBySoldier(Guid soldierId, CancellationToken ct = default)
@@ -175,6 +178,7 @@ public class AccountController : ControllerBase
     /// Створити нового користувача
     /// </summary>
     [HttpPost]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -377,25 +381,6 @@ public class AccountController : ControllerBase
 
             ct.ThrowIfCancellationRequested();
 
-            // Перевірка чи потрібна зміна пароля
-            if (user.RequirePasswordChange)
-            {                
-                if (_logger.IsEnabled(LogLevel.Information))
-                    _logger.LogInformation(
-                        "Користувач UserId={UserId} потребує зміни пароля",
-                        user.Id);
-
-                return Problem(
-                    statusCode: 403,
-                    title: "Потрібна зміна пароля",
-                    detail: "Для продовження роботи необхідно змінити пароль",
-                    extensions: new Dictionary<string, object?>
-                    {
-                        ["requirePasswordChange"] = true,
-                        ["userId"] = user.Id
-                    });
-            }
-
             var passwordValid = await _userManager.CheckPasswordAsync(user, dto.Password);
             if (!passwordValid)
             {
@@ -416,12 +401,32 @@ public class AccountController : ControllerBase
             user.LastLoginDate = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
 
+            // ✅ Спочатку авторизуємо користувача
             await _signInManager.SignInAsync(user, dto.RememberMe);
 
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation(
                     "Успішний вхід UserId={UserId}, UserName={UserName}",
                     user.Id, user.UserName);
+
+            // ✅ Потім перевіряємо чи потрібна зміна пароля
+            if (user.RequirePasswordChange)
+            {                
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation(
+                        "Користувач UserId={UserId} потребує зміни пароля",
+                        user.Id);
+
+                return Problem(
+                    statusCode: 403,
+                    title: "Потрібна зміна пароля",
+                    detail: "Для продовження роботи необхідно змінити пароль",
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["requirePasswordChange"] = true,
+                        ["userId"] = user.Id
+                    });
+            }
 
             var roles = await _userManager.GetRolesAsync(user);
             var result = user.ToInfoDto(roles, includeSoldier: false);
@@ -444,6 +449,7 @@ public class AccountController : ControllerBase
     /// Вихід з системи
     /// </summary>
     [HttpPost("logout")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Logout()
     {
@@ -468,6 +474,7 @@ public class AccountController : ControllerBase
     /// Змінити пароль
     /// </summary>
     [HttpPost("{id}/change-password")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -536,6 +543,7 @@ public class AccountController : ControllerBase
     /// Змінити ім'я користувача
     /// </summary>
     [HttpPost("{id}/change-username")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -645,6 +653,7 @@ public class AccountController : ControllerBase
     /// Заблокувати/розблокувати користувача
     /// </summary>
     [HttpPost("{id}/lockout")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SetLockout(
@@ -703,6 +712,7 @@ public class AccountController : ControllerBase
     /// Видалити користувача
     /// </summary>
     [HttpDelete("{id}")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
@@ -754,6 +764,7 @@ public class AccountController : ControllerBase
     /// Отримати всі ролі
     /// </summary>
     [HttpGet("roles")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllRoles(CancellationToken ct = default)
     {
@@ -783,6 +794,7 @@ public class AccountController : ControllerBase
     /// Отримати роль за ID
     /// </summary>
     [HttpGet("roles/{id}")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetRole(Guid id, CancellationToken ct = default)
@@ -820,6 +832,7 @@ public class AccountController : ControllerBase
     /// Створити роль
     /// </summary>
     [HttpPost("roles")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateRole(
@@ -875,6 +888,7 @@ public class AccountController : ControllerBase
     /// Призначити роль користувачу
     /// </summary>
     [HttpPost("{userId}/roles/{roleName}")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -938,6 +952,7 @@ public class AccountController : ControllerBase
     /// Видалити роль у користувача
     /// </summary>
     [HttpDelete("{userId}/roles/{roleName}")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

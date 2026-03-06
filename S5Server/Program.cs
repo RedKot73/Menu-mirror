@@ -172,6 +172,15 @@ builder.Services.AddCors(options =>
                   .AllowAnyHeader()
                   .AllowCredentials();
         }
+        else
+        {
+            // ✅ FALLBACK: дозволити Azure Web App origin
+            policy.SetIsOriginAllowed(origin =>
+                    origin.Contains(".azurewebsites.net", StringComparison.OrdinalIgnoreCase))
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
     });
 });
 
