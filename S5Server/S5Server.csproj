@@ -53,7 +53,7 @@
     <!-- Azure (мінімум для обмеженого бюджету) -->
     <!-- ═══════════════════════════════════════════════════════════ -->
     <PackageReference Include="Azure.Identity" Version="1.18.0" />
-    <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.4.0" />
+    <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.5.0" />
 
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- Logging (БЕЗКОШТОВНО) -->
