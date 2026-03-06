@@ -572,9 +572,17 @@ namespace S5Server.Data
                     .HasMaxLength(100)
                     .HasColumnType("citext");
                 entity.Property(e => e.Comment).HasColumnType("varchar(250)");
-                entity.Property(e => e.Amount).IsRequired().HasColumnType("money");
-                entity.Property(e => e.WithMeans).HasColumnType("boolean").HasDefaultValue(false);
-                entity.Property(e => e.AreaTypeId).HasColumnType("uuid");
+                entity.Property(e => e.Amount)
+                    .IsRequired()
+                    .HasColumnType("numeric(18, 2)")
+                    .HasComment("Тариф в грн. за завдання");
+                entity.Property(e => e.WithMeans)
+                    .HasColumnType("boolean")
+                    .HasDefaultValue(false)
+                    .HasComment("Чи використовуються в завданні засоби ураження");
+                entity.Property(e => e.AreaTypeId)
+                    .HasColumnType("uuid")
+                    .HasComment("Тип Напрямку ЛБЗ");
 
                 entity.HasIndex(e => e.Value).IsUnique();
                 entity.HasOne(e => e.AreaType)

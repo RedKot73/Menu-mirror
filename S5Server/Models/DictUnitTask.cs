@@ -68,6 +68,7 @@ namespace S5Server.Models
         /// Сума (грн)
         /// </summary>
         [Required]
+        [Column(TypeName = "numeric(18, 2)")]
         public decimal Amount { get; set; }
 
         /// <summary>
