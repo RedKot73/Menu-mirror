@@ -1,7 +1,5 @@
 using System.Threading.Channels;
 
-using DocumentFormat.OpenXml.Wordprocessing;
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -519,7 +517,7 @@ public class DictCityCodesController : ControllerBase
         if (file == null || file.Length == 0)
             return BadRequest("Файл відсутній або порожній");
 
-        var ext = Path.GetExtension(file.FileName);
+        var ext = System.IO.Path.GetExtension(file.FileName);
         if (!string.Equals(ext, ".xlsx", StringComparison.OrdinalIgnoreCase))
             return BadRequest("Підтримується тільки формат .xlsx");
 

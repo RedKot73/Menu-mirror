@@ -146,7 +146,7 @@ public class UnitTask
     /// <summary>
     /// Особовий склад (Master-Detail: завантажується окремо через SoldierTaskController)
     /// </summary>
-    [NotMapped]
+    //[NotMapped]
     public List<SoldierTask> SoldiersTask { get; set; } = [];
 
     //Task---------------------------------------------------------------
@@ -180,7 +180,7 @@ public class UnitTask
     /// <summary>
     /// Дрони, задіяні при виконанні завдання (Master-Detail: завантажується окремо через DroneModelTaskController)
     /// </summary>
-    [NotMapped]
+    //[NotMapped]
     public List<DroneModelTask> Means { get; set; } = [];
 
     // Публикация

@@ -719,7 +719,7 @@ public class UnitController : ControllerBase
             if (soldiers == null || soldiers.Length == 0)
                 return BadRequest("Файл відсутній або порожній");
 
-            var ext = Path.GetExtension(soldiers.FileName);
+            var ext = System.IO.Path.GetExtension(soldiers.FileName);
             if (!string.Equals(ext, ".xlsx", StringComparison.OrdinalIgnoreCase))
                 return BadRequest("Підтримується тільки формат .xlsx");
 

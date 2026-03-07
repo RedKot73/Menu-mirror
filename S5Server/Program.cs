@@ -146,6 +146,16 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
+// ✅ GraphQL
+builder.Services
+    .AddGraphQLServer()
+    .AddQueryType<S5Server.GraphQL.Query>()
+    .AddAuthorization()                     // ✅ Підтримка [Authorize]
+    .AddProjections()                       // ✅ Оптимізація Include/Select
+    .AddFiltering()                         // ✅ Фільтрація (where)
+    .AddSorting();                          // ✅ Сортування (orderBy)
+    // ✅ DbContext вже зареєстрований через AddPooledDbContextFactory!
+
 builder.Services.AddControllers();
 
 builder.Services.AddCors(options =>
@@ -209,7 +219,6 @@ else
 }
 
 app.UseHttpsRedirection();
-//app.UseStaticFiles();
 // ✅ Статичні файли з wwwroot (Angular dist)
 app.UseStaticFiles(new StaticFileOptions
 {
@@ -229,7 +238,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-//app.MapRazorPages();
+app.MapGraphQL();  // ✅ Endpoint: /graphql
 app.MapFallbackToFile("index.html");
 
 // ✅ Українська культура

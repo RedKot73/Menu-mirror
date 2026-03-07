@@ -3,7 +3,7 @@ import {
   provideBrowserGlobalErrorListeners,
   provideZoneChangeDetection,
   LOCALE_ID,
-  APP_INITIALIZER,
+  provideAppInitializer,
   inject,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
@@ -12,6 +12,9 @@ import { MAT_DATE_FORMATS, provideNativeDateAdapter } from '@angular/material/co
 import { firstValueFrom } from 'rxjs';
 import { authInterceptor } from './auth/auth.interceptor';
 import { AuthService } from './auth/auth.service';
+import { provideApollo } from 'apollo-angular';
+import { HttpLink } from 'apollo-angular/http';
+import { InMemoryCache } from '@apollo/client/core';
 
 import { routes } from './app.routes';
 
@@ -37,13 +40,20 @@ export const appConfig: ApplicationConfig = {
     { provide: LOCALE_ID, useValue: 'uk-UA' },
     { provide: MAT_DATE_FORMATS, useValue: MY_NATIVE_FORMATS },
     provideNativeDateAdapter(),
-    {
-      provide: APP_INITIALIZER,
-      useFactory: () => {
-        const auth = inject(AuthService);
-        return () => firstValueFrom(auth.checkSession());
-      },
-      multi: true,
-    },
+    provideAppInitializer(() => {
+      const auth = inject(AuthService);
+      return firstValueFrom(auth.checkSession());
+    }),
+    provideApollo(() => {
+      const httpLink = inject(HttpLink);
+      return {
+        link: httpLink.create({ uri: '/graphql' }),
+        cache: new InMemoryCache(),
+        defaultOptions: {
+          watchQuery: { fetchPolicy: 'network-only' },
+          query: { fetchPolicy: 'network-only' },
+        },
+      };
+    }),
   ],
 };
