@@ -4,7 +4,7 @@ import { debounceTime, distinctUntilChanged, switchMap, startWith, finalize } fr
 
 import { LookupDto } from '../shared/models/lookup.models';
 import { UnitTag } from './Soldier.constant';
-import { SoldierService, SoldierDto } from './services/soldier.service';
+import { SoldierService, SoldierDto } from '../../ServerService/soldier.service';
 
 /**
  * Можливі колонки для інлайн-редагування.

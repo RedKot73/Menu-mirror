@@ -16,13 +16,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
-import {
-  CreateUserDto,
-  UsersService,
-  PasswordRequirements,
-} from '../../app/auth/users.service';
+import { CreateUserDto, UsersService, PasswordRequirements } from '../../app/auth/users.service';
 import { SoldierSelectDialogComponent } from '../../app/dialogs/SoldierSelect-dialog.component';
-import { SoldierDto } from '../../app/Soldier/services/soldier.service';
+import { SoldierDto } from '../../ServerService/soldier.service';
 import { SoldierUtils } from '../../app/Soldier/soldier.utils';
 import { LookupDto } from '../../app/shared/models/lookup.models';
 
@@ -47,19 +43,19 @@ export interface CreateUserDialogData {
   template: `
     <h2 mat-dialog-title>Створити користувача</h2>
     <mat-dialog-content class="dialog-content">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Військовослужбовець</mat-label>
-          <input matInput [value]="soldierDisplay" readonly required />
-          <button
-            mat-icon-button
-            matSuffix
-            color="primary"
-            (click)="openSoldierSelect()"
-            matTooltip="Вибрати"
-          >
-            <mat-icon>person_search</mat-icon>
-          </button>
-        </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Військовослужбовець</mat-label>
+        <input matInput [value]="soldierDisplay" readonly required />
+        <button
+          mat-icon-button
+          matSuffix
+          color="primary"
+          (click)="openSoldierSelect()"
+          matTooltip="Вибрати"
+        >
+          <mat-icon>person_search</mat-icon>
+        </button>
+      </mat-form-field>
 
       <!-- Логін з перевіркою доступності -->
       <mat-form-field appearance="outline" class="full-width">

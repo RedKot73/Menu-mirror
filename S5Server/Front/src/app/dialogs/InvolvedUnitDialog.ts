@@ -13,7 +13,7 @@ import { debounceTime, distinctUntilChanged, switchMap, startWith, finalize } fr
 import { AsyncPipe } from '@angular/common';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
-import { UnitDto } from '../Unit/services/unit.service';
+import { UnitDto } from '../../ServerService/unit.service';
 import { DictAreasService } from '../../ServerService/dictAreas.service';
 import { LookupDto } from '../shared/models/lookup.models';
 import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';

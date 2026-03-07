@@ -24,8 +24,8 @@ import {
   SoldierDialogResult,
 } from '../dialogs/SoldierDialog.component';
 import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
-import { SoldierService, SoldierDto } from '../Soldier/services/soldier.service';
-import { UnitService } from '../Unit/services/unit.service';
+import { SoldierService, SoldierDto } from '../../ServerService/soldier.service';
+import { UnitService } from '../../ServerService/unit.service';
 import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import {
@@ -35,7 +35,11 @@ import {
   UnitTag,
 } from '../Soldier/Soldier.constant';
 import { SoldierUtils } from '../Soldier/soldier.utils';
-import { InlineEditManager, EditColumn, resolveUnitOperation } from '../Soldier/InlineEditManager.class';
+import {
+  InlineEditManager,
+  EditColumn,
+  resolveUnitOperation,
+} from '../Soldier/InlineEditManager.class';
 
 @Component({
   selector: 'app-personnel-page',

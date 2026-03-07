@@ -2,33 +2,12 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-export interface SoldierTaskDto {
-  id: string;
+import { SoldierDto } from './soldier.service';
+
+export interface SoldierTaskDto extends SoldierDto {
   unitTaskId: string;
   soldierId: string;
   externId: number | null;
-  firstName: string;
-  midleName: string | null;
-  lastName: string | null;
-  fio: string;
-  nickName: string | null;
-  unitId: string;
-  unitShortName: string;
-  arrivedAt: string | null; // DateOnly as ISO string
-  departedAt: string | null; // DateOnly as ISO string
-  assignedUnitId: string | null;
-  assignedUnitShortName: string | null;
-  involvedUnitId: string | null;
-  involvedUnitShortName: string | null;
-  rankId: string;
-  rankShortValue: string;
-  positionId: string;
-  positionValue: string;
-  stateId: string;
-  stateValue: string;
-  comment: string | null;
-  changedBy: string;
-  validFrom: string; // DateTime as ISO string
 }
 
 export interface SoldierCountDto {

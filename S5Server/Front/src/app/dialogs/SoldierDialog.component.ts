@@ -16,8 +16,8 @@ import { MatDatepickerModule, MatDatepickerInputEvent } from '@angular/material/
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { forkJoin } from 'rxjs';
 
-import { SoldierCreateDto } from '../Soldier/services/soldier.service';
-import { UnitDto, UnitService } from '../Unit/services/unit.service';
+import { SoldierCreateDto } from '../../ServerService/soldier.service';
+import { UnitDto, UnitService } from '../../ServerService/unit.service';
 import { DictRankService } from '../../ServerService/dictRanks.service';
 import { DictPositionService } from '../../ServerService/dictPosition.service';
 import { DictSoldierStatesService } from '../../ServerService/dictSoldierStates.service';

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { SoldierDto } from '../../Soldier/services/soldier.service';
+import { SoldierDto } from '../../../ServerService/soldier.service';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 
 export enum ImportSoldierStatus {
@@ -69,10 +69,10 @@ export class ImportUnitService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
-          'Не вдалося імпортувати особовий склад'
+          'Не вдалося імпортувати особовий склад',
         );
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -81,10 +81,10 @@ export class ImportUnitService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
-          'Не вдалося отримати останні підрозділи'
+          'Не вдалося отримати останні підрозділи',
         );
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 
@@ -94,10 +94,10 @@ export class ImportUnitService {
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
-          'Не вдалося отримати перелік підрозділів'
+          'Не вдалося отримати перелік підрозділів',
         );
         return throwError(() => new Error(message));
-      })
+      }),
     );
   }
 

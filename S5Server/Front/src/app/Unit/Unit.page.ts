@@ -22,7 +22,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
 
-import { UnitService, UnitDto, UnitTreeItemDto } from './services/unit.service';
+import { UnitService, UnitDto, UnitTreeItemDto } from '../../ServerService/unit.service';
 import { UnitTreeComponent } from './UnitTree.component';
 import { UnitTableComponent } from './UnitTable.component';
 import { UnitContentComponent } from './UnitContent.component';
@@ -185,7 +185,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
     // Use fixed percentage limits to avoid conflicts with CSS min-width
     newNavWidth = Math.max(
       this.MIN_PANEL_WIDTH_PERCENT,
-      Math.min(this.MAX_PANEL_WIDTH_PERCENT, newNavWidth)
+      Math.min(this.MAX_PANEL_WIDTH_PERCENT, newNavWidth),
     );
 
     this.navPanelWidth.set(newNavWidth);
@@ -266,7 +266,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
     const currentNavWidth = this.navPanelWidth();
     const clampedNavWidth = Math.max(
       this.MIN_PANEL_WIDTH_PERCENT,
-      Math.min(this.MAX_PANEL_WIDTH_PERCENT, currentNavWidth)
+      Math.min(this.MAX_PANEL_WIDTH_PERCENT, currentNavWidth),
     );
 
     if (clampedNavWidth !== currentNavWidth) {
@@ -352,7 +352,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
               console.error('Помилка створення підрозділу:', error);
               const errorMessage = S5App_ErrorHandler.handleHttpError(
                 error,
-                'Помилка створення підрозділу'
+                'Помилка створення підрозділу',
               );
               this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
             },
@@ -411,7 +411,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
               console.error('Помилка створення дочірнього підрозділу:', error);
               const errorMessage = S5App_ErrorHandler.handleHttpError(
                 error,
-                'Помилка створення дочірнього підрозділу'
+                'Помилка створення дочірнього підрозділу',
               );
               this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
             },
@@ -470,7 +470,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
               console.error('Помилка створення Екіпаж/Група:', error);
               const errorMessage = S5App_ErrorHandler.handleHttpError(
                 error,
-                'Помилка створення Екіпаж/Група'
+                'Помилка створення Екіпаж/Група',
               );
               this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
             },
@@ -517,7 +517,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
             console.error('Помилка оновлення підрозділу:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка оновлення підрозділу'
+              'Помилка оновлення підрозділу',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
@@ -553,7 +553,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
             console.error('Помилка оновлення підрозділу:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка оновлення підрозділу'
+              'Помилка оновлення підрозділу',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
@@ -610,7 +610,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
             console.error('Помилка видалення підрозділу:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка видалення підрозділу'
+              'Помилка видалення підрозділу',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
@@ -634,7 +634,7 @@ export class UnitsComponent implements AfterViewInit, OnDestroy {
         console.error('Помилка переміщення підрозділу:', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
-          'Помилка переміщення підрозділу'
+          'Помилка переміщення підрозділу',
         );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },

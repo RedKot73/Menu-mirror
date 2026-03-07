@@ -3,51 +3,51 @@ import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http'
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-import { LookupDto } from '../../shared/models/lookup.models';
-import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
-import { toDateOnly } from '../../shared/utils/date.utils';
+import { LookupDto } from '../app/shared/models/lookup.models';
+import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
+import { toDateOnly } from '../app/shared/utils/date.utils';
 
 export interface SoldierDto {
   id: string;
   firstName: string;
-  midleName?: string;
-  lastName?: string;
-  birthDate?: Date;
-  nickName?: string;
+  midleName?: string | null;
+  lastName?: string | null;
+  nickName?: string | null;
   unitId: string;
   unitShortName: string;
   arrivedAt?: Date;
   departedAt?: Date;
-  assignedUnitId?: string;
-  assignedUnitShortName?: string;
-  involvedUnitId?: string;
-  involvedUnitShortName?: string;
+  assignedUnitId?: string | null;
+  assignedUnitShortName?: string | null;
+  involvedUnitId?: string | null;
+  involvedUnitShortName?: string | null;
   rankId: string;
   rankShortValue: string;
   positionId: string;
   positionValue: string;
   stateId: string;
   stateValue: string;
-  comment?: string;
+  comment?: string | null;
+  birthDate?: Date;
   changedBy: string;
   validFrom: Date;
 }
 
 export interface SoldierCreateDto {
   firstName: string;
-  midleName?: string;
-  lastName?: string;
+  midleName?: string | null;
+  lastName?: string | null;
   birthDate?: Date;
-  nickName?: string;
+  nickName?: string | null;
   unitId: string;
   arrivedAt: Date;
   departedAt?: Date;
-  assignedUnitId?: string;
-  involvedUnitId?: string;
+  assignedUnitId?: string | null;
+  involvedUnitId?: string | null;
   rankId: string;
   positionId: string;
   stateId: string;
-  comment?: string;
+  comment?: string | null;
 }
 
 @Injectable({

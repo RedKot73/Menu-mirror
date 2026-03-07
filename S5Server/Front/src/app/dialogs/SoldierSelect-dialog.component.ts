@@ -12,7 +12,7 @@ import { MatSortModule } from '@angular/material/sort';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
-import { SoldierDto, SoldierService } from '../Soldier/services/soldier.service';
+import { SoldierDto, SoldierService } from '../../ServerService/soldier.service';
 import { SoldierUtils } from '../Soldier/soldier.utils';
 
 export interface SoldierSelectDialogData {

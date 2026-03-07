@@ -290,9 +290,7 @@
     <tr
       mat-row
       *matRowDef="let row; columns: displayedColumns"
-      [class.row-severe]="isSevereStatus(row.stateId)"
-      [class.row-problematic]="isProblematicStatus(row.stateId)"
-      [class.row-recovery]="isRecoveryStatus(row.stateId)"
+      [class]="getRowClass(row)"
     ></tr>
   </table>
 </div>

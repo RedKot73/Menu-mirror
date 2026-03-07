@@ -1,6 +1,6 @@
 /** Модели аутентификации — соответствуют серверным DTO */
 
-import { SoldierDto } from '../Soldier/services/soldier.service';
+import { SoldierDto } from '../../ServerService/soldier.service';
 
 export interface LoginDto {
   userName: string;

@@ -28,9 +28,13 @@ import {
   ImportSoldierStatus,
 } from '../Import/import.service';
 
-import { SoldierService, SoldierDto } from '../../Soldier/services/soldier.service';
-import { UnitService } from '../services/unit.service';
-import { InlineEditManager, EditColumn, resolveUnitOperation } from '../../Soldier/InlineEditManager.class';
+import { SoldierService, SoldierDto } from '../../../ServerService/soldier.service';
+import { UnitService } from '../../../ServerService/unit.service';
+import {
+  InlineEditManager,
+  EditColumn,
+  resolveUnitOperation,
+} from '../../Soldier/InlineEditManager.class';
 import { UnitTag } from '../../Soldier/Soldier.constant';
 
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
@@ -304,7 +308,11 @@ export class ImportProgressPage implements OnInit, OnDestroy {
 
   // === Inline edit helpers ===
   startEditing(soldier: SoldierDto, column: EditColumn) {
-    this.inlineEdit.startEdit(soldier.id, column, InlineEditManager.getInitialValue(soldier, column));
+    this.inlineEdit.startEdit(
+      soldier.id,
+      column,
+      InlineEditManager.getInitialValue(soldier, column),
+    );
   }
 
   getControl(soldier: SoldierDto, column: EditColumn) {

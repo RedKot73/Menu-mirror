@@ -3,9 +3,9 @@ import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http'
 import { Observable, of, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-import { LookupDto } from '../../shared/models/lookup.models';
-import { SoldierDto } from '../../Soldier/services/soldier.service';
-import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
+import { LookupDto } from '../app/shared/models/lookup.models';
+import { SoldierDto } from './soldier.service';
+import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
 
 export interface UnitDto {
   id: string;
@@ -256,17 +256,15 @@ export class UnitService {
    * POST /api/Unit/{parentId}/add-exists-child/{childId}
    */
   addExistingChild(parentId: string, childId: string): Observable<void> {
-    return this.http
-      .post<void>(`${this.baseUrl}/${parentId}/add-exists-child/${childId}`, {})
-      .pipe(
-        catchError((error: HttpErrorResponse) => {
-          const message = S5App_ErrorHandler.handleHttpError(
-            error,
-            'Не вдалося додати дочірній підрозділ',
-          );
-          return throwError(() => new Error(message));
-        }),
-      );
+    return this.http.post<void>(`${this.baseUrl}/${parentId}/add-exists-child/${childId}`, {}).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося додати дочірній підрозділ',
+        );
+        return throwError(() => new Error(message));
+      }),
+    );
   }
 
   /**
@@ -322,7 +320,9 @@ export class UnitService {
    * GET /api/Unit/lookup?term={term}&isInvolved={isInvolved}
    */
   lookup(term: string, isInvolved?: boolean): Observable<LookupDto[]> {
-    if (!term?.trim()) { return of([]); }
+    if (!term?.trim()) {
+      return of([]);
+    }
 
     let params = new HttpParams();
     params = params.set('term', term);

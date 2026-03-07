@@ -1,6 +1,6 @@
-﻿using HotChocolate.Authorization;
+﻿using DocumentFormat.OpenXml.Office2010.Excel;
 
-using Microsoft.EntityFrameworkCore;
+using HotChocolate.Authorization;
 
 using S5Server.Data;
 using S5Server.Models;
@@ -49,12 +49,11 @@ public class Query
     /// </summary>
     [Authorize]
     [UseProjection]
-    public async Task<DocumentTemplate?> GetDocumentTemplate(
+    public IQueryable<DocumentTemplate?> GetDocumentTemplate(
         Guid id,
-        [Service] MainDbContext db,
-        CancellationToken ct)
-        => await db.DocumentTemplates
-            .FirstOrDefaultAsync(t => t.Id == id, ct);
+        [Service] MainDbContext db)
+        => db.DocumentTemplates
+            .Where(t => t.Id == id);
 
     /// <summary>
     /// Отримати всі підрозділи
@@ -68,6 +67,17 @@ public class Query
         => db.Units;
 
     /// <summary>
+    /// Отримати підрозділ за id
+    /// </summary>
+    [Authorize]
+    [UseProjection]
+    public IQueryable<Unit?> GetUnit(
+        Guid id,
+        [Service] MainDbContext db)
+        => db.Units
+            .Where(t => t.Id == id);
+
+    /// <summary>
     /// Отримати всіх бійців
     /// </summary>
     [Authorize]
@@ -77,4 +87,59 @@ public class Query
     public IQueryable<Soldier> GetSoldiers(
         [Service] MainDbContext db)
         => db.Soldiers;
+
+    /// <summary>
+    /// Историческая таблица подразделений
+    /// </summary>
+    /// <param name="db"></param>
+    /// <returns></returns>
+    [Authorize]
+    [UseProjection]
+    [UseFiltering]
+    [UseSorting]
+    public IQueryable<UnitHist> GetUnitsHistories(
+        [Service] MainDbContext db)
+        => db.UnitHistories;
+
+    /// <summary>
+    /// Историческая таблица подразделений
+    /// </summary>
+    /// <param name="id">Id підрозділу</param>
+    /// <param name="db"></param>
+    /// <returns></returns>
+    [Authorize]
+    [UseProjection]
+    public IQueryable<UnitHist> GetUnitHistory(
+        Guid id,
+        [Service] MainDbContext db)
+        => db.UnitHistories
+           .Where(t => t.UnitId == id);
+
+    /// <summary>
+    /// Історична таблиця змін бійців
+    /// </summary>
+    /// <param name="db"></param>
+    /// <returns></returns>
+    [Authorize]
+    [UseProjection]
+    [UseFiltering]
+    [UseSorting]
+    public IQueryable<SoldierHist> GetSoldierHistories(
+        [Service] MainDbContext db)
+        => db.SoldierHistories;
+
+    /// <summary>
+    /// Історична таблиця змін бійця
+    /// </summary>
+    /// <param name="id">Id бійця</param>
+    /// <param name="db"></param>
+    /// <returns></returns>
+    [Authorize]
+    [UseProjection]
+    public IQueryable<SoldierHist> GetSoldierHistory(
+        Guid id,
+        [Service] MainDbContext db)
+        => db.SoldierHistories
+           .Where(t => t.SoldierId == id);
 }
+

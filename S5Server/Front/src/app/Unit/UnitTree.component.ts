@@ -10,7 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 //import { Router } from '@angular/router';
 
-import { UnitService, UnitTreeItemDto } from './services/unit.service';
+import { UnitService, UnitTreeItemDto } from '../../ServerService/unit.service';
 import { UnitTreeNodeComponent, UnitTreeNode } from './unit-tree-node.component';
 import { NULL_GUID } from './unit.constants';
 import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
@@ -71,7 +71,7 @@ export class UnitTreeComponent implements OnInit {
               isLoaded: false,
               isLoading: false,
               level: 0,
-            } as UnitTreeNode)
+            }) as UnitTreeNode,
         );
         this.dataSource.data = treeNodes;
       }
@@ -79,7 +79,7 @@ export class UnitTreeComponent implements OnInit {
       console.error('Помилка завантаження кореневих даних:', error);
       const errorMessage = S5App_ErrorHandler.handleHttpError(
         error,
-        'Помилка завантаження кореневих даних'
+        'Помилка завантаження кореневих даних',
       );
       this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
     } finally {
@@ -109,7 +109,7 @@ export class UnitTreeComponent implements OnInit {
     parentNode.isLoading = true;
     try {
       const children = await firstValueFrom(
-        this.unitService.getTreeItems(undefined, parentNode.id)
+        this.unitService.getTreeItems(undefined, parentNode.id),
       );
 
       if (children) {
@@ -121,7 +121,7 @@ export class UnitTreeComponent implements OnInit {
               isLoaded: false,
               isLoading: false,
               level: parentNode.level + 1,
-            } as UnitTreeNode)
+            }) as UnitTreeNode,
         );
 
         parentNode.children = childNodes;
@@ -134,7 +134,7 @@ export class UnitTreeComponent implements OnInit {
       console.error('Помилка завантаження дочірніх елементів:', error);
       const errorMessage = S5App_ErrorHandler.handleHttpError(
         error,
-        'Помилка завантаження дочірніх елементів'
+        'Помилка завантаження дочірніх елементів',
       );
       this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
     } finally {
@@ -160,7 +160,7 @@ export class UnitTreeComponent implements OnInit {
   private findAndProcessNodeById<T>(
     nodeId: string,
     processor: (node: UnitTreeNode) => T,
-    nodes: UnitTreeNode[] = this.dataSource.data
+    nodes: UnitTreeNode[] = this.dataSource.data,
   ): T | null {
     for (const node of nodes) {
       if (node.id === nodeId) {
@@ -190,7 +190,7 @@ export class UnitTreeComponent implements OnInit {
           parentArray.splice(index, 1);
           return true;
         },
-        nodes
+        nodes,
       ) ?? false
     );
   }
@@ -205,7 +205,7 @@ export class UnitTreeComponent implements OnInit {
   private findAndProcessNodesById<T>(
     nodeId: string,
     processor: (parentArray: UnitTreeNode[], index: number) => T,
-    nodes: UnitTreeNode[] = this.dataSource.data
+    nodes: UnitTreeNode[] = this.dataSource.data,
   ): T | null {
     for (let i = 0; i < nodes.length; i++) {
       if (nodes[i].id === nodeId) {

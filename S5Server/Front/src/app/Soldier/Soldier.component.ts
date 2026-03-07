@@ -18,7 +18,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SlicePipe, DatePipe, AsyncPipe } from '@angular/common';
 
 import { ConfirmDialogComponent } from '../dialogs/ConfirmDialog.component';
-import { UnitService } from '../Unit/services/unit.service';
+import { UnitService } from '../../ServerService/unit.service';
 import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
 import { InlineEditManager, EditColumn, resolveUnitOperation } from './InlineEditManager.class';
 import {
@@ -26,9 +26,9 @@ import {
   SoldierDialogData,
   SoldierDialogResult,
 } from '../dialogs/SoldierDialog.component';
-import { SoldierService, SoldierDto } from './services/soldier.service';
+import { SoldierService, SoldierDto } from '../../ServerService/soldier.service';
 import { SoldierUtils } from '../Soldier/soldier.utils';
-import { isSevereStatus, isProblematicStatus, isRecoveryStatus, UnitTag } from './Soldier.constant';
+import { UnitTag } from './Soldier.constant';
 
 // Re-export для использования в других компонентах
 export { UnitTag };
@@ -78,11 +78,6 @@ export class SoldiersComponent implements AfterViewInit {
   inlineEdit = new InlineEditManager((column: EditColumn, term: string) =>
     this.unitService.lookup(term, column === UnitTag.InvolvedId),
   );
-
-  // Методы для проверки статусов (делаем доступными в шаблоне)
-  isSevereStatus = isSevereStatus;
-  isProblematicStatus = isProblematicStatus;
-  isRecoveryStatus = isRecoveryStatus;
 
   @ViewChild(MatSort) sort!: MatSort;
 
@@ -325,20 +320,17 @@ export class SoldiersComponent implements AfterViewInit {
     this.items.set(next);
   }
 
-  unitTagTitle(soldier: SoldierDto): string {
-    switch (this.unitId()) {
-      case soldier.unitId:
-        return '';
-      case soldier.assignedUnitId:
-        return 'Приданий';
-      case soldier.involvedUnitId:
-        return 'Задіяний';
-      default:
-        return ''; // За замовчуванням
-    }
-  }
-
   formatFIO(item: SoldierDto): string {
     return SoldierUtils.formatFIO(item.firstName, item.midleName, item.lastName);
+  }
+
+  unitTagTitle(soldier: SoldierDto): string {
+    return SoldierUtils.getUnitTagLabel(
+      SoldierUtils.getUnitTag(soldier, this.unitId() || ''),
+    );
+  }
+
+  getRowClass(soldier: SoldierDto): string {
+    return SoldierUtils.getRowClass(soldier, this.unitId() || '');
   }
 }

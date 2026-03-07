@@ -28,7 +28,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TemplateDataSetUpSertDto, UnitTaskDto } from '../models/template-dataset.models';
 import { TemplateDataSetService } from '../services/template-dataset.service';
 import { UnitTaskService } from '../services/unit-task.service';
-import { UnitService } from '../../Unit/services/unit.service';
+import { UnitService } from '../../../ServerService/unit.service';
 import { UnitTaskCardComponent } from './UnitTaskCard.component';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 import { TemplateDataSetDto } from '../models/template-dataset.models';
@@ -54,8 +54,7 @@ import { DateMaskDirective } from '../../shared/directives/date-mask.directive';
     MatTooltipModule,
     DateMaskDirective,
   ],
-  providers: [
-  ],
+  providers: [],
   templateUrl: './UnitsTaskEditor.component.html',
   styleUrls: ['./UnitsTaskEditor.component.scss'],
 })
@@ -207,46 +206,49 @@ export class UnitsTaskEditorComponent {
     }
 
     // Завантажуємо дані підрозділу через UnitService
-    this.unitService.getById(unitId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (unit) => {
-        // Створюємо новий UnitTask (ще не збережений на сервері)
-        const unitTask: UnitTaskDto = {
-          id: '', // Ще не створено на сервері
-          unitId: unit.id,
-          unitShortName: unit.shortName || '',
-          parentId: unit.parentId,
-          parentShortName: unit.parentShortName || '',
-          assignedUnitId: unit.assignedUnitId,
-          assignedShortName: unit.assignedShortName,
-          unitTypeId: unit.unitTypeId,
-          unitTypeName: unit.unitType,
-          isInvolved: false,
-          persistentLocationId: unit.persistentLocationId,
-          persistentLocationValue: unit.persistentLocation,
-          taskId: '', // Користувач має вибрати
-          taskValue: '',
-          areaId: '', // Користувач має вибрати РВЗ
-          areaValue: '',
-          meansCount: 0, // ✅ Кількість засобів (Master-Detail)
-          means: [], // ✅ OPTIONAL: завантажується окремо
-          isPublished: false,
-          publishedAtUtc: undefined,
-          changedBy: '',
-          validFrom: new Date().toISOString(),
-        };
+    this.unitService
+      .getById(unitId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (unit) => {
+          // Створюємо новий UnitTask (ще не збережений на сервері)
+          const unitTask: UnitTaskDto = {
+            id: '', // Ще не створено на сервері
+            unitId: unit.id,
+            unitShortName: unit.shortName || '',
+            parentId: unit.parentId,
+            parentShortName: unit.parentShortName || '',
+            assignedUnitId: unit.assignedUnitId,
+            assignedShortName: unit.assignedShortName,
+            unitTypeId: unit.unitTypeId,
+            unitTypeName: unit.unitType,
+            isInvolved: false,
+            persistentLocationId: unit.persistentLocationId,
+            persistentLocationValue: unit.persistentLocation,
+            taskId: '', // Користувач має вибрати
+            taskValue: '',
+            areaId: '', // Користувач має вибрати РВЗ
+            areaValue: '',
+            meansCount: 0, // ✅ Кількість засобів (Master-Detail)
+            means: [], // ✅ OPTIONAL: завантажується окремо
+            isPublished: false,
+            publishedAtUtc: undefined,
+            changedBy: '',
+            validFrom: new Date().toISOString(),
+          };
 
-        this.selectedUnits.set([...currentList, unitTask]);
-        this.hasUnsavedChanges.set(true);
-      },
-      error: (error) => {
-        console.error('Помилка завантаження даних підрозділу:', error);
-        const errorMessage = S5App_ErrorHandler.handleHttpError(
-          error,
-          'Помилка завантаження даних підрозділу',
-        );
-        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-      },
-    });
+          this.selectedUnits.set([...currentList, unitTask]);
+          this.hasUnsavedChanges.set(true);
+        },
+        error: (error) => {
+          console.error('Помилка завантаження даних підрозділу:', error);
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
+            error,
+            'Помилка завантаження даних підрозділу',
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
+      });
   }
 
   /**
@@ -272,36 +274,41 @@ export class UnitsTaskEditorComponent {
       return;
     }
 
-    this.dataSetService.getDataSetById(dataSetId).pipe(
-      tap((dataSet) => {
-        // Зберігаємо інформацію про поточний DataSet
-        this.dataSet.set(dataSet);
+    this.dataSetService
+      .getDataSetById(dataSetId)
+      .pipe(
+        tap((dataSet) => {
+          // Зберігаємо інформацію про поточний DataSet
+          this.dataSet.set(dataSet);
 
-        // Оновлюємо дані документа старшого начальника
-        this.isParentDocUsed.set(dataSet.isParentDocUsed);
-        this.parentDocumentDate.set(dataSet.parentDocDate ? new Date(dataSet.parentDocDate) : null);
-        this.parentDocumentNumber.set(dataSet.parentDocNumber || '');
+          // Оновлюємо дані документа старшого начальника
+          this.isParentDocUsed.set(dataSet.isParentDocUsed);
+          this.parentDocumentDate.set(
+            dataSet.parentDocDate ? new Date(dataSet.parentDocDate) : null,
+          );
+          this.parentDocumentNumber.set(dataSet.parentDocNumber || '');
 
-        // Оновлюємо дату та номер документа
-        this.documentDate.set(new Date(dataSet.docDate));
-        this.documentNumber.set(dataSet.docNumber);
-      }),
-      switchMap((dataSet) => this.unitTaskService.getAll({ dataSetId: dataSet.id })),
-      takeUntilDestroyed(this.destroyRef),
-    ).subscribe({
-      next: (unitTasks) => {
-        this.selectedUnits.set(unitTasks);
-        this.hasUnsavedChanges.set(false);
-      },
-      error: (error) => {
-        console.error('Помилка завантаження набору даних:', error);
-        const errorMessage = S5App_ErrorHandler.handleHttpError(
-          error,
-          'Помилка завантаження набору даних',
-        );
-        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-      },
-    });
+          // Оновлюємо дату та номер документа
+          this.documentDate.set(new Date(dataSet.docDate));
+          this.documentNumber.set(dataSet.docNumber);
+        }),
+        switchMap((dataSet) => this.unitTaskService.getAll({ dataSetId: dataSet.id })),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (unitTasks) => {
+          this.selectedUnits.set(unitTasks);
+          this.hasUnsavedChanges.set(false);
+        },
+        error: (error) => {
+          console.error('Помилка завантаження набору даних:', error);
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
+            error,
+            'Помилка завантаження набору даних',
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
+      });
   }
 
   /**
@@ -415,38 +422,47 @@ export class UnitsTaskEditorComponent {
 
     if (currentDataSet) {
       // Оновлюємо існуючий DataSet
-      this.dataSetService.updateDataSet(currentDataSet.id, dataSetDto).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: () => {
-          // Після оновлення DataSet зберігаємо UnitTask
-          this.saveUnitTasks(currentDataSet.id);
-        },
-        error: (error) => {
-          this.isSaving.set(false);
-          console.error('Error updating dataset:', error);
-          const errorMessage = S5App_ErrorHandler.handleHttpError(error, 'Помилка оновлення даних');
-          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-        },
-      });
+      this.dataSetService
+        .updateDataSet(currentDataSet.id, dataSetDto)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: () => {
+            // Після оновлення DataSet зберігаємо UnitTask
+            this.saveUnitTasks(currentDataSet.id);
+          },
+          error: (error) => {
+            this.isSaving.set(false);
+            console.error('Error updating dataset:', error);
+            const errorMessage = S5App_ErrorHandler.handleHttpError(
+              error,
+              'Помилка оновлення даних',
+            );
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          },
+        });
     } else {
       // Створюємо новий DataSet
-      this.dataSetService.createDataSet(dataSetDto).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: (createdDataSet) => {
-          // Зберігаємо інформацію про новостворений DataSet
-          this.dataSet.set(createdDataSet);
+      this.dataSetService
+        .createDataSet(dataSetDto)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (createdDataSet) => {
+            // Зберігаємо інформацію про новостворений DataSet
+            this.dataSet.set(createdDataSet);
 
-          // Після створення DataSet зберігаємо UnitTask
-          this.saveUnitTasks(createdDataSet.id);
-        },
-        error: (error) => {
-          this.isSaving.set(false);
-          console.error('Error creating dataset:', error);
-          const errorMessage = S5App_ErrorHandler.handleHttpError(
-            error,
-            'Помилка збереження даних',
-          );
-          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-        },
-      });
+            // Після створення DataSet зберігаємо UnitTask
+            this.saveUnitTasks(createdDataSet.id);
+          },
+          error: (error) => {
+            this.isSaving.set(false);
+            console.error('Error creating dataset:', error);
+            const errorMessage = S5App_ErrorHandler.handleHttpError(
+              error,
+              'Помилка збереження даних',
+            );
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          },
+        });
     }
   }
 
@@ -543,32 +559,35 @@ export class UnitsTaskEditorComponent {
 
     this.isSaving.set(true);
 
-    this.dataSetService.publish(currentDataSet.id, isPublished).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.isSaving.set(false);
-        // Оновлюємо статус в локальному signal
-        this.dataSet.set({
-          ...currentDataSet,
-          isPublished: isPublished,
-          publishedAtUtc: isPublished ? new Date().toISOString() : undefined,
-          validFrom: new Date().toISOString(),
-        });
+    this.dataSetService
+      .publish(currentDataSet.id, isPublished)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.isSaving.set(false);
+          // Оновлюємо статус в локальному signal
+          this.dataSet.set({
+            ...currentDataSet,
+            isPublished: isPublished,
+            publishedAtUtc: isPublished ? new Date().toISOString() : undefined,
+            validFrom: new Date().toISOString(),
+          });
 
-        const statusText = isPublished ? 'опубліковано' : 'знято з публікації';
-        this.snackBar.open(`Набір "${currentDataSet.name}" ${statusText}`, 'Закрити', {
-          duration: 3000,
-        });
-      },
-      error: (error) => {
-        this.isSaving.set(false);
-        console.error('Error changing publish status:', error);
-        const errorMessage = S5App_ErrorHandler.handleHttpError(
-          error,
-          'Помилка зміни статусу публікації',
-        );
-        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-      },
-    });
+          const statusText = isPublished ? 'опубліковано' : 'знято з публікації';
+          this.snackBar.open(`Набір "${currentDataSet.name}" ${statusText}`, 'Закрити', {
+            duration: 3000,
+          });
+        },
+        error: (error) => {
+          this.isSaving.set(false);
+          console.error('Error changing publish status:', error);
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
+            error,
+            'Помилка зміни статусу публікації',
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
+      });
   }
 
   /**

@@ -48,12 +48,7 @@ import {
   SoldierTaskService,
   SoldierTaskDto,
   SoldierCountDto,
-} from '../../DocumentDataSet/services/soldierTask.service';
-import {
-  isSevereStatus,
-  isProblematicStatus,
-  isRecoveryStatus,
-} from '../../Soldier/Soldier.constant';
+} from '../../../ServerService/soldierTask.service';
 import { SoldierUtils } from '../../Soldier/soldier.utils';
 import { DocTemplateUtils } from '../models/shared.models';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
@@ -141,11 +136,6 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   editingMeanValue = signal<number | undefined>(undefined);
 
   @ViewChild(MatSort) sort!: MatSort;
-
-  // Методи для перевірки статусів
-  isSevereStatus = isSevereStatus;
-  isProblematicStatus = isProblematicStatus;
-  isRecoveryStatus = isRecoveryStatus;
 
   @Input({ required: true })
   set unitTask(value: UnitTaskDto) {
@@ -764,16 +754,12 @@ export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   unitTagTitle(soldier: SoldierTaskDto): string {
-    const unitId = this.unitTask.unitId;
-    switch (unitId) {
-      case soldier.unitId:
-        return '';
-      case soldier.assignedUnitId:
-        return 'Приданий';
-      case soldier.involvedUnitId:
-        return 'Задіяний';
-      default:
-        return ''; // За замовчуванням
-    }
+    return SoldierUtils.getUnitTagLabel(
+      SoldierUtils.getUnitTag(soldier, this.unitTask.unitId || ''),
+    );
+  }
+
+  getRowClass(soldier: SoldierTaskDto): string {
+    return SoldierUtils.getRowClass(soldier, this.unitTask.unitId || '');
   }
 }

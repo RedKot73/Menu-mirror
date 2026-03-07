@@ -247,4 +247,13 @@
       border-color: #2e7d32;
     }
   }
+
+  // Відряджений (має assignedUnit або involvedUnit) - жовтий фон
+  &.row-seconded {
+    background-color: #fffde7 !important;
+
+    &:hover {
+      background-color: #fff9c4 !important;
+    }
+  }
 }

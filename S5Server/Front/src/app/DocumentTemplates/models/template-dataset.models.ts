@@ -75,35 +75,7 @@ export interface UnitTaskDto {
   validFrom: string;
 }
 
-/**
- * DTO для snap-shot бійця в UnitTask
- */
-export interface SoldierTaskDto {
-  id: string;
-  unitTaskId: string;
-  soldierId: string;
-  externId?: number;
-  firstName: string;
-  midleName?: string;
-  lastName?: string;
-  fio: string;
-  nickName?: string;
-  unitId: string;
-  unitShortName: string;
-  assignedUnitId?: string;
-  assignedUnitShortName?: string;
-  involvedUnitId?: string;
-  involvedUnitShortName?: string;
-  rankId: string;
-  rankShortValue: string;
-  positionId: string;
-  positionValue: string;
-  stateId: string;
-  stateValue: string;
-  comment?: string;
-  changedBy: string;
-  validFrom: string;
-}
+// SoldierTaskDto — визначено у soldierTask.service.ts (extends SoldierBaseDto)
 
 /**
  * DTO для моделі БПЛА в завданні підрозділу

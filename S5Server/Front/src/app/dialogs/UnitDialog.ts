@@ -31,7 +31,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { DictForcesTypeService, DictForcesType } from '../../ServerService/dictForcesType.service';
 import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
-import { UnitDto, UnitService } from '../Unit/services/unit.service';
+import { UnitDto, UnitService } from '../../ServerService/unit.service';
 import { DictUnitTypeService, DictUnitType } from '../../ServerService/dictUnitType.service';
 import { DictAreasService, DictArea } from '../../ServerService/dictAreas.service';
 import { LookupDto } from '../shared/models/lookup.models';

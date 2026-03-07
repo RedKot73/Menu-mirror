@@ -3,7 +3,7 @@ import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http'
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-import { SoldierDto } from '../Soldier/services/soldier.service';
+import { SoldierDto } from '../../ServerService/soldier.service';
 import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
 import { LookupDto } from '../shared/models/lookup.models';
 
