@@ -3,8 +3,8 @@ import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http'
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-import { DroneModelTaskDto } from '../models/template-dataset.models';
-import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
+import { DroneModelTaskDto } from '../app/DocumentTemplates/models/template-dataset.models';
+import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
 
 /**
  * DTO для створення DroneModelTask

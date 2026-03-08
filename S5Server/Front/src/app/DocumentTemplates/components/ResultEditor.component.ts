@@ -12,7 +12,7 @@ import { Editor, NgxEditorModule, Toolbar } from 'ngx-editor';
 import { saveAs } from 'file-saver';
 
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
-import { HandlebarsTemplateService } from '../services/handlebars-template.service';
+import { HandlebarsTemplateService } from '../../../ServerService/handlebars-template.service';
 import { DatasetData } from '../models/template.types';
 import { NGX_EDITOR_TOOLBAR /*NGX_EDITOR_TOOLBAR_READONLY*/ } from './ngx-editor.config';
 

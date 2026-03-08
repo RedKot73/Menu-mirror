@@ -24,7 +24,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { DocumentTemplateService } from '../services/document-template.service';
+import { DocumentTemplateService } from '../../../ServerService/document-template.service';
 import { DocTemplateUtils } from '../models/shared.models';
 import { CreateTemplateDto, TemplateDto } from '../models/document-template.models';
 import {
@@ -114,7 +114,7 @@ export class DocTemplateComponent implements AfterViewInit {
         console.error('Error loading templates:', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
-          'Помилка завантаження шаблонів'
+          'Помилка завантаження шаблонів',
         );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
         this.isLoading.set(false);
@@ -149,7 +149,7 @@ export class DocTemplateComponent implements AfterViewInit {
             console.error('Error creating template:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка створення шаблону'
+              'Помилка створення шаблону',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
@@ -190,7 +190,7 @@ export class DocTemplateComponent implements AfterViewInit {
             console.error('Error updating template:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка оновлення шаблону'
+              'Помилка оновлення шаблону',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
@@ -225,7 +225,7 @@ export class DocTemplateComponent implements AfterViewInit {
             console.error('Error deleting template:', error);
             const errorMessage = S5App_ErrorHandler.handleHttpError(
               error,
-              'Помилка видалення шаблону'
+              'Помилка видалення шаблону',
             );
             this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
           },
@@ -248,7 +248,7 @@ export class DocTemplateComponent implements AfterViewInit {
         console.error('Error downloading template:', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
-          'Помилка завантаження шаблону'
+          'Помилка завантаження шаблону',
         );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
@@ -267,7 +267,7 @@ export class DocTemplateComponent implements AfterViewInit {
         console.error('Error publishing template:', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
-          'Помилка публікації шаблону'
+          'Помилка публікації шаблону',
         );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
@@ -286,7 +286,7 @@ export class DocTemplateComponent implements AfterViewInit {
         console.error('Error unpublishing template:', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,
-          'Помилка зняття шаблону з публікації'
+          'Помилка зняття шаблону з публікації',
         );
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },

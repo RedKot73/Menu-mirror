@@ -1,6 +1,12 @@
 import {
-    Component, inject, signal, computed,
-    effect, input, OnInit, OnDestroy
+  Component,
+  inject,
+  signal,
+  computed,
+  effect,
+  input,
+  OnInit,
+  OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -20,7 +26,7 @@ import {
   Toolbar,
 } from 'ngx-editor';
 
-import { DocumentTemplateService } from '../services/document-template.service';
+import { DocumentTemplateService } from '../../../ServerService/document-template.service';
 import { TemplateDto } from '../models/document-template.models';
 import { DocTemplateUtils } from '../models/shared.models';
 import { NGX_EDITOR_TOOLBAR, NGX_EDITOR_TOOLBAR_READONLY } from './ngx-editor.config';
@@ -138,7 +144,7 @@ export class TemplateEditorComponent implements OnInit, OnDestroy {
    */
   private loadTemplateContent(template: TemplateDto): void {
     // Перевіряємо, чи підтримується перегляд для цього формату
-/*    
+    /*    
     if (!this.supportsEditing(template)) {
       this.loadError.set(`Формат "${template.format}" не підтримується для редагування`);
       this.clearEditor();
@@ -210,7 +216,7 @@ export class TemplateEditorComponent implements OnInit, OnDestroy {
     if (currentTemplate) {
       if (this.formDirty()) {
         const confirmed = confirm(
-          'У вас є незбережені зміни. Ви впевнені, що хочете перезавантажити?'
+          'У вас є незбережені зміни. Ви впевнені, що хочете перезавантажити?',
         );
         if (!confirmed) {
           return;
@@ -231,7 +237,7 @@ export class TemplateEditorComponent implements OnInit, OnDestroy {
   /**
    * Перевіряє, чи підтримується редагування для даного формату
    */
-/*  
+  /*  
   private supportsEditing(template: TemplateDto): boolean {
     // Підтримуємо редагування тільки текстових форматів
     const editableFormats = ['html', 'txt', 'handlebars'];

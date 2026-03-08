@@ -7,8 +7,8 @@ import {
   TemplateDataSetDto,
   TemplateDataSetUpSertDto,
   TemplateDataSetUtils,
-} from '../models/template-dataset.models';
-import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
+} from '../app/DocumentTemplates/models/template-dataset.models';
+import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
 
 @Injectable({
   providedIn: 'root',

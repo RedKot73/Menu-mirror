@@ -14,7 +14,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { TemplateDataSetService } from '../services/template-dataset.service';
+import { TemplateDataSetService } from '../../../ServerService/template-dataset.service';
 import { TemplateDataSetDto } from '../models/template-dataset.models';
 import { ConfirmDialogComponent } from '../../dialogs/ConfirmDialog.component';
 import { DocTemplateUtils } from '../models/shared.models';

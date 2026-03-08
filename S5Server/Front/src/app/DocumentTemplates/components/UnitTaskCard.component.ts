@@ -38,8 +38,8 @@ import {
 } from '../models/template-dataset.models';
 import { DictUnitTasksService, DictUnitTask } from '../../../ServerService/dictUnitTasks.service';
 import { DictAreasService, DictArea } from '../../../ServerService/dictAreas.service';
-import { DroneModelTaskService } from '../services/drone-model-task.service';
-import { UnitTaskService } from '../services/unit-task.service';
+import { DroneModelTaskService } from '../../../ServerService/drone-model-task.service';
+import { UnitTaskService } from '../../../ServerService/unit-task.service';
 import {
   DictDroneModelSelectDialogComponent,
   DictDroneModelWithQuantity,

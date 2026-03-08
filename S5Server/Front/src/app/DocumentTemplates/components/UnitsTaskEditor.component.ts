@@ -26,8 +26,8 @@ import { switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { TemplateDataSetUpSertDto, UnitTaskDto } from '../models/template-dataset.models';
-import { TemplateDataSetService } from '../services/template-dataset.service';
-import { UnitTaskService } from '../services/unit-task.service';
+import { TemplateDataSetService } from '../../../ServerService/template-dataset.service';
+import { UnitTaskService } from '../../../ServerService/unit-task.service';
 import { UnitService } from '../../../ServerService/unit.service';
 import { UnitTaskCardComponent } from './UnitTaskCard.component';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';

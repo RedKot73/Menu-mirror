@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import Handlebars from 'handlebars';
-import { DatasetData, TemplateRenderResult } from '../models/template.types';
-
+import { DatasetData, TemplateRenderResult } from '../app/DocumentTemplates/models/template.types';
 
 @Injectable({
   providedIn: 'root',
@@ -14,10 +13,7 @@ export class HandlebarsTemplateService {
   /**
    * Компилирует и рендерит шаблон с данными на клиенте (только для HTML/TXT)
    */
-  renderTemplate(
-    templateContent: string,
-    data: DatasetData): TemplateRenderResult
-  {
+  renderTemplate(templateContent: string, data: DatasetData): TemplateRenderResult {
     try {
       // Компиляция шаблона
       const template = Handlebars.compile(templateContent);
@@ -69,7 +65,7 @@ export class HandlebarsTemplateService {
           default:
             return d.toLocaleDateString('ru-RU');
         }
-      }
+      },
     );
 
     // Помощник для форматирования чисел
@@ -107,7 +103,7 @@ export class HandlebarsTemplateService {
           default:
             return options.inverse(this);
         }
-      }
+      },
     );
 
     // Помощник для индексов в циклах
