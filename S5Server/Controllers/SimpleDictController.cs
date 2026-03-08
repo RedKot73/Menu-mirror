@@ -14,10 +14,27 @@ namespace S5Server.Controllers;
 public abstract class SimpleDictApiController<TEntity> : ControllerBase
     where TEntity : SimpleDictBase, ISimpleDict, new()
 {
+    /// <summary>
+    /// Represents the primary database context used for data access operations.
+    /// </summary>
+    /// <remarks>Intended for use by derived classes to interact with the application's main database. The
+    /// context should be properly initialized before use.</remarks>
     protected readonly MainDbContext _db;
+    /// <summary>
+    /// Represents the underlying set of entities in the database context for the specified entity type.
+    /// </summary>
     protected readonly DbSet<TEntity> _set;
+    /// <summary>
+    /// Provides access to the logger instance used for recording diagnostic and operational messages within the class.
+    /// </summary>
+    /// <remarks>Intended for use by derived classes to facilitate consistent logging. The logger instance
+    /// should be configured appropriately to capture relevant log output.</remarks>
     protected readonly ILogger _logger;
 
+    /// <summary>
+    /// Generic API контроллер для простих довідників (без пагинації, без Razor)
+    /// </summary>
+    /// ВНИМАНИЕ: [ApiController] не наследуется — добавлять в дочерние контроллеры!
     protected SimpleDictApiController(MainDbContext db, DbSet<TEntity> set, ILogger logger)
     {
         _db = db;
@@ -25,6 +42,12 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// Создает запрос, возвращающий все сущности типа TEntity без отслеживания изменений контекста.
+    /// </summary>
+    /// <remarks>Возвращаемый запрос не отслеживает изменения сущностей в контексте данных. Это повышает
+    /// производительность при операциях только для чтения, но любые изменения возвращаемых объектов не будут
+    /// автоматически сохранены в базе данных.</remarks>
     protected virtual IQueryable<TEntity> Query() => _set.AsNoTracking();
 
     /// <summary>Полный список (опционально фильтр по подстроке)</summary>
@@ -58,6 +81,16 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Retrieves a simple dictionary entry by its unique identifier.
+    /// </summary>
+    /// <remarks>Returns a 200 OK response with the entry if found. Returns 404 Not Found if the entry does
+    /// not exist, 400 Bad Request if the identifier is empty, or 499 if the request is canceled by the client. Returns
+    /// 500 Internal Server Error for unexpected errors.</remarks>
+    /// <param name="id">The unique identifier of the dictionary entry to retrieve. Cannot be an empty GUID.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>An ActionResult containing the requested SimpleDictDto if found; otherwise, a result indicating the error
+    /// condition, such as NotFound or BadRequest.</returns>
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -85,6 +118,17 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Создаёт новую запись справочника на основе предоставлённой модели.
+    /// </summary>
+    /// <remarks>Если значение поля, требующего уникальности, уже существует, возвращается статус 409
+    /// (Conflict) с подробностями о конфликте. В случае отмены операции клиентом возвращается статус 499. При других
+    /// ошибках возвращается статус 500 (Internal Server Error).</remarks>
+    /// <param name="dto">Данные для создания новой записи справочника. Не может быть равен null.</param>
+    /// <param name="ct">Токен отмены, который может быть использован для прерывания операции.</param>
+    /// <returns>Результат операции создания. Возвращает статус 201 (Created) с созданной записью в случае успеха, статус 400
+    /// (Bad Request) при ошибке валидации или статус 409 (Conflict) при конфликте уникальности или конкурентном
+    /// конфликте.</returns>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -131,6 +175,19 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Updates an existing simple dictionary entry with the specified identifier.
+    /// </summary>
+    /// <remarks>If the provided data does not change the existing entry, the method returns the current entry
+    /// without performing an update. Handles uniqueness and concurrency conflicts according to standard HTTP response
+    /// codes.</remarks>
+    /// <param name="id">The unique identifier of the dictionary entry to update. Cannot be an empty GUID.</param>
+    /// <param name="dto">The data transfer object containing the updated values for the dictionary entry. Must not be null and must
+    /// satisfy model validation requirements.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the update operation.</param>
+    /// <returns>An ActionResult containing the updated dictionary entry if the update is successful; a 400 Bad Request if the
+    /// input is invalid; a 404 Not Found if the entry does not exist; or a 409 Conflict if a uniqueness or concurrency
+    /// conflict occurs.</returns>
     [HttpPut("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -191,6 +248,15 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Deletes the entity with the specified identifier.
+    /// </summary>
+    /// <remarks>If the operation is canceled, a 499 response is returned. If an unexpected error occurs, a
+    /// 500 Internal Server Error response is returned.</remarks>
+    /// <param name="id">The unique identifier of the entity to delete. Cannot be an empty GUID.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>A 204 No Content response if the entity was successfully deleted; a 400 Bad Request if the identifier is empty;
+    /// or a 404 Not Found if the entity does not exist.</returns>
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -221,6 +287,18 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Возвращает коллекцию элементов справочника, значения которых содержат указанный поисковый термин.
+    /// </summary>
+    /// <remarks>Если значение параметра limit выходит за пределы допустимого диапазона, используется значение
+    /// по умолчанию. В случае отмены операции возвращается статус 499. При внутренней ошибке сервера возвращается
+    /// статус 500 и сообщение об ошибке.</remarks>
+    /// <param name="term">Поисковый термин, используемый для фильтрации значений справочника. Не может быть пустой или состоять только из
+    /// пробелов.</param>
+    /// <param name="limit">Максимальное количество элементов в возвращаемой коллекции. Должно быть от 1 до 100. Значение по умолчанию — 10.</param>
+    /// <param name="ct">Токен отмены, который может быть использован для отмены асинхронной операции.</param>
+    /// <returns>Результат действия, содержащий коллекцию объектов LookupDto, значения которых соответствуют поисковому термину.
+    /// Если совпадений не найдено, возвращается пустая коллекция.</returns>
     [HttpGet("lookup")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<LookupDto>>> Lookup(
@@ -255,6 +333,15 @@ public abstract class SimpleDictApiController<TEntity> : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Retrieves a list of selectable items for use in dropdowns or selection controls.
+    /// </summary>
+    /// <remarks>The returned list is ordered by value. If the operation is canceled via the provided
+    /// cancellation token, a 499 status code is returned. In case of an internal server error, a 500 status code is
+    /// returned.</remarks>
+    /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>An HTTP 200 response containing a collection of lookup items if successful; returns an appropriate error
+    /// response if the operation is canceled or fails.</returns>
     [HttpGet("sel_list")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<LookupDto>>> GetSelectList(CancellationToken ct = default)

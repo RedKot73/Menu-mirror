@@ -10,6 +10,15 @@ using S5Server.Utils;
 
 namespace S5Server.Controllers;
 
+/// <summary>
+/// Предоставляет API-контроллер для управления шаблонами документов, включая создание, обновление, удаление,
+/// публикацию, скачивание и получение содержимого шаблонов.
+/// </summary>
+/// <remarks>Этот контроллер требует аутентификации и реализует стандартные операции CRUD для шаблонов документов.
+/// Методы контроллера поддерживают работу с категориями шаблонов, публикацию и снятие с публикации, а также загрузку и
+/// сохранение содержимого шаблона. Все действия логируются, а ошибки и конфликтные ситуации возвращают информативные
+/// HTTP-ответы. Контроллер предназначен для использования во внутренних и внешних API-сценариях, связанных с
+/// управлением шаблонами документов.</remarks>
 [Authorize]
 [ApiController]
 [Route("api/templates")]
@@ -19,6 +28,15 @@ public class DocumentTemplatesController : ControllerBase
     private readonly DbSet<DocumentTemplate> _set;
     private readonly ILogger<DocumentTemplatesController> _logger;
 
+    /// <summary>
+    /// Предоставляет API-контроллер для управления шаблонами документов, включая создание, обновление, удаление,
+    /// публикацию, скачивание и получение содержимого шаблонов.
+    /// </summary>
+    /// <remarks>Этот контроллер требует аутентификации и реализует стандартные операции CRUD для шаблонов документов.
+    /// Методы контроллера поддерживают работу с категориями шаблонов, публикацию и снятие с публикации, а также загрузку и
+    /// сохранение содержимого шаблона. Все действия логируются, а ошибки и конфликтные ситуации возвращают информативные
+    /// HTTP-ответы. Контроллер предназначен для использования во внутренних и внешних API-сценариях, связанных с
+    /// управлением шаблонами документов.</remarks>
     public DocumentTemplatesController(MainDbContext db,
         ILogger<DocumentTemplatesController> logger)
     {
@@ -27,6 +45,14 @@ public class DocumentTemplatesController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// Retrieves a list of template data transfer objects, ordered by the validity start date in descending order.
+    /// </summary>
+    /// <remarks>Returns HTTP 499 if the request is canceled by the client, or HTTP 500 if an internal server
+    /// error occurs.</remarks>
+    /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>An action result containing a collection of template data transfer objects with HTTP 200 (OK) on success, or an
+    /// appropriate error response if the operation is canceled or fails.</returns>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<TemplateDto>>> GetList(CancellationToken ct = default)
@@ -53,6 +79,16 @@ public class DocumentTemplatesController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Retrieves a template by its unique identifier.
+    /// </summary>
+    /// <remarks>Returns a 200 OK response with the template data if the template exists. Returns a 404 Not
+    /// Found response if no template with the specified identifier is found. Returns a 499 status code if the request
+    /// is canceled by the client, or a 500 status code for other server errors.</remarks>
+    /// <param name="id">The unique identifier of the template to retrieve.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>An ActionResult containing the template data if found; otherwise, a problem response with the appropriate status
+    /// code.</returns>
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -81,6 +117,17 @@ public class DocumentTemplatesController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Creates a new document template using the provided data and returns the created template.
+    /// </summary>
+    /// <remarks>The request must use 'multipart/form-data' encoding and may include a file. The maximum
+    /// allowed request size is 50 MB. Returns HTTP 409 if a template with the same name already exists or if a
+    /// concurrency conflict occurs.</remarks>
+    /// <param name="dto">The data transfer object containing the information required to create a new template, including file content,
+    /// name, description, category, and publication status. Must not be null.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>An ActionResult containing the created template as a TemplateDto with HTTP 201 status if successful; returns
+    /// HTTP 400 if the input is invalid, or appropriate error responses for other failure conditions.</returns>
     [HttpPost]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(50_000_000)]
@@ -145,6 +192,19 @@ public class DocumentTemplatesController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Обновляет существующий шаблон с указанным идентификатором, используя предоставленные данные формы.
+    /// </summary>
+    /// <remarks>Максимальный размер запроса ограничен 50 МБ. Метод ожидает данные в формате
+    /// multipart/form-data. В случае ошибок возвращаются соответствующие коды состояния HTTP и подробности
+    /// проблемы.</remarks>
+    /// <param name="id">Уникальный идентификатор шаблона, который требуется обновить.</param>
+    /// <param name="dto">Данные формы, содержащие обновлённые значения для шаблона, включая имя, описание, статус публикации и файл
+    /// содержимого.</param>
+    /// <param name="ct">Токен отмены, который может быть использован для отмены операции.</param>
+    /// <returns>Результат выполнения операции обновления. Возвращает статус 204 (No Content) при успешном обновлении, 400 (Bad
+    /// Request) при ошибке валидации, 404 (Not Found) если шаблон не найден, или 409 (Conflict) при конфликте
+    /// уникальности или конкурентном конфликте.</returns>
     [HttpPut("{id}")]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(50_000_000)]
@@ -208,6 +268,16 @@ public class DocumentTemplatesController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Updates the category of the specified template entity.
+    /// </summary>
+    /// <remarks>If the specified category does not exist, the method returns a 404 Not Found response. The
+    /// operation is idempotent and does not return content on success.</remarks>
+    /// <param name="id">The unique identifier of the template entity whose category is to be updated.</param>
+    /// <param name="dto">An object containing the new category identifier to assign to the template entity.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>A result indicating the outcome of the operation. Returns 204 No Content if the update is successful; 400 Bad
+    /// Request if the input is invalid; or 404 Not Found if the template or category does not exist.</returns>
     [HttpPatch("{id}/category")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -254,6 +324,17 @@ public class DocumentTemplatesController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Publishes the entity with the specified identifier by marking it as published and updating its publication
+    /// metadata.
+    /// </summary>
+    /// <remarks>The method updates the publication status and metadata of the entity. If the entity is not
+    /// found, a 404 response is returned. If the operation is canceled, a 499 response is returned. For other errors, a
+    /// 500 response is returned.</remarks>
+    /// <param name="id">The unique identifier of the entity to publish.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>A 204 No Content response if the entity is successfully published; a 404 Not Found response if the entity does
+    /// not exist; or an appropriate error response if the operation fails.</returns>
     [HttpPost("{id}/publish")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -287,6 +368,16 @@ public class DocumentTemplatesController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Unpublishes the specified entity by its unique identifier.
+    /// </summary>
+    /// <remarks>This action sets the entity's published state to unpublished and updates relevant metadata.
+    /// Only accessible to authorized users. The operation is idempotent; calling it on an already unpublished entity
+    /// has no additional effect.</remarks>
+    /// <param name="id">The unique identifier of the entity to unpublish.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>A 204 No Content response if the entity is successfully unpublished; a 404 Not Found response if the entity does
+    /// not exist; or an appropriate error response if the operation fails.</returns>
     [HttpPost("{id}/unpublish")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -320,6 +411,16 @@ public class DocumentTemplatesController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Deletes the entity with the specified identifier.
+    /// </summary>
+    /// <remarks>If the entity with the specified identifier is not found, the method returns a 404 Not Found
+    /// response. If the operation is canceled, a 499 response is returned. For other errors, a 500 Internal Server
+    /// Error response is provided.</remarks>
+    /// <param name="id">The unique identifier of the entity to delete.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>A 204 No Content response if the entity was successfully deleted; a 404 Not Found response if the entity does
+    /// not exist; or an appropriate error response if the operation fails.</returns>
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -347,6 +448,16 @@ public class DocumentTemplatesController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Retrieves the content of the template with the specified identifier as a downloadable file.
+    /// </summary>
+    /// <remarks>Returns a file with a content type of "text/html; charset=utf-8" if the template is found. If
+    /// the template does not exist, returns a 404 Not Found response. If the operation is canceled, returns a 499
+    /// response. For other errors, returns a 500 Internal Server Error response.</remarks>
+    /// <param name="id">The unique identifier of the template to download.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>An <see cref="IActionResult"/> that contains the file content if found; otherwise, a problem response indicating
+    /// the error.</returns>
     [HttpGet("{id}/download")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -373,6 +484,15 @@ public class DocumentTemplatesController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Retrieves the plain text content of the template with the specified identifier.
+    /// </summary>
+    /// <remarks>Returns a 499 status code if the request is canceled by the client. Returns a 500 status code
+    /// if an internal server error occurs.</remarks>
+    /// <param name="id">The unique identifier of the template whose content is to be retrieved.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>An HTTP 200 response containing the template content as plain text if found; otherwise, an HTTP 404 response if
+    /// the template does not exist.</returns>
     [HttpGet("{id}/content")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

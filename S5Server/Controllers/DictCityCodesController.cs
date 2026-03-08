@@ -27,6 +27,9 @@ public class DictCityCodesController : ControllerBase
         PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
     };
 
+    /// <summary>
+    /// Кодифікатор адміністративно-територіальних одиниць та територій територіальних громад
+    /// </summary>
     public DictCityCodesController(MainDbContext db, ILogger<DictCityCodesController> logger)
     {
         _db = db;
@@ -134,6 +137,10 @@ public class DictCityCodesController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Запис Кодифікатору адміністративно-територіальних одиниць
+    /// та територій територіальних громад
+    /// </summary>
     [HttpGet("get-citycode-info/{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -503,6 +510,16 @@ public class DictCityCodesController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Initiates the import of city codes from an uploaded Excel file in .xlsx format as a background operation.
+    /// </summary>
+    /// <remarks>The import process runs asynchronously in the background. The method returns immediately with
+    /// the status of the import initiation. Only .xlsx files are supported. If an import is already in progress, the
+    /// method returns a 423 Locked response.</remarks>
+    /// <param name="file">The Excel file containing city codes to import. Must be a non-empty .xlsx file.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the import operation.</param>
+    /// <returns>An HTTP 202 Accepted response if the import is started successfully; otherwise, an appropriate error response
+    /// indicating the reason for failure.</returns>
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(50_000_000)]
     [HttpPost("importCityCodes")]

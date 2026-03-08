@@ -20,6 +20,9 @@ public class DictCityCodeTreeController : ControllerBase
     private readonly DbSet<DictCityCode> _set;
     private readonly ILogger<DictCityCodeTreeController> _logger;
 
+    /// <summary>
+    /// Контролер для роботи з деревом кодифікатора адміністративно-територіальних одиниць
+    /// </summary>
     public DictCityCodeTreeController(MainDbContext db, ILogger<DictCityCodeTreeController> logger)
     {
         _db = db;

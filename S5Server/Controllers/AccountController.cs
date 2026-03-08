@@ -24,6 +24,9 @@ public class AccountController : ControllerBase
     private readonly DbSet<Soldier> _soldiers;
     private readonly ILogger<AccountController> _logger;
 
+    /// <summary>
+    /// API для управління користувачами системи
+    /// </summary>
     public AccountController(
         UserManager<TVezhaUser> userManager,
         SignInManager<TVezhaUser> signInManager,

@@ -14,6 +14,9 @@ namespace S5Server.Controllers;
 [Route("api/dict-area-types")]
 public class DictAreaTypesController : ShortDictApiController<DictAreaType>
 {
+    /// <summary>
+    /// Типи Напрямку ЛБЗ
+    /// </summary>
     public DictAreaTypesController(
         MainDbContext db,
         ILogger<DictAreaTypesController> logger)

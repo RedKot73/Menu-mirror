@@ -14,6 +14,9 @@ namespace S5Server.Controllers;
 [Route("api/dict-city-categories")]
 public class DictCityCategoriesController : ShortDictApiController<DictCityCategory>
 {
+    /// <summary>
+    /// Категорії об'єктів адміністративно-територіальних одиниць
+    /// </summary>
     public DictCityCategoriesController(
         MainDbContext db,
         ILogger<DictCityCategoriesController> logger)

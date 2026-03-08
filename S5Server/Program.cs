@@ -144,6 +144,11 @@ builder.Services.AddRateLimiter(options =>
         opt.Window = TimeSpan.FromMinutes(1);
         opt.PermitLimit = 5;
     });
+    options.AddFixedWindowLimiter("graphql", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 100;
+    });
 });
 
 // ✅ GraphQL
@@ -231,6 +236,18 @@ app.UseStaticFiles(new StaticFileOptions
         }
     }
 });
+
+// ✅ Українська культура
+var supportedCultures = new[] { new CultureInfo("uk-UA") };
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture("uk-UA"),
+    SupportedCultures = supportedCultures,
+    SupportedUICultures = supportedCultures
+});
+CultureInfo.DefaultThreadCurrentCulture = supportedCultures.FirstOrDefault();
+CultureInfo.DefaultThreadCurrentUICulture = supportedCultures.FirstOrDefault();
+
 app.UseRouting();
 
 app.UseCors();
@@ -238,25 +255,19 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapGraphQL();  // ✅ Endpoint: /graphql
+app.MapGraphQL().RequireRateLimiting("graphql");  // ✅ Endpoint: /graphql
 app.MapFallbackToFile("index.html");
 
 // ✅ Українська культура
+/*
 var cultureInfo = new CultureInfo("uk-UA");
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+*/
 
 try
 {
     Log.Information("Starting S5Server");
-    /*
-    // ✅ Seed roles при запуску
-    using (var scope = app.Services.CreateScope())
-    {
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-        await DbInitializer.SeedRoles(roleManager);
-    }
-    */
     app.Run();
 }
 catch (Exception ex)

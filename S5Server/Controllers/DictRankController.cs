@@ -8,6 +8,14 @@ using S5Server.Utils;
 
 namespace S5Server.Controllers;
 
+/// <summary>
+/// Предоставляет API-контроллер для управления справочником воинских званий, включая операции получения, создания,
+/// обновления и удаления записей рангов.
+/// </summary>
+/// <remarks>Контроллер требует аутентификации и реализует стандартные CRUD-операции для сущности DictRank.
+/// Поддерживает фильтрацию, поиск и получение укороченных списков для автодополнения и выпадающих списков. Все методы
+/// используют асинхронные операции и возвращают стандартные коды HTTP-ответов для REST API. Контроллер не является
+/// потокобезопасным и предназначен для использования в рамках стандартного жизненного цикла ASP.NET Core.</remarks>
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
@@ -16,6 +24,14 @@ public class DictRankController : ControllerBase
     private readonly MainDbContext _db;
     private readonly DbSet<DictRank> _set;
 
+    /// <summary>
+    /// Предоставляет API-контроллер для управления справочником воинских званий, включая операции получения, создания,
+    /// обновления и удаления записей рангов.
+    /// </summary>
+    /// <remarks>Контроллер требует аутентификации и реализует стандартные CRUD-операции для сущности DictRank.
+    /// Поддерживает фильтрацию, поиск и получение укороченных списков для автодополнения и выпадающих списков. Все методы
+    /// используют асинхронные операции и возвращают стандартные коды HTTP-ответов для REST API. Контроллер не является
+    /// потокобезопасным и предназначен для использования в рамках стандартного жизненного цикла ASP.NET Core.</remarks>
     public DictRankController(MainDbContext db)
     {
         _db = db;
@@ -38,6 +54,16 @@ public class DictRankController : ControllerBase
         e.OrderVal = dto.OrderVal;
     }
 
+    /// <summary>
+    /// Retrieves all dictionary rank entries that match the specified search and filter criteria.
+    /// </summary>
+    /// <param name="search">An optional search term to filter results by the short value. If null or empty, no search filtering is applied.</param>
+    /// <param name="category">An optional category to filter the results. If null or empty, results are not filtered by category.</param>
+    /// <param name="subCategory">An optional subcategory to further filter the results. If null or empty, results are not filtered by
+    /// subcategory.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the asynchronous operation.</param>
+    /// <returns>An asynchronous operation that returns an action result containing a collection of dictionary rank data transfer
+    /// objects that match the specified criteria.</returns>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<DictRankDto>>> GetAll(
         [FromQuery] string? search,
@@ -65,6 +91,12 @@ public class DictRankController : ControllerBase
         return Ok(list);
     }
 
+    /// <summary>
+    /// Возвращает объект звания словаря с указанным идентификатором, если он существует.
+    /// </summary>
+    /// <param name="id">Уникальный идентификатор ранга словаря, который требуется получить.</param>
+    /// <param name="ct">Токен отмены, который может быть использован для отмены асинхронной операции.</param>
+    /// <returns>Результат действия, содержащий объект ранга словаря, если найден; в противном случае — результат NotFound.</returns>
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<DictRankDto>> Get(Guid id, CancellationToken ct = default)
     {
@@ -72,6 +104,16 @@ public class DictRankController : ControllerBase
         return e is null ? NotFound() : Ok(ToDto(e));
     }
 
+    /// <summary>
+    /// Creates a new rank entry using the specified data.
+    /// </summary>
+    /// <remarks>Returns a 400 Bad Request if the input data is invalid or required fields are missing.
+    /// Returns a 409 Conflict if a rank with the same value already exists.</remarks>
+    /// <param name="dto">The data transfer object containing the information required to create a new rank. Cannot be null. The 'Value'
+    /// and 'ShortValue' properties must not be empty or whitespace.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>An ActionResult containing the created rank data if successful; otherwise, a result indicating the reason for
+    /// failure, such as a bad request or conflict.</returns>
     [HttpPost]
     public async Task<ActionResult<DictRankDto>> Create([FromBody] DictRankCreateDto dto,
         CancellationToken ct = default)
@@ -105,6 +147,19 @@ public class DictRankController : ControllerBase
         return CreatedAtAction(nameof(Get), new { id = entity.Id }, ToDto(entity));
     }
 
+    /// <summary>
+    /// Updates an existing dictionary rank entry with the specified identifier using the provided data.
+    /// </summary>
+    /// <remarks>The method validates the input and ensures that required fields are provided. If the update
+    /// does not result in any changes, a 204 No Content response is returned. If a uniqueness constraint is violated, a
+    /// 409 Conflict response is returned.</remarks>
+    /// <param name="id">The unique identifier of the dictionary rank entry to update. Must not be <see cref="Guid.Empty"/>.</param>
+    /// <param name="dto">The data transfer object containing the updated values for the dictionary rank entry. Cannot be null.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>An <see cref="IActionResult"/> indicating the result of the update operation. Returns <see
+    /// cref="BadRequestResult"/> if the input is invalid, <see cref="NotFoundResult"/> if the entry does not exist,
+    /// <see cref="ConflictResult"/> if a uniqueness constraint is violated, or <see cref="NoContentResult"/> if the
+    /// update is successful or no changes are detected.</returns>
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] DictRankDto dto,
         CancellationToken ct = default)
@@ -142,6 +197,12 @@ public class DictRankController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Удаляет сущность с указанным идентификатором.
+    /// </summary>
+    /// <param name="id">Уникальный идентификатор сущности, которую требуется удалить.</param>
+    /// <param name="ct">Токен отмены, который может быть использован для отмены асинхронной операции.</param>
+    /// <returns>Результат действия, указывающий на успешное удаление (NoContent) или отсутствие сущности (NotFound).</returns>
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
     {
@@ -154,6 +215,16 @@ public class DictRankController : ControllerBase
     }
 
     // Укороченный список для автокомплита
+    /// <summary>
+    /// Возвращает список элементов для автодополнения, соответствующих заданному поисковому термину.
+    /// </summary>
+    /// <remarks>Если значение параметра limit выходит за пределы допустимого диапазона, используется значение
+    /// по умолчанию 10.</remarks>
+    /// <param name="term">Поисковый термин, используемый для фильтрации элементов. Не может быть пустым или состоять только из пробелов.</param>
+    /// <param name="limit">Максимальное количество возвращаемых элементов. Должно быть от 1 до 100; по умолчанию 10.</param>
+    /// <param name="ct">Токен отмены для прерывания асинхронной операции.</param>
+    /// <returns>Результат действия, содержащий коллекцию объектов LookupDto, соответствующих поисковому термину. Если совпадений
+    /// не найдено, возвращается пустой список.</returns>
     [HttpGet("lookup")]
     public async Task<ActionResult<IEnumerable<LookupDto>>> Lookup(
         [FromQuery] string term,
