@@ -1,14 +1,15 @@
 import { Component, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatCardModule } from '@angular/material/card';
 
-import { DocTemplateComponent } from './components/DocTemplate.component';
-import { DataSetTableComponent } from './components/DataSetTable.component';
+import { DocTemplatesTableComponent } from './components/DocTemplatesTable.component';
+import { DocDataSetsTableComponent } from '../DocumentDataSet/Components/DocDataSetsTable.component';
 import { TemplateEditorComponent } from './components/TemplateEditor.component';
 import { ResultEditorComponent } from './components/ResultEditor.component';
 import { TemplateDto } from '../DocumentTemplates/models/document-template.models';
 import { TemplateDataSetDto } from '../DocumentTemplates/models/template-dataset.models';
-import { UnitsTaskEditorComponent } from '../DocumentTemplates/components/UnitsTaskEditor.component';
+import { UnitsTaskViewer } from './components/UnitsTaskViewer.component';//'../DocumentDataSet/Components/UnitsTaskEditor.component';
 import { MasterDetailLayoutComponent } from '../shared/components/MasterDetailLayout.component';
 
 @Component({
@@ -16,12 +17,13 @@ import { MasterDetailLayoutComponent } from '../shared/components/MasterDetailLa
   imports: [
     CommonModule,
     MatTabsModule,
+    MatCardModule,
     MasterDetailLayoutComponent,
-    DocTemplateComponent,
-    DataSetTableComponent,
+    DocTemplatesTableComponent,
+    DocDataSetsTableComponent,
     TemplateEditorComponent,
     ResultEditorComponent,
-    UnitsTaskEditorComponent,
+    UnitsTaskViewer,
   ],
   styleUrls: ['./DocTemplatesTree.page.scss'],
   templateUrl: './DocTemplatesTree.page.html',
@@ -29,7 +31,7 @@ import { MasterDetailLayoutComponent } from '../shared/components/MasterDetailLa
 export class DocTemplatesTree {
   @ViewChild('templateEditor') templateEditor?: TemplateEditorComponent;
   @ViewChild('resultEditor') resultEditor?: ResultEditorComponent;
-  @ViewChild('unitsTaskEditor') unitsTaskEditor!: UnitsTaskEditorComponent;
+  @ViewChild('unitsTaskViewer') unitsTaskViewer!: UnitsTaskViewer;
 
   selectedTemplate = signal<TemplateDto | null>(null);
   selectedDataSet = signal<TemplateDataSetDto | null>(null);
@@ -54,7 +56,7 @@ export class DocTemplatesTree {
     if (!dataSet) {
       return;
     }
-    this.unitsTaskEditor.loadDataSet(dataSet.id);
+    this.unitsTaskViewer.loadDataSet(dataSet.id);
   }
 
   /**
@@ -68,7 +70,7 @@ export class DocTemplatesTree {
 
     // Якщо переходимо на вкладку результату, також оновлюємо дані
     if (index === 2) {
-      const dataSetContent = this.unitsTaskEditor.getDataSetContent();
+      const dataSetContent = this.unitsTaskViewer.getDataSetContent();
       this.dataSetContent.set(dataSetContent);
     }
   }

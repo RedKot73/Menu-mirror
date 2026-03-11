@@ -15,16 +15,16 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { TemplateDataSetService } from '../../../ServerService/template-dataset.service';
-import { TemplateDataSetDto } from '../models/template-dataset.models';
+import { TemplateDataSetDto } from '../../DocumentTemplates/models/template-dataset.models';
 import { ConfirmDialogComponent } from '../../dialogs/ConfirmDialog.component';
-import { DocTemplateUtils } from '../models/shared.models';
+import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-template-dataset-table',
   standalone: true,
-  templateUrl: './DataSetTable.component.html',
-  styleUrl: './DataSetTable.component.scss',
+  templateUrl: './DocDataSetsTable.component.html',
+  styleUrls: ['./DocDataSetsTable.component.scss'],
   imports: [
     CommonModule,
     FormsModule,
@@ -42,7 +42,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     MatDialogModule,
   ],
 })
-export class DataSetTableComponent implements OnInit {
+/** Компонент для відображення таблиці наборів даних */
+export class DocDataSetsTableComponent implements OnInit {
   private _sort: MatSort | null = null;
 
   @ViewChild(MatSort) set matSort(sort: MatSort) {

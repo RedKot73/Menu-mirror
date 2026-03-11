@@ -56,10 +56,27 @@
         /// Тут саме string оскільки формат UA01020000000022387
         /// </summary>
         public string? ParentId { get; init; }
+        /// <summary>
+        /// Gets the unique identifier of the associated category.
+        /// </summary>
         public Guid CategoryId { get; init; } = default!;
+        /// <summary>
+        /// Gets the category associated with the item.
+        /// </summary>
         public string? Category { get; init; }
+        /// <summary>
+        /// Gets the value represented by this property.
+        /// </summary>
         public string Value { get; init; } = string.Empty;
+        /// <summary>
+        /// Gets a value indicating whether this instance has any child elements.
+        /// </summary>
         public bool HasChildren { get; init; }
+        /// <summary>
+        /// Gets the collection of child nodes in the city code tree.
+        /// </summary>
+        /// <remarks>This property is read-only and is initialized during object construction. The
+        /// collection will be empty if the node has no children.</remarks>
         public List<CityCodeTreeNodeDto> Children { get; init; } = [];
     }
 

@@ -20,6 +20,9 @@ public class SoldierTaskController : ControllerBase
     private readonly DbSet<SoldierTask> _set;
     private readonly ILogger<SoldierTaskController> _logger;
 
+    /// <summary>
+    /// Контролер для управління знімками бійців у завданнях підрозділів
+    /// </summary>
     public SoldierTaskController(
         MainDbContext db,
         ILogger<SoldierTaskController> logger)
@@ -66,12 +69,12 @@ public class SoldierTaskController : ControllerBase
             }
 
             result = await _set.AsNoTracking()
-                .Select(s => s.ToDto())
                 .Where(s => s.UnitTaskId == unitTaskId)
                 .OrderBy(s => s.FirstName)
                 .ThenBy(s => s.MidleName)
                 .ThenBy(s => s.LastName)
                 .ThenBy(s => s.RankShortValue)
+                .Select(s => s.ToDto())
                 .ToListAsync(ct);
 
             return Ok(result);

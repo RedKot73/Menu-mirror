@@ -58,7 +58,7 @@ namespace S5Server.Models
     /// <param name="IsPublished">A value indicating whether the template has been published.</param>
     /// <param name="PublishedAtUtc">The UTC date and time when the template was published, or null if the template is not published.</param>
     /// <param name="CreatedAtUtc">The UTC date and time when the template was created.</param>
-    /// <param name="UpdatedAtUtc">The UTC date and time when the template was last updated.</param>
+    /// <param name="ValidFrom">The UTC date and time when the template was last updated.</param>
     public record TemplateDetailsDto(
         Guid Id,
         string Name,
@@ -69,13 +69,27 @@ namespace S5Server.Models
         DateTime? PublishedAtUtc,
         DateTime CreatedAtUtc,
         DateTime ValidFrom);
-
+    /// <summary>
+    /// Представляет данные, необходимые для создания нового шаблона, включая имя, описание, категорию, статус
+    /// публикации и связанный файл.
+    /// </summary>
+    /// <param name="Name">Имя создаваемого шаблона. Не может быть пустым или равным null.</param>
+    /// <param name="Description">Описание шаблона. Может быть null, если описание не требуется.</param>
+    /// <param name="TemplateCategoryId">Уникальный идентификатор категории, к которой относится шаблон.</param>
+    /// <param name="IsPublished">Значение, указывающее, опубликован ли шаблон. Значение <see langword="true"/> означает, что шаблон опубликован;
+    /// в противном случае — <see langword="false"/>.</param>
+    /// <param name="File">Файл, связанный с шаблоном. Может быть null, если файл не требуется.</param>
     public record CreateTemplateDto(
         [Required] string Name,
         string? Description,
         Guid TemplateCategoryId,
         bool IsPublished,
         IFormFile? File);
+    /// <summary>
+    /// Represents the data required to set or update a category, including an optional template category identifier.
+    /// </summary>
+    /// <param name="TemplateCategoryId">The unique identifier of the template category to associate with the category, or null if no template category
+    /// is specified.</param>
     public record SetCategoryDto(Guid? TemplateCategoryId);
 
     /// <summary>

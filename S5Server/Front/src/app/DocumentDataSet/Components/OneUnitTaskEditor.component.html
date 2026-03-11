@@ -1,0 +1,374 @@
+<div class="main-content">
+  @if (unitTask; as unit) {
+    <!-- Детальная информация о подразделении -->
+    <mat-card class="unit-details-card">
+      <mat-card-header>
+        <mat-card-title class="info-item inline">
+          {{ unit.unitShortName }}
+          @if (unit.isInvolved) {
+            <mat-icon>groups</mat-icon>
+            <span>Екіпаж/Група</span>
+          }
+
+          <mat-button-toggle-group
+            [value]="unit.isPublished"
+            (change)="onPublishStatusChange($event.value)"
+            class="status-toggle"
+            [disabled]="isSaving()"
+          >
+            <mat-button-toggle [value]="false" matTooltip="Чернетка">
+              <mat-icon>edit</mat-icon>
+              {{ getStatusLabel(false) }}
+            </mat-button-toggle>
+            <mat-button-toggle [value]="true" matTooltip="Опубліковано">
+              <mat-icon>check_circle</mat-icon>
+              {{ getStatusLabel(true) }}
+            </mat-button-toggle>
+          </mat-button-toggle-group>
+
+          <div class="remove-button-container">
+            <button
+              mat-icon-button
+              matTooltip="Видалити зі списку"
+              (click)="onRemoveClick()"
+              class="remove-button"
+            >
+              <mat-icon color="warn">remove_circle</mat-icon>
+            </button>
+          </div>
+        </mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="unit-info-grid">
+          @if (unit.parentShortName) {
+            <div class="info-item inline">
+              <strong>Батьківський:</strong>
+              <span>{{ unit.parentShortName }}</span>
+            </div>
+          }
+          @if (!unit.isInvolved) {
+            @if (unit.assignedShortName) {
+              <div class="info-item inline">
+                <strong>Приданий до:</strong>
+                <span>{{ unit.assignedShortName }}</span>
+              </div>
+            }
+          }
+
+          <div class="info-item inline">
+            <strong>ППД:</strong>
+            <span>{{ unit.persistentLocationValue || 'Не вказано' }}</span>
+          </div>
+        </div>
+
+        <div class="task-assignments">
+          <div class="task-item">
+            <strong>Завдання:</strong>
+            <mat-form-field appearance="outline" class="task-select">
+              <mat-select
+                placeholder="Оберіть завдання"
+                [formControl]="taskControl"
+                (selectionChange)="onTaskChange($event.value)"
+              >
+                @for (task of unitTasks(); track task.id) {
+                  <mat-option [value]="task"
+                    >{{ task.value }} ({{ task.areaType }}
+                    {{ task.withMeans ? 'Засоби' : '' }})</mat-option
+                  >
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div class="task-item">
+            <strong>РВЗ (Район виконання завдань):</strong>
+            <mat-form-field appearance="outline" class="task-select">
+              <mat-select
+                placeholder="Оберіть РВЗ"
+                [formControl]="areaControl"
+                (selectionChange)="onAreaChange($event.value)"
+              >
+                @for (area of areas(); track area.id) {
+                  <mat-option [value]="area">{{ area.value }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-accordion class="sections-accordion">
+      <!-- Засоби (Дрони) - показуємо тільки якщо завдання має withMeans = true -->
+      @if (taskControl.value?.withMeans) {
+        <mat-expansion-panel class="unit-section-panel" (opened)="loadMeans()">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon color="primary">flight</mat-icon>
+              Засоби
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+
+          <div class="section-content">
+            <div class="action-container">
+              <div class="action-buttons">
+                <button mat-raised-button color="accent" (click)="addMean()">
+                  <mat-icon>add</mat-icon>
+                  Додати засіб
+                </button>
+              </div>
+            </div>
+            @if (isLoadingMeans()) {
+              <div class="loading-indicator">
+                <mat-icon>hourglass_empty</mat-icon>
+                Завантаження...
+              </div>
+            } @else {
+              @if (means().length === 0) {
+                <div class="empty-list">
+                  <mat-icon>flight</mat-icon>
+                  <p>Засоби не додано</p>
+                </div>
+              } @else {
+                <table mat-table [dataSource]="meansDataSource" class="mat-elevation-z8">
+                  <!-- Actions Column -->
+                  <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef style="width: 80px">Дії</th>
+                    <td mat-cell *matCellDef="let mean">
+                      <button
+                        mat-icon-button
+                        color="warn"
+                        matTooltip="Видалити засіб"
+                        (click)="deleteMean(mean)"
+                      >
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </td>
+                  </ng-container>
+
+                  <!-- DroneModel Column -->
+                  <ng-container matColumnDef="droneModelValue">
+                    <th mat-header-cell *matHeaderCellDef>Модель БПЛА</th>
+                    <td mat-cell *matCellDef="let mean">{{ mean.droneModelValue }}</td>
+                  </ng-container>
+
+                  <!-- DroneType Column -->
+                  <ng-container matColumnDef="droneTypeName">
+                    <th mat-header-cell *matHeaderCellDef>Тип</th>
+                    <td mat-cell *matCellDef="let mean">{{ mean.droneTypeName }}</td>
+                  </ng-container>
+
+                  <!-- Quantity Column -->
+                  <ng-container matColumnDef="quantity">
+                    <th mat-header-cell *matHeaderCellDef>Кількість</th>
+                    <td mat-cell *matCellDef="let mean" class="editable-cell">
+                      @if (isEditingMean(mean.id || mean.droneModelId, 'quantity')) {
+                        <!-- Режим редагування -->
+                        <div class="edit-mode">
+                          <input
+                            type="number"
+                            [(ngModel)]="editingMeanValue"
+                            (ngModelChange)="updateEditingMeanValue($event)"
+                            (click)="$event.stopPropagation()"
+                            (keydown.enter)="saveMeanFieldChange(mean, 'quantity', $event)"
+                            (keydown.escape)="cancelEditingMean($event)"
+                            class="inline-input"
+                            min="1"
+                            autofocus
+                          />
+                          <button
+                            mat-icon-button
+                            class="save-btn"
+                            (click)="saveMeanFieldChange(mean, 'quantity', $event)"
+                            matTooltip="Зберегти"
+                          >
+                            <mat-icon>check</mat-icon>
+                          </button>
+                          <button
+                            mat-icon-button
+                            class="cancel-btn"
+                            (click)="cancelEditingMean($event)"
+                            matTooltip="Відмінити"
+                          >
+                            <mat-icon>close</mat-icon>
+                          </button>
+                        </div>
+                      } @else {
+                        <!-- Режим перегляду -->
+                        <div class="view-mode">
+                          <span class="value-text">{{ mean.quantity }}</span>
+                          <button
+                            mat-icon-button
+                            class="edit-btn"
+                            (click)="startEditingMean(mean, 'quantity', $event)"
+                            matTooltip="Редагувати"
+                          >
+                            <mat-icon>edit</mat-icon>
+                          </button>
+                        </div>
+                      }
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="meansDisplayedColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: meansDisplayedColumns"></tr>
+                </table>
+              }
+            }
+          </div>
+        </mat-expansion-panel>
+      }
+
+      <!-- Особовий склад -->
+      <mat-expansion-panel class="unit-section-panel" (opened)="onSoldiersPanelOpened()">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon color="primary">group</mat-icon>
+            Особовий склад ({{ soldierCount() }})
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        @if (soldiersPanelOpened()) {
+          <div class="section-content">
+            <div class="action-container">
+              <div class="action-buttons">
+                <button mat-raised-button color="primary" (click)="reloadSoldiers()">
+                  <mat-icon>refresh</mat-icon>
+                  Оновити
+                </button>
+              </div>
+            </div>
+
+            @if (isLoadingSoldiers()) {
+              <div class="loading-indicator">
+                <mat-icon>hourglass_empty</mat-icon>
+                Завантаження...
+              </div>
+            } @else {
+              @if (soldiers().length === 0) {
+                <div class="empty-list">
+                  <mat-icon>group</mat-icon>
+                  <p>Особовий склад відсутній</p>
+                </div>
+              } @else {
+                <table
+                  mat-table
+                  [dataSource]="soldierDataSource"
+                  matSort
+                  class="mat-elevation-z8"
+                  style="width: 100%; margin-top: 1em"
+                >
+                  <ng-container matColumnDef="unitTag">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>?</th>
+                    <td mat-cell *matCellDef="let soldier">
+                      {{ unitTagTitle(soldier) }}
+                    </td>
+                  </ng-container>
+
+                  <!-- FIO Column -->
+                  <ng-container matColumnDef="fio">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>ПІБ</th>
+                    <td mat-cell *matCellDef="let soldier">
+                      <span class="fio">{{ getSoldierFIO(soldier) }}</span>
+                    </td>
+                  </ng-container>
+
+                  <!-- NickName Column -->
+                  <ng-container matColumnDef="nickName">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Позивний</th>
+                    <td mat-cell *matCellDef="let soldier">{{ soldier.nickName || '-' }}</td>
+                  </ng-container>
+
+                  <!-- Rank Column -->
+                  <ng-container matColumnDef="rankShortValue">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Звання</th>
+                    <td mat-cell *matCellDef="let soldier">{{ soldier.rankShortValue }}</td>
+                  </ng-container>
+
+                  <!-- Position Column -->
+                  <ng-container matColumnDef="positionValue">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Посада</th>
+                    <td mat-cell *matCellDef="let soldier">{{ soldier.positionValue }}</td>
+                  </ng-container>
+
+                  <!-- State Column -->
+                  <ng-container matColumnDef="stateValue">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Статус</th>
+                    <td mat-cell *matCellDef="let soldier">
+                      <span class="state-badge">{{ soldier.stateValue }}</span>
+                    </td>
+                  </ng-container>
+
+                  <!-- Unit Column -->
+                  <ng-container matColumnDef="unitShortName">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Підрозділ</th>
+                    <td mat-cell *matCellDef="let soldier">
+                      <span class="unit-text">{{ soldier.unitShortName }}</span>
+                    </td>
+                  </ng-container>
+
+                  <!-- Assigned Unit Column -->
+                  <ng-container matColumnDef="assignedUnitShortName">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Приданий до</th>
+                    <td mat-cell *matCellDef="let soldier">
+                      <span class="unit-text">{{ soldier.assignedUnitShortName || '-' }}</span>
+                    </td>
+                  </ng-container>
+
+                  <!-- Involved Unit Column -->
+                  <ng-container matColumnDef="involvedUnitShortName">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Екіпаж/Група</th>
+                    <td mat-cell *matCellDef="let soldier">
+                      <span class="unit-text">{{ soldier.involvedUnitShortName || '-' }}</span>
+                    </td>
+                  </ng-container>
+
+                  <!-- ArrivedAt Column -->
+                  <ng-container matColumnDef="arrivedAt">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Прибув</th>
+                    <td mat-cell *matCellDef="let soldier">
+                      {{ soldier.arrivedAt | date: 'dd.MM.yyyy' }}
+                    </td>
+                  </ng-container>
+
+                  <!-- DepartedAt Column -->
+                  <ng-container matColumnDef="departedAt">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Вибув</th>
+                    <td mat-cell *matCellDef="let soldier">
+                      {{ soldier.departedAt ? (soldier.departedAt | date: 'dd.MM.yyyy') : '-' }}
+                    </td>
+                  </ng-container>
+
+                  <!-- Comment Column -->
+                  <ng-container matColumnDef="comment">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Коментар</th>
+                    <td mat-cell *matCellDef="let soldier" class="comment-cell">
+                      <span
+                        class="comment-text"
+                        [matTooltip]="
+                          soldier.comment && soldier.comment.length > 50 ? soldier.comment : ''
+                        "
+                        [title]="
+                          soldier.comment && soldier.comment.length > 50 ? soldier.comment : ''
+                        "
+                      >
+                        {{ soldier.comment || '' }}
+                      </span>
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="soldierDisplayedColumns"></tr>
+                  <tr
+                    mat-row
+                    *matRowDef="let row; columns: soldierDisplayedColumns"
+                    [class]="getRowClass(row)"
+                  ></tr>
+                </table>
+              }
+            }
+          </div>
+        }
+      </mat-expansion-panel>
+    </mat-accordion>
+  }
+</div>

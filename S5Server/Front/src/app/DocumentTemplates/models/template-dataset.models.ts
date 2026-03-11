@@ -65,9 +65,10 @@ export interface UnitTaskDto {
   persistentLocationValue?: string;
   taskId: string;
   taskValue: string;
+  taskWithMeans: boolean; // Чи має завдання засоби (для відображення іконки)
   areaId: string;
   areaValue?: string; // ✅ Назва району
-  meansCount: number; // ✅ Кількість засобів (Master-Detail)
+  //meansCount: number; // ✅ Кількість засобів (Master-Detail)
   means?: DroneModelTaskDto[]; // ✅ OPTIONAL: завантажується окремо при розгортанні
   isPublished: boolean;
   publishedAtUtc?: string;

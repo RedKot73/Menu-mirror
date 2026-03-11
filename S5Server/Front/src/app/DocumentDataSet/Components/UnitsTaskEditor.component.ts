@@ -25,16 +25,21 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { TemplateDataSetUpSertDto, UnitTaskDto } from '../models/template-dataset.models';
+import {
+  TemplateDataSetUpSertDto,
+  UnitTaskDto,
+} from '../../DocumentTemplates/models/template-dataset.models';
 import { TemplateDataSetService } from '../../../ServerService/template-dataset.service';
 import { UnitTaskService } from '../../../ServerService/unit-task.service';
 import { UnitService } from '../../../ServerService/unit.service';
-import { UnitTaskCardComponent } from './UnitTaskCard.component';
+import { OneUnitTaskEditor } from './OneUnitTaskEditor.component';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
-import { TemplateDataSetDto } from '../models/template-dataset.models';
-import { DocTemplateUtils } from '../models/shared.models';
+import { TemplateDataSetDto } from '../../DocumentTemplates/models/template-dataset.models';
+import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';
 import { VerticalLayoutComponent } from '../../shared/components/VerticalLayout.component';
 import { DateMaskDirective } from '../../shared/directives/date-mask.directive';
+import { formatDate } from '../../shared/utils/date.utils';
+
 @Component({
   selector: 'app-units-task-editor',
   standalone: true,
@@ -49,7 +54,7 @@ import { DateMaskDirective } from '../../shared/directives/date-mask.directive';
     MatButtonToggleModule,
     MatFormFieldModule,
     MatInputModule,
-    UnitTaskCardComponent,
+    OneUnitTaskEditor,
     VerticalLayoutComponent,
     MatTooltipModule,
     DateMaskDirective,
@@ -58,7 +63,7 @@ import { DateMaskDirective } from '../../shared/directives/date-mask.directive';
   templateUrl: './UnitsTaskEditor.component.html',
   styleUrls: ['./UnitsTaskEditor.component.scss'],
 })
-export class UnitsTaskEditorComponent {
+export class UnitsTaskEditor {
   private destroyRef = inject(DestroyRef);
   private snackBar = inject(MatSnackBar);
 
@@ -72,7 +77,7 @@ export class UnitsTaskEditorComponent {
   @ViewChild('numberInput') numberInput?: ElementRef<HTMLInputElement>;
 
   // Доступ до всіх карток підрозділів
-  @ViewChildren(UnitTaskCardComponent) unitTaskCards!: QueryList<UnitTaskCardComponent>;
+  @ViewChildren(OneUnitTaskEditor) unitTaskCards!: QueryList<OneUnitTaskEditor>;
 
   // --- Selected Units List with DataSets ---
   protected selectedUnits = signal<UnitTaskDto[]>([]);
@@ -227,9 +232,10 @@ export class UnitsTaskEditorComponent {
             persistentLocationValue: unit.persistentLocation,
             taskId: '', // Користувач має вибрати
             taskValue: '',
+            taskWithMeans: false, // За замовчуванням вважаємо, що завдання не має засобів
             areaId: '', // Користувач має вибрати РВЗ
             areaValue: '',
-            meansCount: 0, // ✅ Кількість засобів (Master-Detail)
+            //meansCount: 0, // ✅ Кількість засобів (Master-Detail)
             means: [], // ✅ OPTIONAL: завантажується окремо
             isPublished: false,
             publishedAtUtc: undefined,
@@ -618,8 +624,10 @@ export class UnitsTaskEditorComponent {
   getStatusLabel(isPublished: boolean): string {
     return DocTemplateUtils.getStatusLabel(isPublished);
   }
-
+  /**
+   * Форматує дату у читабельний формат
+   */
   formatDate(dateString: string): string {
-    return DocTemplateUtils.formatDate(dateString);
+    return formatDate(dateString);
   }
 }

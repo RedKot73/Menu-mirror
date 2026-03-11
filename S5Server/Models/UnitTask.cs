@@ -32,9 +32,10 @@ public record UnitTaskDto(
     string? PersistentLocationValue,
     Guid TaskId,
     string TaskValue,
+    bool TaskWithMeans,
     Guid AreaId,
     string? AreaValue,          // ✅ ДОДАНО: назва району
-    int MeansCount,             // ✅ ДОДАНО: кількість засобів
+    //int MeansCount,             // ✅ ДОДАНО: кількість засобів
     bool IsPublished,
     DateTime? PublishedAtUtc,
     string ChangedBy,
@@ -46,6 +47,12 @@ public record UnitTaskDto(
 [Table("units_task")]
 public class UnitTask
 {
+    /// <summary>
+    /// Gets or sets the unique identifier for the entity.
+    /// </summary>
+    /// <remarks>The identifier is generated using version 7 GUIDs, which provide improved uniqueness and
+    /// ordering for distributed systems. This property is typically used as the primary key in database
+    /// entities.</remarks>
     [Key]
     public Guid Id { get; set; } = Guid.CreateVersion7();
 
@@ -188,6 +195,9 @@ public class UnitTask
     /// Опубліковано - створено SnapShot Unit and Soldiers
     /// </summary>
     public bool IsPublished { get; set; }
+    /// <summary>
+    /// Gets or sets the date and time, in UTC, when the content was published.
+    /// </summary>
     public DateTime? PublishedAtUtc { get; set; }
 
     /// <summary>
@@ -213,13 +223,14 @@ public static class UnitTaskExtensions
     /// </summary>
     /// <param name="unit">Підрозділ</param>
     /// <param name="dataSetId">ID набору даних документу</param>
-    /// <param name="taskId">ID завдання</param>
+    /// <param name="task">Завдання підрозділу</param>
     /// <param name="areaId">ID району виконання завдань</param>
     /// <param name="changedBy">Хто публікує</param>
-    public static UnitTask CreateSnapshot(
+    public static UnitTask Create(
         this Unit unit,
+        DictUnitTask task,
         Guid dataSetId,
-        Guid taskId,
+        //Guid taskId,
         Guid areaId,
         string changedBy) =>
         new()
@@ -237,10 +248,10 @@ public static class UnitTaskExtensions
             IsInvolved = unit.IsInvolved,
             PersistentLocationId = unit.PersistentLocationId,
             PersistentLocationValue = unit.PersistentLocation?.Value,
-            TaskId = taskId,
-            TaskValue = string.Empty, // Заповнюється через Include(t => t.Task)
+            TaskId = task.Id,
+            TaskValue = task.Value, 
             AreaId = areaId,
-            IsPublished = true,
+            IsPublished = false,
             PublishedAtUtc = DateTime.UtcNow,
             ChangedBy = changedBy,
             ValidFrom = DateTime.UtcNow
@@ -250,7 +261,7 @@ public static class UnitTaskExtensions
     /// Конвертує UnitTask у DTO (БЕЗ деталей)
     /// Smart: Published = snapshot, Unpublished = actual from Unit
     /// </summary>
-    public static UnitTaskDto ToDto(this UnitTask task, int meansCount = 0)
+    public static UnitTaskDto ToDto(this UnitTask task)
     {
         // ✅ ЛОГІКА: Якщо IsPublished - false і Unit != null — взяти актуальні дані з Unit,
         // ігноруючи збережені в UnitTask (які можуть бути застарілими)
@@ -273,25 +284,41 @@ public static class UnitTaskExtensions
             useActualData ? task.Unit!.PersistentLocation?.Value : task.PersistentLocationValue,
             task.TaskId,
             task.TaskValue,
+            task.Task.WithMeans,
             task.AreaId,
             task.Area?.Value,
-            meansCount,
             task.IsPublished,
             task.PublishedAtUtc,
             task.ChangedBy,
             task.ValidFrom);
     }
 
+    /// <summary>
+    /// Determines whether the specified unit task and unit task data transfer object represent the same task based on
+    /// their identifiers and publication status.
+    /// </summary>
+    /// <param name="task">The unit task to compare. Cannot be null.</param>
+    /// <param name="dto">The unit task data transfer object to compare. Cannot be null.</param>
+    /// <returns>true if the task and the data transfer object have matching task identifiers, area identifiers, and publication
+    /// status; otherwise, false.</returns>
     public static bool IsEqualTo(this UnitTask task, UnitTaskDto dto) =>
         task.TaskId == dto.TaskId &&
         task.AreaId == dto.AreaId &&
         task.IsPublished == dto.IsPublished;
-
+    /// <summary>
+    /// Updates the properties of a unit task based on the values provided in the data transfer object.
+    /// </summary>
+    /// <remarks>If the publication status changes, the method updates it accordingly. When both the existing
+    /// task and the DTO indicate a published state, no further updates are applied. Otherwise, the task's properties
+    /// are updated to match the DTO, and the change is attributed to the specified user.</remarks>
+    /// <param name="task">The unit task instance to update. Must not be null.</param>
+    /// <param name="dto">The data transfer object containing updated values for the unit task. Must not be null.</param>
+    /// <param name="changedBy">The identifier of the user or process making the change. Used to record who performed the update.</param>
     public static void UpdateFromDto(this UnitTask task, UnitTaskDto dto, string changedBy)
     {
         // Оновити статус публікації
         if (dto.IsPublished != task.IsPublished)
-            task.Publish(dto.IsPublished);
+            task.Publish(dto.IsPublished, changedBy);
         
         // Якщо обидва published - не змінюємо дані
         if (task.IsPublished && dto.IsPublished)
@@ -307,9 +334,10 @@ public static class UnitTaskExtensions
     /// <summary>
     /// Змінити статус публікації
     /// </summary>
-    public static void Publish(this UnitTask task, bool setPublish)
+    public static void Publish(this UnitTask task, bool setPublish, string changedBy)
     {
         task.IsPublished = setPublish;
         task.PublishedAtUtc = setPublish ? DateTime.UtcNow : null;
+        task.ChangedBy = changedBy;
     }
 }

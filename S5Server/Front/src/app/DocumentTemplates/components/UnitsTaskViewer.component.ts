@@ -1,0 +1,165 @@
+import {
+  inject,
+  signal,
+  DestroyRef,
+  ViewChild,
+  ElementRef,
+  ViewChildren,
+  QueryList,
+} from '@angular/core';
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
+
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { switchMap, tap } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
+import {
+  UnitTaskDto,
+} from '../../DocumentTemplates/models/template-dataset.models';
+import { TemplateDataSetService } from '../../../ServerService/template-dataset.service';
+import { UnitTaskService } from '../../../ServerService/unit-task.service';
+import { UnitService } from '../../../ServerService/unit.service';
+import { OneUnitTaskViewer } from './OneUnitTaskViewer.component';
+import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
+import { TemplateDataSetDto } from '../../DocumentTemplates/models/template-dataset.models';
+import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';
+import { VerticalLayoutComponent } from '../../shared/components/VerticalLayout.component';
+
+@Component({
+  selector: 'app-units-task-viewer',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatIconModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatTooltipModule,
+    OneUnitTaskViewer,
+    VerticalLayoutComponent,
+  ],
+  providers: [],
+  templateUrl: './UnitsTaskViewer.component.html',
+  styleUrls: ['./UnitsTaskViewer.component.scss'],
+})
+export class UnitsTaskViewer {
+  private destroyRef = inject(DestroyRef);
+  private snackBar = inject(MatSnackBar);
+
+  private dataSetService = inject(TemplateDataSetService);
+  private unitService = inject(UnitService);
+  private unitTaskService = inject(UnitTaskService);
+
+  @ViewChild('parentDateInput') parentDateInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('parentNumberInput') parentNumberInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('dateInput') dateInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('numberInput') numberInput?: ElementRef<HTMLInputElement>;
+
+  // Доступ до всіх карток підрозділів
+  @ViewChildren(OneUnitTaskViewer) unitTaskCards!: QueryList<OneUnitTaskViewer>;
+
+  // --- Selected Units List with DataSets ---
+  protected selectedUnits = signal<UnitTaskDto[]>([]);
+
+  // --- Current Loaded DataSet ---
+  protected dataSet = signal<TemplateDataSetDto | null>(null);
+
+  // --- Document Info ---
+  // Документ старшого начальника
+  protected isParentDocUsed = signal<boolean>(false);
+  protected parentDocumentDate = signal<Date | null>(null);
+  protected parentDocumentNumber = signal<string>('');
+
+  // Основний документ
+  protected documentDate = signal<Date | null>(new Date());
+  protected documentNumber = signal<string>('');
+
+  /**
+   * Обробник зміни підрозділу з дочірнього компонента
+   */
+  onUnitChange(updatedUnit: UnitTaskDto): void {
+    const units = [...this.selectedUnits()];
+    const unitIndex = units.findIndex((u) => u.id === updatedUnit.id);
+    if (unitIndex !== -1) {
+      units[unitIndex] = updatedUnit;
+      this.selectedUnits.set(units);
+    }
+  }
+
+  /**
+   * Повертає контент DataSet у форматі JSON для ResultEditor
+   */
+  getDataSetContent(): string {
+    const units = this.selectedUnits();
+    if (units.length === 0) {
+      return '';
+    }
+
+    return JSON.stringify(units, null, 2);
+  }
+
+  /**
+   * Завантажує DataSet та список UnitTask
+   */
+  loadDataSet(dataSetId: string): void {
+    if (this.dataSet()?.id === dataSetId) {
+      return; // Вже завантажено
+    }
+
+    this.dataSetService
+      .getDataSetById(dataSetId)
+      .pipe(
+        tap((dataSet) => {
+          // Зберігаємо інформацію про поточний DataSet
+          this.dataSet.set(dataSet);
+
+          // Оновлюємо дані документа старшого начальника
+          this.isParentDocUsed.set(dataSet.isParentDocUsed);
+          this.parentDocumentDate.set(
+            dataSet.parentDocDate ? new Date(dataSet.parentDocDate) : null,
+          );
+          this.parentDocumentNumber.set(dataSet.parentDocNumber || '');
+
+          // Оновлюємо дату та номер документа
+          this.documentDate.set(new Date(dataSet.docDate));
+          this.documentNumber.set(dataSet.docNumber);
+        }),
+        switchMap((dataSet) => this.unitTaskService.getAll({ dataSetId: dataSet.id })),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (unitTasks) => {
+          this.selectedUnits.set(unitTasks);
+        },
+        error: (error) => {
+          console.error('Помилка завантаження набору даних:', error);
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
+            error,
+            'Помилка завантаження набору даних',
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
+      });
+  }
+
+  /**
+   * Отримує читабельну назву статусу публікації
+   */
+  getStatusLabel(isPublished: boolean): string {
+    return DocTemplateUtils.getStatusLabel(isPublished);
+  }
+
+  formatDate(dateString: string): string {
+    return DocTemplateUtils.formatDate(dateString);
+  }
+}

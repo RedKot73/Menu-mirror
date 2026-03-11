@@ -237,14 +237,6 @@ namespace S5Server.Models
         [ValidateNever]
         public DictCityCode? Level3 { get; set; }
         /// <summary>
-        /// території територіальних громад в областях,
-        /// територіальні громади Автономної Республіки Крим
-        /// </summary>
-        /*
-        [NotMapped, JsonIgnore]
-        public IReadOnlyList<DictCityCode> Levels3 { get; set; } = [];
-        */
-        /// <summary>
         /// міста, селища міського типу, села, селища (населені пункти)
         /// </summary>
         public string? Level4Id { get; set; }
@@ -254,13 +246,6 @@ namespace S5Server.Models
         [ValidateNever]
         public DictCityCode? Level4 { get; set; }
         /// <summary>
-        /// міста, селища міського типу, села, селища (населені пункти)
-        /// </summary>
-        /*
-        [NotMapped, JsonIgnore]
-        public IReadOnlyList<DictCityCode> Levels4 { get; set; } = [];
-        */
-        /// <summary>
         /// райони в містах (в тому числі, в містах, що мають спеціальний статус)
         /// </summary>
         public string? LevelExtId { get; set; }
@@ -269,13 +254,6 @@ namespace S5Server.Models
         /// </summary>
         [ValidateNever]
         public DictCityCode? LevelExt { get; set; }
-        /// <summary>
-        /// райони в містах (в тому числі, в містах, що мають спеціальний статус)
-        /// </summary>
-        /*
-        [NotMapped, JsonIgnore]
-        public IReadOnlyList<DictCityCode> LevelsExt { get; set; } = [];
-        */
         /// <summary>
         /// Категорія об’єкта
         /// «О» – Автономна Республіка Крим, області
@@ -382,8 +360,6 @@ namespace S5Server.Models
         /// <summary>
         /// Визначає ID та ParentID для запису кодифікатора
         /// </summary>
-        /// <param name="keys">Масив рівнів [Root, Level1, Level2, Level3, Level4, LevelExt]. 
-        /// УВАГА: keys[0] буде перезаписаний на RootCityCode</param>
         public static (string? Id, string? ParentId) GetCityCodeKeys(string level1,
             string? level2,
             string? level3,

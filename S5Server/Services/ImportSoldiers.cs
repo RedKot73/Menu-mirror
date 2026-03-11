@@ -11,6 +11,25 @@ using S5Server.Utils;
 
 namespace S5Server.Services
 {
+    /// <summary>
+    /// Represents a data transfer object for importing soldier information, including personal details, rank, position,
+    /// and unit identifiers.
+    /// </summary>
+    /// <remarks>This record is typically used for importing soldier data from external sources and mapping it
+    /// to the internal domain model. It provides a convenient structure for batch operations or data migration
+    /// scenarios.</remarks>
+    /// <param name="FirstName">The first name of the soldier. Cannot be null or empty.</param>
+    /// <param name="MidleName">The middle name of the soldier, if available; otherwise, null.</param>
+    /// <param name="LastName">The last name of the soldier, if available; otherwise, null.</param>
+    /// <param name="ExternId">The external identifier associated with the soldier record.</param>
+    /// <param name="Rank">The rank of the soldier as a string representation.</param>
+    /// <param name="BirthDate">The date of birth of the soldier.</param>
+    /// <param name="Position">The position or job title of the soldier.</param>
+    /// <param name="ArrivedAt">The date the soldier arrived, or null if not specified.</param>
+    /// <param name="DepartedAt">The date the soldier departed, or null if not specified.</param>
+    /// <param name="UnitId">The unique identifier of the unit to which the soldier is assigned.</param>
+    /// <param name="RankId">The unique identifier of the soldier's rank.</param>
+    /// <param name="PositionId">The unique identifier of the soldier's position.</param>
     public record ImportedSoldier(
         string FirstName,
         string? MidleName,
@@ -27,6 +46,14 @@ namespace S5Server.Services
         Guid PositionId
     )
     {
+        /// <summary>
+        /// Преобразует экземпляр типа ImportedSoldier в новый объект Soldier.
+        /// </summary>
+        /// <remarks>Поля MidleName и LastName будут установлены в null, если соответствующие значения в
+        /// исходном объекте содержат только пробелы или пусты. Свойство NickName будет установлено в пустую
+        /// строку.</remarks>
+        /// <param name="soldier">Экземпляр ImportedSoldier, содержащий данные для преобразования. Не должен быть равен null.</param>
+        /// <returns>Новый объект Soldier, инициализированный на основе данных из параметра soldier.</returns>
         public static Soldier ToEntity(ImportedSoldier soldier) => new()
         {
             ExternId = soldier.ExternId,
@@ -43,6 +70,14 @@ namespace S5Server.Services
             StateId = ControllerFunctions.NullGuid,
             //Comment = string.IsNullOrWhiteSpace(Comment) ? null : Comment?.Trim()
         };
+        /// <summary>
+        /// Updates the specified soldier's properties with the current object's values.
+        /// </summary>
+        /// <remarks>This method copies the current object's property values to the provided soldier
+        /// instance. The caller is responsible for ensuring that the soldier parameter is a valid, non-null
+        /// object.</remarks>
+        /// <param name="soldier">The soldier instance to update. Cannot be null.</param>
+        /// <returns>The updated soldier instance with properties set to match the current object.</returns>
         public Soldier Update(Soldier soldier)
         {
             soldier.FirstName = FirstName;
@@ -53,8 +88,18 @@ namespace S5Server.Services
             soldier.DepartedAt = DepartedAt;
             soldier.RankId = RankId;
             soldier.PositionId = PositionId;
+            soldier.UnitId = UnitId;
             return soldier;
         }
+        /// <summary>
+        /// Determines whether the specified soldier's personal and service details differ from the current instance.
+        /// </summary>
+        /// <remarks>The comparison includes first name, middle name, last name, birth date, arrival and
+        /// departure dates, rank ID, and position ID. Use this method to detect changes before updating or saving
+        /// soldier information.</remarks>
+        /// <param name="soldier">The soldier to compare with the current instance. Cannot be null.</param>
+        /// <returns>true if any of the compared fields differ between the specified soldier and the current instance; otherwise,
+        /// false.</returns>
         public bool Chnaged(Soldier soldier)
         {
             var res = soldier.FirstName != FirstName ||
@@ -68,13 +113,30 @@ namespace S5Server.Services
             return res;
         }
     }
-
+    /// <summary>
+    /// Specifies the possible outcomes for a soldier record during an import operation.
+    /// </summary>
+    /// <remarks>Use this enumeration to determine whether a soldier record was inserted, updated, or deleted
+    /// as a result of the import process. This can be useful for tracking changes or providing feedback to users after
+    /// an import completes.</remarks>
     public enum ImportSoldierStatus { Inserted, Updated, Deleted }
+    /// <summary>
+    /// Represents the result of importing a soldier, including the imported soldier's data and the status of the import
+    /// operation.
+    /// </summary>
+    /// <param name="Soldier">The data transfer object containing information about the imported soldier.</param>
+    /// <param name="Status">The status indicating the outcome of the import operation for the soldier.</param>
     public record ImportedSoldierResult(
         SoldierDto Soldier,
         ImportSoldierStatus Status
     )
     {
+        /// <summary>
+        /// Creates a new ImportedSoldierResult instance from the specified soldier and import status.
+        /// </summary>
+        /// <param name="e">The soldier entity to convert to a data transfer object.</param>
+        /// <param name="status">The status indicating the result of the import operation for the soldier.</param>
+        /// <returns>An ImportedSoldierResult containing the converted soldier data and the specified import status.</returns>
         public static ImportedSoldierResult ToDto(Soldier e, ImportSoldierStatus status)
         {
             var sldr = e.ToSoldierDto();
@@ -82,10 +144,29 @@ namespace S5Server.Services
             return res;
         }
     }
-
+    /// <summary>
+    /// Specifies the status of an import operation or its individual units.
+    /// </summary>
+    /// <remarks>Use this enumeration to track and report the progress of an import process. The values
+    /// indicate the overall state (such as start, completion, or failure) as well as the status of individual units or
+    /// records within the import. This can be useful for providing feedback to users or for logging purposes during
+    /// batch data import scenarios.</remarks>
     public enum ImportProgressStatus { Start, Done, Failed, UnitStart, UnitDone, UnitNotFound, RecordDone }
+    /// <summary>
+    /// Represents a unit being imported, including its name, current import status, and the results of imported
+    /// soldiers.
+    /// </summary>
+    /// <remarks>Use this class to track the progress and results of importing a single unit, including the
+    /// collection of soldiers associated with the unit. The import status indicates the current stage of the import
+    /// process for this unit.</remarks>
     public class ImportUnit {
+        /// <summary>
+        /// Gets or sets the name associated with the object.
+        /// </summary>
         public string Name { get; set; }
+        /// <summary>
+        /// Gets or sets the current status of the import progress.
+        /// </summary>
         public ImportProgressStatus Status { get; set; } = ImportProgressStatus.UnitStart;
         public List<ImportedSoldierResult> ImportedSoldiers { get; init; } = [];
         //public ImportUnit(string name) => Name = name;
@@ -177,6 +258,17 @@ namespace S5Server.Services
         }
 
         // Буферизация файла до запуска фоновой задачи, чтобы избежать ObjectDisposedException
+        /// <summary>
+        /// Attempts to start a background import job for the specified unit using the provided file.
+        /// </summary>
+        /// <remarks>If an import job is already running, the method does not start a new job and returns
+        /// an error message. The file is buffered in memory before the background task begins to avoid issues with
+        /// disposed streams.</remarks>
+        /// <param name="unit">The unit for which the import job is to be started.</param>
+        /// <param name="file">The file containing data to be imported. Must not be null.</param>
+        /// <param name="ct">A cancellation token that can be used to cancel the import operation. Optional.</param>
+        /// <returns>A tuple containing a boolean indicating whether the job was started, the import job instance, and an error
+        /// message if the job could not be started.</returns>
         public static (bool started, ImportJob job, string? error) TryStartBackground(Unit unit, IFormFile file, CancellationToken ct = default)
         {
             lock (_sync)
@@ -205,7 +297,19 @@ namespace S5Server.Services
                 return (true, Current, null);
             }
         }
-
+        /// <summary>
+        /// Imports soldier records for the specified unit from the provided data stream asynchronously.
+        /// </summary>
+        /// <remarks>The method processes each worksheet in the provided data as a separate subunit,
+        /// importing or updating soldier records accordingly. The import operation is thread-safe and supports
+        /// cancellation. Progress is reported throughout the import process. If the operation fails, the import job
+        /// status is updated to reflect the failure.</remarks>
+        /// <param name="unit">The unit for which soldiers are to be imported. Must not be null.</param>
+        /// <param name="soldiersData">A byte array containing the serialized soldier data to import. The data is expected to be in a supported
+        /// spreadsheet format.</param>
+        /// <param name="ct">A cancellation token that can be used to cancel the import operation.</param>
+        /// <returns>A task that represents the asynchronous import operation.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if a soldier record cannot be found after insertion or update during the import process.</exception>
         public static async Task DoImportSoldiers(Unit unit, byte[] soldiersData, CancellationToken ct = default)
         {
             try
@@ -389,10 +493,10 @@ namespace S5Server.Services
 
                         ImportSoldierStatus? importSoldierStatus = null;
                         var soldier = await db.Soldiers
-                            .AsNoTracking()
+                            .AsTracking()//.AsNoTracking()
                             .Where(t => t.ExternId == sldr.ExternId)
                             .FirstOrDefaultAsync(ct);
-                        if(soldier == null)
+                        if(soldier == null)//За ExternId не знайдено
                         {
                             soldier = await db.Soldiers
                                 .AsNoTracking()
@@ -401,7 +505,7 @@ namespace S5Server.Services
                                 t.LastName == sldr.LastName &&
                                 t.BirthDate == sldr.BirthDate)
                                 .FirstOrDefaultAsync(ct);
-                            if (soldier == null)
+                            if (soldier == null)//За ФІО не знайдено
                             {
                                 soldier = ImportedSoldier.ToEntity(sldr);
                                 soldier.ValidFrom = DateTime.UtcNow;
@@ -411,7 +515,7 @@ namespace S5Server.Services
                                 importSoldierStatus = ImportSoldierStatus.Inserted;
                             }
                             else
-                            if (sldr.Chnaged(soldier))
+                            if (sldr.Chnaged(soldier))//Дані в Exl and DB відрізняються
                             {
                                 soldier.ValidFrom = DateTime.UtcNow;
                                 soldier.ChangedBy = "ImportSoldiers";
@@ -421,8 +525,8 @@ namespace S5Server.Services
                             }
                         }
                         else
-                        if(sldr.Chnaged(soldier))
-                        {
+                        if(sldr.Chnaged(soldier))//Дані в Exl and DB відрізняються
+                            {
                             soldier.ValidFrom = DateTime.UtcNow;
                             soldier.ChangedBy = "ImportSoldiers";
                             db.Soldiers.Update(soldier);
@@ -448,9 +552,6 @@ namespace S5Server.Services
 
                         processed++;
                         Report(new ImportProgress(sheet.Name, ImportProgressStatus.RecordDone, processed, total, null));
-
-                        // Заменяем блокирующую паузу на асинхронную с поддержкой отмены
-                        //await Task.Delay(100, ct);
                     }
                     import.Status = ImportProgressStatus.UnitDone;
                     Report(new ImportProgress(sheet.Name, ImportProgressStatus.UnitDone, processed, total, "sheet-done"));

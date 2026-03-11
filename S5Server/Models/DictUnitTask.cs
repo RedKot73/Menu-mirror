@@ -8,40 +8,34 @@ namespace S5Server.Models
     /// <summary>
     /// Завдання підрозділу для використання в документах БР/БД
     /// </summary>
+    /// <param name="Id">Ідентифікатор</param>
+    /// <param name="Value">Назва</param>
+    /// <param name="Comment">Коментар</param>
+    /// <param name="Amount">Сума (грн)</param>
+    /// <param name="WithMeans">True - треба вказати засоби (БПЛА)</param>
+    /// <param name="AreaTypeId">Тип Напрямку ЛБЗ (ідентифікатор)</param>
+    /// <param name="AreaType">Тип Напрямку ЛБЗ (назва)</param>
     public record DictUnitTaskDto(
         Guid Id,
-        /// <summary>
-        /// Назва
-        /// </summary>
         string Value,
         string? Comment,
-        /// <summary>
-        /// Сума (грн)
-        /// </summary>
         decimal Amount,
-        /// <summary>
-        /// True - треба вказати засоби (БПЛА)
-        /// </summary>
         bool WithMeans,
-        /// <summary>
-        /// Тип Напрямку ЛБЗ
-        /// </summary>
         Guid AreaTypeId,
-        /// <summary>
-        /// Тип Напрямку ЛБЗ
-        /// </summary>
         string AreaType);
 
     /// <summary>
     /// Завдання підрозділу для використання в документах БР/БД
     /// </summary>
+    /// <param name="Value">Назва</param>
+    /// <param name="Comment">Коментар</param>
+    /// <param name="Amount">Сума (грн)</param>
+    /// <param name="AreaTypeId">Тип Напрямку ЛБЗ</param>
+    /// <param name="WithMeans">True - треба вказати засоби (БПЛА)</param>
     public record DictUnitTaskCreateDto(
         string Value,
         string? Comment,
         decimal Amount,
-        /// <summary>
-        /// Тип Напрямку ЛБЗ
-        /// </summary>
         Guid AreaTypeId,
         bool WithMeans = false
         );

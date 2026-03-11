@@ -35,7 +35,7 @@ import {
   UnitTaskDto,
   UnitTaskCreateDto,
   DroneModelTaskDto,
-} from '../models/template-dataset.models';
+} from '../../DocumentTemplates/models/template-dataset.models';
 import { DictUnitTasksService, DictUnitTask } from '../../../ServerService/dictUnitTasks.service';
 import { DictAreasService, DictArea } from '../../../ServerService/dictAreas.service';
 import { DroneModelTaskService } from '../../../ServerService/drone-model-task.service';
@@ -50,12 +50,12 @@ import {
   SoldierCountDto,
 } from '../../../ServerService/soldierTask.service';
 import { SoldierUtils } from '../../Soldier/soldier.utils';
-import { DocTemplateUtils } from '../models/shared.models';
+import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 import { PPD_AREA_TYPE_GUID } from '../../Unit/unit.constants';
 
 @Component({
-  selector: 'app-unit-task-card',
+  selector: 'app-one-unit-task-editor',
   standalone: true,
   imports: [
     CommonModule,
@@ -75,14 +75,14 @@ import { PPD_AREA_TYPE_GUID } from '../../Unit/unit.constants';
     MatTooltipModule,
     MatButtonToggleModule,
   ],
-  templateUrl: './UnitTaskCard.component.html',
+  templateUrl: './OneUnitTaskEditor.component.html',
   styleUrls: [
-    './UnitTaskCard.component.scss',
+    './OneUnitTaskEditor.component.scss',
     '../../Unit/UnitContent.component.scss',
     '../../Soldier/Soldier.component.scss',
   ],
 })
-export class UnitTaskCardComponent implements OnInit, OnDestroy, AfterViewInit {
+export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   private dictUnitTasksService = inject(DictUnitTasksService);
   private dictAreasService = inject(DictAreasService);
   private droneModelTaskService = inject(DroneModelTaskService);

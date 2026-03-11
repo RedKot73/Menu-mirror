@@ -130,7 +130,7 @@
   position: relative;
   margin-top: 16px;
   min-height: 0; /* Важливо для правильної роботи flex */
-  overflow: hidden; /* Запобігає переповненню */
+  overflow: hidden; /* Запобігає появі зайвого скролу */
 }
 
 .codemirror-container {

@@ -1,0 +1,60 @@
+<app-vertical-layout>
+  @if (selectedUnits().length === 0) {
+    <div class="empty-list">
+      <mat-icon>inbox</mat-icon>
+      <p>Список порожній. Додайте підрозділи з дерева.</p>
+    </div>
+  } @else {
+    <div actionPanel class="action-panel-content">
+      <mat-card class="document-card">
+        <mat-card-header>
+          <mat-card-title> Підрозділи: {{ selectedUnits().length }} </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (isParentDocUsed()) {
+            <fieldset class="group-box">
+              <legend>Документ старшого начальника</legend>
+              <div class="document-field">
+                <mat-label>Дата:</mat-label>&nbsp;
+                <span>{{ parentDocumentDate() | date: 'dd.MM.yyyy' }}</span>
+              </div>
+              <div class="document-field">
+                <mat-label>Номер:</mat-label>&nbsp;
+                <span>{{ parentDocumentNumber() }}</span>
+              </div>
+            </fieldset>
+          }
+
+          <fieldset class="group-box">
+            <legend>Документ</legend>
+            <div class="document-field">
+              <mat-label>Дата:</mat-label>&nbsp;
+              <span>{{ documentDate() | date: 'dd.MM.yyyy' }}</span>
+            </div>
+            <div class="document-field">
+              <mat-label>Номер:</mat-label>&nbsp;
+              <span>{{ documentNumber() }}</span>
+            </div>
+          </fieldset>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+
+  <!-- Content Panel -->
+  <div contentPanel class="selected-units-list">
+    @if (selectedUnits().length === 0) {
+      <div class="empty-list">
+        <mat-icon>inbox</mat-icon>
+        <p>Список порожній. Додайте підрозділи з дерева.</p>
+      </div>
+    } @else {
+      @for (unitTask of selectedUnits(); track unitTask.id) {
+        <app-one-unit-task-viewer
+          [unitTask]="unitTask"
+        >
+        </app-one-unit-task-viewer>
+      }
+    }
+  </div>
+</app-vertical-layout>

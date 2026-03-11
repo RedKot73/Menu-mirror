@@ -9,6 +9,14 @@ using S5Server.Utils;
 
 namespace S5Server.Controllers;
 
+/// <summary>
+/// Предоставляет API-контроллер для управления задачами подразделений, включая получение, создание, обновление,
+/// удаление и публикацию задач. Доступ к методам контроллера ограничен авторизацией.
+/// </summary>
+/// <remarks>Контроллер реализует RESTful интерфейс для работы с задачами подразделений. Все методы требуют
+/// авторизации пользователя. Для получения и управления задачами используются стандартные HTTP методы. Контроллер
+/// поддерживает фильтрацию, обработку ошибок и логирование. Используйте методы контроллера для интеграции с внешними
+/// системами или пользовательскими интерфейсами, где требуется управление задачами подразделений.</remarks>
 [Authorize]
 [ApiController]
 [Route("api/unit-tasks")]
@@ -18,6 +26,14 @@ public class UnitTaskController : ControllerBase
     private readonly DbSet<UnitTask> _set;
     private readonly ILogger<UnitTaskController> _logger;
 
+    /// <summary>
+    /// Предоставляет API-контроллер для управления задачами подразделений, включая получение, создание, обновление,
+    /// удаление и публикацию задач. Доступ к методам контроллера ограничен авторизацией.
+    /// </summary>
+    /// <remarks>Контроллер реализует RESTful интерфейс для работы с задачами подразделений. Все методы требуют
+    /// авторизации пользователя. Для получения и управления задачами используются стандартные HTTP методы. Контроллер
+    /// поддерживает фильтрацию, обработку ошибок и логирование. Используйте методы контроллера для интеграции с внешними
+    /// системами или пользовательскими интерфейсами, где требуется управление задачами подразделений.</remarks>
     public UnitTaskController(MainDbContext db, ILogger<UnitTaskController> logger)
     {
         _db = db;
@@ -26,42 +42,31 @@ public class UnitTaskController : ControllerBase
     }
 
     /// <summary>
-    /// Отримати всі завдання підрозділів (БЕЗ деталей - Master-Detail)
+    /// Отримати всі завдання підрозділів
     /// </summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] Guid? dataSetId,
-        [FromQuery] Guid? unitId,
-        [FromQuery] Guid? taskId,
+        //[FromQuery] Guid? unitId,
+        //[FromQuery] Guid? taskId,
         CancellationToken ct = default)
     {
         try
         {
-            // Базовий запит
             var baseQuery = _set.AsNoTracking()
                 .Include(t => t.Task)
                 .Include(t => t.Area)
                 .AsQueryable();
-
-            // Фільтри
             if (dataSetId.HasValueGuid())
                 baseQuery = baseQuery.Where(t => t.DataSetId == dataSetId);
 
-            if (unitId.HasValueGuid())
-                baseQuery = baseQuery.Where(t => t.UnitId == unitId);
-
-            if (taskId.HasValueGuid())
-                baseQuery = baseQuery.Where(t => t.TaskId == taskId);
-
-            // ✅ 1️⃣ Published: БЕЗ Unit (snapshot)
-            var publishedQuery = baseQuery
+            var qry1 = await baseQuery
                 .Where(t => t.IsPublished)
-                .OrderByDescending(t => t.PublishedAtUtc)
-                .ThenByDescending(t => t.ValidFrom);
-
-            // ✅ 2️⃣ Unpublished: З актуальними даними Unit
-            var unpublishedQuery = baseQuery
+                .Select(t => t.ToDto())
+                .ToListAsync(ct)
+                ;
+            var qry2 = await baseQuery
                 .Where(t => !t.IsPublished)
                 .Include(t => t.Unit)
                     .ThenInclude(u => u.Parent)
@@ -71,36 +76,14 @@ public class UnitTaskController : ControllerBase
                     .ThenInclude(u => u.UnitType)
                 .Include(t => t.Unit)
                     .ThenInclude(u => u.PersistentLocation)
-                .OrderByDescending(t => t.ValidFrom);
+                .Select(t => t.ToDto())
+                .ToListAsync(ct)
+                ;
 
-            // ✅ Виконати запити + MeansCount одразу
-            var published = await publishedQuery
-                .Select(t => new
-                {
-                    Task = t,
-                    MeansCount = _db.DroneModelTasks.Count(m => m.UnitTaskId == t.Id)
-                })
-                .ToListAsync(ct);
-
-            var unpublished = await unpublishedQuery
-                .Select(t => new
-                {
-                    Task = t,
-                    MeansCount = _db.DroneModelTasks.Count(m => m.UnitTaskId == t.Id)
-                })
-                .ToListAsync(ct);
-
-            // ✅ 3️⃣ Об'єднати (БЕЗ дублікатів, бо published != unpublished)
-            var allTasks = published
-                .Concat(unpublished)
-                .OrderByDescending(x => x.Task.PublishedAtUtc ?? x.Task.ValidFrom)
-                .ToList();
-
-            // ✅ 4️⃣ ToDto з Smart Logic (автоматично вибирає snapshot/actual)
-            var result = allTasks
-                .Select(x => x.Task.ToDto(x.MeansCount))
-                .ToList();
-
+            var result = qry1.Union(qry2)
+                .OrderByDescending(t => t.PublishedAtUtc)
+                .ThenByDescending(t => t.ValidFrom)
+                ;
             return Ok(result);
         }
         catch (OperationCanceledException)
@@ -116,7 +99,7 @@ public class UnitTaskController : ControllerBase
     }
 
     /// <summary>
-    /// Отримати завдання підрозділу за ID (БЕЗ деталей)
+    /// Отримати завдання підрозділу за ID
     /// </summary>
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -131,6 +114,7 @@ public class UnitTaskController : ControllerBase
             var task = await _set
                 .AsNoTracking()
                 .Include(t => t.Task)
+                .ThenInclude(t => t.WithMeans)
                 .Include(t => t.Area)
                 .FirstOrDefaultAsync(t => t.Id == id, ct);
 
@@ -152,14 +136,14 @@ public class UnitTaskController : ControllerBase
     }
 
     /// <summary>
-    /// Створити знімок підрозділу для завдання (опублікувати)
+    /// Створити завдання - знімок підрозділу
     /// </summary>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<ActionResult<UnitTaskDto>> CreateSnapshot(
+    public async Task<ActionResult<UnitTaskDto>> Create(
         [FromBody] UnitTaskCreateDto dto,
         CancellationToken ct = default)
     {
@@ -178,9 +162,10 @@ public class UnitTaskController : ControllerBase
                     detail: $"Набір даних з ID '{dto.DataSetId}' не знайдено");
 
             // 2. Перевірка існування Task
-            var taskExists = await _db.DictUnitTasks
-                .AnyAsync(t => t.Id == dto.TaskId, ct);
-            if (!taskExists)
+            var task = await _db.DictUnitTasks.AsNoTracking()
+                .Where(t => t.Id == dto.TaskId)
+                .FirstOrDefaultAsync(t => t.Id == dto.TaskId, ct);
+            if (task == null)
                 return Problem(
                     statusCode: 404,
                     title: "Не знайдено",
@@ -210,51 +195,17 @@ public class UnitTaskController : ControllerBase
                     title: "Не знайдено",
                     detail: $"Підрозділ з ID '{dto.UnitId}' не знайдено");
 
-            // 5. Перевірити, чи немає вже активного завдання для цього підрозділу
-            /*
-            var existingTask = await _set
-                .FirstOrDefaultAsync(t => t.UnitId == dto.UnitId && t.IsPublished, ct);
-
-            if (existingTask != null)
-            {
-                if (_logger.IsEnabled(LogLevel.Information))
-                    _logger.LogInformation(
-                        "Спроба створити завдання для підрозділу, який вже має активне завдання. UnitId={UnitId}, ExistingTaskId={TaskId}",
-                        dto.UnitId, existingTask.Id);
-
-                return Problem(
-                    statusCode: 409,
-                    title: "Конфлікт",
-                    detail: $"Підрозділ '{unit.ShortName}' вже має активне завдання (ID: {existingTask.Id})",
-                    extensions: new Dictionary<string, object?>
-                    {
-                        ["unitId"] = dto.UnitId,
-                        ["existingTaskId"] = existingTask.Id
-                    });
-            }
-            */
-
+            var changedBy = User.Identity?.Name ?? "Unknown";
             // 6. Створити знімок підрозділу
-            var changedBy = User.Identity?.Name ?? "System";
-            var unitTask = unit.CreateSnapshot(
+            var unitTask = unit.Create(
+                task,
                 dto.DataSetId,
-                dto.TaskId,
                 dto.AreaId,
                 changedBy);
             _set.Add(unitTask);
-
+            /*
             // 7. Завантажити бійців підрозділу
             var soldiers = await _db.Soldiers.GetUnionQuery(dto.UnitId)
-                /*
-                .AsNoTracking()
-                .Include(s => s.Unit)
-                .Include(s => s.AssignedUnit)
-                .Include(s => s.InvolvedUnit)
-                .Include(s => s.Rank)
-                .Include(s => s.Position)
-                .Include(s => s.State)
-                .Where(s => s.UnitId == dto.UnitId)
-                */
                 .ToListAsync(ct);
 
             // 8. Створити знімки бійців
@@ -263,7 +214,7 @@ public class UnitTaskController : ControllerBase
                 .ToList();
 
             _db.SoldierTasks.AddRange(soldierTasks);
-
+            */
             // 9. Зберегти все разом
             try
             {
@@ -271,8 +222,8 @@ public class UnitTaskController : ControllerBase
 
                 if (_logger.IsEnabled(LogLevel.Information))
                     _logger.LogInformation(
-                        "Створено знімок підрозділу UnitId={UnitId}, TaskId={TaskId}, UnitTaskId={UnitTaskId}, Soldiers={SoldiersCount}",
-                        dto.UnitId, dto.TaskId, unitTask.Id, soldiers.Count);
+                        "Створено знімок підрозділу UnitId={UnitId}, TaskId={TaskId}, UnitTaskId={UnitTaskId}",
+                        dto.UnitId, dto.TaskId, unitTask.Id);
 
                 // 10. Завантажити створений знімок з Task та Area
                 var created = await _set
@@ -346,7 +297,7 @@ public class UnitTaskController : ControllerBase
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Завдання з ID '{id}' не знайдено");
 
             if (task.IsEqualTo(dto))
-                return Ok(task.ToDto());  // ✅ Повертаємо існуючі дані БЕЗ UPDATE
+                return NoContent();
 
             // Оновити тільки статус публікації
             /*
@@ -357,11 +308,7 @@ public class UnitTaskController : ControllerBase
             try
             {
                 await _db.SaveChangesAsync(ct);
-                /*
-                if (_logger.IsEnabled(LogLevel.Information))
-                    _logger.LogInformation("Оновлено завдання UnitTaskId={Id}, IsPublished={IsPublished}",
-                        id, dto.IsPublished);
-                */
+
                 // Завантажити оновлений знімок
                 var updated = await _set
                     .AsNoTracking()
@@ -410,6 +357,9 @@ public class UnitTaskController : ControllerBase
             if (task == null)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Завдання з ID '{id}' не знайдено");
 
+            var changedBy = User.Identity?.Name ?? "Unknown";
+            await task.DeleteSoldierSnapshot(_db, changedBy, ct);
+
             _set.Remove(task);
             await _db.SaveChangesAsync(ct);
 
@@ -450,7 +400,16 @@ public class UnitTaskController : ControllerBase
             if (task == null)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Завдання з ID '{id}' не знайдено");
 
-            task.Publish(set_publish);
+            var changedBy = User.Identity?.Name ?? "Unknown";
+            task.Publish(set_publish, changedBy);
+            if (task.IsPublished)
+            {
+                await task.CreateSoldierSnapshot(_db, changedBy, ct);
+            }
+            else
+            {
+                await task.DeleteSoldierSnapshot(_db, changedBy, ct);
+            }
             await _db.SaveChangesAsync(ct);
 
             if (_logger.IsEnabled(LogLevel.Information))

@@ -12,9 +12,9 @@ import { MatTabsModule } from '@angular/material/tabs';
 
 import { UnitTreeComponent } from '../Unit/UnitTree.component';
 import { UnitTreeNode } from '../Unit/unit-tree-node.component';
-import { DataSetTableComponent } from '../DocumentTemplates/components/DataSetTable.component';
+import { DocDataSetsTableComponent } from './Components/DocDataSetsTable.component';
 import { TemplateDataSetDto } from '../DocumentTemplates/models/template-dataset.models';
-import { UnitsTaskEditorComponent } from '../DocumentTemplates/components/UnitsTaskEditor.component';
+import { UnitsTaskEditor } from './Components/UnitsTaskEditor.component';
 import { MasterDetailLayoutComponent } from '../shared/components/MasterDetailLayout.component';
 
 @Component({
@@ -31,8 +31,8 @@ import { MasterDetailLayoutComponent } from '../shared/components/MasterDetailLa
     MatTabsModule,
     MasterDetailLayoutComponent,
     UnitTreeComponent,
-    DataSetTableComponent,
-    UnitsTaskEditorComponent,
+    DocDataSetsTableComponent,
+    UnitsTaskEditor,
   ],
   providers: [provideNativeDateAdapter()],
   templateUrl: './DocumentDataSet.page.html',
@@ -40,7 +40,7 @@ import { MasterDetailLayoutComponent } from '../shared/components/MasterDetailLa
 })
 export class DocumentDataSetComponent {
   @ViewChild(UnitTreeComponent) unitTree!: UnitTreeComponent;
-  @ViewChild('unitsTaskEditor') unitsTaskEditor!: UnitsTaskEditorComponent;
+  @ViewChild('unitsTaskEditor') unitsTaskEditor!: UnitsTaskEditor;
 
   // --- Public Methods ---
 

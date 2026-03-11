@@ -4,6 +4,14 @@ using S5Server.Models;
 
 namespace S5Server.Services;
 
+/// <summary>
+/// Provides extension methods for querying collections of Soldier entities with related data included for read-only
+/// operations.
+/// </summary>
+/// <remarks>This static class contains methods that simplify the retrieval of soldiers and their related entities
+/// from a DbSet. The methods are designed for scenarios where related data is required and no modifications to the
+/// entities are intended. All queries are configured to disable change tracking and to eagerly load related entities,
+/// making them suitable for reporting, display, or other read-only use cases.</remarks>
 public static class SoldierService
 {
     /// <summary>

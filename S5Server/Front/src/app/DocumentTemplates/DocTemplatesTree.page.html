@@ -10,11 +10,11 @@
       </mat-tab>
       <mat-tab label="Шаблони документів">
         <div class="tab-content-scroll">
-          <app-page-doc-templates
+          <app-doc-templates-table
             [selectedTemplate]="selectedTemplate()"
             (templateSelected)="onTemplateSelected($event)"
           >
-          </app-page-doc-templates>
+          </app-doc-templates-table>
         </div>
       </mat-tab>
     </mat-tab-group>
@@ -24,7 +24,7 @@
   <div rightPanel class="right-panel-tabs">
     <mat-tab-group (selectedIndexChange)="onTabChange($event)">
       <mat-tab label="Дані документа">
-        <app-units-task-editor #unitsTaskEditor></app-units-task-editor>
+          <app-units-task-viewer #unitsTaskViewer></app-units-task-viewer>
       </mat-tab>
       <mat-tab label="Шаблон">
         <app-template-editor #templateEditor [template]="selectedTemplate()"></app-template-editor>

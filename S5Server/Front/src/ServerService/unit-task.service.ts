@@ -59,7 +59,7 @@ export class UnitTaskService {
   }
 
   /**
-   * Створити snap-shot підрозділу для завдання (опублікувати)
+   * Створити завдання підрозділу
    * POST /api/unit-tasks
    */
   create(dto: UnitTaskCreateDto): Observable<UnitTaskDto> {

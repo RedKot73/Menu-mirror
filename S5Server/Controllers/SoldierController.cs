@@ -363,6 +363,18 @@ public class SoldierController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Updates the details of an existing soldier with the specified identifier.
+    /// </summary>
+    /// <remarks>Returns appropriate HTTP status codes based on the outcome of the operation, including
+    /// validation errors, not found, uniqueness conflicts, and concurrency conflicts.</remarks>
+    /// <param name="id">The unique identifier of the soldier to update. Cannot be empty.</param>
+    /// <param name="dto">The data transfer object containing the updated soldier information. The FirstName property cannot be null or
+    /// whitespace.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>An IActionResult indicating the result of the update operation. Returns 204 No Content if the update is
+    /// successful, 400 Bad Request if the input is invalid, 404 Not Found if the soldier does not exist, or 409
+    /// Conflict if a uniqueness or concurrency conflict occurs.</returns>
     [HttpPut("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

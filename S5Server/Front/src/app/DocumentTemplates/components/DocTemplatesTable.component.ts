@@ -38,7 +38,7 @@ import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 export type DocumentTemplate = TemplateDto;
 
 @Component({
-  selector: 'app-page-doc-templates',
+  selector: 'app-doc-templates-table',
   imports: [
     MatTableModule,
     MatButtonModule,
@@ -55,10 +55,10 @@ export type DocumentTemplate = TemplateDto;
     CommonModule,
     FormsModule,
   ],
-  templateUrl: './DocTemplate.component.html',
-  styleUrl: './DocTemplate.component.scss',
+  templateUrl: './DocTemplatesTable.component.html',
+  styleUrls: ['./DocTemplatesTable.component.scss'],
 })
-export class DocTemplateComponent implements AfterViewInit {
+export class DocTemplatesTableComponent implements AfterViewInit {
   private _sort: MatSort | null = null;
 
   @ViewChild(MatSort) set matSort(sort: MatSort) {
