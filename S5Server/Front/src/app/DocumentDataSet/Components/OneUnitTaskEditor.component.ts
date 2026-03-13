@@ -47,12 +47,13 @@ import {
 import {
   SoldierTaskService,
   SoldierTaskDto,
-  SoldierCountDto,
+ // SoldierCountDto,
 } from '../../../ServerService/soldierTask.service';
 import { SoldierUtils } from '../../Soldier/soldier.utils';
 import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 import { PPD_AREA_TYPE_GUID } from '../../Unit/unit.constants';
+import { ConfirmDialogComponent } from '../../dialogs/ConfirmDialog.component';
 
 @Component({
   selector: 'app-one-unit-task-editor',
@@ -117,7 +118,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     'involvedUnitShortName',
     'comment',
   ];
-  soldierCount = signal<number>(0);
+//  soldierCount = signal<number>(0);
   isLoadingSoldiers = signal<boolean>(false);
   soldiersPanelOpened = signal(false);
 
@@ -248,7 +249,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
             this.soldiers.set(soldiers);
             this.soldierDataSource.data = soldiers;
             this.soldierDataSource.sort = this.sort;
-            this.soldierCount.set(soldiers.length);
+            //this.soldierCount.set(soldiers.length);
           },
           error: (error: unknown) => {
             console.error('Помилка завантаження особового складу підрозділу:', error);
@@ -275,7 +276,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
           this.soldiers.set(soldiers);
           this.soldierDataSource.data = soldiers;
           this.soldierDataSource.sort = this.sort;
-          this.soldierCount.set(soldiers.length);
+          //this.soldierCount.set(soldiers.length);
         },
         error: (error: unknown) => {
           console.error('Помилка завантаження особового складу:', error);
@@ -291,6 +292,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   /**
    * Завантажує кількість бійців для завдання
    */
+  /*
   loadSoldierCount(): void {
     const unitTaskId = this.unitTask.id;
     if (!unitTaskId) {
@@ -309,6 +311,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
         },
       });
   }
+  */
 
   /**
    * Завантажує засоби (дрони) для завдання підрозділу (Master-Detail)
@@ -356,7 +359,28 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
    * Обробник натискання кнопки видалення
    */
   onRemoveClick(): void {
-    this.remove.emit(this.unitTask.id);
+    const unit = this.unitTask;
+
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '360px',
+      maxWidth: '95vw',
+      autoFocus: false,
+      data: {
+        title: 'Видалення підрозділу із завдання',
+        message: `Ви впевнені, що хочете видалити "${unit.unitShortName}" зі списку?`,
+        confirmText: 'Видалити',
+        cancelText: 'Відмінити',
+        color: 'warn',
+        icon: 'warning',
+      },
+    });
+
+    ref.afterClosed().subscribe((confirmed) => {
+      if (confirmed) {
+        this.remove.emit(unit.id);
+        this.unitTaskService.delete(unit.id).subscribe({});
+      }
+    });
   }
 
   /**
@@ -721,7 +745,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
         this.unitTaskSignal.set(updatedUnitTask);
 
         // ✅ Сповіщаємо батьківський компонент про зміну
-        this.unitChange.emit(updatedUnitTask);
+        //this.unitChange.emit(updatedUnitTask);
 
         const statusText = isPublished ? 'опубліковано' : 'знято з публікації';
         this.snackBar.open(

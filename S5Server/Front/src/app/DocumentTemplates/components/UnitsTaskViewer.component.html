@@ -8,7 +8,12 @@
     <div actionPanel class="action-panel-content">
       <mat-card class="document-card">
         <mat-card-header>
-          <mat-card-title> Підрозділи: {{ selectedUnits().length }} </mat-card-title>
+          <mat-card-title>
+            Підрозділи: {{ selectedUnits().length }}
+            <button mat-icon-button matTooltip="Переглянути JSON" (click)="loadDataSetJson()">
+              <mat-icon>data_object</mat-icon>
+            </button>
+          </mat-card-title>
         </mat-card-header>
         <mat-card-content>
           @if (isParentDocUsed()) {
@@ -50,10 +55,7 @@
       </div>
     } @else {
       @for (unitTask of selectedUnits(); track unitTask.id) {
-        <app-one-unit-task-viewer
-          [unitTask]="unitTask"
-        >
-        </app-one-unit-task-viewer>
+        <app-one-unit-task-viewer [unitTask]="unitTask"> </app-one-unit-task-viewer>
       }
     }
   </div>

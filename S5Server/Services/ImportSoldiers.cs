@@ -109,7 +109,8 @@ namespace S5Server.Services
                 soldier.ArrivedAt != ArrivedAt ||
                 soldier.DepartedAt != DepartedAt ||
                 soldier.RankId != RankId ||
-                soldier.PositionId != PositionId;
+                soldier.PositionId != PositionId ||
+                soldier.UnitId != UnitId;
             return res;
         }
     }

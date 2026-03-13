@@ -269,6 +269,7 @@ public class SoldierTaskController : ControllerBase
     /// <summary>
     /// Отримати кількість бійців для завдання
     /// </summary>
+    /*
     [HttpGet("count/{unitTaskId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<SoldierCountDto>> GetCount(
@@ -298,6 +299,7 @@ public class SoldierTaskController : ControllerBase
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
+    */
 }
 
 

@@ -1117,7 +1117,7 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
             entity.HasIndex(e => e.UnitId);
             entity.HasIndex(e => e.TaskId);
             //entity.HasIndex(e => e.IsPublished);
-            entity.HasIndex(e => new { e.UnitId, e.TaskId }).IsUnique();
+            entity.HasIndex(e => new { e.UnitId, e.DataSetId }).IsUnique();
         });
         modelBuilder.Entity<SoldierTask>(entity =>
         {

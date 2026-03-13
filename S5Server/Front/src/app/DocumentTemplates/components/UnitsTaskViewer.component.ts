@@ -18,20 +18,22 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { switchMap, tap } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
+import { Observable, of, switchMap, tap } from 'rxjs';
+import { map as rxMap } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import {
-  UnitTaskDto,
-} from '../../DocumentTemplates/models/template-dataset.models';
+import { UnitTaskDto } from '../../DocumentTemplates/models/template-dataset.models';
 import { TemplateDataSetService } from '../../../ServerService/template-dataset.service';
 import { UnitTaskService } from '../../../ServerService/unit-task.service';
-import { UnitService } from '../../../ServerService/unit.service';
+//import { UnitService } from '../../../ServerService/unit.service';
 import { OneUnitTaskViewer } from './OneUnitTaskViewer.component';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 import { TemplateDataSetDto } from '../../DocumentTemplates/models/template-dataset.models';
 import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';
 import { VerticalLayoutComponent } from '../../shared/components/VerticalLayout.component';
+import { JsonEditorDialogComponent } from './JsonEditorDialog.component';
+import { GraphqlDataService } from '../../../ServerService/graphql-data.service';
 
 @Component({
   selector: 'app-units-task-viewer',
@@ -55,10 +57,12 @@ import { VerticalLayoutComponent } from '../../shared/components/VerticalLayout.
 export class UnitsTaskViewer {
   private destroyRef = inject(DestroyRef);
   private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
 
   private dataSetService = inject(TemplateDataSetService);
-  private unitService = inject(UnitService);
+  //private unitService = inject(UnitService);
   private unitTaskService = inject(UnitTaskService);
+  private graphqlDataService = inject(GraphqlDataService);
 
   @ViewChild('parentDateInput') parentDateInput?: ElementRef<HTMLInputElement>;
   @ViewChild('parentNumberInput') parentNumberInput?: ElementRef<HTMLInputElement>;
@@ -97,15 +101,59 @@ export class UnitsTaskViewer {
   }
 
   /**
-   * Повертає контент DataSet у форматі JSON для ResultEditor
+   * Загальний метод: завантажує DataSet через GraphQL та повертає JSON-рядок
    */
-  getDataSetContent(): string {
-    const units = this.selectedUnits();
-    if (units.length === 0) {
-      return '';
+  private fetchDataSetJson(): Observable<string> {
+    const dataSetId = this.dataSet()?.id;
+    if (!dataSetId) {
+      return of('');
     }
 
-    return JSON.stringify(units, null, 2);
+    return this.graphqlDataService
+      .getDataSetForRender(dataSetId)
+      .pipe(rxMap((data) => (data ? JSON.stringify(data, null, 2) : '')));
+  }
+
+  /**
+   * Повертає контент DataSet у форматі JSON для підстановки в шаблон
+   */
+  getDataSetContent(): Observable<string> {
+    return this.fetchDataSetJson();
+  }
+
+  /**
+   * Завантажує DataSet через GraphQL та відображає JSON у діалозі
+   */
+  loadDataSetJson(): void {
+    this.fetchDataSetJson()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (jsonContent) => {
+          if (!jsonContent) {
+            this.snackBar.open('Немає даних для перегляду', 'Закрити', { duration: 3000 });
+            return;
+          }
+
+          this.dialog.open(JsonEditorDialogComponent, {
+            width: '80vw',
+            maxWidth: '1200px',
+            maxHeight: '90vh',
+            data: {
+              jsonContent,
+              readOnly: true,
+              title: 'Дані підрозділів (JSON)',
+            },
+          });
+        },
+        error: (error) => {
+          console.error('Помилка завантаження даних:', error);
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
+            error,
+            'Помилка завантаження даних',
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
+      });
   }
 
   /**
@@ -161,5 +209,9 @@ export class UnitsTaskViewer {
 
   formatDate(dateString: string): string {
     return DocTemplateUtils.formatDate(dateString);
+  }
+
+  showJson(): void {
+    this.loadDataSetJson();
   }
 }

@@ -94,24 +94,7 @@ public class SoldierController : ControllerBase
 
         try
         {
-            //var qry1 = _set.Where(s => s.UnitId == unitId);
-            //var qry2 = _set.Where(s => s.AssignedUnitId == unitId);
-            //var qry3 = _set.Where(s => s.InvolvedUnitId == unitId);
             var result = await _set.GetUnionQuery(unitId)
-                /*
-                (qry1
-                .Union(qry2)
-                .Union(qry3))
-                .Include(s => s.Unit)
-                .Include(s => s.AssignedUnit)
-                .Include(s => s.InvolvedUnit)
-                .Include(s => s.Rank)
-                .Include(s => s.Position)
-                .Include(s => s.State)
-                .OrderBy(s => s.FirstName)
-                .ThenBy(s => s.MidleName)
-                .ThenBy(s => s.LastName)
-                */
                 .Select(s => s.ToSoldierDto())
                 .ToListAsync(ct);
             return Ok(result);

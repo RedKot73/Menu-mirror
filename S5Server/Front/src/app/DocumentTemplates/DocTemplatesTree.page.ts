@@ -9,7 +9,7 @@ import { TemplateEditorComponent } from './components/TemplateEditor.component';
 import { ResultEditorComponent } from './components/ResultEditor.component';
 import { TemplateDto } from '../DocumentTemplates/models/document-template.models';
 import { TemplateDataSetDto } from '../DocumentTemplates/models/template-dataset.models';
-import { UnitsTaskViewer } from './components/UnitsTaskViewer.component';//'../DocumentDataSet/Components/UnitsTaskEditor.component';
+import { UnitsTaskViewer } from './components/UnitsTaskViewer.component'; //'../DocumentDataSet/Components/UnitsTaskEditor.component';
 import { MasterDetailLayoutComponent } from '../shared/components/MasterDetailLayout.component';
 
 @Component({
@@ -70,8 +70,9 @@ export class DocTemplatesTree {
 
     // Якщо переходимо на вкладку результату, також оновлюємо дані
     if (index === 2) {
-      const dataSetContent = this.unitsTaskViewer.getDataSetContent();
-      this.dataSetContent.set(dataSetContent);
+      this.unitsTaskViewer.getDataSetContent().subscribe((content) => {
+        this.dataSetContent.set(content);
+      });
     }
   }
 }

@@ -36,6 +36,7 @@ const GET_DATA_SET_FOR_RENDER = gql`
       isPublished
       unitTasks {
         id
+        isPublished
         unitShortName
         parentShortName
         assignedShortName
@@ -46,7 +47,17 @@ const GET_DATA_SET_FOR_RENDER = gql`
         area {
           value
         }
-        isPublished
+        means {
+          quantity
+          droneModel {
+            value
+          }
+        }
+        soldiersTask {
+          firstName
+          midleName
+          lastName
+        }
       }
     }
   }
@@ -191,7 +202,15 @@ export class GraphqlDataService {
         query: GET_DATA_SET_FOR_RENDER,
         variables: { id },
       })
-      .pipe(map((result) => result.data!.templateDataSet));
+      .pipe(
+        map((result) => {
+          const data = result.data!.templateDataSet;
+          if (Array.isArray(data)) {
+            return data[0] ?? null;
+          }
+          return data;
+        }),
+      );
   }
 
   /**

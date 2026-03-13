@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { Subject, firstValueFrom } from 'rxjs';
+import { Subject/*, firstValueFrom*/ } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
 
 import { MatCardModule } from '@angular/material/card';
@@ -23,7 +23,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialog } from '@angular/material/dialog';
+//import { MatDialog } from '@angular/material/dialog';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
@@ -33,21 +33,23 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import {
   UnitTaskDto,
-  UnitTaskCreateDto,
+//  UnitTaskCreateDto,
   DroneModelTaskDto,
 } from '../../DocumentTemplates/models/template-dataset.models';
 import { DictUnitTasksService, DictUnitTask } from '../../../ServerService/dictUnitTasks.service';
 import { DictAreasService, DictArea } from '../../../ServerService/dictAreas.service';
 import { DroneModelTaskService } from '../../../ServerService/drone-model-task.service';
+/*
 import { UnitTaskService } from '../../../ServerService/unit-task.service';
 import {
   DictDroneModelSelectDialogComponent,
   DictDroneModelWithQuantity,
 } from '../../dialogs/DictDroneModelSelect-dialog.component';
+*/
 import {
   SoldierTaskService,
   SoldierTaskDto,
-  SoldierCountDto,
+//  SoldierCountDto,
 } from '../../../ServerService/soldierTask.service';
 import { SoldierUtils } from '../../Soldier/soldier.utils';
 import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';
@@ -86,10 +88,10 @@ export class OneUnitTaskViewer implements OnInit, OnDestroy, AfterViewInit {
   private dictUnitTasksService = inject(DictUnitTasksService);
   private dictAreasService = inject(DictAreasService);
   private droneModelTaskService = inject(DroneModelTaskService);
-  private unitTaskService = inject(UnitTaskService);
+//  private unitTaskService = inject(UnitTaskService);
   private soldierTaskService = inject(SoldierTaskService);
   private snackBar = inject(MatSnackBar);
-  private dialog = inject(MatDialog);
+//  private dialog = inject(MatDialog);
   private destroy$ = new Subject<void>();
 
   // Сигнал для реактивного відстеження змін unitTask
@@ -117,7 +119,7 @@ export class OneUnitTaskViewer implements OnInit, OnDestroy, AfterViewInit {
     'involvedUnitShortName',
     'comment',
   ];
-  soldierCount = signal<number>(0);
+  // soldierCount = signal<number>(0);
   isLoadingSoldiers = signal<boolean>(false);
   soldiersPanelOpened = signal(false);
 
@@ -227,7 +229,7 @@ export class OneUnitTaskViewer implements OnInit, OnDestroy, AfterViewInit {
    */
   reloadSoldiers(): void {
     const unitTaskId = this.unitTask.id;
-
+/*
     if (!unitTaskId) {
       const unitId = this.unitTask.unitId;
       // Якщо завдання ще не збережено - завантажуємо актуальний склад підрозділу
@@ -248,7 +250,7 @@ export class OneUnitTaskViewer implements OnInit, OnDestroy, AfterViewInit {
             this.soldiers.set(soldiers);
             this.soldierDataSource.data = soldiers;
             this.soldierDataSource.sort = this.sort;
-            this.soldierCount.set(soldiers.length);
+            //this.soldierCount.set(soldiers.length);
           },
           error: (error: unknown) => {
             console.error('Помилка завантаження особового складу підрозділу:', error);
@@ -261,7 +263,7 @@ export class OneUnitTaskViewer implements OnInit, OnDestroy, AfterViewInit {
         });
       return;
     }
-
+*/
     // Якщо завдання збережено - завантажуємоSnapshot
     this.isLoadingSoldiers.set(true);
     this.soldierTaskService
@@ -275,7 +277,7 @@ export class OneUnitTaskViewer implements OnInit, OnDestroy, AfterViewInit {
           this.soldiers.set(soldiers);
           this.soldierDataSource.data = soldiers;
           this.soldierDataSource.sort = this.sort;
-          this.soldierCount.set(soldiers.length);
+          //this.soldierCount.set(soldiers.length);
         },
         error: (error: unknown) => {
           console.error('Помилка завантаження особового складу:', error);
@@ -291,6 +293,7 @@ export class OneUnitTaskViewer implements OnInit, OnDestroy, AfterViewInit {
   /**
    * Завантажує кількість бійців для завдання
    */
+  /*
   loadSoldierCount(): void {
     const unitTaskId = this.unitTask.id;
     if (!unitTaskId) {
@@ -309,12 +312,14 @@ export class OneUnitTaskViewer implements OnInit, OnDestroy, AfterViewInit {
         },
       });
   }
+  */
 
   /**
    * Завантажує засоби (дрони) для завдання підрозділу (Master-Detail)
    */
   loadMeans(): void {
     const unitTaskId = this.unitTask.id;
+    /*
     if (!unitTaskId) {
       // UnitTask ще не збережено - показуємо локально додані засоби
       if (this.unitTask.means && this.unitTask.means.length > 0) {
@@ -323,6 +328,7 @@ export class OneUnitTaskViewer implements OnInit, OnDestroy, AfterViewInit {
       }
       return;
     }
+    */
 
     // Якщо вже завантажено - не перезавантажуємо
     if (this.means().length > 0) {

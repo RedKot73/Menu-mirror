@@ -2,6 +2,8 @@
 
 using HotChocolate.Authorization;
 
+using Microsoft.EntityFrameworkCore;
+
 using S5Server.Data;
 using S5Server.Models;
 
@@ -31,7 +33,10 @@ public class Query
     public IQueryable<TemplateDataSet> GetTemplateDataSet(
         Guid id,
         [Service] MainDbContext db)
-        => db.TemplateDataSets.Where(d => d.Id == id);
+        => db.TemplateDataSets
+            .Where(d => d.Id == id)
+            //.FirstOrDefaultAsync(t => t.Id == id)
+        ;
 
     /// <summary>
     /// Отримати всі шаблони документів

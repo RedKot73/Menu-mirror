@@ -9,12 +9,12 @@ export interface SoldierTaskDto extends SoldierDto {
   soldierId: string;
   externId: number | null;
 }
-
+/*
 export interface SoldierCountDto {
   unitTaskId: string;
   count: number;
 }
-
+*/
 @Injectable({
   providedIn: 'root',
 })
@@ -58,7 +58,9 @@ export class SoldierTaskService {
    * Отримати кількість бійців для завдання
    * GET /api/soldier-tasks/count/{unitTaskId}
    */
+/*  
   getCount(unitTaskId: string): Observable<SoldierCountDto> {
     return this.http.get<SoldierCountDto>(`${this.api}/count/${unitTaskId}`);
   }
+*/  
 }

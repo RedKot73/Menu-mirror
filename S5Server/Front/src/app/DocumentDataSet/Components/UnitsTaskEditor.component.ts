@@ -259,12 +259,12 @@ export class UnitsTaskEditor {
 
   /**
    * Удаляет подразделение из списка выбранных
+   * Изменение сохраняется автоматически в OneUnitTaskEditor
+   * при удалении карточки, поэтому здесь просто обновляем список
    */
   removeUnitFromSelection(nodeId: string) {
     const currentList = this.selectedUnits();
     this.selectedUnits.set(currentList.filter((u) => u.id !== nodeId));
-    // Позначаємо що є незбережені зміни
-    this.hasUnsavedChanges.set(true);
   }
 
   /**
