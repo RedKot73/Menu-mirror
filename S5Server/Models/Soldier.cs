@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+using DocumentFormat.OpenXml.Spreadsheet;
+
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace S5Server.Models;
@@ -22,6 +24,7 @@ public record SoldierCreateDto(
     Guid RankId,
     Guid PositionId,
     Guid StateId,
+    int? ExternId,
     string? Comment
 );
 
@@ -43,6 +46,7 @@ public record SoldierDto(
     Guid RankId,
     Guid PositionId,
     Guid StateId,
+    int? ExternId,
     string? Comment,
 //Нові поля
     Guid Id,
@@ -74,6 +78,7 @@ public record SoldierDto(
     RankId,
     PositionId,
     StateId,
+    ExternId,
     Comment
 );
 
@@ -83,27 +88,45 @@ public record SoldierDto(
 [Table("soldiers")]
 public class Soldier
 {
+    /// <summary>
+    /// Gets or sets the unique identifier for the entity.
+    /// </summary>
     [Key]
     public Guid Id { get; set; } = Guid.CreateVersion7();
     /// <summary>
     /// Id з Імпульса, Армія- и тд.
     /// </summary>
     public int? ExternId { get; set; }
+    /// <summary>
+    /// Gets or sets the first name of the person.
+    /// </summary>
 
     [StringLength(50), Display(Name = "Прізвище"), Required(ErrorMessage = UIConstant.RequiredMsg)]
     public string FirstName { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the middle name of the person.
+    /// </summary>
 
     [StringLength(50), Display(Name = "Ім'я")]
     public string? MidleName { get; set; }
+    /// <summary>
+    /// Gets or sets the last name of the person.
+    /// </summary>
 
     [StringLength(50), Display(Name = "По батькові")]
     public string? LastName { get; set; }
 
     private string MName => string.IsNullOrEmpty(MidleName) ? string.Empty : MidleName[..1];
     private string LName => string.IsNullOrEmpty(LastName) ? string.Empty : LastName[..1];
+    /// <summary>
+    /// Gets the full name of the person, formatted as a single string.
+    /// </summary>
 
     [Display(Name = "ПІБ")]
     public string FIO => string.IsNullOrEmpty(MidleName + LastName) ? FirstName : $"{FirstName} {MName}.{LName}.";
+    /// <summary>
+    /// Gets or sets the date of birth.
+    /// </summary>
 
     public DateOnly? BirthDate { get; set; }
 
@@ -247,6 +270,7 @@ public static class SoldierExtensions
             RankId: e.RankId,
             PositionId: e.PositionId,
             StateId: e.StateId,
+            ExternId: e.ExternId,
             Comment: e.Comment,
             // Додаткові параметри SoldierDto
             Id: e.Id,
@@ -268,6 +292,7 @@ public static class SoldierExtensions
     /// for further processing or persistence. Properties with only whitespace are converted to null to ensure data
     /// consistency.</remarks>
     /// <param name="soldierDto">The source SoldierDto object containing soldier data to be converted. Cannot be null.</param>
+    /// <param name="changedBy">UserName</param>
     /// <returns>A Soldier entity populated with values from the specified SoldierDto. String properties are trimmed and
     /// empty values are set to null.</returns>
     public static Soldier ToEntity(this SoldierCreateDto soldierDto, string changedBy) 
@@ -289,6 +314,7 @@ public static class SoldierExtensions
             RankId = soldierDto.RankId,
             PositionId = soldierDto.PositionId,
             StateId = soldierDto.StateId,
+            ExternId = soldierDto.ExternId,
             Comment = string.IsNullOrWhiteSpace(soldierDto.Comment) ? null : soldierDto.Comment?.Trim(),
             ChangedBy = changedBy,
             ValidFrom = DateTime.UtcNow
@@ -315,6 +341,7 @@ public static class SoldierExtensions
         e.RankId = dto.RankId;
         e.PositionId = dto.PositionId;
         e.StateId = dto.StateId;
+        e.ExternId = dto.ExternId;
         e.Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment;
         e.ChangedBy = changedBy;
         e.ValidFrom = DateTime.UtcNow;
@@ -338,6 +365,7 @@ public static class SoldierExtensions
         e.RankId == dto.RankId &&
         e.PositionId == dto.PositionId &&
         e.StateId == dto.StateId &&
+        e.ExternId == dto.ExternId &&
         e.Comment == (string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment);
 
     /// <summary>

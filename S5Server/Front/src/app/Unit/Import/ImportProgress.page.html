@@ -23,331 +23,359 @@
   <mat-card class="progress-card">
     <mat-card-content>
       @if (currentSheet()) {
-      <div class="sheet-info"><strong>Поточний аркуш:</strong> {{ currentSheet() }}</div>
-      } @if (totalRows() > 0) {
-      <div class="progress-info">
-        <div class="progress-text">
-          Оброблено: {{ processedRows() }} з {{ totalRows() }} ({{ progressPercent() }}%)
+        <div class="sheet-info"><strong>Поточний аркуш:</strong> {{ currentSheet() }}</div>
+      }
+      @if (totalRows() > 0) {
+        <div class="progress-info">
+          <div class="progress-text">
+            Оброблено: {{ processedRows() }} з {{ totalRows() }} ({{ progressPercent() }}%)
+          </div>
+          <mat-progress-bar mode="determinate" [value]="progressPercent()"></mat-progress-bar>
         </div>
-        <mat-progress-bar mode="determinate" [value]="progressPercent()"></mat-progress-bar>
-      </div>
       } @else if (!isCompleted()) {
-      <div class="progress-info">
-        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-        <div class="progress-text">Підготовка до імпорту...</div>
-      </div>
-      } @if (message()) {
-      <div
-        class="status-message"
-        [class.error]="hasFailed()"
-        [class.success]="isCompleted() && !hasFailed()"
-      >
-        @if (isCompleted() && !hasFailed()) {
-        <mat-icon>check_circle</mat-icon>
-        } @else if (hasFailed()) {
-        <mat-icon>error</mat-icon>
-        } @else {
-        <mat-icon>info</mat-icon>
-        }
-        {{ message() }}
-      </div>
+        <div class="progress-info">
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+          <div class="progress-text">Підготовка до імпорту...</div>
+        </div>
+      }
+      @if (message()) {
+        <div
+          class="status-message"
+          [class.error]="hasFailed()"
+          [class.success]="isCompleted() && !hasFailed()"
+        >
+          @if (isCompleted() && !hasFailed()) {
+            <mat-icon>check_circle</mat-icon>
+          } @else if (hasFailed()) {
+            <mat-icon>error</mat-icon>
+          } @else {
+            <mat-icon>info</mat-icon>
+          }
+          {{ message() }}
+        </div>
       }
     </mat-card-content>
   </mat-card>
 
   <!-- Results Section -->
   @if (completedSheets().length > 0) {
-  <div class="results-section">
-    <h2>Результати імпорту</h2>
-    <mat-accordion class="sections-accordion">
-      @for (unit of completedSheets(); track unit.name) {
-      <mat-expansion-panel class="unit-section-panel">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            {{ unit.name }}
-            @if(unit.importedSoldiers){
-            <span class="soldier-count">({{ unit.importedSoldiers.length }} осіб)</span>
-            } @if(unit.status === ImportProgressStatus.UnitNotFound){
-            <span class="unit-not-found-badge">
-              <mat-icon inline color="warn">error</mat-icon>
-              Підрозділ не знайдено
-            </span>
-            }
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-
-        <div class="section-content">
-          @if (unit.importedSoldiers && unit.importedSoldiers.length > 0) {
-          <table mat-table [dataSource]="unit.importedSoldiers" class="soldiers-table">
-            <!-- Операція -->
-            <ng-container matColumnDef="operation">
-              <th mat-header-cell *matHeaderCellDef>Операція</th>
-              <td mat-cell *matCellDef="let item">
-                @if (item.status === ImportSoldierStatus.Inserted) {
-                <span class="operation-badge inserted">
-                  <mat-icon inline>add_circle</mat-icon>
-                  Додано
-                </span>
-                } @else if (item.status === ImportSoldierStatus.Updated) {
-                <span class="operation-badge updated">
-                  <mat-icon inline>update</mat-icon>
-                  Оновлено
-                </span>
-                } @else if (item.status === ImportSoldierStatus.Deleted) {
-                <span class="operation-badge deleted">
-                  <mat-icon inline>delete</mat-icon>
-                  Видалено
-                </span>
+    <div class="results-section">
+      <h2>Результати імпорту</h2>
+      <mat-accordion class="sections-accordion">
+        @for (unit of completedSheets(); track unit.name) {
+          <mat-expansion-panel class="unit-section-panel">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                {{ unit.name }}
+                @if (unit.importedSoldiers) {
+                  <span class="soldier-count">({{ unit.importedSoldiers.length }} осіб)</span>
                 }
-              </td>
-            </ng-container>
+                @if (unit.status === ImportProgressStatus.UnitNotFound) {
+                  <span class="unit-not-found-badge">
+                    <mat-icon inline color="warn">error</mat-icon>
+                    Підрозділ не знайдено
+                  </span>
+                }
+              </mat-panel-title>
+            </mat-expansion-panel-header>
 
-            <!-- ПІБ -->
-            <ng-container matColumnDef="fio">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>ПІБ</th>
-              <td mat-cell *matCellDef="let item">{{ item.soldier.fio }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="nickName">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>Позивний</th>
-              <td mat-cell *matCellDef="let item">{{ item.soldier.nickName }}</td>
-            </ng-container>
-
-            <!-- Rank Column -->
-            <ng-container matColumnDef="rankShortValue">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>Звання</th>
-              <td mat-cell *matCellDef="let item">{{ item.soldier.rankShortValue }}</td>
-            </ng-container>
-
-            <!-- Position Column -->
-            <ng-container matColumnDef="positionValue">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>Посада</th>
-              <td mat-cell *matCellDef="let item">{{ item.soldier.positionValue }}</td>
-            </ng-container>
-
-            <!-- State Column -->
-            <ng-container matColumnDef="stateValue">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>Статус</th>
-              <td mat-cell *matCellDef="let item">
-                <span class="state-badge">{{ item.soldier.stateValue }}</span>
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="unitShortName">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>Підрозділ</th>
-              <td mat-cell *matCellDef="let item" class="unit-cell">
-                @if (inlineEdit.isMode(item.soldier.id, UnitTag.UnitId)) {
-                <div class="edit-mode">
-                  <mat-form-field appearance="outline" class="inline-field">
-                    <input
-                      type="text"
-                      matInput
-                      [formControl]="getControl(item.soldier, UnitTag.UnitId)"
-                      [matAutocomplete]="unitAuto"
-                      placeholder="Основний підрозділ"
-                    />
-                    <mat-autocomplete
-                      #unitAuto="matAutocomplete"
-                      [displayWith]="inlineEdit.displayLookupFn"
-                      (optionSelected)="onSelect(item.soldier, UnitTag.UnitId, $event)"
-                    >
-                      @if (inlineEdit.loading(item.soldier.id)) {
-                      <mat-option disabled>Завантаження...</mat-option>
-                      } @for (unit of inlineEdit.options(item.soldier.id) | async; track unit.id) {
-                      <mat-option [value]="unit">{{ unit.value }}</mat-option>
+            <div class="section-content">
+              @if (unit.importedSoldiers && unit.importedSoldiers.length > 0) {
+                <table mat-table [dataSource]="unit.importedSoldiers" class="soldiers-table">
+                  <!-- Операція -->
+                  <ng-container matColumnDef="operation">
+                    <th mat-header-cell *matHeaderCellDef>Операція</th>
+                    <td mat-cell *matCellDef="let item">
+                      @if (item.status === ImportSoldierStatus.Inserted) {
+                        <span class="operation-badge inserted">
+                          <mat-icon inline>add_circle</mat-icon>
+                          Додано
+                        </span>
+                      } @else if (item.status === ImportSoldierStatus.Updated) {
+                        <span class="operation-badge updated">
+                          <mat-icon inline>update</mat-icon>
+                          Оновлено
+                        </span>
+                      } @else if (item.status === ImportSoldierStatus.Deleted) {
+                        <span class="operation-badge deleted">
+                          <mat-icon inline>delete</mat-icon>
+                          Видалено
+                        </span>
                       }
-                    </mat-autocomplete>
-                  </mat-form-field>
-                  <button
-                    mat-icon-button
-                    class="cancel-btn"
-                    (click)="inlineEdit.clear(item.soldier.id)"
-                    matTooltip="Відмінити"
-                  >
-                    <mat-icon>close</mat-icon>
-                  </button>
-                </div>
-                } @else {
-                <div class="view-mode">
-                  <span class="unit-text">{{ item.soldier.unitShortName }}</span>
-                  <button
-                    mat-icon-button
-                    class="edit-btn"
-                    (click)="startEditing(item.soldier, UnitTag.UnitId)"
-                    matTooltip="Редагувати"
-                  >
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                </div>
-                }
-              </td>
-            </ng-container>
+                    </td>
+                  </ng-container>
 
-            <ng-container matColumnDef="assignedUnitShortName">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>Приданий до</th>
-              <td mat-cell *matCellDef="let item" class="assigned-unit-cell">
-                @if (inlineEdit.isMode(item.soldier.id, UnitTag.AssignedId)) {
-                <div class="edit-mode">
-                  <mat-form-field appearance="outline" class="inline-field">
-                    <input
-                      type="text"
-                      matInput
-                      [formControl]="getControl(item.soldier, UnitTag.AssignedId)"
-                      [matAutocomplete]="assignedAuto"
-                      placeholder="Не приданий"
-                    />
-                    <mat-autocomplete
-                      #assignedAuto="matAutocomplete"
-                      [displayWith]="inlineEdit.displayLookupFn"
-                      (optionSelected)="onSelect(item.soldier, UnitTag.AssignedId, $event)"
-                    >
-                      <mat-option [value]="null">Не приданий</mat-option>
-                      @if (inlineEdit.loading(item.soldier.id)) {
-                      <mat-option disabled>Завантаження...</mat-option>
-                      } @for (unit of inlineEdit.options(item.soldier.id) | async; track unit.id) {
-                      <mat-option [value]="unit">{{ unit.value }}</mat-option>
+                  <ng-container matColumnDef="externId">
+                    <th mat-header-cell *matHeaderCellDef>externId</th>
+                    <td mat-cell *matCellDef="let item">{{ item.soldier.externId }}</td>
+                  </ng-container>
+
+                  <!-- ПІБ -->
+                  <ng-container matColumnDef="fio">
+                    <th mat-header-cell *matHeaderCellDef>ПІБ</th>
+                    <td mat-cell *matCellDef="let item">{{ formatFIO(item.soldier) }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="nickName">
+                    <th mat-header-cell *matHeaderCellDef>Позивний</th>
+                    <td mat-cell *matCellDef="let item">{{ item.soldier.nickName }}</td>
+                  </ng-container>
+
+                  <!-- Rank Column -->
+                  <ng-container matColumnDef="rankShortValue">
+                    <th mat-header-cell *matHeaderCellDef>Звання</th>
+                    <td mat-cell *matCellDef="let item">{{ item.soldier.rankShortValue }}</td>
+                  </ng-container>
+
+                  <!-- Position Column -->
+                  <ng-container matColumnDef="positionValue">
+                    <th mat-header-cell *matHeaderCellDef>Посада</th>
+                    <td mat-cell *matCellDef="let item">{{ item.soldier.positionValue }}</td>
+                  </ng-container>
+
+                  <!-- State Column -->
+                  <ng-container matColumnDef="stateValue">
+                    <th mat-header-cell *matHeaderCellDef>Статус</th>
+                    <td mat-cell *matCellDef="let item">
+                      <span class="state-badge">{{ item.soldier.stateValue }}</span>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="unitShortName">
+                    <th mat-header-cell *matHeaderCellDef>Підрозділ</th>
+                    <td mat-cell *matCellDef="let item" class="unit-cell">
+                      @if (inlineEdit.isMode(item.soldier.id, UnitTag.UnitId)) {
+                        <div class="edit-mode">
+                          <mat-form-field appearance="outline" class="inline-field">
+                            <input
+                              type="text"
+                              matInput
+                              [formControl]="getControl(item.soldier, UnitTag.UnitId)"
+                              [matAutocomplete]="unitAuto"
+                              placeholder="Основний підрозділ"
+                            />
+                            <mat-autocomplete
+                              #unitAuto="matAutocomplete"
+                              [displayWith]="inlineEdit.displayLookupFn"
+                              (optionSelected)="onSelect(item.soldier, UnitTag.UnitId, $event)"
+                            >
+                              @if (inlineEdit.loading(item.soldier.id)) {
+                                <mat-option disabled>Завантаження...</mat-option>
+                              }
+                              @for (
+                                unit of inlineEdit.options(item.soldier.id) | async;
+                                track unit.id
+                              ) {
+                                <mat-option [value]="unit">{{ unit.value }}</mat-option>
+                              }
+                            </mat-autocomplete>
+                          </mat-form-field>
+                          <button
+                            mat-icon-button
+                            class="cancel-btn"
+                            (click)="inlineEdit.clear(item.soldier.id)"
+                            matTooltip="Відмінити"
+                          >
+                            <mat-icon>close</mat-icon>
+                          </button>
+                        </div>
+                      } @else {
+                        <div class="view-mode">
+                          <span class="unit-text">{{ item.soldier.unitShortName }}</span>
+                          <button
+                            mat-icon-button
+                            class="edit-btn"
+                            (click)="startEditing(item.soldier, UnitTag.UnitId)"
+                            matTooltip="Редагувати"
+                          >
+                            <mat-icon>edit</mat-icon>
+                          </button>
+                        </div>
                       }
-                    </mat-autocomplete>
-                  </mat-form-field>
-                  <button
-                    mat-icon-button
-                    class="cancel-btn"
-                    (click)="inlineEdit.clear(item.soldier.id)"
-                    matTooltip="Відмінити"
-                  >
-                    <mat-icon>close</mat-icon>
-                  </button>
-                </div>
-                } @else {
-                <div class="view-mode">
-                  <span class="unit-text">{{ item.soldier.assignedUnitShortName || '-' }}</span>
-                  <button
-                    mat-icon-button
-                    class="edit-btn"
-                    (click)="startEditing(item.soldier, UnitTag.AssignedId)"
-                    matTooltip="Редагувати"
-                  >
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                </div>
-                }
-              </td>
-            </ng-container>
+                    </td>
+                  </ng-container>
 
-            <ng-container matColumnDef="involvedUnitShortName">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>Екіпаж/Група</th>
-              <td mat-cell *matCellDef="let item" class="involved-unit-cell">
-                @if (inlineEdit.isMode(item.soldier.id, UnitTag.InvolvedId)) {
-                <div class="edit-mode">
-                  <mat-form-field appearance="outline" class="inline-field">
-                    <input
-                      type="text"
-                      matInput
-                      [formControl]="getControl(item.soldier, UnitTag.InvolvedId)"
-                      [matAutocomplete]="involvedAuto"
-                      placeholder="Не призначено"
-                    />
-                    <mat-autocomplete
-                      #involvedAuto="matAutocomplete"
-                      [displayWith]="inlineEdit.displayLookupFn"
-                      (optionSelected)="onSelect(item.soldier, UnitTag.InvolvedId, $event)"
-                    >
-                      <mat-option [value]="null">Не призначено</mat-option>
-                      @if (inlineEdit.loading(item.soldier.id)) {
-                      <mat-option disabled>Завантаження...</mat-option>
-                      } @for (unit of inlineEdit.options(item.soldier.id) | async; track unit.id) {
-                      <mat-option [value]="unit">{{ unit.value }}</mat-option>
+                  <ng-container matColumnDef="assignedUnitShortName">
+                    <th mat-header-cell *matHeaderCellDef>Приданий до</th>
+                    <td mat-cell *matCellDef="let item" class="assigned-unit-cell">
+                      @if (inlineEdit.isMode(item.soldier.id, UnitTag.AssignedId)) {
+                        <div class="edit-mode">
+                          <mat-form-field appearance="outline" class="inline-field">
+                            <input
+                              type="text"
+                              matInput
+                              [formControl]="getControl(item.soldier, UnitTag.AssignedId)"
+                              [matAutocomplete]="assignedAuto"
+                              placeholder="Не приданий"
+                            />
+                            <mat-autocomplete
+                              #assignedAuto="matAutocomplete"
+                              [displayWith]="inlineEdit.displayLookupFn"
+                              (optionSelected)="onSelect(item.soldier, UnitTag.AssignedId, $event)"
+                            >
+                              <mat-option [value]="null">Не приданий</mat-option>
+                              @if (inlineEdit.loading(item.soldier.id)) {
+                                <mat-option disabled>Завантаження...</mat-option>
+                              }
+                              @for (
+                                unit of inlineEdit.options(item.soldier.id) | async;
+                                track unit.id
+                              ) {
+                                <mat-option [value]="unit">{{ unit.value }}</mat-option>
+                              }
+                            </mat-autocomplete>
+                          </mat-form-field>
+                          <button
+                            mat-icon-button
+                            class="cancel-btn"
+                            (click)="inlineEdit.clear(item.soldier.id)"
+                            matTooltip="Відмінити"
+                          >
+                            <mat-icon>close</mat-icon>
+                          </button>
+                        </div>
+                      } @else {
+                        <div class="view-mode">
+                          <span class="unit-text">{{
+                            item.soldier.assignedUnitShortName || '-'
+                          }}</span>
+                          <button
+                            mat-icon-button
+                            class="edit-btn"
+                            (click)="startEditing(item.soldier, UnitTag.AssignedId)"
+                            matTooltip="Редагувати"
+                          >
+                            <mat-icon>edit</mat-icon>
+                          </button>
+                        </div>
                       }
-                    </mat-autocomplete>
-                  </mat-form-field>
-                  <button
-                    mat-icon-button
-                    class="cancel-btn"
-                    (click)="inlineEdit.clear(item.soldier.id)"
-                    matTooltip="Відмінити"
-                  >
-                    <mat-icon>close</mat-icon>
-                  </button>
-                </div>
-                } @else {
-                <div class="view-mode">
-                  <span class="unit-text">{{ item.soldier.involvedUnitShortName || '-' }}</span>
-                  <button
-                    mat-icon-button
-                    class="edit-btn"
-                    (click)="startEditing(item.soldier, UnitTag.InvolvedId)"
-                    matTooltip="Редагувати"
-                  >
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                </div>
-                }
-              </td>
-            </ng-container>
+                    </td>
+                  </ng-container>
 
-            <!-- ArrivedAt Column -->
-            <ng-container matColumnDef="arrivedAt">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>Прибув</th>
-              <td mat-cell *matCellDef="let item">
-                {{ item.soldier.arrivedAt ? (item.soldier.arrivedAt | date : 'dd.MM.yyyy') : '-' }}
-              </td>
-            </ng-container>
+                  <ng-container matColumnDef="involvedUnitShortName">
+                    <th mat-header-cell *matHeaderCellDef>Екіпаж/Група</th>
+                    <td mat-cell *matCellDef="let item" class="involved-unit-cell">
+                      @if (inlineEdit.isMode(item.soldier.id, UnitTag.InvolvedId)) {
+                        <div class="edit-mode">
+                          <mat-form-field appearance="outline" class="inline-field">
+                            <input
+                              type="text"
+                              matInput
+                              [formControl]="getControl(item.soldier, UnitTag.InvolvedId)"
+                              [matAutocomplete]="involvedAuto"
+                              placeholder="Не призначено"
+                            />
+                            <mat-autocomplete
+                              #involvedAuto="matAutocomplete"
+                              [displayWith]="inlineEdit.displayLookupFn"
+                              (optionSelected)="onSelect(item.soldier, UnitTag.InvolvedId, $event)"
+                            >
+                              <mat-option [value]="null">Не призначено</mat-option>
+                              @if (inlineEdit.loading(item.soldier.id)) {
+                                <mat-option disabled>Завантаження...</mat-option>
+                              }
+                              @for (
+                                unit of inlineEdit.options(item.soldier.id) | async;
+                                track unit.id
+                              ) {
+                                <mat-option [value]="unit">{{ unit.value }}</mat-option>
+                              }
+                            </mat-autocomplete>
+                          </mat-form-field>
+                          <button
+                            mat-icon-button
+                            class="cancel-btn"
+                            (click)="inlineEdit.clear(item.soldier.id)"
+                            matTooltip="Відмінити"
+                          >
+                            <mat-icon>close</mat-icon>
+                          </button>
+                        </div>
+                      } @else {
+                        <div class="view-mode">
+                          <span class="unit-text">{{
+                            item.soldier.involvedUnitShortName || '-'
+                          }}</span>
+                          <button
+                            mat-icon-button
+                            class="edit-btn"
+                            (click)="startEditing(item.soldier, UnitTag.InvolvedId)"
+                            matTooltip="Редагувати"
+                          >
+                            <mat-icon>edit</mat-icon>
+                          </button>
+                        </div>
+                      }
+                    </td>
+                  </ng-container>
 
-            <!-- DepartedAt Column -->
-            <ng-container matColumnDef="departedAt">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>Вибув</th>
-              <td mat-cell *matCellDef="let item">
-                {{
-                  item.soldier.departedAt ? (item.soldier.departedAt | date : 'dd.MM.yyyy') : '-'
-                }}
-              </td>
-            </ng-container>
+                  <!-- ArrivedAt Column -->
+                  <ng-container matColumnDef="arrivedAt">
+                    <th mat-header-cell *matHeaderCellDef>Прибув</th>
+                    <td mat-cell *matCellDef="let item">
+                      {{
+                        item.soldier.arrivedAt ? (item.soldier.arrivedAt | date: 'dd.MM.yyyy') : '-'
+                      }}
+                    </td>
+                  </ng-container>
 
-            <!-- Comment Column -->
-            <ng-container matColumnDef="comment">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>Коментар</th>
-              <td mat-cell *matCellDef="let item" class="comment-cell">
-                <span
-                  class="comment-text"
-                  [matTooltip]="
-                    item.soldier.comment && item.soldier.comment.length > 50
-                      ? item.soldier.comment
-                      : ''
-                  "
-                  [title]="
-                    item.soldier.comment && item.soldier.comment.length > 50
-                      ? item.soldier.comment
-                      : ''
-                  "
-                >
-                  {{
-                    item.soldier.comment
-                      ? item.soldier.comment.length > 50
-                        ? (item.soldier.comment | slice : 0 : 50) + '...'
-                        : item.soldier.comment
-                      : '-'
-                  }}
-                </span>
-              </td>
-            </ng-container>
+                  <!-- DepartedAt Column -->
+                  <ng-container matColumnDef="departedAt">
+                    <th mat-header-cell *matHeaderCellDef>Вибув</th>
+                    <td mat-cell *matCellDef="let item">
+                      {{
+                        item.soldier.departedAt
+                          ? (item.soldier.departedAt | date: 'dd.MM.yyyy')
+                          : '-'
+                      }}
+                    </td>
+                  </ng-container>
 
-            <!-- Дата народження -->
-            <ng-container matColumnDef="birthDate">
-              <th mat-header-cell *matHeaderCellDef>Дата народження</th>
-              <td mat-cell *matCellDef="let item">{{ item.soldier.birthDate }}</td>
-            </ng-container>
+                  <!-- Comment Column -->
+                  <ng-container matColumnDef="comment">
+                    <th mat-header-cell *matHeaderCellDef>Коментар</th>
+                    <td mat-cell *matCellDef="let item" class="comment-cell">
+                      <span
+                        class="comment-text"
+                        [matTooltip]="
+                          item.soldier.comment && item.soldier.comment.length > 50
+                            ? item.soldier.comment
+                            : ''
+                        "
+                        [title]="
+                          item.soldier.comment && item.soldier.comment.length > 50
+                            ? item.soldier.comment
+                            : ''
+                        "
+                      >
+                        {{
+                          item.soldier.comment
+                            ? item.soldier.comment.length > 50
+                              ? (item.soldier.comment | slice: 0 : 50) + '...'
+                              : item.soldier.comment
+                            : '-'
+                        }}
+                      </span>
+                    </td>
+                  </ng-container>
 
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-          </table>
-          } @else {
-          <p class="no-soldiers">Немає імпортованих бійців</p>
-          }
-        </div>
-      </mat-expansion-panel>
-      }
-    </mat-accordion>
-  </div>
+                  <!-- Дата народження -->
+                  <ng-container matColumnDef="birthDate">
+                    <th mat-header-cell *matHeaderCellDef>Дата народження</th>
+                    <td mat-cell *matCellDef="let item">{{ item.soldier.birthDate }}</td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+                </table>
+              } @else {
+                <p class="no-soldiers">Немає імпортованих бійців</p>
+              }
+            </div>
+          </mat-expansion-panel>
+        }
+      </mat-accordion>
+    </div>
   }
 
   <!-- Footer Actions -->

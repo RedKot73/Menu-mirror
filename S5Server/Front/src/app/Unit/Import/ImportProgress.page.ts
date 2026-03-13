@@ -20,6 +20,8 @@ import { signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { take, finalize } from 'rxjs/operators';
 
+import { SoldierUtils } from '../../Soldier/soldier.utils';
+
 import {
   ImportProgress,
   ImportProgressStatus,
@@ -72,6 +74,7 @@ export class ImportProgressPage implements OnInit, OnDestroy {
 
   displayedColumns = [
     'operation',
+    'externId',
     'fio',
     'nickName',
     'rankShortValue',
@@ -359,5 +362,9 @@ export class ImportProgressPage implements OnInit, OnDestroy {
     }));
 
     this.completedSheets.set(next);
+  }
+
+  formatFIO(item: SoldierDto): string {
+    return SoldierUtils.formatFIO(item.firstName, item.midleName, item.lastName);
   }
 }
