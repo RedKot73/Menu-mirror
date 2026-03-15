@@ -47,6 +47,7 @@ export interface SoldierCreateDto {
   rankId: string;
   positionId: string;
   stateId: string;
+  ExternId?: number;
   comment?: string | null;
 }
 

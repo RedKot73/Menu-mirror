@@ -7,6 +7,15 @@
             <mat-card-title
               >Документ (вибрані підрозділи: {{ selectedUnits().length }})</mat-card-title
             >
+        <button
+          mat-icon-button
+          matSuffix
+          color="primary"
+          (click)="openUnitSelect()"
+          matTooltip="Вибрати підрозділ"
+        >
+          <mat-icon>domain</mat-icon>
+        </button>
           </div>
           <div class="header-right">
             @let currentDataSet = dataSet();

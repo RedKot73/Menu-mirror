@@ -284,7 +284,6 @@ export class SoldierDialogComponent implements OnInit {
   }
 
   // ── Вибір підрозділу через діалог ─────
-
   openUnitSelect(field: 'unit' | 'assigned' | 'involved'): void {
     const titles: Record<string, string> = {
       unit: 'Вибір підрозділу',

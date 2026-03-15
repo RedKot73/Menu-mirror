@@ -196,26 +196,14 @@ public class UnitTaskController : ControllerBase
                     detail: $"Підрозділ з ID '{dto.UnitId}' не знайдено");
 
             var changedBy = User.Identity?.Name ?? "Unknown";
-            // 6. Створити знімок підрозділу
+            //Створити знімок підрозділу
             var unitTask = unit.Create(
                 task,
                 dto.DataSetId,
                 dto.AreaId,
                 changedBy);
             _set.Add(unitTask);
-            /*
-            // 7. Завантажити бійців підрозділу
-            var soldiers = await _db.Soldiers.GetUnionQuery(dto.UnitId)
-                .ToListAsync(ct);
 
-            // 8. Створити знімки бійців
-            var soldierTasks = soldiers
-                .Select(s => s.CreateSnapshot(unitTask.Id, changedBy))
-                .ToList();
-
-            _db.SoldierTasks.AddRange(soldierTasks);
-            */
-            // 9. Зберегти все разом
             try
             {
                 await _db.SaveChangesAsync(ct);

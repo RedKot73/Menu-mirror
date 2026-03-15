@@ -22,10 +22,9 @@ const GET_DATA_SETS = gql`
   }
 `;
 
-/** Набір даних з UnitTasks для рендерингу */
-const GET_DATA_SET_FOR_RENDER = gql`
-  query GetDataSetForRender($id: UUID!) {
-    templateDataSet(id: $id) {
+const GET_COMPLETE_DATA_SET = gql`
+  query GetCompleteDataSet($dataSetId: UUID!, $templateCategoryId: UUID!) {
+    templateDataSetForDoc(dataSetId: $dataSetId, templateCategoryId: $templateCategoryId) {
       id
       name
       docNumber
@@ -57,6 +56,49 @@ const GET_DATA_SET_FOR_RENDER = gql`
           firstName
           midleName
           lastName
+          rankShortValue
+        }
+      }
+    }
+  }
+`;
+
+/** Набір даних з UnitTasks для рендерингу */
+const GET_DATA_SET_FOR_RENDER = gql`
+  query GetDataSetForRender($dataSetId: UUID!, $templateCategoryId: UUID!) {
+    templateDataSet(id: $dataSetId, templateCategoryId: $templateCategoryId) {
+      id
+      name
+      docNumber
+      docDate
+      isParentDocUsed
+      parentDocNumber
+      parentDocDate
+      isPublished
+      unitTasks {
+        id
+        isPublished
+        unitShortName
+        parentShortName
+        assignedShortName
+        unitTypeName
+        isInvolved
+        persistentLocationValue
+        taskValue
+        area {
+          value
+        }
+        means {
+          quantity
+          droneModel {
+            value
+          }
+        }
+        soldiersTask {
+          firstName
+          midleName
+          lastName
+          rankShortValue
         }
       }
     }
@@ -192,6 +234,23 @@ export class GraphqlDataService {
       })
       .pipe(map((result) => result.data!.templateDataSets));
   }
+
+  /**
+   * Отримати набір даних для рендерингу шаблону (з UnitTasks)
+   * з фільтрацією відряджених бійців (assignedUnit, involvedUnit)
+   */
+getCompleteDataSet(dataSetId: string, templateCategoryId: string): Observable<GqlTemplateDataSet | null> {
+  return this.apollo
+    .query<{ templateDataSetForDoc: GqlTemplateDataSet | null }>({
+      query: GET_COMPLETE_DATA_SET,
+      variables: { dataSetId: dataSetId, templateCategoryId: templateCategoryId },
+    })
+    .pipe(
+      map((result) => 
+        result.data?.templateDataSetForDoc || null
+    )
+    );
+}
 
   /**
    * Отримати набір даних для рендерингу шаблону (з UnitTasks)

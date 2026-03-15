@@ -37,6 +37,12 @@ public record TemplateDataSetUpSertDto(
 [Table("template_data_sets")]
 public class TemplateDataSet
 {
+    /// <summary>
+    /// Gets or sets the unique identifier for the entity.
+    /// </summary>
+    /// <remarks>The identifier is generated using version 7 GUIDs, which provide improved uniqueness and
+    /// ordering for distributed systems. This property is typically used as the primary key in database
+    /// contexts.</remarks>
     [Key]
     public Guid Id { get; set; } = Guid.CreateVersion7();
 
@@ -55,7 +61,11 @@ public class TemplateDataSet
     /// Дата документу старшого начальника
     /// </summary>
     public DateOnly? ParentDocDate { get; set; }  // ✅ Nullable
-
+    /// <summary>
+    /// Gets or sets the name associated with this entity.
+    /// </summary>
+    /// <remarks>The name must be a non-empty string with a maximum length of 150 characters. This property is
+    /// required and cannot be null or empty.</remarks>
     [StringLength(150), Required]
     public string Name { get; set; } = string.Empty;
 
@@ -72,7 +82,7 @@ public class TemplateDataSet
     public DateOnly DocDate { get; set; }
 
     /// <summary>
-    /// Список завдань підрозділів
+    /// Перелік завдань підрозділів
     /// </summary>
     public List<UnitTask> UnitTasks { get; set; } = [];
 
@@ -81,10 +91,20 @@ public class TemplateDataSet
     /// Gets or sets a value indicating whether the content is published.
     /// </summary>
     public bool IsPublished { get; set; }
+    /// <summary>
+    /// Gets or sets the date and time, in UTC, when the item was published.
+    /// </summary>
+    /// <remarks>If the value is null, the item has not been published. Use this property to determine the
+    /// publication status and timestamp of the item.</remarks>
     public DateTime? PublishedAtUtc { get; set; }
+    /// <summary>
+    /// Gets or sets the name of the publisher associated with the item.
+    /// </summary>
     [StringLength(100)]
     public string? PublishedBy { get; set; }
-
+    /// <summary>
+    /// Gets or sets the date and time when the entity was created, in Coordinated Universal Time (UTC).
+    /// </summary>
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     /// <summary>

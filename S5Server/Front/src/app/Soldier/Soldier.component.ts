@@ -193,21 +193,7 @@ export class SoldiersComponent implements AfterViewInit {
       width: '600px',
       data: {
         id: soldier.id,
-        model: {
-          firstName: soldier.firstName,
-          midleName: soldier.midleName,
-          lastName: soldier.lastName,
-          nickName: soldier.nickName,
-          unitId: soldier.unitId,
-          arrivedAt: soldier.arrivedAt,
-          departedAt: soldier.departedAt,
-          assignedUnitId: soldier.assignedUnitId,
-          involvedUnitId: soldier.involvedUnitId,
-          rankId: soldier.rankId,
-          positionId: soldier.positionId,
-          stateId: soldier.stateId,
-          comment: soldier.comment,
-        },
+        model: soldier,
       } as SoldierDialogData,
     });
 

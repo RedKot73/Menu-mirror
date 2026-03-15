@@ -8,6 +8,7 @@ import {
   ViewChildren,
   QueryList,
 } from '@angular/core';
+import { MatDialog, } from '@angular/material/dialog';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -39,6 +40,7 @@ import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';
 import { VerticalLayoutComponent } from '../../shared/components/VerticalLayout.component';
 import { DateMaskDirective } from '../../shared/directives/date-mask.directive';
 import { formatDate } from '../../shared/utils/date.utils';
+import { UnitSelectDialogComponent } from '../../dialogs/UnitSelect-dialog.component';
 
 @Component({
   selector: 'app-units-task-editor',
@@ -66,6 +68,7 @@ import { formatDate } from '../../shared/utils/date.utils';
 export class UnitsTaskEditor {
   private destroyRef = inject(DestroyRef);
   private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
 
   private dataSetService = inject(TemplateDataSetService);
   private unitService = inject(UnitService);
@@ -173,6 +176,7 @@ export class UnitsTaskEditor {
   /**
    * Повертає контент DataSet у форматі JSON для ResultEditor
    */
+  /*
   getDataSetContent(): string {
     const units = this.selectedUnits();
     if (units.length === 0) {
@@ -181,7 +185,7 @@ export class UnitsTaskEditor {
 
     return JSON.stringify(units, null, 2);
   }
-
+*/
   /**
    * Перевіряє наявність незбережених змін і запитує підтвердження
    * @returns true якщо можна продовжити, false якщо користувач скасував
@@ -196,6 +200,25 @@ export class UnitsTaskEditor {
       return confirmed;
     }
     return true;
+  }
+
+  // ── Вибір підрозділу через діалог ─────
+  openUnitSelect(): void {
+    const titles: Record<string, string> = {
+      unit: 'Вибір підрозділу',
+      assigned: 'Приданий до підрозділу',
+      involved: 'Екіпаж/Група',
+    };
+    const dialogRef = this.dialog.open(UnitSelectDialogComponent, {
+      width: '900px',
+      maxHeight: '90vh',
+      data: { title: titles['unit'] },
+    });
+    dialogRef.afterClosed().subscribe((unit: UnitTaskDto | undefined) => {
+      if (unit) {
+        this.addUnitToSelection(unit.id);
+      }
+    });
   }
 
   /**

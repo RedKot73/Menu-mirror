@@ -15,7 +15,14 @@ namespace S5Server.Models
         Guid TemplateCategoryId,
         string TemplateCategory,
         Guid UnitTaskId);
-
+    /// <summary>
+    /// Представляет данные для создания элемента задачи подразделения, включая значение, комментарий и идентификаторы
+    /// связанных категорий и задач.
+    /// </summary>
+    /// <param name="Value">Значение элемента задачи подразделения. Не может быть пустым.</param>
+    /// <param name="Comment">Дополнительный комментарий к элементу задачи подразделения. Может быть null.</param>
+    /// <param name="TemplateCategoryId">Идентификатор категории шаблона, к которой относится элемент задачи подразделения.</param>
+    /// <param name="UnitTaskId">Идентификатор задачи подразделения, с которой связан элемент.</param>
     public record DictUnitTaskItemCreateDto(
         string Value,
         string? Comment,

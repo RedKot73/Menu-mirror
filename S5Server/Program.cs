@@ -1,15 +1,16 @@
-﻿using System.Globalization;
-
+﻿using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.HttpOverrides;
 
 using Npgsql;
 
 using S5Server.Data;
 using S5Server.Models;
-
 using Serilog;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -199,18 +200,36 @@ builder.Services.AddCors(options =>
     });
 });
 
+// ✅ Настройка портов в зависимости от окружения
+if (builder.Environment.IsDevelopment())
+{
+    // Dev: локально только HTTPS
+    builder.WebHost.UseUrls("https://localhost:5001");
+}
+else
+{
+    // Production: HTTP для reverse proxy (Azure App Service, Docker, K8s)
+    builder.WebHost.UseUrls("http://*:8080");
+}
+
 var app = builder.Build();
 
 // ✅ Конфігурація фонових сервісів
 {
     var factory = app.Services.GetRequiredService<IDbContextFactory<MainDbContext>>();
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    S5Server.Services.ImportSoldiers.Configure(factory, logger);
+    S5Server.Services.ImportSoldiersBGWorker.Configure(factory, logger);
 }
 
 app.UseSerilogRequestLogging(options =>
 {
     options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+});
+
+// ✅ HTTPS Redirection працює правильно з проксі
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
 
 if (app.Environment.IsDevelopment())
@@ -223,10 +242,12 @@ else
     app.UseHsts();
 }
 
+// ✅ Редирект на HTTPS (только если запрос пришел по HTTP через проксі)
 app.UseHttpsRedirection();
 // ✅ Статичні файли з wwwroot (Angular dist)
 app.UseStaticFiles(new StaticFileOptions
 {
+    /*
     OnPrepareResponse = ctx =>
     {
         // Cache static files for 1 year
@@ -235,6 +256,7 @@ app.UseStaticFiles(new StaticFileOptions
             ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=31536000");
         }
     }
+    */
 });
 
 // ✅ Українська культура
@@ -257,6 +279,9 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapGraphQL().RequireRateLimiting("graphql");  // ✅ Endpoint: /graphql
 app.MapFallbackToFile("index.html");
+// ✅ Health check для Load Balancer
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
+   .AllowAnonymous();
 
 // ✅ Українська культура
 /*
@@ -268,6 +293,25 @@ CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 try
 {
     Log.Information("Starting S5Server");
+    var lifetime = app.Lifetime;
+    lifetime.ApplicationStarted.Register(() =>
+    {
+        var server = app.Services.GetRequiredService<IServer>();
+        var addressFeature = server.Features.Get<IServerAddressesFeature>();
+
+        if (addressFeature != null && addressFeature.Addresses.Count != 0 == true)
+        {
+            foreach (var address in addressFeature.Addresses)
+            {
+                Log.Information("S5Server listening on: {Address}", address);
+            }
+        }
+        else
+        {
+            Log.Information("S5Server started (addresses not available)");
+        }
+    });
+
     app.Run();
 }
 catch (Exception ex)

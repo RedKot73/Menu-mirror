@@ -725,7 +725,7 @@ public class UnitController : ControllerBase
 
             (bool started,
              ImportJob job,
-             string? error) = Services.ImportSoldiers.TryStartBackground(unit, soldiers, ct);
+             string? error) = Services.ImportSoldiersBGWorker.TryStartBackground(unit, soldiers, ct);
             if (!started)
                 return Problem(statusCode: 423, title: error ?? "Імпорт заблоковано");
             
@@ -758,7 +758,7 @@ public class UnitController : ControllerBase
     {
         try
         {
-            var result = Services.ImportSoldiers.GetLastUnits();
+            var result = Services.ImportSoldiersBGWorker.GetLastUnits();
             return Ok(result);
         }
         catch (Exception ex)
@@ -778,7 +778,7 @@ public class UnitController : ControllerBase
     {
         try
         {
-            var result = Services.ImportSoldiers.GetUnits(units);
+            var result = Services.ImportSoldiersBGWorker.GetUnits(units);
             return Ok(result);
         }
         catch (Exception ex)
@@ -806,7 +806,7 @@ public class UnitController : ControllerBase
             channel.Writer.TryWrite($"data: {json}\n\n");
         }
 
-        Services.ImportSoldiers.Progress += Handler;
+        Services.ImportSoldiersBGWorker.Progress += Handler;
         try
         {
             await foreach (var msg in channel.Reader.ReadAllAsync(ct))
@@ -821,7 +821,7 @@ public class UnitController : ControllerBase
         }
         finally
         {
-            Services.ImportSoldiers.Progress -= Handler;
+            Services.ImportSoldiersBGWorker.Progress -= Handler;
         }
     }
 }
