@@ -11,7 +11,7 @@
           }
 
           <mat-button-toggle-group
-            [value]="unit.isPublished"
+            [formControl]="publishStatusControl"
             (change)="onPublishStatusChange($event.value)"
             class="status-toggle"
             [disabled]="isSaving()"
@@ -30,6 +30,7 @@
             <button
               mat-icon-button
               matTooltip="Видалити зі списку"
+              [disabled]="unit.isPublished"
               (click)="onRemoveClick()"
               class="remove-button"
             >

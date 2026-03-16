@@ -331,6 +331,7 @@ public class UnitTaskController : ControllerBase
     /// </summary>
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
     {
@@ -344,6 +345,8 @@ public class UnitTaskController : ControllerBase
 
             if (task == null)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Завдання з ID '{id}' не знайдено");
+            if(task.IsPublished)
+                return Problem(statusCode: 400, title: "Неможливо видалити опубліковане завдання");
 
             var changedBy = User.Identity?.Name ?? "Unknown";
             await task.DeleteSoldierSnapshot(_db, changedBy, ct);

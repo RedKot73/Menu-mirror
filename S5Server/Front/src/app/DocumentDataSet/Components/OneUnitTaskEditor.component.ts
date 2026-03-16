@@ -130,6 +130,12 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
 
   // Стан збереження (для індикації процесу)
   isSaving = signal<boolean>(false);
+  /** Контрол для статусу публікації 
+   * Предотвращает переключение визуального контрола
+   * при ошибках в изменении статуса публикации из-за
+   * асинхронного обновления unitTask после сохранения.
+  */
+  protected publishStatusControl = new FormControl<boolean>(false, { nonNullable: true });
 
   // Стан редагування засобів
   editingMeanId = signal<string | null>(null);
@@ -141,6 +147,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   @Input({ required: true })
   set unitTask(value: UnitTaskDto) {
     this.unitTaskSignal.set(value);
+    this.publishStatusControl.setValue(value.isPublished, { emitEvent: false });
   }
   get unitTask(): UnitTaskDto {
     return this.unitTaskSignal()!;
@@ -290,30 +297,6 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * Завантажує кількість бійців для завдання
-   */
-  /*
-  loadSoldierCount(): void {
-    const unitTaskId = this.unitTask.id;
-    if (!unitTaskId) {
-      return;
-    }
-
-    this.soldierTaskService
-      .getCount(unitTaskId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (data: SoldierCountDto) => {
-          this.soldierCount.set(data.count);
-        },
-        error: (error: unknown) => {
-          console.error('Помилка завантаження кількості бійців:', error);
-        },
-      });
-  }
-  */
-
-  /**
    * Завантажує засоби (дрони) для завдання підрозділу (Master-Detail)
    */
   loadMeans(): void {
@@ -377,8 +360,19 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
 
     ref.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
-        this.remove.emit(unit.id);
-        this.unitTaskService.delete(unit.id).subscribe({});
+        this.unitTaskService.delete(unit.id).subscribe({
+        next: () => {
+          this.remove.emit(unit.id);
+        },
+        error: (error: unknown) => {
+          console.error('Помилка в видаленні підрозділу:', error);
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
+            error,
+            'Помилка видалення підрозділу',
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
+        });
       }
     });
   }
@@ -717,6 +711,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   onPublishStatusChange(isPublished: boolean): void {
     const currentUnitTask = this.unitTask;
     if (!currentUnitTask || !currentUnitTask.id) {
+      this.publishStatusControl.setValue(currentUnitTask?.isPublished ?? false, { emitEvent: false });
       this.snackBar.open('Неможливо змінити статус: завдання ще не збережено', 'Закрити', {
         duration: 3000,
       });
@@ -728,6 +723,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
+    this.publishStatusControl.setValue(currentUnitTask.isPublished, { emitEvent: false });
     this.isSaving.set(true);
 
     this.unitTaskService.publish(currentUnitTask.id, isPublished).subscribe({
@@ -743,6 +739,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
 
         // Оновлюємо внутрішній signal
         this.unitTaskSignal.set(updatedUnitTask);
+  this.publishStatusControl.setValue(isPublished, { emitEvent: false });
 
         // ✅ Сповіщаємо батьківський компонент про зміну
         //this.unitChange.emit(updatedUnitTask);
@@ -756,6 +753,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
       },
       error: (error) => {
         this.isSaving.set(false);
+        this.publishStatusControl.setValue(currentUnitTask.isPublished, { emitEvent: false });
         console.error('Error changing publish status:', error);
         const errorMessage = S5App_ErrorHandler.handleHttpError(
           error,

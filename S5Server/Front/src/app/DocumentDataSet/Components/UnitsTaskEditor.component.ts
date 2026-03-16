@@ -11,7 +11,7 @@ import {
 import { MatDialog, } from '@angular/material/dialog';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormsModule } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
 
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -101,6 +101,12 @@ export class UnitsTaskEditor {
   // --- Save State ---
   protected isSaving = signal<boolean>(false);
   protected hasUnsavedChanges = signal<boolean>(false);
+  /** Контрол для статусу публікації 
+   * Предотвращает переключение визуального контрола
+   * при ошибках в изменении статуса публикации из-за
+   * асинхронного обновления unitTask после сохранения.
+   */
+  protected publishStatusControl = new FormControl<boolean>(false, { nonNullable: true });
 
   /**
    * Обробник зміни підрозділу з дочірнього компонента
@@ -174,19 +180,6 @@ export class UnitsTaskEditor {
   }
 
   /**
-   * Повертає контент DataSet у форматі JSON для ResultEditor
-   */
-  /*
-  getDataSetContent(): string {
-    const units = this.selectedUnits();
-    if (units.length === 0) {
-      return '';
-    }
-
-    return JSON.stringify(units, null, 2);
-  }
-*/
-  /**
    * Перевіряє наявність незбережених змін і запитує підтвердження
    * @returns true якщо можна продовжити, false якщо користувач скасував
    */
@@ -258,8 +251,7 @@ export class UnitsTaskEditor {
             taskWithMeans: false, // За замовчуванням вважаємо, що завдання не має засобів
             areaId: '', // Користувач має вибрати РВЗ
             areaValue: '',
-            //meansCount: 0, // ✅ Кількість засобів (Master-Detail)
-            means: [], // ✅ OPTIONAL: завантажується окремо
+            means: [], //завантажується окремо
             isPublished: false,
             publishedAtUtc: undefined,
             changedBy: '',
@@ -577,6 +569,7 @@ export class UnitsTaskEditor {
   onPublishStatusChange(isPublished: boolean): void {
     const currentDataSet = this.dataSet();
     if (!currentDataSet) {
+      this.publishStatusControl.setValue(false, { emitEvent: false });
       this.snackBar.open('Немає завантаженого набору даних', 'Закрити', { duration: 3000 });
       return;
     }
@@ -586,6 +579,7 @@ export class UnitsTaskEditor {
       return;
     }
 
+    this.publishStatusControl.setValue(currentDataSet.isPublished, { emitEvent: false });
     this.isSaving.set(true);
 
     this.dataSetService
@@ -601,6 +595,7 @@ export class UnitsTaskEditor {
             publishedAtUtc: isPublished ? new Date().toISOString() : undefined,
             validFrom: new Date().toISOString(),
           });
+          this.publishStatusControl.setValue(isPublished, { emitEvent: false });
 
           const statusText = isPublished ? 'опубліковано' : 'знято з публікації';
           this.snackBar.open(`Набір "${currentDataSet.name}" ${statusText}`, 'Закрити', {
@@ -609,6 +604,7 @@ export class UnitsTaskEditor {
         },
         error: (error) => {
           this.isSaving.set(false);
+          this.publishStatusControl.setValue(currentDataSet.isPublished, { emitEvent: false });
           console.error('Error changing publish status:', error);
           const errorMessage = S5App_ErrorHandler.handleHttpError(
             error,

@@ -21,7 +21,7 @@
             @let currentDataSet = dataSet();
             @if (currentDataSet) {
               <mat-button-toggle-group
-                [value]="currentDataSet.isPublished"
+                [formControl]="publishStatusControl"
                 (change)="onPublishStatusChange($event.value)"
                 class="status-toggle"
                 [disabled]="isSaving()"
