@@ -321,6 +321,7 @@ public class AccountController : ControllerBase
     {
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
+
         /*Принудительное создание первого пользователя когда в системе нет никого
         // 4. Створення нового користувача
         var sldrId = Guid.Parse("06501ce2-3c5a-4732-9a1b-b7b780269682");

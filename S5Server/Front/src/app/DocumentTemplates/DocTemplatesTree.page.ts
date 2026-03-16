@@ -1,7 +1,12 @@
-import { Component, signal, ViewChild } from '@angular/core';
+import {
+  inject,
+  Component,
+  signal,
+  ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatCardModule } from '@angular/material/card';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { DocTemplatesTableComponent } from './components/DocTemplatesTable.component';
 import { DocDataSetsTableComponent } from '../DocumentDataSet/Components/DocDataSetsTable.component';
@@ -29,6 +34,8 @@ import { MasterDetailLayoutComponent } from '../shared/components/MasterDetailLa
   templateUrl: './DocTemplatesTree.page.html',
 })
 export class DocTemplatesTree {
+  private snackBar = inject(MatSnackBar);
+
   @ViewChild('templateEditor') templateEditor?: TemplateEditorComponent;
   @ViewChild('resultEditor') resultEditor?: ResultEditorComponent;
   @ViewChild('unitsTaskViewer') unitsTaskViewer!: UnitsTaskViewer;
@@ -70,7 +77,13 @@ export class DocTemplatesTree {
 
     // Якщо переходимо на вкладку результату, також оновлюємо дані
     if (index === 2) {
-      this.unitsTaskViewer.getDataSetContent().subscribe((content) => {
+      const templateCategoryId: string = this.selectedTemplate()?.templateCategoryId || '';
+          if (!templateCategoryId) {
+            this.snackBar.open('Не визначено тип шаблону', 'Закрити', { duration: 3000 });
+            return;
+          }
+
+      this.unitsTaskViewer.getDataSetContent(templateCategoryId).subscribe((content) => {
         this.dataSetContent.set(content);
       });
     }

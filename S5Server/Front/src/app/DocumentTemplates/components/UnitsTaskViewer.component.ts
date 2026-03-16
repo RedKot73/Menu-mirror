@@ -26,7 +26,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { UnitTaskDto } from '../../DocumentTemplates/models/template-dataset.models';
 import { TemplateDataSetService } from '../../../ServerService/template-dataset.service';
 import { UnitTaskService } from '../../../ServerService/unit-task.service';
-//import { UnitService } from '../../../ServerService/unit.service';
 import { OneUnitTaskViewer } from './OneUnitTaskViewer.component';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 import { TemplateDataSetDto } from '../../DocumentTemplates/models/template-dataset.models';
@@ -60,7 +59,6 @@ export class UnitsTaskViewer {
   private dialog = inject(MatDialog);
 
   private dataSetService = inject(TemplateDataSetService);
-  //private unitService = inject(UnitService);
   private unitTaskService = inject(UnitTaskService);
   private graphqlDataService = inject(GraphqlDataService);
 
@@ -102,30 +100,35 @@ export class UnitsTaskViewer {
 
   /**
    * Загальний метод: завантажує DataSet через GraphQL та повертає JSON-рядок
+    * @param templateCategoryId Ідентифікатор категорії шаблону БР/БД....
    */
-  private fetchDataSetJson(): Observable<string> {
+  private fetchDataSetJson(templateCategoryId: string): Observable<string> {
     const dataSetId = this.dataSet()?.id;
     if (!dataSetId) {
       return of('');
     }
 
     return this.graphqlDataService
-      .getDataSetForRender(dataSetId)
-      .pipe(rxMap((data) => (data ? JSON.stringify(data, null, 2) : '')));
+      .getCompleteDataSet(dataSetId, templateCategoryId)
+      .pipe(rxMap((data) =>
+         (data ? JSON.stringify(data, null, 2) : '')
+    ));
   }
 
   /**
    * Повертає контент DataSet у форматі JSON для підстановки в шаблон
+    * @param templateCategoryId Ідентифікатор категорії шаблону БР/БД....
    */
-  getDataSetContent(): Observable<string> {
-    return this.fetchDataSetJson();
+  getDataSetContent(templateCategoryId: string): Observable<string> {
+    return this.fetchDataSetJson(templateCategoryId);
   }
 
   /**
    * Завантажує DataSet через GraphQL та відображає JSON у діалозі
    */
   loadDataSetJson(): void {
-    this.fetchDataSetJson()
+    // Використовуємо фіксований ID категорії для отримання повного DataSet
+    this.fetchDataSetJson('3c787c14-a0ed-4e88-ba9e-2b1c6648dc0d') 
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (jsonContent) => {
@@ -133,16 +136,11 @@ export class UnitsTaskViewer {
             this.snackBar.open('Немає даних для перегляду', 'Закрити', { duration: 3000 });
             return;
           }
-
           this.dialog.open(JsonEditorDialogComponent, {
             width: '80vw',
             maxWidth: '1200px',
             maxHeight: '90vh',
-            data: {
-              jsonContent,
-              readOnly: true,
-              title: 'Дані підрозділів (JSON)',
-            },
+            data: { jsonContent, readOnly: true, title: 'Дані підрозділів (JSON)' },
           });
         },
         error: (error) => {

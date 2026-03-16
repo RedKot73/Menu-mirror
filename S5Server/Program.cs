@@ -11,6 +11,11 @@ using S5Server.Data;
 using S5Server.Models;
 using Serilog;
 using System.Globalization;
+using System.Text;
+
+//Исправление кодировки консоли для отображения кириллицы в ошибках PostgreSQL
+Console.OutputEncoding = Encoding.UTF8;
+Console.InputEncoding = Encoding.UTF8;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,12 +64,13 @@ var connBuilder = new NpgsqlConnectionStringBuilder
 };
 var connectionString = connBuilder.ConnectionString;
 ArgumentException.ThrowIfNullOrEmpty(connectionString);
+
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-// ✅ Налаштувати обробку infinity
+//Налаштувати обробку infinity
 dataSourceBuilder.EnableDynamicJson();
-// ✅ Конвертувати infinity → DateTime.MaxValue/MinValue
+//Конвертувати infinity → DateTime.MaxValue/MinValue
 dataSourceBuilder.ConnectionStringBuilder.Options = "-c DateStyle=ISO";
-// ✅ Увімкнути legacy behavior для timestamp
+//Увімкнути legacy behavior для timestamp
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 if (builder.Environment.IsProduction())
 {
@@ -88,6 +94,33 @@ builder.Services.AddScoped<MainDbContext>(sp =>
     var factory = sp.GetRequiredService<IDbContextFactory<MainDbContext>>();
     return factory.CreateDbContext();
 });
+
+//Проверка подключения к PostgreSQL с тестовым запросом
+try
+{
+    await using var testConnection = await dataSource.OpenConnectionAsync();
+    await using var cmd = testConnection.CreateCommand();
+    cmd.CommandText = "SELECT version()";
+    var version = await cmd.ExecuteScalarAsync();
+
+    Log.Information("PostgreSQL подключен: {Database}@{Host}:{Port}",
+        pgConnConfig.DB_Name, pgConnConfig.DB_Host, pgConnConfig.Port);
+    Log.Debug("PostgreSQL Version: {Version}", version);
+
+    await testConnection.CloseAsync();
+}
+catch (NpgsqlException ex)
+{
+    Log.Fatal(ex, "Ошибка аутентификации PostgreSQL. Проверьте: DB_Username={Username}, DB_Host={Host}, DB_Port={Port}",
+        pgConnConfig.DB_Username, pgConnConfig.DB_Host, pgConnConfig.Port);
+    throw;
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Не удалось подключиться к PostgreSQL: {Database}@{Host}:{Port}",
+        pgConnConfig.DB_Name, pgConnConfig.DB_Host, pgConnConfig.Port);
+    throw;
+}
 
 // ✅ Identity
 builder.Services.AddIdentity<TVezhaUser, IdentityRole<Guid>>(options =>

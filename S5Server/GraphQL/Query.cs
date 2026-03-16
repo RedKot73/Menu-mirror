@@ -69,13 +69,15 @@ public class Query
             var unitId = task.UnitId;
             var taskId = task.Id;
 
-            task.SoldiersTask = await db.SoldierTasks
-                .Where(st => st.UnitTaskId == taskId)
-                .Where(st =>
-                    (st.UnitId == unitId && st.AssignedUnitId == null && st.InvolvedUnitId == null) ||
-                    (st.AssignedUnitId == unitId) ||
-                    (st.InvolvedUnitId == unitId)
-                )
+            var unitQry = db.SoldierTasks
+                .Where(t => t.UnitId == unitId && t.AssignedUnitId == null && t.InvolvedUnitId == null);
+            var assUnitQry = db.SoldierTasks
+                .Where(t => t.AssignedUnitId == unitId);
+            var invUnitQry = db.SoldierTasks
+                .Where(t => t.InvolvedUnitId == unitId);
+
+            task.SoldiersTask = await
+                unitQry.Union(assUnitQry).Union(invUnitQry)
                 .ToListAsync();
 
             task.Means = await db.DroneModelTasks

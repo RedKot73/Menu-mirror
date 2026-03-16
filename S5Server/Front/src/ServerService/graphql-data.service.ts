@@ -238,6 +238,8 @@ export class GraphqlDataService {
   /**
    * Отримати набір даних для рендерингу шаблону (з UnitTasks)
    * з фільтрацією відряджених бійців (assignedUnit, involvedUnit)
+   * @param dataSetId Ідентифікатор набору даних
+   * @param templateCategoryId Ідентифікатор категорії шаблону БР/БД....
    */
 getCompleteDataSet(dataSetId: string, templateCategoryId: string): Observable<GqlTemplateDataSet | null> {
   return this.apollo
