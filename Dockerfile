@@ -2,16 +2,17 @@
 FROM mcr.microsoft.com/dotnet/sdk:latest AS build
 WORKDIR /src
 
-
 # Вставляем установку Node.js здесь, чтобы она была доступна для компиляции
 RUN apt-get update && apt-get install -y nodejs
 
-# Копируем и восстанавливаем зависимости
-COPY ["S5Server.csproj", "./"]
+# Забираем файл проекта из папки S5Server и кладем в корень папки /src внутри контейнера
+COPY ["S5Server/S5Server.csproj", "./"]
 RUN dotnet restore "S5Server.csproj"
 
-# Копируем остальные файлы и собираем
-COPY . .
+# Теперь копируем всё остальное содержимое папки S5Server
+COPY ["S5Server/", "./"]
+
+# Собираем проект
 RUN dotnet build "S5Server.csproj" -c Release -o /app/build
 
 # 2. Публикация
