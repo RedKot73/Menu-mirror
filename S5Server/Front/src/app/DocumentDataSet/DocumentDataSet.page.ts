@@ -58,6 +58,7 @@ export class DocumentDataSetComponent {
     this.unitsTaskEditor.createNewDataSet();
   }
 
+  /** Оновлю таблицю наборів даних */
   loadDataSets(): void {
     this.dataSetTable.loadDataSets();
   }

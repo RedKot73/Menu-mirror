@@ -59,15 +59,17 @@ public class Query
         var dataSet = await db.TemplateDataSets
             .Include(d => d.UnitTasks)
                 .ThenInclude(ut => ut.Area)
+            .Include(d => d.UnitTasks)
+                .ThenInclude(ut => ut.Task)
             .FirstOrDefaultAsync(d => d.Id == dataSetId);
 
         if (dataSet == null) return null;
 
         // 2. Для кожного UnitTask вручную завантажуємо бійців за логікою UNION
-        foreach (var task in dataSet.UnitTasks)
+        foreach (var unitTask in dataSet.UnitTasks)
         {
-            var unitId = task.UnitId;
-            var taskId = task.Id;
+            var unitId = unitTask.UnitId;
+            var taskId = unitTask.Id;
 
             var unitQry = db.SoldierTasks
                 .Where(t => t.UnitId == unitId && t.AssignedUnitId == null && t.InvolvedUnitId == null);
@@ -76,20 +78,23 @@ public class Query
             var invUnitQry = db.SoldierTasks
                 .Where(t => t.InvolvedUnitId == unitId);
 
-            task.SoldiersTask = await
+            unitTask.SoldiersTask = await
                 unitQry.Union(assUnitQry).Union(invUnitQry)
                 .ToListAsync();
 
-            task.Means = await db.DroneModelTasks
+            unitTask.Means = await db.DroneModelTasks
                 .Include(t => t.DroneModel)
                     .ThenInclude(t => t.DroneType)
                 .Where(t => t.UnitTaskId == taskId)
                 .ToListAsync();
 
-            task.TaskValue = await db.DictUnitTaskItems
-                .Where(t => t.UnitTaskId == task.TaskId && t.TemplateCategoryId == templateCategoryId)
-                .Select(t => t.Value)
-                .FirstOrDefaultAsync() ?? string.Empty;
+            var taskItems = await db.DictUnitTaskItems
+                .Where(t => t.UnitTaskId == unitTask.TaskId && t.TemplateCategoryId == templateCategoryId)
+                .Select(t => t)
+                .ToListAsync();
+            unitTask.Task.UnitTaskItems = taskItems;
+            unitTask.TaskValue = string.Join("; ", taskItems
+                .Select(i => i.Value));
         }
 
         return dataSet;

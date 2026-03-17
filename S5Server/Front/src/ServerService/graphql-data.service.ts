@@ -43,6 +43,11 @@ const GET_COMPLETE_DATA_SET = gql`
         isInvolved
         persistentLocationValue
         taskValue
+        task{
+            unitTaskItems{
+                value
+            }
+        }
         area {
           value
         }
