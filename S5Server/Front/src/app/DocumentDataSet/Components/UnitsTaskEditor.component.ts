@@ -196,21 +196,29 @@ export class UnitsTaskEditor {
   }
 
   // ── Вибір підрозділу через діалог ─────
-  openUnitSelect(): void {
+  private openUnitSelectDialog(onSelected: (unit: UnitTaskDto) => void): void {
     const titles: Record<string, string> = {
       unit: 'Вибір підрозділу',
       assigned: 'Приданий до підрозділу',
       involved: 'Екіпаж/Група',
     };
+
     const dialogRef = this.dialog.open(UnitSelectDialogComponent, {
       width: '900px',
       maxHeight: '90vh',
       data: { title: titles['unit'] },
     });
+
     dialogRef.afterClosed().subscribe((unit: UnitTaskDto | undefined) => {
       if (unit) {
-        this.addUnitToSelection(unit.id);
+        onSelected(unit);
       }
+    });
+  }
+
+  openUnitSelect(): void {
+    this.openUnitSelectDialog((unit) => {
+      this.addUnitToSelection(unit.id);
     });
   }
 
@@ -546,21 +554,27 @@ export class UnitsTaskEditor {
       return;
     }
 
-    // Очищаємо поточний DataSet
-    this.dataSet.set(null);
+    this.openUnitSelectDialog((unit) => {
+      // Очищаємо поточний DataSet
+      this.dataSet.set(null);
 
-    // Очищуємо всі дані
-    this.selectedUnits.set([]);
-    this.isParentDocUsed.set(false);
-    this.parentDocumentDate.set(null);
-    this.parentDocumentNumber.set('');
-    this.documentDate.set(new Date());
-    this.documentNumber.set('');
+      // Очищуємо всі дані
+      this.selectedUnits.set([]);
+      this.isParentDocUsed.set(false);
+      this.parentDocumentDate.set(null);
+      this.parentDocumentNumber.set('');
+      this.documentDate.set(new Date());
+      this.documentNumber.set('');
+      this.publishStatusControl.setValue(false, { emitEvent: false });
 
-    // Скидаємо прапорець стану
-    this.hasUnsavedChanges.set(false);
+      // Після створення нового набору одразу додаємо вибраний підрозділ
+      this.addUnitToSelection(unit.id);
+      this.hasUnsavedChanges.set(true);
 
-    this.snackBar.open('Створено новий набір даних', 'Закрити', { duration: 3000 });
+      this.snackBar.open('Створено новий набір даних і додано підрозділ', 'Закрити', {
+        duration: 3000,
+      });
+    });
   }
 
   /**

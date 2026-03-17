@@ -1,4 +1,6 @@
 import { Component, inject, ViewChild, effect, signal, output, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -11,14 +13,12 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { TemplateDataSetService } from '../../../ServerService/template-dataset.service';
 import { TemplateDataSetDto } from '../../DocumentTemplates/models/template-dataset.models';
 import { ConfirmDialogComponent } from '../../dialogs/ConfirmDialog.component';
 import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';
-import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-template-dataset-table',
@@ -92,7 +92,7 @@ export class DocDataSetsTableComponent implements OnInit {
   }
 
   /**
-   * Загружает наборы данных для шаблона
+   * Загружает наборы данных
    */
   loadDataSets(): void {
     this.isLoading.set(true);
@@ -120,22 +120,27 @@ export class DocDataSetsTableComponent implements OnInit {
   }
 
   /**
-   * Создает новый набор данных
+   * Створює новий набір даних (очищає форму)
    */
-  /*
-  createDataSet(): void {
-    const dialogRef = this.dialog.open(CreateDataSetDialogComponent, {
-      width: '700px',
-      maxWidth: '90vw',
-      disableClose: true,
-      data: {},
-    });
+  createNewDataSet(): void {
+    const nowIso = new Date().toISOString();
+    const newDataSet: TemplateDataSetDto = {
+      id: `new-${Date.now()}`,
+      name: `Набір даних ${Date.now()}`,
+      isParentDocUsed: false,
+      parentDocNumber: null,
+      parentDocDate: null,
+      docNumber: '',
+      docDate: nowIso,
+      isPublished: false,
+      publishedAtUtc: undefined,
+      createdAtUtc: nowIso,
+      validFrom: nowIso,
+    };
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.refreshDataSets();
-      }
-    });
+    this.dataSets.update((items) => [newDataSet, ...items]);
+    this.selectedDataSet.set(newDataSet);
+    this.dataSetSelected.emit(newDataSet);
   }
 
   /**

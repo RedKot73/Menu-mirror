@@ -10,8 +10,6 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTabsModule } from '@angular/material/tabs';
 
-import { UnitTreeComponent } from '../Unit/UnitTree.component';
-import { UnitTreeNode } from '../Unit/unit-tree-node.component';
 import { DocDataSetsTableComponent } from './Components/DocDataSetsTable.component';
 import { TemplateDataSetDto } from '../DocumentTemplates/models/template-dataset.models';
 import { UnitsTaskEditor } from './Components/UnitsTaskEditor.component';
@@ -30,7 +28,6 @@ import { MasterDetailLayoutComponent } from '../shared/components/MasterDetailLa
     MatDividerModule,
     MatTabsModule,
     MasterDetailLayoutComponent,
-    UnitTreeComponent,
     DocDataSetsTableComponent,
     UnitsTaskEditor,
   ],
@@ -39,24 +36,10 @@ import { MasterDetailLayoutComponent } from '../shared/components/MasterDetailLa
   styleUrls: ['./DocumentDataSet.page.scss'],
 })
 export class DocumentDataSetComponent {
-  @ViewChild(UnitTreeComponent) unitTree!: UnitTreeComponent;
   @ViewChild('unitsTaskEditor') unitsTaskEditor!: UnitsTaskEditor;
+  @ViewChild('dataSetTable') dataSetTable!: DocDataSetsTableComponent;
 
-  // --- Public Methods ---
 
-  /**
-   * Обновляет дерево подразделений
-   */
-  loadUnitTree() {
-    this.unitTree?.refresh();
-  }
-
-  /**
-   * Добавляет подразделение в список выбранных
-   */
-  addUnitToSelection(node: UnitTreeNode) {
-    this.unitsTaskEditor.addUnitToSelection(node.id);
-  }
 
   /**
    * Загружает полный DataSet с особовим складом через API
@@ -73,5 +56,9 @@ export class DocumentDataSetComponent {
    */
   createNewDataSet(): void {
     this.unitsTaskEditor.createNewDataSet();
+  }
+
+  loadDataSets(): void {
+    this.dataSetTable.loadDataSets();
   }
 }

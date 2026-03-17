@@ -1,48 +1,30 @@
 <app-master-detail-layout storageKey="documentDataSet">
   <!-- Left Panel: Дерево підрозділів та Набори даних -->
   <div leftPanel>
-    <mat-tab-group>
-      <mat-tab label="Дерево підрозділів">
-        <!-- Кастомный шаблон действий узла -->
-        <ng-template #nodeActions let-node>
-          <button
-            mat-icon-button
-            matTooltip="Додати до списку вибору"
-            (click)="addUnitToSelection(node); $event.stopPropagation()"
-          >
-            <mat-icon color="primary">add_circle</mat-icon>
-          </button>
-        </ng-template>
-
-        <!-- Дерево подразделений с кастомными действиями -->
-        <div class="panel-header">
-          <button mat-icon-button (click)="loadUnitTree()" matTooltip="Оновити перелік">
-            <mat-icon>refresh</mat-icon>
-          </button>
-          <button
-            mat-raised-button
-            color="primary"
-            (click)="createNewDataSet()"
-            matTooltip="Створити набір"
-          >
-            <mat-icon>add</mat-icon>
-            Створити набір
-          </button>
-        </div>
-        <unit-tree class="unit-tree" [nodeActionsTemplate]="nodeActions"></unit-tree>
-      </mat-tab>
-      <mat-tab label="Набори даних">
-        <!-- Таблица з наборами даних -->
-        <app-template-dataset-table
-          class="dataset-table"
-          (dataSetSelected)="onDataSetSelected($event)"
-        ></app-template-dataset-table>
-      </mat-tab>
-    </mat-tab-group>
+    <div class="panel-header">
+      <button mat-icon-button (click)="loadDataSets()" matTooltip="Оновити перелік">
+        <mat-icon>refresh</mat-icon>
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="createNewDataSet()"
+        matTooltip="Створити набір"
+      >
+        <mat-icon>add</mat-icon>
+        Створити набір
+      </button>
+    </div>
+    <!-- Таблица з наборами даних -->
+    <app-template-dataset-table
+      #dataSetTable
+      (dataSetSelected)="onDataSetSelected($event)"
+      class="dataset-table"
+    ></app-template-dataset-table>
   </div>
 
   <!-- Right Panel: Дані документа -->
-  <div rightPanel style="display: flex; flex-direction: column; height: 100%;">
+  <div rightPanel style="display: flex; flex-direction: column; height: 100%">
     <app-units-task-editor #unitsTaskEditor></app-units-task-editor>
   </div>
 </app-master-detail-layout>
