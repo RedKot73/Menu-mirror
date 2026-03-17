@@ -1,5 +1,58 @@
 # See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
+
+
+=== Результаты сборки === 
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Rr]elease/
+[Dd]ebug/
+
+# === Временные файлы IDE (VS, VS Code, Rider) === 
+.vs/
+.vscode/
+.idea/
+*.user
+*.userosscache
+*.sln.doccache
+*.suo
+*.userprefs
+*.sln.iml
+*.patch
+*.diff
+
+# === Локальные настройки и секреты (КРИТИЧНО) === 
+# Эти файлы не должны попасть в репозиторий 
+appsettings.Development.json
+usersecrets.json
+*.secrets.json
+*.dev.json
+.env
+.env.*
+!.env.example
+
+# === Логи и системные файлы === 
+*.log
+*.log.*
+.DS_Store
+Thumbs.db
+
+# === Папки пакетов (NuGet/npm восстановят их сами) === 
+packages/
+node_modules/
+.nuget/
+!packages/repository.config
+
+# === Тесты и отчеты ===
+TestResults/
+*.sequenced
+
+# === Прочее ===
+.cache/
+
+
+
 # Compiled output
 /dist
 /tmp

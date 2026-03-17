@@ -17,7 +17,7 @@ build-job:
   - docker:dind # <--- ДОБАВИТЬ ЭТУ СТРОКУ
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build -t $IMAGE_TAG .
+    - docker build --provenance=false -t $IMAGE_TAG .
     - docker push $IMAGE_TAG
 
 # Деплой на DEV (Автоматически из develop)
@@ -35,7 +35,7 @@ deploy-dev:
     - docker run -d --name app-dev -e ASPNETCORE_ENVIRONMENT=Development -p 8081:8080 $IMAGE_TAG
     - docker image prune -af
   rules:
-    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "development"
 
 # Деплой на PROD (Вручную из main)
 deploy-prod:
