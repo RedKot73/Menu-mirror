@@ -126,10 +126,14 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   means = signal<DroneModelTaskDto[]>([]);
   meansDataSource = new MatTableDataSource<DroneModelTaskDto>([]);
   meansDisplayedColumns: string[] = ['actions', 'droneModelValue', 'droneTypeName', 'quantity'];
+  /** Сигнал для відстеження стану завантаження засобів */
   isLoadingMeans = signal<boolean>(false);
+  /** Сигнал для відстеження стану збереження засобів */
+  isSavingMeans = signal<boolean>(false);
 
   // Стан збереження (для індикації процесу)
   isSaving = signal<boolean>(false);
+  protected hasUnsavedChanges = signal<boolean>(false);
   /** Контрол для статусу публікації
    * Предотвращает переключение визуального контрола
    * при ошибках в изменении статуса публикации из-за
@@ -179,10 +183,12 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     });
 
     // Ініціалізуємо локально додані засоби (якщо є)
+    /*
     if (this.unitTask.means && this.unitTask.means.length > 0) {
       this.means.set(this.unitTask.means);
       this.meansDataSource.data = this.unitTask.means;
     }
+    */
   }
 
   /**
@@ -388,37 +394,38 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
         taskValue: '',
         areaId: '',
         areaValue: '',
+        means: [],
       };
-      this.unitTaskSignal.set(updatedUnit);
-      this.unitChange.emit(updatedUnit);
-      this.areas.set([]);
 
-      // ✅ Очищуємо засоби при скиданні завдання
       this.means.set([]);
       this.meansDataSource.data = [];
+      this.areas.set([]);
+      this.unitTaskSignal.set(updatedUnit);
+      this.unitChange.emit(updatedUnit);
+      this.hasUnsavedChanges.set(true);
       return;
     }
 
-    const updatedUnit: UnitTaskDto = {
+    let updatedUnit: UnitTaskDto = {
       ...this.unitTask,
       taskId: task.id,
       taskValue: task.value,
     };
-    this.unitTaskSignal.set(updatedUnit);
-    this.unitChange.emit(updatedUnit);
 
     // ✅ Перевіряємо чи потрібні засоби для цього завдання
     if (!task.withMeans) {
       // Якщо засоби не використовуються - очищуємо список
       this.means.set([]);
       this.meansDataSource.data = [];
-      const updatedUnitWithoutMeans = {
+      updatedUnit = {
         ...updatedUnit,
-        meansCount: 0,
         means: [],
       };
-      this.unitChange.emit(updatedUnitWithoutMeans);
     }
+
+    this.unitTaskSignal.set(updatedUnit);
+    this.unitChange.emit(updatedUnit);
+    this.hasUnsavedChanges.set(true);
 
     // Завантажуємо області для обраного завдання (використовуємо areaTypeId з кешованого об'єкта)
     if (task.areaTypeId) {
@@ -437,6 +444,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     };
     this.unitTaskSignal.set(updatedUnit);
     this.unitChange.emit(updatedUnit);
+    this.hasUnsavedChanges.set(true);
   }
 
   /**
@@ -551,6 +559,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
           means: updatedMeans,
         };
         this.unitChange.emit(updatedUnit);
+        this.hasUnsavedChanges.set(true);
       }
     });
   }
@@ -567,6 +576,10 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
    */
   startEditingMean(mean: DroneModelTaskDto, field: 'quantity', event: Event): void {
     event.stopPropagation();
+    if (this.isSavingMeans()) {
+      return;
+    }
+
     // Використовуємо droneModelId як унікальний ідентифікатор для локально доданих засобів
     const meanId = mean.id || mean.droneModelId;
     this.editingMeanId.set(meanId);
@@ -587,8 +600,11 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   /**
    * Зберігає зміни поля засобу
    */
-  saveMeanFieldChange(mean: DroneModelTaskDto, field: 'quantity', event: Event): void {
+  async saveMeanFieldChange(mean: DroneModelTaskDto, field: 'quantity', event: Event): Promise<void> {
     event.stopPropagation();
+    if (this.isSavingMeans()) {
+      return;
+    }
 
     const newValue = this.editingMeanValue();
     if (newValue === undefined || newValue <= 0) {
@@ -616,6 +632,13 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     };
     this.unitTaskSignal.set(updatedUnit);
     this.unitChange.emit(updatedUnit);
+    this.hasUnsavedChanges.set(true);
+
+    try {
+      await this.saveAndReloadMeans(this.unitTask.id);
+    } catch {
+      return;
+    }
 
     // Скидаємо стан редагування
     this.cancelEditingMean(event);
@@ -631,8 +654,11 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   /**
    * Видаляє засіб зі списку
    */
-  deleteMean(mean: DroneModelTaskDto): void {
-    // Локальне видалення (збереження буде через saveUnitTask)
+  async deleteMean(mean: DroneModelTaskDto): Promise<void> {
+    if (this.isSavingMeans()) {
+      return;
+    }
+
     const updatedMeans = this.means().filter((m) =>
       m.id ? m.id !== mean.id : m.droneModelId !== mean.droneModelId,
     );
@@ -646,6 +672,13 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
       means: updatedMeans,
     };
     this.unitChange.emit(updatedUnit);
+    this.hasUnsavedChanges.set(true);
+
+    try {
+      await this.saveAndReloadMeans(this.unitTask.id);
+    } catch {
+      return;
+    }
   }
 
   /**
@@ -669,30 +702,19 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
           areaId: this.unitTask.areaId,
         };
         const result = await firstValueFrom(this.unitTaskService.create(createDto));
-        this.unitTask.id = result.id; // Оновлюємо ID локально
+        // Оновлюємо ID
+        this.unitTaskSignal.set({...this.unitTask, id: result.id})
 
         // Синхронізуємо ID з батьківським компонентом
         this.unitChange.emit({ ...this.unitTask, id: result.id });
       }
 
-      // 2. Зберігаємо засоби через bulkSave
-      const meansToSave = this.means().map((mean) => ({
-        unitTaskId: this.unitTask.id,
-        droneModelId: mean.droneModelId,
-        quantity: mean.quantity,
-      }));
-
-      await firstValueFrom(this.droneModelTaskService.bulkSave(this.unitTask.id, meansToSave));
-
-      // 3. Перезавантажуємо засоби з сервера (щоб отримати droneTypeName та інші поля)
-      const savedMeans = await firstValueFrom(
-        this.droneModelTaskService.getByUnitTask(this.unitTask.id),
-      );
-      this.means.set(savedMeans);
-      this.meansDataSource.data = savedMeans;
+      await this.saveAndReloadMeans(this.unitTask.id);
+      this.hasUnsavedChanges.set(false);
 
       return true;
     } catch (error) {
+      this.hasUnsavedChanges.set(true);
       console.error('Помилка збереження UnitTask:', error);
       const errorMessage = S5App_ErrorHandler.handleHttpError(
         error,
@@ -702,6 +724,36 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
       return false;
     } finally {
       this.isSaving.set(false);
+    }
+  }
+
+  private async saveAndReloadMeans(unitTaskId: string): Promise<void> {
+    if (!unitTaskId) {
+      return;
+    }
+
+    this.isSavingMeans.set(true);
+    try {
+      // 2. Зберігаємо засоби через bulkSave
+      const meansToSave = this.means().map((mean) => ({
+        unitTaskId,
+        droneModelId: mean.droneModelId,
+        quantity: mean.quantity,
+      }));
+
+      await firstValueFrom(this.droneModelTaskService.bulkSave(unitTaskId, meansToSave));
+
+      // Перезавантажуємо засоби з сервера (щоб отримати droneTypeName та інші поля)
+      const savedMeans = await firstValueFrom(this.droneModelTaskService.getByUnitTask(unitTaskId));
+      this.means.set(savedMeans);
+      this.meansDataSource.data = savedMeans;
+    } catch (error) {
+      console.error('Помилка збереження засобів:', error);
+      const errorMessage = S5App_ErrorHandler.handleHttpError(error, 'Помилка збереження засобів');
+      this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      throw error;
+    } finally {
+      this.isSavingMeans.set(false);
     }
   }
 
@@ -743,10 +795,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
         this.unitTaskSignal.set(updatedUnitTask);
         this.publishStatusControl.setValue(isPublished, { emitEvent: false });
 
-        // ✅ Сповіщаємо батьківський компонент про зміну
-        //this.unitChange.emit(updatedUnitTask);
-
-        const statusText = isPublished ? 'опубліковано' : 'знято з публікації';
+        const statusText = this.getStatusLabel(isPublished);
         this.snackBar.open(
           `Завдання підрозділу "${currentUnitTask.unitShortName}" ${statusText}`,
           'Закрити',
