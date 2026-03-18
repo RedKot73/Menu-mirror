@@ -276,7 +276,7 @@ else
 }
 
 // ✅ Редирект на HTTPS (только если запрос пришел по HTTP через проксі)
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 // ✅ Статичні файли з wwwroot (Angular dist)
 app.UseStaticFiles(new StaticFileOptions
 {
