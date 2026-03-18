@@ -12,8 +12,8 @@ import { DocTemplatesTableComponent } from './components/DocTemplatesTable.compo
 import { DocDataSetsTableComponent } from '../DocumentDataSet/Components/DocDataSetsTable.component';
 import { TemplateEditorComponent } from './components/TemplateEditor.component';
 import { ResultEditorComponent } from './components/ResultEditor.component';
-import { TemplateDto } from '../DocumentTemplates/models/document-template.models';
-import { TemplateDataSetDto } from '../DocumentTemplates/models/template-dataset.models';
+import { TemplateDto } from './models/document-template.models';
+import { TemplateDataSetDto } from './models/template-dataset.models';
 import { UnitsTaskViewer } from './components/UnitsTaskViewer.component'; //'../DocumentDataSet/Components/UnitsTaskEditor.component';
 import { MasterDetailLayoutComponent } from '../shared/components/MasterDetailLayout.component';
 
@@ -30,8 +30,8 @@ import { MasterDetailLayoutComponent } from '../shared/components/MasterDetailLa
     ResultEditorComponent,
     UnitsTaskViewer,
   ],
-  styleUrls: ['./DocTemplatesTree.page.scss'],
-  templateUrl: './DocTemplatesTree.page.html',
+  styleUrls: ['./DocTemplates.page.scss'],
+  templateUrl: './DocTemplates.page.html',
 })
 export class DocTemplatesTree {
   private snackBar = inject(MatSnackBar);

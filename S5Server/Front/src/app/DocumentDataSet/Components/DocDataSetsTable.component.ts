@@ -119,29 +119,13 @@ export class DocDataSetsTableComponent implements OnInit {
     this.dataSetSelected.emit(dataSet);
   }
 
-  /**
-   * Створює новий набір даних (очищає форму)
-   */
-  createNewDataSet(): void {
-    const nowIso = new Date().toISOString();
-    const newDataSet: TemplateDataSetDto = {
-      id: `new-${Date.now()}`,
-      name: `Набір даних ${Date.now()}`,
-      isParentDocUsed: false,
-      parentDocNumber: null,
-      parentDocDate: null,
-      docNumber: '',
-      docDate: nowIso,
-      isPublished: false,
-      publishedAtUtc: undefined,
-      createdAtUtc: nowIso,
-      validFrom: nowIso,
-    };
-
-    this.dataSets.update((items) => [newDataSet, ...items]);
-    this.selectedDataSet.set(newDataSet);
-    this.dataSetSelected.emit(newDataSet);
+  /*
+  addDraftDataSet(dataSet: TemplateDataSetDto): void {
+    this.dataSets.update((items) => [dataSet, ...items.filter((item) => item.id !== dataSet.id)]);
+    this.selectedDataSet.set(dataSet);
+    this.dataSetSelected.emit(dataSet);
   }
+  */
 
   /**
    * Клонирует набор данных

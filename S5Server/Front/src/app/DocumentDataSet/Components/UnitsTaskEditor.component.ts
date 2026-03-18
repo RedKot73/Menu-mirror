@@ -435,6 +435,8 @@ export class UnitsTaskEditor {
     this.isSaving.set(true);
 
     const currentDataSet = this.dataSet();
+    /** Id = пусто значит это новый набор данных */
+    const hasPersistedDataSetId = !!currentDataSet?.id?.trim();
 
     // Формуємо DTO для створення або оновлення
     const dataSetDto: TemplateDataSetUpSertDto = {
@@ -449,7 +451,7 @@ export class UnitsTaskEditor {
       isPublished: currentDataSet?.isPublished || false,
     };
 
-    if (currentDataSet) {
+    if (hasPersistedDataSetId && currentDataSet) {
       // Оновлюємо існуючий DataSet
       this.dataSetService
         .updateDataSet(currentDataSet.id, dataSetDto)
@@ -548,6 +550,7 @@ export class UnitsTaskEditor {
   /**
    * Створює новий набір даних (очищає форму)
    */
+//  createNewDataSet(onCreated?: (dataSet: TemplateDataSetDto) => void): void {
   createNewDataSet(): void {
     // Перевіряємо наявність незбережених змін
     if (!this.checkUnsavedChanges()) {
@@ -567,8 +570,26 @@ export class UnitsTaskEditor {
       this.documentNumber.set('');
       this.publishStatusControl.setValue(false, { emitEvent: false });
 
+      const nowIso = new Date().toISOString();
+      const draftDataSet: TemplateDataSetDto = {
+        id: '',//`new-${Date.now()}`,
+        name: `Набір даних ${Date.now()}`,
+        isParentDocUsed: false,
+        parentDocNumber: null,
+        parentDocDate: null,
+        docNumber: '',
+        docDate: nowIso,
+        isPublished: false,
+        //publishedAtUtc: undefined,
+        createdAtUtc: nowIso,
+        validFrom: nowIso,
+      };
+      //onCreated?.(draftDataSet);
+
       // Після створення нового набору одразу додаємо вибраний підрозділ
       this.addUnitToSelection(unit.id);
+          // Зберігаємо інформацію про поточний DataSet
+          this.dataSet.set(draftDataSet);
       this.hasUnsavedChanges.set(true);
 
       this.snackBar.open('Створено новий набір даних і додано підрозділ', 'Закрити', {
@@ -582,9 +603,11 @@ export class UnitsTaskEditor {
    */
   onPublishStatusChange(isPublished: boolean): void {
     const currentDataSet = this.dataSet();
-    if (!currentDataSet) {
+    if (!currentDataSet?.id?.trim()) {
       this.publishStatusControl.setValue(false, { emitEvent: false });
-      this.snackBar.open('Немає завантаженого набору даних', 'Закрити', { duration: 3000 });
+      this.snackBar.open('Спочатку збережіть набір даних, потім змінюйте публікацію', 'Закрити', {
+        duration: 3000,
+      });
       return;
     }
 
