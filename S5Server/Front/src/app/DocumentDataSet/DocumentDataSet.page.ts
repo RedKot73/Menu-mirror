@@ -39,8 +39,6 @@ export class DocumentDataSetComponent {
   @ViewChild('unitsTaskEditor') unitsTaskEditor!: UnitsTaskEditor;
   @ViewChild('dataSetTable') dataSetTable!: DocDataSetsTableComponent;
 
-
-
   /**
    * Загружает полный DataSet с особовим складом через API
    */
@@ -56,8 +54,14 @@ export class DocumentDataSetComponent {
    */
   createNewDataSet(): void {
     this.unitsTaskEditor.createNewDataSet();
+    /*
+    this.unitsTaskEditor.createNewDataSet((draftDataSet) => {
+      this.dataSetTable.addDraftDataSet(draftDataSet);
+    });
+    */
   }
 
+  /** Оновлю таблицю наборів даних */
   loadDataSets(): void {
     this.dataSetTable.loadDataSets();
   }

@@ -113,13 +113,13 @@ catch (NpgsqlException ex)
 {
     Log.Fatal(ex, "Ошибка аутентификации PostgreSQL. Проверьте: DB_Username={Username}, DB_Host={Host}, DB_Port={Port}",
         pgConnConfig.DB_Username, pgConnConfig.DB_Host, pgConnConfig.Port);
-    throw;
+    //throw;
 }
 catch (Exception ex)
 {
     Log.Fatal(ex, "Не удалось подключиться к PostgreSQL: {Database}@{Host}:{Port}",
         pgConnConfig.DB_Name, pgConnConfig.DB_Host, pgConnConfig.Port);
-    throw;
+    //throw;
 }
 
 // ✅ Identity

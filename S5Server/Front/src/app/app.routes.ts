@@ -129,7 +129,7 @@ export const routes: Routes = [
     path: 'templates',
     title: 'Шаблони документів',
     loadComponent: () =>
-      import('../app/DocumentTemplates/DocTemplatesTree.page').then((m) => m.DocTemplatesTree),
+      import('./DocumentTemplates/DocTemplates.page').then((m) => m.DocTemplatesTree),
     canActivate: [authGuard],
   },
   {
