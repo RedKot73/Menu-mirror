@@ -8,7 +8,7 @@ import {
   ViewChildren,
   QueryList,
 } from '@angular/core';
-import { MatDialog, } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormsModule } from '@angular/forms';
@@ -23,7 +23,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { switchMap, tap } from 'rxjs';
+import { firstValueFrom, switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import {
@@ -101,7 +101,7 @@ export class UnitsTaskEditor {
   // --- Save State ---
   protected isSaving = signal<boolean>(false);
   protected hasUnsavedChanges = signal<boolean>(false);
-  /** Контрол для статусу публікації 
+  /** Контрол для статусу публікації
    * Предотвращает переключение визуального контрола
    * при ошибках в изменении статуса публикации из-за
    * асинхронного обновления unitTask после сохранения.
@@ -361,12 +361,12 @@ export class UnitsTaskEditor {
   /**
    * Зберігає вибрані підрозділи як набір даних
    */
-  saveSelectedUnitsAsDataSet(): void {
+  async saveSelectedUnitsAsDataSet(): Promise<boolean> {
     if (this.selectedUnits().length === 0) {
       this.snackBar.open('Немає вибраних підрозділів для збереження', 'Закрити', {
         duration: 3000,
       });
-      return;
+      return false;
     }
 
     // Перевірка обов'язкових полів
@@ -378,7 +378,7 @@ export class UnitsTaskEditor {
           'Заповніть дату документа старшого начальника',
         )
       ) {
-        return;
+        return false;
       }
 
       if (
@@ -388,18 +388,18 @@ export class UnitsTaskEditor {
           'Заповніть номер документа старшого начальника',
         )
       ) {
-        return;
+        return false;
       }
     }
 
     if (!this.checkRequiredField(this.documentDate(), this.dateInput, 'Заповніть дату документа')) {
-      return;
+      return false;
     }
 
     if (
       !this.checkRequiredField(this.documentNumber(), this.numberInput, 'Заповніть номер документа')
     ) {
-      return;
+      return false;
     }
 
     // Перевірка обов'язкових полів для кожного підрозділу
@@ -413,7 +413,7 @@ export class UnitsTaskEditor {
           'Закрити',
           { duration: 5000 },
         );
-        return;
+        return false;
       }
 
       if (!unit.areaId) {
@@ -422,7 +422,7 @@ export class UnitsTaskEditor {
           'Закрити',
           { duration: 5000 },
         );
-        return;
+        return false;
       }
     }
 
@@ -451,49 +451,29 @@ export class UnitsTaskEditor {
       isPublished: currentDataSet?.isPublished || false,
     };
 
-    if (hasPersistedDataSetId && currentDataSet) {
-      // Оновлюємо існуючий DataSet
-      this.dataSetService
-        .updateDataSet(currentDataSet.id, dataSetDto)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: () => {
-            // Після оновлення DataSet зберігаємо UnitTask
-            this.saveUnitTasks(currentDataSet.id);
-          },
-          error: (error) => {
-            this.isSaving.set(false);
-            console.error('Error updating dataset:', error);
-            const errorMessage = S5App_ErrorHandler.handleHttpError(
-              error,
-              'Помилка оновлення даних',
-            );
-            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-          },
-        });
-    } else {
-      // Створюємо новий DataSet
-      this.dataSetService
-        .createDataSet(dataSetDto)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: (createdDataSet) => {
-            // Зберігаємо інформацію про новостворений DataSet
-            this.dataSet.set(createdDataSet);
+    try {
+      if (hasPersistedDataSetId && currentDataSet) {
+        await firstValueFrom(
+          this.dataSetService
+            .updateDataSet(currentDataSet.id, dataSetDto)
+            .pipe(takeUntilDestroyed(this.destroyRef)),
+        );
+        return await this.saveUnitTasks(currentDataSet.id);
+      }
 
-            // Після створення DataSet зберігаємо UnitTask
-            this.saveUnitTasks(createdDataSet.id);
-          },
-          error: (error) => {
-            this.isSaving.set(false);
-            console.error('Error creating dataset:', error);
-            const errorMessage = S5App_ErrorHandler.handleHttpError(
-              error,
-              'Помилка збереження даних',
-            );
-            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-          },
-        });
+      const createdDataSet = await firstValueFrom(
+        this.dataSetService.createDataSet(dataSetDto).pipe(takeUntilDestroyed(this.destroyRef)),
+      );
+      //Показываем на UI DataSet поля которого могли
+      // поменяться после сохранения (наприклад, id, createdAtUtc)
+      this.dataSet.set(createdDataSet);
+      return await this.saveUnitTasks(createdDataSet.id);
+    } catch (error) {
+      this.isSaving.set(false);
+      console.error('Error saving dataset:', error);
+      const errorMessage = S5App_ErrorHandler.handleHttpError(error, 'Помилка збереження даних');
+      this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      return false;
     }
   }
 
@@ -501,13 +481,13 @@ export class UnitsTaskEditor {
    * Зберігає UnitTask для кожного підрозділу
    * Координує збереження через виклик card.saveUnitTask()
    */
-  private async saveUnitTasks(dataSetId: string): Promise<void> {
+  private async saveUnitTasks(dataSetId: string): Promise<boolean> {
     const cards = this.unitTaskCards.toArray();
 
     if (cards.length === 0) {
       this.snackBar.open('Немає підрозділів для збереження', 'Закрити', { duration: 3000 });
       this.isSaving.set(false);
-      return;
+      return false;
     }
 
     try {
@@ -531,10 +511,12 @@ export class UnitsTaskEditor {
         this.snackBar.open(`Дані успішно збережено (${successCount} підрозділів)`, 'Закрити', {
           duration: 3000,
         });
+        return true;
       } else {
         this.snackBar.open(`Збережено: ${successCount}, Помилок: ${failedCount}`, 'Закрити', {
           duration: 5000,
         });
+        return false;
       }
     } catch (error) {
       this.isSaving.set(false);
@@ -544,13 +526,14 @@ export class UnitsTaskEditor {
         'Помилка збереження завдань підрозділів',
       );
       this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      return false;
     }
   }
 
   /**
    * Створює новий набір даних (очищає форму)
    */
-//  createNewDataSet(onCreated?: (dataSet: TemplateDataSetDto) => void): void {
+  //  createNewDataSet(onCreated?: (dataSet: TemplateDataSetDto) => void): void {
   createNewDataSet(): void {
     // Перевіряємо наявність незбережених змін
     if (!this.checkUnsavedChanges()) {
@@ -572,7 +555,7 @@ export class UnitsTaskEditor {
 
       const nowIso = new Date().toISOString();
       const draftDataSet: TemplateDataSetDto = {
-        id: '',//`new-${Date.now()}`,
+        id: '',
         name: `Набір даних ${Date.now()}`,
         isParentDocUsed: false,
         parentDocNumber: null,
@@ -586,10 +569,11 @@ export class UnitsTaskEditor {
       };
       //onCreated?.(draftDataSet);
 
+      //показываем на странице новый набор данных,
+      // чтобы пользователь видел, что он сейчас редактирует
+      this.dataSet.set(draftDataSet);
       // Після створення нового набору одразу додаємо вибраний підрозділ
       this.addUnitToSelection(unit.id);
-          // Зберігаємо інформацію про поточний DataSet
-          this.dataSet.set(draftDataSet);
       this.hasUnsavedChanges.set(true);
 
       this.snackBar.open('Створено новий набір даних і додано підрозділ', 'Закрити', {
@@ -601,13 +585,23 @@ export class UnitsTaskEditor {
   /**
    * Обробник зміни статусу публікації
    */
-  onPublishStatusChange(isPublished: boolean): void {
+  async onPublishStatusChange(isPublished: boolean): Promise<void> {
+    const initialDataSet = this.dataSet();
+
+    if (this.hasUnsavedChanges()) {
+      const saveSuccess = await this.saveSelectedUnitsAsDataSet();
+      if (!saveSuccess) {
+        this.publishStatusControl.setValue(initialDataSet?.isPublished ?? false, {
+          emitEvent: false,
+        });
+        return;
+      }
+    }
+
     const currentDataSet = this.dataSet();
     if (!currentDataSet?.id?.trim()) {
       this.publishStatusControl.setValue(false, { emitEvent: false });
-      this.snackBar.open('Спочатку збережіть набір даних, потім змінюйте публікацію', 'Закрити', {
-        duration: 3000,
-      });
+      this.snackBar.open('Набір даних не збережено', 'Закрити', { duration: 3000 });
       return;
     }
 
@@ -619,37 +613,36 @@ export class UnitsTaskEditor {
     this.publishStatusControl.setValue(currentDataSet.isPublished, { emitEvent: false });
     this.isSaving.set(true);
 
-    this.dataSetService
-      .publish(currentDataSet.id, isPublished)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.isSaving.set(false);
-          // Оновлюємо статус в локальному signal
-          this.dataSet.set({
-            ...currentDataSet,
-            isPublished: isPublished,
-            publishedAtUtc: isPublished ? new Date().toISOString() : undefined,
-            validFrom: new Date().toISOString(),
-          });
-          this.publishStatusControl.setValue(isPublished, { emitEvent: false });
+    try {
+      await firstValueFrom(
+        this.dataSetService
+          .publish(currentDataSet.id, isPublished)
+          .pipe(takeUntilDestroyed(this.destroyRef)),
+      );
 
-          const statusText = isPublished ? 'опубліковано' : 'знято з публікації';
-          this.snackBar.open(`Набір "${currentDataSet.name}" ${statusText}`, 'Закрити', {
-            duration: 3000,
-          });
-        },
-        error: (error) => {
-          this.isSaving.set(false);
-          this.publishStatusControl.setValue(currentDataSet.isPublished, { emitEvent: false });
-          console.error('Error changing publish status:', error);
-          const errorMessage = S5App_ErrorHandler.handleHttpError(
-            error,
-            'Помилка зміни статусу публікації',
-          );
-          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-        },
+      this.isSaving.set(false);
+      this.dataSet.set({
+        ...currentDataSet,
+        isPublished,
+        publishedAtUtc: isPublished ? new Date().toISOString() : undefined,
+        validFrom: new Date().toISOString(),
       });
+      this.publishStatusControl.setValue(isPublished, { emitEvent: false });
+
+      const statusText = isPublished ? 'опубліковано' : 'знято з публікації';
+      this.snackBar.open(`Набір "${currentDataSet.name}" ${statusText}`, 'Закрити', {
+        duration: 3000,
+      });
+    } catch (error) {
+      this.isSaving.set(false);
+      this.publishStatusControl.setValue(currentDataSet.isPublished, { emitEvent: false });
+      console.error('Error changing publish status:', error);
+      const errorMessage = S5App_ErrorHandler.handleHttpError(
+        error,
+        'Помилка зміни статусу публікації',
+      );
+      this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+    }
   }
 
   /**
