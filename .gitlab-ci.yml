@@ -33,13 +33,7 @@ deploy-dev:
     - docker pull $IMAGE_TAG
     - docker rm -f app-dev || true
     #- docker run -d --name app-dev -e ASPNETCORE_ENVIRONMENT=Development -p 8081:8080 $IMAGE_TAG
-    - docker run -d \
-        --name app-dev \
-        -p 8080:8080 -p 8081:8081 \
-        -e ASPNETCORE_ENVIRONMENT=Development \
-        -e DOTNET_GENERATE_ASPNET_CERTIFICATE=false \
-        -e ASPNETCORE_URLS="http://+:8080;https://+:8081" \
-        $IMAGE_TAG
+    - docker run -d --name app-dev  -p 8080:8080 -p 8081:8081 -e ASPNETCORE_ENVIRONMENT=Development -e DOTNET_GENERATE_ASPNET_CERTIFICATE=false -e ASPNETCORE_URLS="http://+:8080;https://+:8081" $IMAGE_TAG
     - docker image prune -af
   rules:
     - if: $CI_COMMIT_BRANCH == "development"
