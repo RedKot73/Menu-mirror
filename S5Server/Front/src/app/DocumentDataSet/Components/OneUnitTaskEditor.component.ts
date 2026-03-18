@@ -47,7 +47,7 @@ import {
 import {
   SoldierTaskService,
   SoldierTaskDto,
- // SoldierCountDto,
+  // SoldierCountDto,
 } from '../../../ServerService/soldierTask.service';
 import { SoldierUtils } from '../../Soldier/soldier.utils';
 import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';
@@ -118,7 +118,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     'involvedUnitShortName',
     'comment',
   ];
-//  soldierCount = signal<number>(0);
+  //  soldierCount = signal<number>(0);
   isLoadingSoldiers = signal<boolean>(false);
   soldiersPanelOpened = signal(false);
 
@@ -130,11 +130,11 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
 
   // Стан збереження (для індикації процесу)
   isSaving = signal<boolean>(false);
-  /** Контрол для статусу публікації 
+  /** Контрол для статусу публікації
    * Предотвращает переключение визуального контрола
    * при ошибках в изменении статуса публикации из-за
    * асинхронного обновления unitTask после сохранения.
-  */
+   */
   protected publishStatusControl = new FormControl<boolean>(false, { nonNullable: true });
 
   // Стан редагування засобів
@@ -361,17 +361,17 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     ref.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
         this.unitTaskService.delete(unit.id).subscribe({
-        next: () => {
-          this.remove.emit(unit.id);
-        },
-        error: (error: unknown) => {
-          console.error('Помилка в видаленні підрозділу:', error);
-          const errorMessage = S5App_ErrorHandler.handleHttpError(
-            error,
-            'Помилка видалення підрозділу',
-          );
-          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-        },
+          next: () => {
+            this.remove.emit(unit.id);
+          },
+          error: (error: unknown) => {
+            console.error('Помилка в видаленні підрозділу:', error);
+            const errorMessage = S5App_ErrorHandler.handleHttpError(
+              error,
+              'Помилка видалення підрозділу',
+            );
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          },
         });
       }
     });
@@ -711,7 +711,9 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   onPublishStatusChange(isPublished: boolean): void {
     const currentUnitTask = this.unitTask;
     if (!currentUnitTask || !currentUnitTask.id) {
-      this.publishStatusControl.setValue(currentUnitTask?.isPublished ?? false, { emitEvent: false });
+      this.publishStatusControl.setValue(currentUnitTask?.isPublished ?? false, {
+        emitEvent: false,
+      });
       this.snackBar.open('Неможливо змінити статус: завдання ще не збережено', 'Закрити', {
         duration: 3000,
       });
@@ -739,7 +741,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
 
         // Оновлюємо внутрішній signal
         this.unitTaskSignal.set(updatedUnitTask);
-  this.publishStatusControl.setValue(isPublished, { emitEvent: false });
+        this.publishStatusControl.setValue(isPublished, { emitEvent: false });
 
         // ✅ Сповіщаємо батьківський компонент про зміну
         //this.unitChange.emit(updatedUnitTask);
