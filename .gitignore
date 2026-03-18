@@ -100,7 +100,6 @@ chrome.devtools.json
 /S5Server/Front/dist/Menu
 /S5Server/Front/node_modules
 /S5Server/publish
-/S5Server/wwwroot
 
 # Build artifacts
 /Release
