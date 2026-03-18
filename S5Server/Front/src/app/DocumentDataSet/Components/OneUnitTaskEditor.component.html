@@ -140,6 +140,7 @@
                         mat-icon-button
                         color="warn"
                         matTooltip="Видалити засіб"
+                        [disabled]="isSavingMeans()"
                         (click)="deleteMean(mean)"
                       >
                         <mat-icon>delete</mat-icon>
@@ -175,11 +176,13 @@
                             (keydown.escape)="cancelEditingMean($event)"
                             class="inline-input"
                             min="1"
+                            [disabled]="isSavingMeans()"
                             autofocus
                           />
                           <button
                             mat-icon-button
                             class="save-btn"
+                            [disabled]="isSavingMeans()"
                             (click)="saveMeanFieldChange(mean, 'quantity', $event)"
                             matTooltip="Зберегти"
                           >
@@ -188,6 +191,7 @@
                           <button
                             mat-icon-button
                             class="cancel-btn"
+                            [disabled]="isSavingMeans()"
                             (click)="cancelEditingMean($event)"
                             matTooltip="Відмінити"
                           >
@@ -201,6 +205,7 @@
                           <button
                             mat-icon-button
                             class="edit-btn"
+                            [disabled]="isSavingMeans()"
                             (click)="startEditingMean(mean, 'quantity', $event)"
                             matTooltip="Редагувати"
                           >
