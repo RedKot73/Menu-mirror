@@ -9,6 +9,9 @@ using S5Server.Utils;
 
 namespace S5Server.Controllers;
 
+/// <summary>
+/// API контролер для управління особовим складом (військовослужбовцями), включаючи операції отримання, створення, оновлення, видалення та призначення до підрозділів.
+/// </summary>
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]

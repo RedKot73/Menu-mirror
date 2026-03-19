@@ -14,6 +14,8 @@ RUN dotnet restore "S5Server.csproj"
 # Теперь копируем всё остальное содержимое папки S5Server
 COPY ["S5Server/", "./"]
 
+RUN rm -rf Properties/launchSettings.json || true
+
 # ГЕНЕРАЦИЯ СЕРТИФИКАТА (Решение проблемы HTTPS)
 # Создаем самоподписанный сертификат прямо в процессе сборки
 RUN mkdir -p /app && dotnet dev-certs https -ep /app/aspnetapp.pfx -p devpass

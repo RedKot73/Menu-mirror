@@ -233,17 +233,17 @@ builder.Services.AddCors(options =>
     });
 });
 
-// ✅ Настройка портов в зависимости от окружения
-if (builder.Environment.IsDevelopment())
-{
-    // Dev: локально только HTTPS
-    builder.WebHost.UseUrls("https://localhost:5001");
-}
-else
-{
-    // Production: HTTP для reverse proxy (Azure App Service, Docker, K8s)
-    builder.WebHost.UseUrls("http://*:8080");
-}
+// // ✅ Настройка портов в зависимости от окружения
+// if (builder.Environment.IsDevelopment())
+// {
+//     // Dev: локально только HTTPS
+//     builder.WebHost.UseUrls("https://localhost:5001");
+// }
+// else
+// {
+//     // Production: HTTP для reverse proxy (Azure App Service, Docker, K8s)
+//     builder.WebHost.UseUrls("http://*:8080");
+// }
 
 var app = builder.Build();
 

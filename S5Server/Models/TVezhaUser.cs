@@ -24,9 +24,6 @@ public record LoginDto(
     bool RememberMe = false
 );
 
-/// <summary>
-/// Вимоги до пароля
-/// </summary>
 public record PasswordRequirementsDto(
     /// <summary>
     /// Мінімальна довжина пароля
@@ -62,7 +59,7 @@ public record PasswordRequirementsDto(
 /// <summary>
 /// DTO для перевірки доступності імені користувача
 /// </summary>
-public class CheckUsernameDto
+public record CheckUsernameDto
 {
     /// <summary>
     /// Ім'я користувача для перевірки
@@ -71,17 +68,16 @@ public class CheckUsernameDto
     [StringLength(256, MinimumLength = 3, ErrorMessage = "UserName має бути від 3 до 256 символів")]
     public string UserName { get; set; } = string.Empty;
 
+
     /// <summary>
     /// ID користувача, якщо це оновлення (щоб виключити себе з перевірки)
     /// </summary>
     public Guid? ExcludeUserId { get; set; }
 }
 
-/// <summary>
-/// DTO для валідації пароля
-/// </summary>
-public class ValidatePasswordDto
+public record ValidatePasswordDto
 {
+    /// <summary> DTO для валідації пароля </summary>
     [Required(ErrorMessage = "Пароль обов'язковий")]
     public string Password { get; set; } = string.Empty;
 
@@ -96,7 +92,7 @@ public class ValidatePasswordDto
 /// <summary>
 /// DTO для перевірки доступності email
 /// </summary>
-public class CheckEmailDto
+public record CheckEmailDto
 {
     /// <summary>
     /// Email для перевірки
@@ -147,7 +143,7 @@ public class AdminResetPasswordDto
 /// <summary>
 /// DTO для зміни імені користувача
 /// </summary>
-public class ChangeUsernameDto
+public record ChangeUsernameDto
 {
     /// <summary>
     /// Поточний пароль для підтвердження зміни
