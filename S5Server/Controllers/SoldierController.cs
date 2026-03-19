@@ -36,8 +36,6 @@ public class SoldierController : ControllerBase
         _logger = logger;
     }
 
-    //private IQueryable<Soldier> Query() => SoldierService.GetQuery(_set);
-
     /// <summary>
     /// Список військовослужбовців з фільтрацією.
     /// </summary>
