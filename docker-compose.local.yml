@@ -1,0 +1,23 @@
+
+services:
+  db:
+    # Docker Compose сам соберет образ по вашему Dockerfile
+    build:
+      context: ./deploy/database
+      dockerfile: Dockerfile.local
+    container_name: local-postgres-18
+    # Здесь мы ЯВНО указываем, какого пользователя и БД создать
+    environment:
+      - POSTGRES_USER=my_app_user       # Имя пользователя
+      - POSTGRES_PASSWORD=SecretPass123 # Пароль пользователя
+      - POSTGRES_DB=S5_DB           # Имя базы данных
+    ports:
+      - "5432:5432" # Пробрасываем порт: Левый (ваш ПК) : Правый (внутри контейнера)
+    volumes:
+      # Сохраняем данные локально, чтобы при перезапуске они не удалились
+      #- pg_local_data:/var/lib/postgresql/data
+      - pg_local_data:/var/lib/postgresql/data/pgdata
+
+
+volumes:
+  pg_local_data:     # Правильно: имя тома с двоеточием на конце (это пустой словарь)
