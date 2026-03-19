@@ -1,5 +1,6 @@
 <div class="main-content">
   @if (unitTask; as unit) {
+    @let readOnly = unit.isPublished;
     <!-- Детальная информация о подразделении -->
     <mat-card class="unit-details-card">
       <mat-card-header>
@@ -10,27 +11,21 @@
             <span>Екіпаж/Група</span>
           }
 
-          <mat-button-toggle-group
-            [formControl]="publishStatusControl"
-            (change)="onPublishStatusChange($event.value)"
-            class="status-toggle"
-            [disabled]="isSaving()"
-          >
-            <mat-button-toggle [value]="false" matTooltip="Чернетка">
-              <mat-icon>edit</mat-icon>
-              {{ getStatusLabel(false) }}
-            </mat-button-toggle>
-            <mat-button-toggle [value]="true" matTooltip="Опубліковано">
-              <mat-icon>check_circle</mat-icon>
-              {{ getStatusLabel(true) }}
-            </mat-button-toggle>
-          </mat-button-toggle-group>
+          <div>
+            @if(unit.isPublished) {
+              <mat-icon color="primary">check_circle</mat-icon>
+              <span>Опубліковано</span>
+            } @else {
+              <mat-icon color="warn">edit</mat-icon>
+              <span>Чернетка</span>
+            }
+          </div>
 
           <div class="remove-button-container">
             <button
               mat-icon-button
               matTooltip="Видалити зі списку"
-              [disabled]="unit.isPublished"
+              [disabled]="readOnly"
               (click)="onRemoveClick()"
               class="remove-button"
             >
@@ -71,6 +66,7 @@
                 placeholder="Оберіть завдання"
                 [formControl]="taskControl"
                 (selectionChange)="onTaskChange($event.value)"
+                [disabled]="readOnly"
               >
                 @for (task of unitTasks(); track task.id) {
                   <mat-option [value]="task"
@@ -88,6 +84,7 @@
                 placeholder="Оберіть РВЗ"
                 [formControl]="areaControl"
                 (selectionChange)="onAreaChange($event.value)"
+                [disabled]="readOnly"
               >
                 @for (area of areas(); track area.id) {
                   <mat-option [value]="area">{{ area.value }}</mat-option>
@@ -113,7 +110,7 @@
           <div class="section-content">
             <div class="action-container">
               <div class="action-buttons">
-                <button mat-raised-button color="accent" (click)="addMean()">
+                <button mat-raised-button color="accent" (click)="addMean()" [disabled]="readOnly">
                   <mat-icon>add</mat-icon>
                   Додати засіб
                 </button>
@@ -140,7 +137,7 @@
                         mat-icon-button
                         color="warn"
                         matTooltip="Видалити засіб"
-                        [disabled]="isSavingMeans()"
+                        [disabled]="isSavingMeans() || readOnly"
                         (click)="deleteMean(mean)"
                       >
                         <mat-icon>delete</mat-icon>
@@ -205,7 +202,7 @@
                           <button
                             mat-icon-button
                             class="edit-btn"
-                            [disabled]="isSavingMeans()"
+                            [disabled]="readOnly || isSavingMeans()"
                             (click)="startEditingMean(mean, 'quantity', $event)"
                             matTooltip="Редагувати"
                           >

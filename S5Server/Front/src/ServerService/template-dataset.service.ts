@@ -106,9 +106,9 @@ export class TemplateDataSetService {
    * Змінити статус публікації
    * POST /api/templ_data/data-sets/{id}/publish/{set_publish}
    */
-  publish(id: string, set_publish: boolean): Observable<void> {
+  publish(id: string, set_publish: boolean): Observable<TemplateDataSetDto> {
     return this.http
-      .post<void>(`${this.baseUrl}/data-sets/${id}/publish/${set_publish ? 'true' : 'false'}`, {})
+      .post<TemplateDataSetDto>(`${this.baseUrl}/data-sets/${id}/publish/${set_publish ? 'true' : 'false'}`, {})
       .pipe(
         catchError((error: HttpErrorResponse) => {
           const message = S5App_ErrorHandler.handleHttpError(

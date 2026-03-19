@@ -285,7 +285,8 @@ public class TemplateDataSetController : ControllerBase
     /// Змінити статус публікації
     /// </summary>
     [HttpPost("data-sets/{id}/publish/{set_publish}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Publish(Guid id, bool set_publish, CancellationToken ct = default)
     {
@@ -296,9 +297,12 @@ public class TemplateDataSetController : ControllerBase
             var ds = await _set
                 .AsTracking()
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
-            
+
             if (ds == null)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Id={id}");
+
+            if (ds.IsPublished == set_publish)
+                return Ok(ds.ToDto());
 
             // ✅ Публікація через extension-метод
             ds.Publish(set_publish, User.Identity?.Name ?? "System");
@@ -309,7 +313,7 @@ public class TemplateDataSetController : ControllerBase
                     "Змінено статус публікації набору даних Id={Id}, IsPublished={IsPublished}",
                     id, set_publish);
 
-            return NoContent();
+            return Ok(ds.ToDto());
         }
         catch (OperationCanceledException)
         {

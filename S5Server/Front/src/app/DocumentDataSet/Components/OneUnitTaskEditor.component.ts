@@ -9,6 +9,7 @@ import {
   ViewChild,
   inject,
   signal,
+  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -93,6 +94,11 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   private dialog = inject(MatDialog);
   private destroy$ = new Subject<void>();
 
+  @Output() remove = new EventEmitter<string>();
+  @Output() unitChange = new EventEmitter<UnitTaskDto>();
+  /** Еміт події при зміні стану незбережених змін */
+  @Output() unsavedChangesChange = new EventEmitter<boolean>();
+
   // Сигнал для реактивного відстеження змін unitTask
   private unitTaskSignal = signal<UnitTaskDto | null>(null);
 
@@ -134,6 +140,11 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   // Стан збереження (для індикації процесу)
   isSaving = signal<boolean>(false);
   protected hasUnsavedChanges = signal<boolean>(false);
+  
+  // Effect для відстеження змін hasUnsavedChanges і емітування батьківському компоненту
+  private unsavedChangesEffect = effect(() => {
+    this.unsavedChangesChange.emit(this.hasUnsavedChanges());
+  }, { allowSignalWrites: true });
   /** Контрол для статусу публікації
    * Предотвращает переключение визуального контрола
    * при ошибках в изменении статуса публикации из-за
@@ -157,9 +168,6 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     return this.unitTaskSignal()!;
   }
 
-  @Output() remove = new EventEmitter<string>();
-  @Output() unitChange = new EventEmitter<UnitTaskDto>();
-
   // Form Controls
   protected taskControl = new FormControl<DictUnitTask | null>(null);
   protected areaControl = new FormControl<DictArea | null>(null);
@@ -181,14 +189,6 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
         this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
       },
     });
-
-    // Ініціалізуємо локально додані засоби (якщо є)
-    /*
-    if (this.unitTask.means && this.unitTask.means.length > 0) {
-      this.means.set(this.unitTask.means);
-      this.meansDataSource.data = this.unitTask.means;
-    }
-    */
   }
 
   /**
@@ -197,12 +197,6 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   private initializeControls(): void {
     const unitTask = this.unitTask;
     const tasks = this.unitTasks();
-
-    // Ініціалізуємо засоби
-    if (unitTask.means && unitTask.means.length > 0) {
-      this.means.set(unitTask.means);
-      this.meansDataSource.data = unitTask.means;
-    }
 
     // Ініціалізуємо taskControl якщо завдання вже обрано
     if (unitTask.taskId && tasks.length > 0) {
@@ -262,7 +256,6 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
             this.soldiers.set(soldiers);
             this.soldierDataSource.data = soldiers;
             this.soldierDataSource.sort = this.sort;
-            //this.soldierCount.set(soldiers.length);
           },
           error: (error: unknown) => {
             console.error('Помилка завантаження особового складу підрозділу:', error);
@@ -366,6 +359,10 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
 
     ref.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
+        if(!unit.id) {
+          this.remove.emit(unit.id);
+          return;
+        }
         this.unitTaskService.delete(unit.id).subscribe({
           next: () => {
             this.remove.emit(unit.id);
@@ -384,7 +381,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * Обробник зміни завдання (викликається при selectionChange)
+   * Обробник зміни завдання
    */
   onTaskChange(task: DictUnitTask | null): void {
     if (!task) {
@@ -453,56 +450,55 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
    * @param isInitialization - true якщо це початкова ініціалізація (не емітити зміни)
    */
   private loadAreasByTask(areaTypeId: string, isInitialization: boolean = false): void {
-    // Якщо це завдання типу ППД - використовуємо persistentLocationId як РВЗ
     if (areaTypeId === PPD_AREA_TYPE_GUID) {
-      // Для ППД РВЗ береться з persistentLocationId підрозділу
-      if (this.unitTask.persistentLocationId) {
-        // Створюємо "віртуальний" DictArea об'єкт з persistentLocation
-        const persistentArea: DictArea = {
-          id: this.unitTask.persistentLocationId,
-          value: this.unitTask.persistentLocationValue || 'ППД',
-          areaTypeId: PPD_AREA_TYPE_GUID,
-          areaType: 'ППД',
-        };
-
-        this.areas.set([persistentArea]);
-        this.areaControl.setValue(persistentArea, { emitEvent: false });
-
-        // Оновлюємо unitTask з persistentLocationId як areaId, тільки якщо НЕ ініціалізація
-        if (!isInitialization && this.unitTask.areaId !== this.unitTask.persistentLocationId) {
-          const updatedUnit: UnitTaskDto = {
-            ...this.unitTask,
-            areaId: this.unitTask.persistentLocationId,
-            areaValue: this.unitTask.persistentLocationValue || 'ППД',
-          };
-          this.unitTaskSignal.set(updatedUnit);
-          this.unitChange.emit(updatedUnit);
-        }
-      } else {
-        // Якщо persistentLocationId відсутній - очищуємо
-        this.areas.set([]);
-        this.areaControl.setValue(null, { emitEvent: false });
-        const errorMessage = 'Для підрозділу не вказано ППД. Спочатку вкажіть ППД підрозділу.';
-        console.error(errorMessage);
-        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-      }
+      this.handlePpdAreaType(isInitialization);
       return;
     }
 
-    // Для інших типів завдань - завантажуємо області з сервера
+    this.loadAreasFromServer(areaTypeId, isInitialization);
+  }
+
+  private handlePpdAreaType(isInitialization: boolean): void {
+    const persistentLocationId = this.unitTask.persistentLocationId;
+    if (!persistentLocationId) {
+      this.areas.set([]);
+      this.areaControl.setValue(null, { emitEvent: false });
+      const errorMessage = 'Для підрозділу не вказано ППД. Спочатку вкажіть ППД підрозділу.';
+      console.error(errorMessage);
+      this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+      return;
+    }
+
+    const persistentArea: DictArea = {
+      id: persistentLocationId,
+      value: this.unitTask.persistentLocationValue || 'ППД',
+      areaTypeId: PPD_AREA_TYPE_GUID,
+      areaType: 'ППД',
+    };
+
+    this.areas.set([persistentArea]);
+    this.areaControl.setValue(persistentArea, { emitEvent: false });
+
+    if (!isInitialization && this.unitTask.areaId !== persistentLocationId) {
+      const updatedUnit: UnitTaskDto = {
+        ...this.unitTask,
+        areaId: persistentLocationId,
+        areaValue: this.unitTask.persistentLocationValue || 'ППД',
+      };
+      this.unitTaskSignal.set(updatedUnit);
+      this.unitChange.emit(updatedUnit);
+    }
+  }
+
+  private loadAreasFromServer(areaTypeId: string, isInitialization: boolean): void {
     this.dictAreasService
       .getByAreaType(areaTypeId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (areas) => {
           this.areas.set(areas);
-
-          // Якщо це ініціалізація і areaId вже встановлений - встановлюємо areaControl
-          if (isInitialization && this.unitTask.areaId) {
-            const area = areas.find((a) => a.id === this.unitTask.areaId);
-            if (area) {
-              this.areaControl.setValue(area, { emitEvent: false });
-            }
+          if (isInitialization) {
+            this.applyInitialAreaSelection(areas);
           }
         },
         error: (error) => {
@@ -515,6 +511,31 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
           this.areas.set([]);
         },
       });
+  }
+
+  private applyInitialAreaSelection(areas: DictArea[]): void {
+    if (!this.unitTask.areaId) {
+      return;
+    }
+
+    const area = areas.find((a) => a.id === this.unitTask.areaId);
+    if (area) {
+      this.areaControl.setValue(area, { emitEvent: false });
+      return;
+    }
+
+    // Якщо areaId не знайдено в отриманому списку - очищуємо локальний стан картки
+    const errorMessage = `Область ${this.unitTask.areaValue}\n ${this.unitTask.areaId}
+    не знайдена в отриманому переліку.`;
+    const updatedUnit: UnitTaskDto = {
+      ...this.unitTask,
+      areaId: '',
+      areaValue: '',
+    };
+    this.unitTaskSignal.set(updatedUnit);
+    this.areaControl.setValue(null, { emitEvent: false });
+    this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+    this.hasUnsavedChanges.set(true);
   }
 
   /**
@@ -682,10 +703,21 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * ✅ ПУБЛІЧНИЙ МЕТОД: Зберігає UnitTask + його засоби (means)
+   * Зберігає UnitTask + його засоби (means)
    * Викликається з батьківського компонента при загальному збереженні
    */
-  async saveUnitTask(dataSetId: string): Promise<boolean> {
+  async saveUnitTask(dataSetId: string): Promise<[boolean, string]> {
+    // Перевіряємо обов'язкові поля перед збереженням
+    if (!this.unitTask.taskId) {
+      const msg = `Підрозділ "${this.unitTask.unitShortName}": заповніть завдання`;
+      return [false, msg];
+    }
+
+    if (!this.unitTask.areaId) {
+      const msg = `Підрозділ "${this.unitTask.unitShortName}": заповніть район виконання завдань (РВЗ)`;
+      return [false, msg];
+    }
+    
     this.isSaving.set(true);
 
     try {
@@ -712,7 +744,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
       await this.saveAndReloadMeans(this.unitTask.id);
       this.hasUnsavedChanges.set(false);
 
-      return true;
+      return [true, ''];
     } catch (error) {
       this.hasUnsavedChanges.set(true);
       console.error('Помилка збереження UnitTask:', error);
@@ -720,8 +752,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
         error,
         `Помилка збереження підрозділу "${this.unitTask.unitShortName}"`,
       );
-      this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-      return false;
+      return [false, errorMessage];
     } finally {
       this.isSaving.set(false);
     }
@@ -758,61 +789,82 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * Обробник зміни статусу публікації
+   * Публікує/знімає з публікації UnitTask.
+   * Повертає [true, ''] при успіху або [false, errorMsg] при помилці.
+   * Викликається з батьківського компонента або з onPublishStatusChange.
    */
-  onPublishStatusChange(isPublished: boolean): void {
+  async publishUnitTask(isPublished: boolean): Promise<[boolean, string]> {
     const currentUnitTask = this.unitTask;
-    if (!currentUnitTask || !currentUnitTask.id) {
-      this.publishStatusControl.setValue(currentUnitTask?.isPublished ?? false, {
-        emitEvent: false,
-      });
-      this.snackBar.open('Неможливо змінити статус: завдання ще не збережено', 'Закрити', {
+    if (!currentUnitTask.id) {
+      return [false, `Підрозділ "${currentUnitTask.unitShortName}": завдання не збережено`];
+    }
+
+    if (currentUnitTask.isPublished === isPublished) {
+      return [true, ''];
+    }
+
+    this.isSaving.set(true);
+    try {
+      await firstValueFrom(this.unitTaskService.publish(currentUnitTask.id, isPublished));
+
+      const updatedUnitTask: UnitTaskDto = {
+        ...currentUnitTask,
+        isPublished,
+        publishedAtUtc: isPublished ? new Date().toISOString() : undefined,
+      };
+      this.unitTaskSignal.set(updatedUnitTask);
+      this.publishStatusControl.setValue(isPublished, { emitEvent: false });
+
+      return [true, ''];
+    } catch (error) {
+      console.error('Error changing publish status:', error);
+      const errorMessage = S5App_ErrorHandler.handleHttpError(
+        error,
+        `Помилка зміни статусу публікації підрозділу "${currentUnitTask.unitShortName}"`,
+      );
+      return [false, errorMessage];
+    } finally {
+      this.isSaving.set(false);
+    }
+  }
+
+  /**
+   * Обробник зміни статусу публікації (викликається з шаблону)
+   */
+  async onPublishStatusChange(isPublished: boolean): Promise<void> {
+    // Якщо є незбережені зміни — спочатку зберігаємо
+    if (this.hasUnsavedChanges()) {
+      const [saved, errorMsg] = await this.saveUnitTask(this.unitTask.dataSetId ?? '');
+      if (!saved) {
+        this.snackBar.open(errorMsg || 'Помилка збереження', 'Закрити', { duration: 5000 });
+        this.publishStatusControl.setValue(this.unitTask.isPublished, { emitEvent: false });
+        return;
+      }
+    }
+
+    if (!this.unitTask.id) {
+      this.publishStatusControl.setValue(this.unitTask.isPublished, { emitEvent: false });
+      this.snackBar.open('Неможливо змінити статус: завдання не збережено', 'Закрити', {
         duration: 3000,
       });
       return;
     }
 
-    // Перевіряємо чи статус дійсно змінився
-    if (currentUnitTask.isPublished === isPublished) {
-      return;
+    // Превентивно скидаємо контрол до поточного стану — publishUnitTask оновить при успіху
+    this.publishStatusControl.setValue(this.unitTask.isPublished, { emitEvent: false });
+
+    const [success, errorMsg] = await this.publishUnitTask(isPublished);
+    if (success) {
+      const statusText = this.getStatusLabel(isPublished);
+      this.snackBar.open(
+        `Завдання підрозділу "${this.unitTask.unitShortName}" ${statusText}`,
+        'Закрити',
+        { duration: 3000 },
+      );
+    } else {
+      this.publishStatusControl.setValue(this.unitTask.isPublished, { emitEvent: false });
+      this.snackBar.open(errorMsg, 'Закрити', { duration: 5000 });
     }
-
-    this.publishStatusControl.setValue(currentUnitTask.isPublished, { emitEvent: false });
-    this.isSaving.set(true);
-
-    this.unitTaskService.publish(currentUnitTask.id, isPublished).subscribe({
-      next: () => {
-        this.isSaving.set(false);
-
-        // Оновлюємо локальний unitTask з новим статусом
-        const updatedUnitTask: UnitTaskDto = {
-          ...currentUnitTask,
-          isPublished: isPublished,
-          publishedAtUtc: isPublished ? new Date().toISOString() : undefined,
-        };
-
-        // Оновлюємо внутрішній signal
-        this.unitTaskSignal.set(updatedUnitTask);
-        this.publishStatusControl.setValue(isPublished, { emitEvent: false });
-
-        const statusText = this.getStatusLabel(isPublished);
-        this.snackBar.open(
-          `Завдання підрозділу "${currentUnitTask.unitShortName}" ${statusText}`,
-          'Закрити',
-          { duration: 3000 },
-        );
-      },
-      error: (error) => {
-        this.isSaving.set(false);
-        this.publishStatusControl.setValue(currentUnitTask.isPublished, { emitEvent: false });
-        console.error('Error changing publish status:', error);
-        const errorMessage = S5App_ErrorHandler.handleHttpError(
-          error,
-          'Помилка зміни статусу публікації',
-        );
-        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-      },
-    });
   }
 
   /**

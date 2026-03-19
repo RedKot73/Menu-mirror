@@ -1,5 +1,8 @@
 <app-vertical-layout>
-  @if (selectedUnits().length != 0) {
+  @let currentDataSet = dataSet();
+  @let isPublished = currentDataSet?.isPublished ?? false;
+  @let readOnly = selectedUnits().length === 0 || isPublished;
+  @if (selectedUnits().length != 0 || currentDataSet) {
     <div actionPanel class="action-panel-content">
       <mat-card class="document-card">
         <mat-card-header class="header-layout">
@@ -12,18 +15,18 @@
               color="primary"
               (click)="openUnitSelect()"
               matTooltip="Додати підрозділ"
+              [disabled]="isSaving() || isPublished"
             >
               Додати підрозділ <mat-icon>domain</mat-icon>
             </button>
           </div>
           <div class="header-right">
-            @let currentDataSet = dataSet();
             @if (currentDataSet) {
               <mat-button-toggle-group
                 [formControl]="publishStatusControl"
                 (change)="onPublishStatusChange($event.value)"
                 class="status-toggle"
-                [disabled]="isSaving()"
+                [disabled]="isSaving() || selectedUnits().length === 0"
               >
                 @let statusText =
                   currentDataSet.isPublished
@@ -43,7 +46,7 @@
               mat-raised-button
               color="primary"
               (click)="saveSelectedUnitsAsDataSet()"
-              [disabled]="selectedUnits().length === 0 || !hasUnsavedChanges()"
+              [disabled]="readOnly || !hasUnsavedChanges()"
               matTooltip="Зберегти дані"
             >
               @if (isSaving()) {
@@ -60,6 +63,7 @@
             <input
               type="checkbox"
               id="isParentDocUsed"
+              [disabled]="readOnly"
               [checked]="isParentDocUsed()"
               (change)="onParentDocUsedChange($event)"
             />
@@ -78,6 +82,7 @@
                   [matDatepicker]="parentPicker"
                   [value]="parentDocumentDate()"
                   (dateChange)="onParentDocumentDateChange($event)"
+                  [disabled]="readOnly"
                   required
                 />
                 <mat-datepicker-toggle matIconSuffix [for]="parentPicker"></mat-datepicker-toggle>
@@ -92,6 +97,7 @@
                   type="text"
                   [value]="parentDocumentNumber()"
                   (input)="onParentDocumentNumberChange($event)"
+                  [disabled]="readOnly"
                   required
                 />
               </mat-form-field>
@@ -109,6 +115,7 @@
                 [matDatepicker]="picker"
                 [value]="documentDate()"
                 (dateChange)="onDocumentDateChange($event)"
+                [disabled]="readOnly"
                 required
               />
               <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
@@ -123,6 +130,7 @@
                 type="text"
                 [value]="documentNumber()"
                 (input)="onDocumentNumberChange($event)"
+                [disabled]="readOnly"
                 required
               />
             </mat-form-field>
@@ -145,6 +153,7 @@
           [unitTask]="unitTask"
           (remove)="removeUnitFromSelection($event)"
           (unitChange)="onUnitChange($event)"
+          (unsavedChangesChange)="onUnitUnsavedChanges(unitTask.id, $event)"
         >
         </app-one-unit-task-editor>
       }
