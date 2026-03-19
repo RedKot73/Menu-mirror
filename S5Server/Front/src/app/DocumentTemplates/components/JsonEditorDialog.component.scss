@@ -2,15 +2,9 @@ mat-dialog-content {
   padding: 0 !important;
   margin: 0 !important;
   overflow: hidden !important;
-}
-
-.json-editor-dialog-content {
-  width: 100%;
   height: 70vh;
   display: flex;
   flex-direction: column;
-  position: relative;
-  overflow: hidden;
 }
 
 .editor-toolbar {
