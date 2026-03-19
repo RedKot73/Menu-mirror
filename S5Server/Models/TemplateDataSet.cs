@@ -180,7 +180,7 @@ public static class TemplateDataSetExtensions
     {
         ds.IsPublished = setPublish;
         ds.PublishedAtUtc = setPublish ? DateTime.UtcNow : null;
-        ds.ValidFrom = DateTime.UtcNow;
+        ds.PublishedBy = setPublish ? changedBy : null;
         ds.ValidFrom = DateTime.UtcNow;
         ds.ChangedBy = changedBy;
     }
