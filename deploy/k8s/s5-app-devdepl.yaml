@@ -1,0 +1,82 @@
+# 1. Объявляем версию API и тип ресурса
+apiVersion: apps/v1        # Версия API для работы с контроллерами (стандарт для Deployment)
+kind: Deployment           # Тип объекта — "Развертывание" (управляет группой Подов)
+
+# 2. Метаданные самого Деплоймента
+metadata:
+  name: s5depl       # Уникальное имя этого деплоймента в кластере
+  labels:                  # Метки для организации (например, для поиска в админке)
+    tier: s5depl
+
+# 3. Спецификация — описание "желаемого состояния"
+spec:
+  replicas: 1              # СКОЛЬКО копий приложения должно работать одновременно
+  
+  # Селектор: как Деплоймент поймет, какими Подами он управляет?
+  selector:
+    matchLabels:
+      app: s5-app         # Он будет следить за всеми Подами с меткой s5-app
+  
+  # Шаблон (Template): по этому чертежу будут создаваться новые Поды
+  template:
+    metadata:
+      labels:              # ЭТУ метку мы вешаем на каждый создаваемый Под
+        app: s5-app       # Важно: она должна совпадать с selector выше!
+    
+    # Описание внутренностей Пода
+    spec:
+      containers:
+      - name: s5app-container        # Имя контейнера внутри Пода
+        # Твой собранный Docker-образ
+        image: registry.gitlab.com822.dom/s5/app:development   
+        imagePullPolicy: IfNotPresent # Брать локальный образ, если он есть (важно для Docker Desktop)
+        
+        # Настройки сети внутри контейнера
+        ports:
+        - containerPort: 8080      # HTTP порт приложения
+          name: http-port
+        - containerPort: 8081      # HTTPS порт приложения (как в твоем CI)
+          name: https-port
+
+        # Переменные окружения (ENV)
+        env:
+        - name: DB_HOST
+          value: "s5db-service"      # Имя Сервиса базы (K8s сам найдет IP по этому имени)
+        # ДОБАВЛЕНО: Переменные из твоего Docker-скрипта
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Development"
+        - name: ASPNETCORE_URLS
+          value: "http://+:8080;https://+:8081"
+        
+        # Проверка "готовности" (Readiness Probe)
+        readinessProbe:
+          httpGet:                 # K8s будет "стучаться" по HTTP
+            path: /                # На этот эндпоинт в твоем приложении
+            port: 8080             # На этот порт
+          initialDelaySeconds: 5   # Начать проверку через 5 секунд после старта
+          periodSeconds: 10        # Проверять каждые 10 секунд
+
+---
+# 4. Описание Сервиса (Сетевой доступ к Подам)
+apiVersion: v1
+kind: Service
+metadata:
+  name: s5-app-service  # Имя сервиса (будет доступно как доменное имя в сети кластера)
+spec:
+  # Тип LoadBalancer в Docker Desktop пробросит порт на твой компьютер (localhost)
+  type: LoadBalancer 
+  
+  # Селектор: куда Сервис должен перенаправлять трафик?
+  selector:
+    app: s5-app           # Ищем любые Поды с меткой s5-app
+  
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80                     # Внешний HTTP (localhost:80)
+      targetPort: 8080             # Внутренний HTTP
+    - name: https-legacy-support
+      protocol: TCP
+      port: 443                    # Внешний HTTPS (localhost:443)
+      targetPort: 8080            # <--- Мы всё равно шлем на 8080     
+      
