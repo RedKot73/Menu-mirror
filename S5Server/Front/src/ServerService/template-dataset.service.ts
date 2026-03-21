@@ -103,6 +103,22 @@ export class TemplateDataSetService {
   }
 
   /**
+   * Отримати чернетку нового набору даних (БЕЗ збереження)
+   * GET /api/templ_data/data-sets/add
+   */
+  getAddDataSetDraft(): Observable<TemplateDataSetDto> {
+    return this.http.get<TemplateDataSetDto>(`${this.baseUrl}/data-sets/add`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося отримати чернетку набору даних',
+        );
+        return throwError(() => new Error(message));
+      }),
+    );
+  }
+
+  /**
    * Змінити статус публікації
    * POST /api/templ_data/data-sets/{id}/publish/{set_publish}
    */

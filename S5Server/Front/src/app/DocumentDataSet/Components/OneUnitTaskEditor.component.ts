@@ -389,6 +389,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
         ...this.unitTask,
         taskId: '',
         taskValue: '',
+        taskWithMeans: false,
         areaId: '',
         areaValue: '',
         means: [],
@@ -397,34 +398,36 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
       this.means.set([]);
       this.meansDataSource.data = [];
       this.areas.set([]);
+      this.areaControl.setValue(null, { emitEvent: false });
       this.unitTaskSignal.set(updatedUnit);
       this.unitChange.emit(updatedUnit);
       this.hasUnsavedChanges.set(true);
       return;
     }
 
-    let updatedUnit: UnitTaskDto = {
+    // При зміні завдання тип РВЗ міг змінитися — скидаємо вибір
+    this.areaControl.setValue(null, { emitEvent: false });
+
+    // Засоби завжди скидаємо при зміні завдання —
+    // будуть перезавантажені при відкритті панелі (loadMeans)
+    this.means.set([]);
+    this.meansDataSource.data = [];
+
+    const updatedUnit: UnitTaskDto = {
       ...this.unitTask,
       taskId: task.id,
       taskValue: task.value,
+      taskWithMeans: task.withMeans,
+      areaId: '',    // скидаємо — буде обрано після завантаження нового списку РВЗ
+      areaValue: '',
+      means: [],
     };
-
-    // ✅ Перевіряємо чи потрібні засоби для цього завдання
-    if (!task.withMeans) {
-      // Якщо засоби не використовуються - очищуємо список
-      this.means.set([]);
-      this.meansDataSource.data = [];
-      updatedUnit = {
-        ...updatedUnit,
-        means: [],
-      };
-    }
 
     this.unitTaskSignal.set(updatedUnit);
     this.unitChange.emit(updatedUnit);
     this.hasUnsavedChanges.set(true);
 
-    // Завантажуємо області для обраного завдання (використовуємо areaTypeId з кешованого об'єкта)
+    // Завантажуємо РВЗ для обраного завдання (використовуємо areaTypeId з кешованого об'єкта)
     if (task.areaTypeId) {
       this.loadAreasByTask(task.areaTypeId);
     }

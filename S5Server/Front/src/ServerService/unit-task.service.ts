@@ -123,6 +123,25 @@ export class UnitTaskService {
   }
 
   /**
+   * Отримати чернетку нового UnitTask для підрозділу
+   * GET /api/unit-tasks/add-unit-task?dataSetId={dataSetId}&unitId={unitId}
+   */
+  getAddUnitTaskDraft(dataSetId: string, unitId: string): Observable<UnitTaskDto> {
+    const params = new HttpParams()
+      .set('dataSetId', dataSetId)
+      .set('unitId', unitId);
+    return this.http.get<UnitTaskDto>(`${this.baseUrl}/add-unit-task`, { params }).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося отримати чернетку завдання підрозділу',
+        );
+        return throwError(() => new Error(message));
+      }),
+    );
+  }
+
+  /**
    * Отримати набір даних для формування документу (для Angular)
    * GET /api/unit-tasks/{id}/data-set
    */
