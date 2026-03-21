@@ -17,7 +17,24 @@ using System.Text;
 Console.OutputEncoding = Encoding.UTF8;
 Console.InputEncoding = Encoding.UTF8;
 
+// Читаем локальный .env файл (в продакшене K8s его не будет, и метод просто ничего не сделает)
+DotNetEnv.Env.Load();
+
 var builder = WebApplication.CreateBuilder(args);
+
+// --- ВРЕМЕННАЯ ПРОВЕРКА ДЛЯ ОТЛАДКИ ---
+var testHost = builder.Configuration["PrimaryConnection:DB_Host"];
+if (string.IsNullOrEmpty(testHost))
+{
+    Console.WriteLine("⚠️ ВНИМАНИЕ: Файл .env не загрузился или переменные названы неверно!");
+}
+else
+{
+    Console.WriteLine($"✅ Переменные подхватились! Host: {testHost}");
+}
+// --------------------------------------
+
+
 
 // ✅ Serilog - єдине джерело логування
 Log.Logger = new LoggerConfiguration()
@@ -246,6 +263,32 @@ builder.Services.AddCors(options =>
 // }
 
 var app = builder.Build();
+
+/// === ДОБАВИТЬ: БЛОК АВТОМАТИЧЕСКИХ МИГРАЦИЙ ===
+/* if (args.Contains("--migrate"))
+{
+    Log.Information("=== Запуск режима миграций ===");
+    
+    using var scope = app.Services.CreateScope();
+    // Достаем ваш MainDbContext
+    var dbContext = scope.ServiceProvider.GetRequiredService<MainDbContext>();
+    
+    try
+    {
+        // Накатываем миграции поверх дампа
+        await dbContext.Database.MigrateAsync();
+        Log.Information("=== Миграции успешно применены! ===");
+    }
+    catch (Exception ex)
+    {
+        Log.Fatal(ex, "Ошибка при применении миграций");
+        throw; // Роняем приложение, чтобы CI/CD понял, что произошла ошибка
+    }
+
+    // Завершаем работу программы, так как мы вызывали её только ради миграций
+    return; 
+}
+// === */
 
 // ✅ Конфігурація фонових сервісів
 {

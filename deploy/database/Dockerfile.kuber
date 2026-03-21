@@ -1,0 +1,41 @@
+# 1. Берем официальный базовый образ CNPG (PostgreSQL 18.3)
+FROM ghcr.io/cloudnative-pg/postgresql:18.3
+#FROM postgres:18.3
+# 2. Переключаемся на root для установки системных пакетов
+USER root
+
+#RUN apt-get update && apt-get install -y locales 
+
+
+
+
+# 3. Устанавливаем локали (ОБЯЗАТЕЛЬНО для корректной работы сортировки и кириллицы из дампа)
+RUN apt-get update && apt-get install -y locales \
+    && rm -rf /var/lib/apt/lists/*
+
+# 4. Генерируем нужные локали. 
+# Замените en_US и uk_UA на те, которые использовались в вашей старой базе, если они другие.
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    sed -i -e 's/# uk_UA.UTF-8 UTF-8/uk_UA.UTF-8 UTF-8/' /etc/locale.gen && \
+    locale-gen
+
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
+# 5. КОПИРУЕМ ДАМП ВНУТРЬ ОБРАЗА
+# Папка /docker-entrypoint-initdb.d/ — это специальная директория. 
+# При первом запуске пустого контейнера все .sql скрипты из нее выполнятся автоматически.
+
+# для сбокри  hcr.io/cloudnative-pg/postgresql:18.3
+COPY --chown=26:26 init-dump.sql /docker-entrypoint-initdb.d/
+COPY --chown=26:26 custom-entrypoint.sh /custom-entrypoint.sh
+
+# 5. Делаем скрипт исполняемым
+RUN chmod +x /custom-entrypoint.sh
+# для сбокри  postgres:18.3
+#COPY --chown=postgres:postgres init-dump.sql /docker-entrypoint-initdb.d/
+
+# 6. Возвращаем права системному пользователю postgres (UID 26 - стандарт CNPG)
+#USER postgres
+USER 26
+

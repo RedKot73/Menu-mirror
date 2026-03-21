@@ -10,9 +10,12 @@ RUN apt-get update && apt-get install -y locales \
 
 # 4. Генерируем нужные локали. 
 # Замените en_US и uk_UA на те, которые использовались в вашей старой базе, если они другие.
-RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
-    sed -i -e 's/# uk_UA.UTF-8 UTF-8/uk_UA.UTF-8 UTF-8/' /etc/locale.gen && \
-    locale-gen
+# 2. Установка локалей [cite: 8, 9]
+RUN apt-get update && apt-get install -y locales \
+    && rm -rf /var/lib/apt/lists/* \
+    && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
+    && sed -i -e 's/# uk_UA.UTF-8 UTF-8/uk_UA.UTF-8 UTF-8/' /etc/locale.gen \
+    && locale-gen
 
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
@@ -28,4 +31,4 @@ ENV LC_ALL=en_US.UTF-8
 COPY --chown=postgres:postgres init-dump.sql.gz /docker-entrypoint-initdb.d/
 
 
-USER postgres
+#USER postgres

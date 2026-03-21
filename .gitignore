@@ -1,8 +1,9 @@
 # See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
+init-dump.sql
 
 
-=== Результаты сборки === 
+#=== Результаты сборки === 
 [Bb]in/
 [Oo]bj/
 [Oo]ut/

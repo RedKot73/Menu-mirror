@@ -1,59 +1,26 @@
 stages:
   - build
-  - deploy
+
 variables:
-  # Используем переменную для удобства
   IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
   DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: "" # если не используете TLS
-# Сборка образа
+  DOCKER_TLS_CERTDIR: ""
+
 build-job:
   stage: build
   image: docker:latest
   tags:
-  - wsl-runner.S5
-
+    - wsl-runner.S5
   services:
-  - docker:dind # <--- ДОБАВИТЬ ЭТУ СТРОКУ
-  script:
+    - docker:dind
+  before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    # Сборка образа (без использования --provenance для совместимости)
     - docker build --provenance=false -t $IMAGE_TAG .
+    # Отправка образа в ваш GitLab Container Registry
     - docker push $IMAGE_TAG
-
-# Деплой на DEV (Автоматически из develop)
-deploy-dev:
-  stage: deploy
-  image: docker:latest
-  tags:
-  - wsl-runner.S5
-  environment:
-    name: development
-  script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker pull $IMAGE_TAG
-    - docker rm -f app-dev || true
-    #- docker run -d --name app-dev -e ASPNETCORE_ENVIRONMENT=Development -p 8081:8080 $IMAGE_TAG
-    - docker run -d --name app-dev  -p 8080:8080 -p 8081:8081 -e ASPNETCORE_ENVIRONMENT=Development -e DOTNET_GENERATE_ASPNET_CERTIFICATE=false -e ASPNETCORE_URLS="http://+:8080;https://+:8081" $IMAGE_TAG
-    - docker image prune -af
   rules:
+    # Собираем образ для веток development и main
     - if: $CI_COMMIT_BRANCH == "development"
-
-# Деплой на PROD (Вручную из main)
-deploy-prod:
-  stage: deploy
-  image: docker:latest
-  tags:
-  - wsl-runner.S5
-  environment:
-    name: production
-  script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker pull $IMAGE_TAG
-    - docker rm -f app-prod || true
-    #- docker run -d --name app-prod -e ASPNETCORE_ENVIRONMENT=Production -p 80:8080 $IMAGE_TAG
-    # Запуск с ограничением логов (max-size=10m)
-    - docker run -d --name app-prod --log-opt max-size=10m --log-opt max-file=3 -e ASPNETCORE_ENVIRONMENT=Production -p 80:8080 $IMAGE_TAG
-    - docker image prune -af
-  rules:
     - if: $CI_COMMIT_BRANCH == "main"
-      when: manual

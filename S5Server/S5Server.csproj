@@ -31,6 +31,7 @@
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- PostgreSQL + Entity Framework Core -->
     <!-- ═══════════════════════════════════════════════════════════ -->
+    <PackageReference Include="DotNetEnv" Version="3.1.1" />
     <PackageReference Include="HotChocolate.AspNetCore" Version="15.1.12" />
     <PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="15.1.12" />
     <PackageReference Include="HotChocolate.Data" Version="15.1.12" />
