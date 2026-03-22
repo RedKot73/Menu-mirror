@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - k8s-deployment.yaml
   - k8s-service.yaml
+  - k8s-db-cluster.yaml
 
 images:
   - name: s5-server

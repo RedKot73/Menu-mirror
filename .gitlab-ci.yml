@@ -59,6 +59,7 @@ dry-run-dev:
     - echo "DB_USER=${DB_USER}" > deploy/k8s/overlays/dev/dev.env
     - echo "DB_PASSWORD=${DB_PASSWORD}" >> deploy/k8s/overlays/dev/dev.env
     - echo "DB_NAME=${DB_NAME}" >> deploy/k8s/overlays/dev/dev.env
+    - echo "DB_PORT=${DB_PORT}" >> deploy/k8s/overlays/dev/dev.env
     - echo "Setting image for dev dry-run..."
     - (cd deploy/k8s/overlays/dev && kustomize edit set image s5-server=$APP_IMAGE)
     - echo "Running dry-run for dev..."
@@ -79,6 +80,7 @@ deploy-dev:
     - echo "DB_USER=${DB_USER}" > deploy/k8s/overlays/dev/dev.env
     - echo "DB_PASSWORD=${DB_PASSWORD}" >> deploy/k8s/overlays/dev/dev.env
     - echo "DB_NAME=${DB_NAME}" >> deploy/k8s/overlays/dev/dev.env
+    - echo "DB_PORT=${DB_PORT}" >> deploy/k8s/overlays/dev/dev.env
     - echo "Setting image for dev..."
     - (cd deploy/k8s/overlays/dev && kustomize edit set image s5-server=$APP_IMAGE)
     - echo "Deploying to Kubernetes using dev overlay..."
@@ -97,6 +99,7 @@ deploy-prod:
     - echo "DB_USER=${DB_USER}" > deploy/k8s/overlays/prod/prod.env
     - echo "DB_PASSWORD=${DB_PASSWORD}" >> deploy/k8s/overlays/prod/prod.env
     - echo "DB_NAME=${DB_NAME}" >> deploy/k8s/overlays/prod/prod.env
+    - echo "DB_PORT=${DB_PORT}" >> deploy/k8s/overlays/prod/prod.env
     - echo "Setting image for prod..."
     - (cd deploy/k8s/overlays/prod && kustomize edit set image s5-server=$APP_IMAGE)
     - echo "Deploying to Kubernetes using prod overlay..."

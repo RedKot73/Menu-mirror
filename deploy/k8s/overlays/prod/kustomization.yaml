@@ -11,7 +11,6 @@ configMapGenerator:
   literals:
   - ASPNETCORE_ENVIRONMENT=Production
   - DB_HOST=s5-db-cluster-rw # This should be the production database host
-  - DB_PORT=5432
 
 # Generate the Secret from the .env file
 secretGenerator:
