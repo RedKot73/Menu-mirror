@@ -18,4 +18,4 @@ configMapGenerator:
 secretGenerator:
 - name: s5-db-credentials
   envs:
-  - local.env
+  - ../../../../.env

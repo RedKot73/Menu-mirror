@@ -33,13 +33,21 @@ You do not need to run `kubectl` commands manually for these environments.
 
 ## Local Deployment and Testing
 
-For local development, you'll use the `local` overlay.
+For local development, you'll use the `local` overlay, which sources its secrets from the main `.env` file in the project root.
 
 ### Step 1: Prepare Local Secrets
-- Edit the file `deploy/k8s/overlays/local/local.env`.
-- Fill in the `DB_USER` and `DB_PASSWORD` for your local database instance.
+- Edit the `.env` file in the root of the project.
+- Fill in the `DB_USER`, `DB_PASSWORD`, `DB_NAME`, etc., for your local database instance. The `local` Kustomize overlay is configured to read this file.
 
-### Step 2: Deploy the Database Cluster
+### Step 2: Preview the Generated Manifests (Optional but Recommended)
+Before applying any changes, you can preview all the Kubernetes resources that Kustomize will generate. This is a great way to verify that your secrets and configurations are correct.
+```shell
+# Run this from the project root
+kubectl kustomize deploy/k8s/overlays/local
+```
+This command will print the final `Deployment`, `Service`, `ConfigMap`, and `Secret` manifests to the console.
+
+### Step 3: Deploy the Database Cluster
 This step is the same as before. It sets up the CloudNativePG PostgreSQL cluster.
 ```shell
 # Apply the cluster definition
@@ -50,7 +58,7 @@ kubectl apply -f deploy/k8s/k8s-db-cluster.yaml
 kubectl get cluster -n default
 ```
 
-### Step 3: Deploy the Application using the `local` Overlay
+### Step 4: Deploy the Application using the `local` Overlay
 This single command deploys the application and its configuration.
 ```shell
 # This command builds the final manifests from 'base' and the 'local' overlay
@@ -59,7 +67,7 @@ kubectl apply -k deploy/k8s/overlays/local/
 ```
 **Note**: For this to work, your application image must be available in your local cluster's Docker daemon. You may need to build it locally and, if using Minikube, run `minikube image load <your-image-name>:<tag>`.
 
-### Step 4: Verification and Access
+### Step 5: Verification and Access
 ```shell
 # Check that the deployment was successful and the pod is ready
 kubectl get deployments

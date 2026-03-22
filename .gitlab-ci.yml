@@ -1,5 +1,6 @@
 stages:
   - build
+  - validate
   - deploy
   - verify
 
@@ -47,6 +48,26 @@ build-db:
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_BRANCH == "development"
 
+dry-run-dev:
+  stage: validate
+  image: google/cloud-sdk:latest
+  tags:
+    - wsl-runner.S5
+  script:
+    - echo "Preparing dev environment for dry-run..."
+    # Create .env file to prevent kustomize error
+    - echo "DB_USER=${DB_USER}" > deploy/k8s/overlays/dev/dev.env
+    - echo "DB_PASSWORD=${DB_PASSWORD}" >> deploy/k8s/overlays/dev/dev.env
+    - echo "DB_NAME=${DB_NAME}" >> deploy/k8s/overlays/dev/dev.env
+    - echo "Setting image for dev dry-run..."
+    - (cd deploy/k8s/overlays/dev && kustomize edit set image s5-server=$APP_IMAGE)
+    - echo "Running dry-run for dev..."
+    - kubectl apply -k deploy/k8s/overlays/dev/ --dry-run=client
+    - echo "Rendering final YAML for review..."
+    - kubectl kustomize deploy/k8s/overlays/dev/
+  rules:
+    - if: $CI_COMMIT_BRANCH == "development"
+
 deploy-dev:
   stage: deploy
   image: google/cloud-sdk:latest
@@ -57,6 +78,7 @@ deploy-dev:
     # Create .env file for kustomize secretGenerator from GitLab variables
     - echo "DB_USER=${DB_USER}" > deploy/k8s/overlays/dev/dev.env
     - echo "DB_PASSWORD=${DB_PASSWORD}" >> deploy/k8s/overlays/dev/dev.env
+    - echo "DB_NAME=${DB_NAME}" >> deploy/k8s/overlays/dev/dev.env
     - echo "Setting image for dev..."
     - (cd deploy/k8s/overlays/dev && kustomize edit set image s5-server=$APP_IMAGE)
     - echo "Deploying to Kubernetes using dev overlay..."
@@ -74,6 +96,7 @@ deploy-prod:
     # Create .env file for kustomize secretGenerator from GitLab variables
     - echo "DB_USER=${DB_USER}" > deploy/k8s/overlays/prod/prod.env
     - echo "DB_PASSWORD=${DB_PASSWORD}" >> deploy/k8s/overlays/prod/prod.env
+    - echo "DB_NAME=${DB_NAME}" >> deploy/k8s/overlays/prod/prod.env
     - echo "Setting image for prod..."
     - (cd deploy/k8s/overlays/prod && kustomize edit set image s5-server=$APP_IMAGE)
     - echo "Deploying to Kubernetes using prod overlay..."

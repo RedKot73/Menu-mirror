@@ -12,7 +12,6 @@ configMapGenerator:
   - ASPNETCORE_ENVIRONMENT=Development
   - DB_HOST=s5-db-cluster-rw # This could be a different dev-specific host
   - DB_PORT=5432
-  - DB_NAME=S5_DB_dev # It's good practice to use a separate dev database
 
 # Generate the Secret from the .env file
 secretGenerator:

@@ -38,8 +38,8 @@ spec:
                   key: DB_PORT
             - name: PrimaryConnection__DB_Name
               valueFrom:
-                configMapKeyRef:
-                  name: s5-app-config
+                secretKeyRef:
+                  name: s5-db-credentials
                   key: DB_NAME
             - name: PrimaryConnection__DB_Username
               valueFrom:
@@ -59,13 +59,13 @@ spec:
           # --- Настройки liveness и readiness проб для надежности ---
           livenessProbe:
             httpGet:
-              path: /healthz # Endpoint should be implemented in the app
+              path: / # Endpoint should be implemented in the app
               port: http
             initialDelaySeconds: 15
             periodSeconds: 20
           readinessProbe:
             httpGet:
-              path: /ready # Endpoint should be implemented in the app
+              path: / # Endpoint should be implemented in the app
               port: http
             initialDelaySeconds: 5
             periodSeconds: 10
