@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Inherit from the base configuration
+resources:
+  - ../../base
+
+# Generate the ConfigMap for the local environment
+configMapGenerator:
+- name: s5-app-config
+  literals:
+  - ASPNETCORE_ENVIRONMENT=Development
+  - DB_HOST=s5-db-cluster-rw # Or maybe 'localhost' or a docker service name
+  - DB_PORT=5432
+  - DB_NAME=S5_DB_local
+
+# Generate the Secret from the .env file
+secretGenerator:
+- name: s5-db-credentials
+  envs:
+  - local.env

@@ -25,13 +25,9 @@ ENV LC_ALL=en_US.UTF-8
 # 5. КОПИРУЕМ ДАМП ВНУТРЬ ОБРАЗА
 # Папка /docker-entrypoint-initdb.d/ — это специальная директория. 
 # При первом запуске пустого контейнера все .sql скрипты из нее выполнятся автоматически.
+# Скрипт entrypoint умеет работать с .gz архивами.
+COPY --chown=26:26 init-dump.sql.gz /docker-entrypoint-initdb.d/
 
-# для сбокри  hcr.io/cloudnative-pg/postgresql:18.3
-COPY --chown=26:26 init-dump.sql /docker-entrypoint-initdb.d/
-COPY --chown=26:26 custom-entrypoint.sh /custom-entrypoint.sh
-
-# 5. Делаем скрипт исполняемым
-RUN chmod +x /custom-entrypoint.sh
 # для сбокри  postgres:18.3
 #COPY --chown=postgres:postgres init-dump.sql /docker-entrypoint-initdb.d/
 

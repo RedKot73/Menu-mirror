@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Inherit from the base configuration
+resources:
+  - ../../base
+
+# Generate the ConfigMap for the production environment
+configMapGenerator:
+- name: s5-app-config
+  literals:
+  - ASPNETCORE_ENVIRONMENT=Production
+  - DB_HOST=s5-db-cluster-rw # This should be the production database host
+  - DB_PORT=5432
+  - DB_NAME=S5_DB # Use the production database name
+
+# Generate the Secret from the .env file
+secretGenerator:
+- name: s5-db-credentials
+  envs:
+  - prod.env
