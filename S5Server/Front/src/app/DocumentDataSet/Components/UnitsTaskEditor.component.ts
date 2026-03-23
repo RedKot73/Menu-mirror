@@ -7,6 +7,7 @@ import {
   ElementRef,
   ViewChildren,
   QueryList,
+  output,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Component } from '@angular/core';
@@ -108,6 +109,9 @@ export class UnitsTaskEditor {
    * асинхронного обновления unitTask после сохранения.
    */
   protected publishStatusControl = new FormControl<boolean>(false, { nonNullable: true });
+
+  /** Emits the updated TemplateDataSetDto after a successful save or publish */
+  dataSetChanged = output<TemplateDataSetDto>();
 
   /**
    * Обробник зміни підрозділу з дочірнього компонента
@@ -425,7 +429,21 @@ export class UnitsTaskEditor {
             .updateDataSet(currentDataSet.id, dataSetDto)
             .pipe(takeUntilDestroyed(this.destroyRef)),
         );
-        return await this.saveUnitTasks(currentDataSet.id);
+        const saved = await this.saveUnitTasks(currentDataSet.id);
+        if (saved) {
+          const updatedDto: TemplateDataSetDto = {
+            ...currentDataSet,
+            name: dataSetName,
+            isParentDocUsed: dataSetDto.isParentDocUsed,
+            parentDocNumber: dataSetDto.parentDocNumber ?? null,
+            parentDocDate: dataSetDto.parentDocDate ?? null,
+            docNumber: dataSetDto.docNumber,
+            docDate: dataSetDto.docDate,
+          };
+          this.dataSet.set(updatedDto);
+          this.dataSetChanged.emit(updatedDto);
+        }
+        return saved;
       }
 
       const createdDataSet = await firstValueFrom(
@@ -434,7 +452,11 @@ export class UnitsTaskEditor {
       //Показываем на UI DataSet поля которого могли
       // поменяться после сохранения (наприклад, id, createdAtUtc)
       this.dataSet.set(createdDataSet);
-      return await this.saveUnitTasks(createdDataSet.id);
+      const saved = await this.saveUnitTasks(createdDataSet.id);
+      if (saved) {
+        this.dataSetChanged.emit(createdDataSet);
+      }
+      return saved;
     } catch (error) {
       this.isSaving.set(false);
       console.error('Error saving dataset:', error);
@@ -595,6 +617,7 @@ export class UnitsTaskEditor {
       );
 
       this.setDataSet(updatedDataSet);
+      this.dataSetChanged.emit(updatedDataSet);
 
       const statusText = isPublished ? 'опубліковано' : 'знято з публікації';
       this.snackBar.open(`Набір "${currentDataSet.name}" ${statusText}`, 'Закрити', {

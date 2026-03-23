@@ -54,15 +54,15 @@ export class DocumentDataSetComponent {
    */
   createNewDataSet(): void {
     this.unitsTaskEditor.createNewDataSet();
-    /*
-    this.unitsTaskEditor.createNewDataSet((draftDataSet) => {
-      this.dataSetTable.addDraftDataSet(draftDataSet);
-    });
-    */
   }
 
   /** Оновлю таблицю наборів даних */
   loadDataSets(): void {
     this.dataSetTable.loadDataSets();
+  }
+
+  /** Оновлює рядок таблиці після збереження/публікації в редакторі */
+  onDataSetChanged(dataSet: TemplateDataSetDto): void {
+    this.dataSetTable.updateDataSetRow(dataSet);
   }
 }

@@ -190,6 +190,18 @@ export class DocDataSetsTableComponent implements OnInit {
   }
 
   /**
+   * Оновлює один рядок таблиці після збереження/публікації без перезавантаження всього списку
+   */
+  updateDataSetRow(updated: TemplateDataSetDto): void {
+    this.dataSets.update((items) =>
+      items.map((item) => (item.id === updated.id ? updated : item)),
+    );
+    if (this.selectedDataSet()?.id === updated.id) {
+      this.selectedDataSet.set(updated);
+    }
+  }
+
+  /**
    * Получает читаемое название статуса публикации
    */
   getStatusLabel(isPublished: boolean): string {
