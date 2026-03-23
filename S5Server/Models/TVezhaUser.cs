@@ -5,6 +5,16 @@ using Microsoft.AspNetCore.Identity;
 
 namespace S5Server.Models;
 
+/// <summary>
+/// Represents the data required to create a new user, including identification, credentials, and role assignments.
+/// </summary>
+/// <param name="SoldierId">The unique identifier of the soldier associated with the user. This value is required.</param>
+/// <param name="UserName">The user name for the new user. Must be between 3 and 256 characters in length.</param>
+/// <param name="Email">The email address of the user. Must be a valid email address if provided; otherwise, null.</param>
+/// <param name="Password">The password for the new user. Must be at least 6 characters in length. This value is required.</param>
+/// <param name="EmailConfirmed">A value indicating whether the user's email address has been confirmed. If null, the confirmation status is
+/// unspecified.</param>
+/// <param name="Roles">An array of roles to assign to the user. May be null if no roles are specified.</param>
 public record CreateUserDto(
     [Required]
     Guid SoldierId,
@@ -17,42 +27,37 @@ public record CreateUserDto(
     bool? EmailConfirmed,
     string[]? Roles
 );
-
+/// <summary>
+/// Represents the data required to perform a user login operation.
+/// </summary>
+/// <param name="UserName">The user name associated with the account to authenticate. Cannot be null or empty.</param>
+/// <param name="Password">The password for the specified user account. Cannot be null or empty.</param>
+/// <param name="RememberMe">A value indicating whether the authentication session should be persistent across browser sessions. Set to <see
+/// langword="true"/> to enable persistent login; otherwise, <see langword="false"/>.</param>
 public record LoginDto(
     string UserName,  
     string Password,
     bool RememberMe = false
 );
-
+/// <summary>
+/// Represents the set of requirements that a password must meet for validation.
+/// </summary>
+/// <param name="RequiredLength">The minimum number of characters required for a valid password. Must be a non-negative integer.</param>
+/// <param name="RequireDigit">A value indicating whether at least one numeric digit is required in the password. Set to <see langword="true"/> to
+/// require a digit; otherwise, <see langword="false"/>.</param>
+/// <param name="RequireLowercase">A value indicating whether at least one lowercase letter is required in the password. Set to <see langword="true"/>
+/// to require a lowercase letter; otherwise, <see langword="false"/>.</param>
+/// <param name="RequireUppercase">A value indicating whether at least one uppercase letter is required in the password. Set to <see langword="true"/>
+/// to require an uppercase letter; otherwise, <see langword="false"/>.</param>
+/// <param name="RequireNonAlphanumeric">A value indicating whether at least one non-alphanumeric character (such as a symbol) is required in the password.
+/// Set to <see langword="true"/> to require a non-alphanumeric character; otherwise, <see langword="false"/>.</param>
+/// <param name="RequiredUniqueChars">The minimum number of unique characters that must be present in the password. Must be a non-negative integer.</param>
 public record PasswordRequirementsDto(
-    /// <summary>
-    /// Мінімальна довжина пароля
-    /// </summary>
     int RequiredLength,
-
-    /// <summary>
-    /// Чи потрібна цифра
-    /// </summary>
     bool RequireDigit,
-
-    /// <summary>
-    /// Чи потрібна мала літера
-    /// </summary>
     bool RequireLowercase,
-
-    /// <summary>
-    /// Чи потрібна велика літера
-    /// </summary>
     bool RequireUppercase,
-
-    /// <summary>
-    /// Чи потрібен спеціальний символ
-    /// </summary>
     bool RequireNonAlphanumeric,
-
-    /// <summary>
-    /// Кількість унікальних символів
-    /// </summary>
     int RequiredUniqueChars
 );
 
@@ -74,13 +79,20 @@ public record CheckUsernameDto
     /// </summary>
     public Guid? ExcludeUserId { get; set; }
 }
-
+/// <summary>
+/// Represents the data transfer object used to validate a user's password.
+/// </summary>
+/// <remarks>This record is typically used when submitting password validation requests, such as during
+/// authentication or password change operations. It contains the password to validate, along with optional user
+/// identification fields that may be used for additional verification or context.</remarks>
 public record ValidatePasswordDto
 {
     /// <summary> DTO для валідації пароля </summary>
     [Required(ErrorMessage = "Пароль обов'язковий")]
     public string Password { get; set; } = string.Empty;
-
+    /// <summary>
+    /// Gets or sets the user name associated with the current instance.
+    /// </summary>
     public string UserName { get; set; } = string.Empty;
 
     /// <summary>
