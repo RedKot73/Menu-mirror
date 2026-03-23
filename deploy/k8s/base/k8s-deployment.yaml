@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s5-server-deployment
+  namespace: default
+  labels:
+    app: s5-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: s5-server
+  template:
+    metadata:
+      labels:
+        app: s5-server
+    spec:
+      containers:
+        - name: s5-server
+          # Kustomize заменит этот плейсхолдер реальным образом при деплое
+          image: s5-server:placeholder
+          ports:
+            - containerPort: 8080
+              name: http
+            - containerPort: 8081
+              name: https
+          env:
+            # --- Маппинг переменных из ConfigMap и Secret в формат .NET ---
+            - name: PrimaryConnection__DB_Host
+              valueFrom:
+                configMapKeyRef:
+                  name: s5-app-config
+                  key: DB_HOST
+            - name: PrimaryConnection__Port
+              valueFrom:
+                secretKeyRef:
+                  name: s5-db-credentials
+                  key: DB_PORT
+            - name: PrimaryConnection__DB_Name
+              valueFrom:
+                secretKeyRef:
+                  name: s5-db-credentials
+                  key: DB_NAME
+            - name: PrimaryConnection__DB_Username
+              valueFrom:
+                secretKeyRef:
+                  name: s5-db-credentials
+                  key: DB_USER
+            - name: PrimaryConnection__DB_Password
+              valueFrom:
+                secretKeyRef:
+                  name: s5-db-credentials
+                  key: DB_PASSWORD
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: s5-app-config
+                  key: ASPNETCORE_ENVIRONMENT
+
+          # --- Настройки liveness и readiness проб ---
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10

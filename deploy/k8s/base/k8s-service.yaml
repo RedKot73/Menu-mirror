@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: s5-server-service
+  namespace: default
+spec:
+  # Type: ClusterIP делает сервис доступным только внутри кластера.
+  # Для доступа извне обычно используют NodePort, LoadBalancer или Ingress.
+  type: ClusterIP
+  selector:
+    # Этот селектор должен совпадать с labels в шаблоне пода вашего Deployment
+    app: s5-server
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: http # Имя порта из Deployment (8080)
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: https # Имя порта из Deployment (8081)
