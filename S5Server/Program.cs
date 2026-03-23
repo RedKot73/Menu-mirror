@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.HttpOverrides;
-
 using Npgsql;
-
 using S5Server.Data;
 using S5Server.Models;
 using Serilog;
@@ -17,24 +15,7 @@ using System.Text;
 Console.OutputEncoding = Encoding.UTF8;
 Console.InputEncoding = Encoding.UTF8;
 
-// Читаем локальный .env файл (в продакшене K8s его не будет, и метод просто ничего не сделает)
-DotNetEnv.Env.Load();
-
 var builder = WebApplication.CreateBuilder(args);
-
-// --- ВРЕМЕННАЯ ПРОВЕРКА ДЛЯ ОТЛАДКИ ---
-var testHost = builder.Configuration["PrimaryConnection:DB_Host"];
-if (string.IsNullOrEmpty(testHost))
-{
-    Console.WriteLine("⚠️ ВНИМАНИЕ: Файл .env не загрузился или переменные названы неверно!");
-}
-else
-{
-    Console.WriteLine($"✅ Переменные подхватились! Host: {testHost}");
-}
-// --------------------------------------
-
-
 
 // ✅ Serilog - єдине джерело логування
 Log.Logger = new LoggerConfiguration()
@@ -59,6 +40,20 @@ if (builder.Environment.IsProduction())
 {
     builder.Services.AddApplicationInsightsTelemetry();
 }
+
+// --- ВРЕМЕННАЯ ПРОВЕРКА ДЛЯ ОТЛАДКИ ---
+// Читаем локальный .env файл (в продакшене K8s его не будет, и метод просто ничего не сделает)
+DotNetEnv.Env.Load();
+var testHost = builder.Configuration["PrimaryConnection:DB_Host"];
+if (string.IsNullOrEmpty(testHost))
+{
+    Log.Error("⚠️ ВНИМАНИЕ: Файл .env не загрузился или переменные названы неверно!");
+}
+else
+{
+    Log.Information($"✅ Переменные подхватились! Host: {testHost}");
+}
+// --------------------------------------
 
 var pgConnConfig = new DBConfig();
 builder.Configuration.GetSection(DBConfig.ConfigKey).Bind(pgConnConfig);
@@ -101,7 +96,9 @@ var dataSource = dataSourceBuilder.Build();
 
 // ✅ Використати DataSource замість connectionString
 builder.Services.AddPooledDbContextFactory<MainDbContext>(options =>
-    options.UseNpgsql(dataSource)  // ← Замість connectionString!
+    options.UseNpgsql(dataSource, npgsql =>
+            // ← Явно вказати ім'я таблиці міграцій (UseSnakeCaseNamingConvention змінює його на __ef_migrations_history)
+            npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "public"))  
         .UseSnakeCaseNamingConvention()
         .EnableSensitiveDataLogging(builder.Environment.IsDevelopment())
         .EnableDetailedErrors(builder.Environment.IsDevelopment())
@@ -250,34 +247,45 @@ builder.Services.AddCors(options =>
     });
 });
 
-// // ✅ Настройка портов в зависимости от окружения
-// if (builder.Environment.IsDevelopment())
-// {
-//     // Dev: локально только HTTPS
-//     builder.WebHost.UseUrls("https://localhost:5001");
-// }
-// else
-// {
-//     // Production: HTTP для reverse proxy (Azure App Service, Docker, K8s)
-//     builder.WebHost.UseUrls("http://*:8080");
-// }
 
 var app = builder.Build();
 
-/// === ДОБАВИТЬ: БЛОК АВТОМАТИЧЕСКИХ МИГРАЦИЙ ===
-/* if (args.Contains("--migrate"))
+// === БЛОК АВТОМАТИЧЕСКИХ МИГРАЦИЙ ===
+if (args.Contains("--migrate"))
 {
     Log.Information("=== Запуск режима миграций ===");
-    
+
     using var scope = app.Services.CreateScope();
     // Достаем ваш MainDbContext
     var dbContext = scope.ServiceProvider.GetRequiredService<MainDbContext>();
-    
     try
     {
-        // Накатываем миграции поверх дампа
-        await dbContext.Database.MigrateAsync();
-        Log.Information("=== Миграции успешно применены! ===");
+        // Перевіряємо, чи є в БД таблиці, але немає записів у __EFMigrationsHistory
+        var allMigrations = dbContext.Database.GetMigrations().ToList();
+        var appliedMigrations = (await dbContext.Database.GetAppliedMigrationsAsync()).ToList();
+        /*
+        var tmp = dbContext.Database.SqlQuery<string>(@$"SELECT migration_id
+FROM public.""__EFMigrationsHistory""
+ORDER BY migration_id").ToList();
+        */
+        /*
+        if (appliedMigrations.Count == 0)
+        {
+            // Таблиці вже існують (відновлено з дампу) — реєструємо всі міграції як застосовані
+            foreach (var migration in allMigrations)
+            {
+                await dbContext.Database.ExecuteSqlAsync(
+                    $"""INSERT INTO public."__EFMigrationsHistory" ("MigrationId", "ProductVersion") VALUES ('{migration}', '10.0.4') ON CONFLICT DO NOTHING""");
+            }
+            Log.Information("=== Міграції зареєстровано як застосовані (дамп) ===");
+        }
+        else
+        */
+        {
+            // Накатываем миграции поверх дампа
+            await dbContext.Database.MigrateAsync();
+            Log.Information("=== Миграции успешно применены! ===");
+        }
     }
     catch (Exception ex)
     {
@@ -288,7 +296,6 @@ var app = builder.Build();
     // Завершаем работу программы, так как мы вызывали её только ради миграций
     return; 
 }
-// === */
 
 // ✅ Конфігурація фонових сервісів
 {
@@ -323,7 +330,7 @@ else
 // ✅ Статичні файли з wwwroot (Angular dist)
 app.UseStaticFiles(new StaticFileOptions
 {
-    /*
+    /*Кеширование JS/CSS файлов на 1 год (раскомментировать при необходимости)
     OnPrepareResponse = ctx =>
     {
         // Cache static files for 1 year
