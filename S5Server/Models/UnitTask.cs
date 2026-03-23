@@ -5,6 +5,24 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 namespace S5Server.Models;
 
 /// <summary>
+/// Заглушка для створення UnitTask без Id
+/// </summary>
+/// <param name="Id">The unique identifier for the unit task.</param>
+/// <param name="DataSetId">The identifier of the dataset associated with the unit task.</param>
+/// <param name="UnitId">The identifier of the unit to which the task is assigned.</param>
+/// <param name="TaskId">The identifier of the task being created.</param>
+/// <param name="AreaId">The identifier of the area related to the unit task.</param>
+/// <param name="IsPublished">Indicates whether the unit task is published. Set to <see langword="true"/> if published; otherwise, <see
+/// langword="false"/>.</param>
+public record UnitTaskNewDTO(
+    Guid Id,
+    Guid DataSetId,
+    Guid UnitId,
+    Guid TaskId,
+    Guid AreaId,
+    bool IsPublished);
+
+/// <summary>
 /// DTO для створення UnitTask
 /// </summary>
 public record UnitTaskCreateDto(
@@ -35,7 +53,6 @@ public record UnitTaskDto(
     bool TaskWithMeans,
     Guid AreaId,
     string? AreaValue,          // ✅ ДОДАНО: назва району
-    //int MeansCount,             // ✅ ДОДАНО: кількість засобів
     bool IsPublished,
     DateTime? PublishedAtUtc,
     string ChangedBy,
@@ -224,14 +241,13 @@ public static class UnitTaskExtensions
     /// <param name="unit">Підрозділ</param>
     /// <param name="dataSetId">ID набору даних документу</param>
     /// <param name="task">Завдання підрозділу</param>
-    /// <param name="areaId">ID району виконання завдань</param>
+    /// <param name="area">Район виконання завдань</param>
     /// <param name="changedBy">Хто публікує</param>
     public static UnitTask Create(
         this Unit unit,
-        DictUnitTask task,
         Guid dataSetId,
-        //Guid taskId,
-        Guid areaId,
+        DictUnitTask task,
+        DictArea area,
         string changedBy) =>
         new()
         {
@@ -248,9 +264,11 @@ public static class UnitTaskExtensions
             IsInvolved = unit.IsInvolved,
             PersistentLocationId = unit.PersistentLocationId,
             PersistentLocationValue = unit.PersistentLocation?.Value,
+            Task = task, //проверить что в вызывающем коде стоит DictTask.AsTracking иначе EF Core будет делать лишний INSERT
             TaskId = task.Id,
-            TaskValue = task.Value, 
-            AreaId = areaId,
+            TaskValue = task.Value,
+            Area = area, //проверить что в вызывающем коде стоит DictArea.AsTracking иначе EF Core будет делать лишний INSERT
+            AreaId = area.Id,
             IsPublished = false,
             PublishedAtUtc = DateTime.UtcNow,
             ChangedBy = changedBy,

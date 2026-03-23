@@ -32,7 +32,6 @@ import {
 } from '../../DocumentTemplates/models/template-dataset.models';
 import { TemplateDataSetService } from '../../../ServerService/template-dataset.service';
 import { UnitTaskService } from '../../../ServerService/unit-task.service';
-import { UnitService } from '../../../ServerService/unit.service';
 import { OneUnitTaskEditor } from './OneUnitTaskEditor.component';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 import { TemplateDataSetDto } from '../../DocumentTemplates/models/template-dataset.models';
@@ -72,7 +71,6 @@ export class UnitsTaskEditor {
   private dialog = inject(MatDialog);
 
   private dataSetService = inject(TemplateDataSetService);
-  private unitService = inject(UnitService);
   private unitTaskService = inject(UnitTaskService);
 
   @ViewChild('parentDateInput') parentDateInput?: ElementRef<HTMLInputElement>;
@@ -249,56 +247,36 @@ export class UnitsTaskEditor {
 
   /**
    * Додає підрозділ до списку вибраних
-   * Завантажує Unit через UnitService
    */
   addUnitToSelection(unitId: string) {
     const currentList = this.selectedUnits();
     // Перевіряємо, чи немає вже цього підрозділу в списку
     if (currentList.find((u) => u.unitId === unitId)) {
-      this.snackBar.open('Цей підрозділ вже додано до списку', 'Закрити', { duration: 3000 });
+      this.snackBar.open('Цей підрозділ вже додано до переліку', 'Закрити', { duration: 3000 });
       return;
     }
 
-    // Завантажуємо дані підрозділу через UnitService
-    this.unitService
-      .getById(unitId)
+    const dataSetId = this.dataSet()?.id;
+
+    if (!dataSetId) {
+      this.snackBar.open('Спочатку збережіть набір даних', 'Закрити', { duration: 3000 });
+      return;
+    }
+
+    // Використовуємо серверний API для отримання готової чернетки UnitTask
+    this.unitTaskService
+      .getAddUnitTaskDraft(dataSetId, unitId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (unit) => {
-          // Створюємо новий UnitTask (ще не збережений на сервері)
-          const unitTask: UnitTaskDto = {
-            id: '', // Ще не створено на сервері
-            unitId: unit.id,
-            unitShortName: unit.shortName || '',
-            parentId: unit.parentId,
-            parentShortName: unit.parentShortName || '',
-            assignedUnitId: unit.assignedUnitId,
-            assignedShortName: unit.assignedShortName,
-            unitTypeId: unit.unitTypeId,
-            unitTypeName: unit.unitType,
-            isInvolved: false,
-            persistentLocationId: unit.persistentLocationId,
-            persistentLocationValue: unit.persistentLocation,
-            taskId: '', // Користувач має вибрати
-            taskValue: '',
-            taskWithMeans: false, // За замовчуванням вважаємо, що завдання не має засобів
-            areaId: '', // Користувач має вибрати РВЗ
-            areaValue: '',
-            means: [], //завантажується окремо
-            isPublished: false,
-            publishedAtUtc: undefined,
-            changedBy: '',
-            validFrom: new Date().toISOString(),
-          };
-
+        next: (unitTask) => {
           this.selectedUnits.set([...currentList, unitTask]);
           this.hasUnsavedChanges.set(true);
         },
         error: (error) => {
-          console.error('Помилка завантаження даних підрозділу:', error);
+          console.error('Помилка отримання чернетки завдання підрозділу:', error);
           const errorMessage = S5App_ErrorHandler.handleHttpError(
             error,
-            'Помилка завантаження даних підрозділу',
+            'Помилка отримання чернетки завдання підрозділу',
           );
           this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
         },
@@ -332,22 +310,7 @@ export class UnitsTaskEditor {
       .getDataSetById(dataSetId)
       .pipe(
         tap((dataSet) => {
-          // Зберігаємо інформацію про поточний DataSet
-          this.dataSet.set(dataSet);
-
-          // Оновлюємо дані документа старшого начальника
-          this.isParentDocUsed.set(dataSet.isParentDocUsed);
-          this.parentDocumentDate.set(
-            dataSet.parentDocDate ? new Date(dataSet.parentDocDate) : null,
-          );
-          this.parentDocumentNumber.set(dataSet.parentDocNumber || '');
-
-          // Оновлюємо дату та номер документа
-          this.documentDate.set(new Date(dataSet.docDate));
-          this.documentNumber.set(dataSet.docNumber);
-
-          // Синхронізуємо контрол публікації з завантаженим статусом
-          this.publishStatusControl.setValue(dataSet.isPublished, { emitEvent: false });
+          this.setDataSet(dataSet);
         }),
         switchMap((dataSet) => this.unitTaskService.getAll({ dataSetId: dataSet.id })),
         takeUntilDestroyed(this.destroyRef),
@@ -541,52 +504,37 @@ export class UnitsTaskEditor {
   /**
    * Створює новий набір даних (очищає форму)
    */
-  //  createNewDataSet(onCreated?: (dataSet: TemplateDataSetDto) => void): void {
   createNewDataSet(): void {
     // Перевіряємо наявність незбережених змін
     if (!this.checkUnsavedChanges()) {
       return;
     }
 
+    this.setDataSet(null);
+    this.selectedUnits.set([]);
+
     this.openUnitSelectDialog((unit) => {
-      // Очищаємо поточний DataSet
-      this.dataSet.set(null);
-
-      // Очищуємо всі дані
-      this.selectedUnits.set([]);
-      this.isParentDocUsed.set(false);
-      this.parentDocumentDate.set(null);
-      this.parentDocumentNumber.set('');
-      this.documentDate.set(new Date());
-      this.documentNumber.set('');
-      this.publishStatusControl.setValue(false, { emitEvent: false });
-
-      const nowIso = new Date().toISOString();
-      const draftDataSet: TemplateDataSetDto = {
-        id: '',
-        name: `Набір даних ${Date.now()}`,
-        isParentDocUsed: false,
-        parentDocNumber: null,
-        parentDocDate: null,
-        docNumber: '',
-        docDate: nowIso,
-        isPublished: false,
-        //publishedAtUtc: undefined,
-        createdAtUtc: nowIso,
-        validFrom: nowIso,
-      };
-      //onCreated?.(draftDataSet);
-
-      //показываем на странице новый набор данных,
-      // чтобы пользователь видел, что он сейчас редактирует
-      this.dataSet.set(draftDataSet);
-      // Після створення нового набору одразу додаємо вибраний підрозділ
-      this.addUnitToSelection(unit.id);
-      this.hasUnsavedChanges.set(true);
-
-      this.snackBar.open('Створено новий набір даних і додано підрозділ', 'Закрити', {
-        duration: 3000,
-      });
+      this.dataSetService
+        .getAddDataSetDraft()
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (draftDataSet) => {
+            this.setDataSet(draftDataSet);
+            this.addUnitToSelection(unit.id);
+            this.hasUnsavedChanges.set(true);
+            this.snackBar.open('Створено новий набір даних і додано підрозділ', 'Закрити', {
+              duration: 3000,
+            });
+          },
+          error: (error) => {
+            console.error('Помилка отримання чернетки набору даних:', error);
+            const errorMessage = S5App_ErrorHandler.handleHttpError(
+              error,
+              'Помилка створення нового набору даних',
+            );
+            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+          },
+        });
     });
   }
 
@@ -646,8 +594,7 @@ export class UnitsTaskEditor {
           .pipe(takeUntilDestroyed(this.destroyRef)),
       );
 
-      this.dataSet.set(updatedDataSet);
-      this.publishStatusControl.setValue(updatedDataSet.isPublished, { emitEvent: false });
+      this.setDataSet(updatedDataSet);
 
       const statusText = isPublished ? 'опубліковано' : 'знято з публікації';
       this.snackBar.open(`Набір "${currentDataSet.name}" ${statusText}`, 'Закрити', {
@@ -664,6 +611,31 @@ export class UnitsTaskEditor {
     } finally {
       this.isSaving.set(false);
     }
+  }
+
+  /**
+   * Встановлює поточний DataSet і синхронізує всі поля форми.
+   * При null — скидає форму до значень за замовчуванням.
+   */
+  private setDataSet(dataSet: TemplateDataSetDto | null): void {
+    this.dataSet.set(dataSet);
+
+    if (!dataSet) {
+      this.isParentDocUsed.set(false);
+      this.parentDocumentDate.set(null);
+      this.parentDocumentNumber.set('');
+      this.documentDate.set(new Date());
+      this.documentNumber.set('');
+      this.publishStatusControl.setValue(false, { emitEvent: false });
+      return;
+    }
+
+    this.isParentDocUsed.set(dataSet.isParentDocUsed);
+    this.parentDocumentDate.set(dataSet.parentDocDate ? new Date(dataSet.parentDocDate) : null);
+    this.parentDocumentNumber.set(dataSet.parentDocNumber || '');
+    this.documentDate.set(dataSet.docDate ? new Date(dataSet.docDate) : new Date());
+    this.documentNumber.set(dataSet.docNumber || '');
+    this.publishStatusControl.setValue(dataSet.isPublished, { emitEvent: false });
   }
 
   /**

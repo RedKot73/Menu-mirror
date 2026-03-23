@@ -148,12 +148,12 @@
         <p>Перелік порожній. Додайте підрозділи з дерева.</p>
       </div>
     } @else {
-      @for (unitTask of selectedUnits(); track unitTask.id) {
+      @for (unitTask of selectedUnits(); track unitTask.unitId) {
         <app-one-unit-task-editor
           [unitTask]="unitTask"
           (remove)="removeUnitFromSelection($event)"
           (unitChange)="onUnitChange($event)"
-          (unsavedChangesChange)="onUnitUnsavedChanges(unitTask.id, $event)"
+          (unsavedChangesChange)="onUnitUnsavedChanges(unitTask.unitId, $event)"
         >
         </app-one-unit-task-editor>
       }

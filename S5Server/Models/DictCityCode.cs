@@ -112,54 +112,39 @@ namespace S5Server.Models
         /// </summary>
         [Required]
         public string Id { get; set; } = default!;
+        /// <summary>
+        /// Indicates whether the current item has child elements.
+        /// </summary>
         public bool HasChildren = false;
     }
     /// <summary>
     /// Інформація про кодифікатор адміністративно-територіальних одиниць
     /// з описом рівнів
     /// </summary>
+    /// <param name="CityCodeId">Тут саме string оскільки формат UA01020000000022387</param>
+    /// <param name="CityCode">Назва населеного пункту або адміністративної одиниці</param>
+    /// <param name="Level1">Автономна Республіка Крим, області, міста, що мають спеціальний статус</param>
+    /// <param name="Level1Cat">Категорія рівня 1 (напр. «Обл.»)</param>
+    /// <param name="Level2">Район в області або Автономній Республіці Крим</param>
+    /// <param name="Level2Cat">Категорія рівня 2 (напр. «Р-н»)</param>
+    /// <param name="Level3">Територіальна громада (ТГР)</param>
+    /// <param name="Level3Cat">Категорія рівня 3 (напр. «ТГР»)</param>
+    /// <param name="Level4">Населений пункт (місто, село, селище тощо)</param>
+    /// <param name="Level4Cat">Категорія рівня 4 (напр. «місто», «село»)</param>
+    /// <param name="LevelExt">Район у місті</param>
+    /// <param name="LevelExtCat">Категорія розширеного рівня (напр. «р-н міста»)</param>
     public record CityCodeInfo(
         string? CityCodeId,
         string? CityCode,
-        /// <summary>
-        /// Область
-        /// </summary>
         string? Level1,
-        /// <summary>
-        /// Обл.
-        /// </summary>
         string? Level1Cat,
-        /// <summary>
-        /// Район
-        /// </summary>
         string? Level2,
-        /// <summary>
-        /// Р-н
-        /// </summary>
         string? Level2Cat,
-        /// <summary>
-        /// Громада
-        /// </summary>
         string? Level3,
-        /// <summary>
-        /// ТГР
-        /// </summary>
         string? Level3Cat,
-        /// <summary>
-        /// Населений пункт
-        /// </summary>
         string? Level4,
-        /// <summary>
-        /// місто
-        /// </summary>
         string? Level4Cat,
-        /// <summary>
-        /// Район у місті
-        /// </summary>
         string? LevelExt,
-        /// <summary>
-        /// р-н міста
-        /// </summary>
         string? LevelExtCat
         );
 
@@ -181,15 +166,17 @@ namespace S5Server.Models
     public class DictCityCategory : ShortDictBase, IShortDictBase
     {
         /// <summary>
-        /// Gets or sets the code identifier.
+        /// Gets or sets the identifier code associated with the entity.
         /// </summary>
-        /// <remarks>The code identifier must be a non-empty string with a maximum length of one
-        /// character.</remarks>
-        [StringLength(1), Required]
+        /// <remarks>The value must be a non-empty string with a maximum length of one character. This
+        /// property is required and validation will fail if it is not provided.</remarks>
+        [StringLength(1), Required(ErrorMessage = UIConstant.RequiredMsg)]
         public string CodeId { get; set; } = string.Empty;
         /// <summary>
         /// Gets or sets the collection of city codes associated with the entity.
         /// </summary>
+        /// <remarks>This property is not mapped to the database and is intended for use in application
+        /// logic. The collection may be empty if no city codes are associated.</remarks>
         [NotMapped]
         public List<DictCityCode> CityCodes { get; set; } = [];
     }
@@ -202,10 +189,11 @@ namespace S5Server.Models
     public class DictCityCode
     {
         /// <summary>
-        /// Represents the code for the root city in the city code hierarchy.
-        /// Додано вручну для побудови дерева кодифікаторів,
-        /// оскільки в даних відсутній єдиний кореневий код для всіх записів.
+        /// Represents the root city code used as a default or placeholder value in city-related operations.
         /// </summary>
+        /// <remarks>This constant can be used to identify the root or top-level city in hierarchical city
+        /// structures. It is typically used when a specific city code is not available or when referencing the entire
+        /// city hierarchy.</remarks>
         public const string RootCityCode = "UA00000000000000000";
 
         /// <summary>
@@ -308,7 +296,7 @@ namespace S5Server.Models
         /// <summary>
         /// Gets or sets the string value associated with this property.
         /// </summary>
-        [StringLength(100), Required]
+        [StringLength(100), Required(ErrorMessage = UIConstant.RequiredMsg)]
         public string Value { get; set; } = string.Empty;
         /// <summary>
         /// Gets or sets a value indicating whether the current entity has child entities.
@@ -316,7 +304,7 @@ namespace S5Server.Models
         [NotMapped]
         public bool HasChildren { get; set; } = false;
         /// <summary>
-        /// Gets or sets the collection of child city codes associated with this entity.
+        /// Gets or sets the collection of child city code entries associated with this instance.
         /// </summary>
         [NotMapped]
         public List<DictCityCode> Children { get; set; } = [];
@@ -350,7 +338,16 @@ namespace S5Server.Models
                 Value = cityCode.Value,
                 HasChildren = cityCode.HasChildren
             };
-
+        /// <summary>
+        /// Converts a DictCityCode instance to a CityCodeInfo object, mapping hierarchical city code values and
+        /// categories.
+        /// </summary>
+        /// <remarks>This extension method extracts values and category short values from each
+        /// hierarchical level of the city code. Use this method to simplify access to structured city code information
+        /// for display or processing.</remarks>
+        /// <param name="cityCode">The DictCityCode instance containing city code information to convert. Cannot be null.</param>
+        /// <returns>A CityCodeInfo object populated with values and categories from the specified cityCode. Returns null if
+        /// cityCode is null.</returns>
         public static CityCodeInfo ToCityCodeInfo(this DictCityCode cityCode) =>
             new(
                 cityCode.Id,
