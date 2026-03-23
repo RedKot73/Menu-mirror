@@ -3,19 +3,9 @@ import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http'
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-import { DroneModelTaskDto } from '../app/DocumentTemplates/models/template-dataset.models';
+import { DroneModelTaskDto } from '../app/DocumentDataSet/models/template-dataset.models';
 import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
 
-/**
- * DTO для створення DroneModelTask
- */
-/*
-export interface DroneModelTaskCreateDto {
-  unitTaskId: string;
-  droneModelId: string;
-  quantity: number;
-}
-*/
 /**
  * DTO для оновлення DroneModelTask
  */
