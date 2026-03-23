@@ -1,26 +1,149 @@
 stages:
   - build
+  - validate
+  - deploy
+  - verify
 
 variables:
-  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
-  DOCKER_DRIVER: overlay2
+  # Формируем базовое имя образа из настроек GitLab
+  APP_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  DB_IMAGE: $CI_REGISTRY_IMAGE-db:$CI_COMMIT_REF_SLUG
   DOCKER_TLS_CERTDIR: ""
 
-build-job:
+build-app:
   stage: build
   image: docker:latest
   tags:
     - wsl-runner.S5
   services:
-    - docker:dind
+    - name: docker:dind
+      alias: docker
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    # Сборка образа (без использования --provenance для совместимости)
-    - docker build --provenance=false -t $IMAGE_TAG .
-    # Отправка образа в ваш GitLab Container Registry
-    - docker push $IMAGE_TAG
+    - echo "Building app image: $APP_IMAGE"
+    # Сборка основного образа приложения
+    - docker build --provenance=false -f Dockerfile -t $APP_IMAGE .
+    - docker push $APP_IMAGE
   rules:
-    # Собираем образ для веток development и main
-    - if: $CI_COMMIT_BRANCH == "development"
     - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "development"
+
+build-db:
+  stage: build
+  image: docker:latest
+  tags:
+    - wsl-runner.S5
+  services:
+    - name: docker:dind
+      alias: docker
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - echo "Building database image: $DB_IMAGE"
+    # Сборка образа базы данных
+    - docker build --provenance=false -f ./deploy/database/Dockerfile.kuber -t $DB_IMAGE ./deploy/database
+    - docker push $DB_IMAGE
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "development"
+
+dry-run-dev:
+  stage: validate
+  image: google/cloud-sdk:latest
+  tags:
+    - wsl-runner.S5
+  script:
+    - echo "Preparing dev environment for dry-run..."
+    # Create .env file to prevent kustomize error
+    - echo "DB_USER=${DB_USER}" > deploy/k8s/overlays/dev/dev.env
+    - echo "DB_PASSWORD=${DB_PASSWORD}" >> deploy/k8s/overlays/dev/dev.env
+    - echo "DB_NAME=${DB_NAME}" >> deploy/k8s/overlays/dev/dev.env
+    - echo "DB_PORT=${DB_PORT}" >> deploy/k8s/overlays/dev/dev.env
+    - echo "Setting image for dev dry-run..."
+    - (cd deploy/k8s/overlays/dev && kustomize edit set image s5-server=$APP_IMAGE)
+    - echo "Running dry-run for dev..."
+    - kubectl apply -k deploy/k8s/overlays/dev/ --dry-run=client
+    - echo "Rendering final YAML for review..."
+    - kubectl kustomize deploy/k8s/overlays/dev/
+  rules:
+    - if: $CI_COMMIT_BRANCH == "development"
+
+deploy-dev:
+  stage: deploy
+  image: google/cloud-sdk:latest
+  tags:
+    - wsl-runner.S5
+  script:
+    - echo "Preparing dev environment deployment..."
+    # Create .env file for kustomize secretGenerator from GitLab variables
+    - echo "DB_USER=${DB_USER}" > deploy/k8s/overlays/dev/dev.env
+    - echo "DB_PASSWORD=${DB_PASSWORD}" >> deploy/k8s/overlays/dev/dev.env
+    - echo "DB_NAME=${DB_NAME}" >> deploy/k8s/overlays/dev/dev.env
+    - echo "DB_PORT=${DB_PORT}" >> deploy/k8s/overlays/dev/dev.env
+    - echo "Setting image for dev..."
+    - (cd deploy/k8s/overlays/dev && kustomize edit set image s5-server=$APP_IMAGE)
+    - echo "Deploying to Kubernetes using dev overlay..."
+    - kubectl apply -k deploy/k8s/overlays/dev/
+  rules:
+    - if: $CI_COMMIT_BRANCH == "development"
+
+deploy-prod:
+  stage: deploy
+  image: google/cloud-sdk:latest
+  tags:
+    - wsl-runner.S5
+  script:
+    - echo "Preparing prod environment deployment..."
+    # Create .env file for kustomize secretGenerator from GitLab variables
+    - echo "DB_USER=${DB_USER}" > deploy/k8s/overlays/prod/prod.env
+    - echo "DB_PASSWORD=${DB_PASSWORD}" >> deploy/k8s/overlays/prod/prod.env
+    - echo "DB_NAME=${DB_NAME}" >> deploy/k8s/overlays/prod/prod.env
+    - echo "DB_PORT=${DB_PORT}" >> deploy/k8s/overlays/prod/prod.env
+    - echo "Setting image for prod..."
+    - (cd deploy/k8s/overlays/prod && kustomize edit set image s5-server=$APP_IMAGE)
+    - echo "Deploying to Kubernetes using prod overlay..."
+    - kubectl apply -k deploy/k8s/overlays/prod/
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  when: manual
+
+verify-db-cluster:
+  stage: verify
+  image: google/cloud-sdk:latest
+  tags:
+    - wsl-runner.S5
+  script:
+    - echo "Verifying database cluster readiness..."
+    - TIMEOUT=900 # 15 минут таймаут
+    - SECONDS=0
+    - |
+      while [ $SECONDS -lt $TIMEOUT ]; do
+        # Получаем статус инстансов
+        READY_INSTANCES=$(kubectl get cluster s5-db-cluster -n default -o jsonpath='{.status.readyInstances}')
+        TOTAL_INSTANCES=$(kubectl get cluster s5-db-cluster -n default -o jsonpath='{.spec.instances}')
+        
+        if [ "$READY_INSTANCES" == "$TOTAL_INSTANCES" ] && [ -n "$READY_INSTANCES" ]; then
+          echo "Cluster is ready! ($READY_INSTANCES/$TOTAL_INSTANCES instances)"
+          POD_NAME=$(kubectl get pods -n default -l cnpg.io/cluster=s5-db-cluster,cnpg.io/instanceRole=primary -o jsonpath='{.items[0].metadata.name}')
+          echo "Checking logs of pod: $POD_NAME"
+          # "database system is ready to accept connections" - стандартное сообщение о готовности Postgres
+          if kubectl logs $POD_NAME -n default | grep "database system is ready to accept connections"; then
+            echo "Verification successful: Database is ready and accepting connections."
+            exit 0
+          else
+            echo "Error: Cluster is ready, but log verification failed."
+            kubectl logs $POD_NAME -n default
+            exit 1
+          fi
+        fi
+        
+        echo "Waiting for cluster to be ready... ($READY_INSTANCES/$TOTAL_INSTANCES ready)"
+        sleep 30
+        SECONDS=$((SECONDS + 30))
+      done
+    - echo "Timeout waiting for cluster to become ready."
+    - exit 1
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "development"

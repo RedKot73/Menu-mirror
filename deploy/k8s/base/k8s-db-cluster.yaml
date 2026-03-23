@@ -1,0 +1,28 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: s5-db-cluster
+  namespace: default
+spec:
+  instances: 1
+  imageName: ${DB_IMAGE}
+
+  # Описание подключения к базе данных
+  database:
+    name:
+      configMapKeyRef:
+        name: s5-app-config
+        key: DB_NAME
+    owner:
+      secretKeyRef:
+        name: s5-db-credentials
+        key: DB_USER
+  
+  # Настройки хранилища
+  storage:
+    size: 1Gi
+    storageClass: standard # Укажите ваш StorageClass, если он отличается
+  
+  # Мониторинг (опционально, можно включить позже)
+  # monitoring:
+  #   enablePodMonitor: true
