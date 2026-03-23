@@ -39,7 +39,7 @@ import { TemplateDataSetDto } from '../../DocumentTemplates/models/template-data
 import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';
 import { VerticalLayoutComponent } from '../../shared/components/VerticalLayout.component';
 import { DateMaskDirective } from '../../shared/directives/date-mask.directive';
-import { formatDate } from '../../shared/utils/date.utils';
+import { formatDate, parseDateString } from '../../shared/utils/date.utils';
 import { UnitSelectDialogComponent } from '../../dialogs/UnitSelect-dialog.component';
 import { ErrorListSnackBarComponent } from '../../dialogs/ErrorListSnackbar.component';
 
@@ -162,7 +162,7 @@ export class UnitsTaskEditor {
     const inputElement = event.targetElement as HTMLInputElement;
 
     // Пытаемся распарсить то, что ввел пользователь вручную
-    const manualDate = DocTemplateUtils.parseDateString(inputElement.value);
+    const manualDate = parseDateString(inputElement.value);
 
     // Если ручной парсинг удался — берем его, иначе берем то, что определил Material
     const finalDate = manualDate || event.value;
@@ -187,7 +187,7 @@ export class UnitsTaskEditor {
     const inputElement = event.targetElement as HTMLInputElement;
 
     // Пытаемся распарсить то, что ввел пользователь вручную
-    const manualDate = DocTemplateUtils.parseDateString(inputElement.value);
+    const manualDate = parseDateString(inputElement.value);
 
     // Если ручной парсинг удался — берем его, иначе берем то, что определил Material
     const finalDate = manualDate || event.value;

@@ -33,6 +33,7 @@ import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';
 import { VerticalLayoutComponent } from '../../shared/components/VerticalLayout.component';
 import { JsonEditorDialogComponent } from './JsonEditorDialog.component';
 import { GraphqlDataService } from '../../../ServerService/graphql-data.service';
+import { formatDate } from '../../shared/utils/date.utils';
 
 @Component({
   selector: 'app-units-task-viewer',
@@ -206,7 +207,7 @@ export class UnitsTaskViewer {
   }
 
   formatDate(dateString: string): string {
-    return DocTemplateUtils.formatDate(dateString);
+    return formatDate(dateString);
   }
 
   showJson(): void {

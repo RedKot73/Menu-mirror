@@ -19,6 +19,7 @@ import { TemplateDataSetService } from '../../../ServerService/template-dataset.
 import { TemplateDataSetDto } from '../../DocumentTemplates/models/template-dataset.models';
 import { ConfirmDialogComponent } from '../../dialogs/ConfirmDialog.component';
 import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';
+import { formatDate } from '../../shared/utils/date.utils';
 
 @Component({
   selector: 'app-template-dataset-table',
@@ -199,7 +200,7 @@ export class DocDataSetsTableComponent implements OnInit {
    * Форматує дату для відображення
    */
   formatDate(dateString: string): string {
-    return DocTemplateUtils.formatDate(dateString);
+    return formatDate(dateString);
   }
 
   cloneDataSet(_dataSet: TemplateDataSetDto) {

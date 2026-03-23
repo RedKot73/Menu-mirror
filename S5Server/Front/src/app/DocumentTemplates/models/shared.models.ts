@@ -1,9 +1,8 @@
 // Utility типи та константи
-import { formatDate, parseDateString } from '../../shared/utils/date.utils';
 export type TemplateDataSetStatus = 'published' | 'draft';
 
 // Реекспорт для зворотної сумісності
-export { formatDate, parseDateString } from '../../shared/utils/date.utils';
+//export { formatDate, parseDateString } from '../../shared/utils/date.utils';
 
 /**
  * Утилітарний клас для DocumentTemplates.
@@ -17,10 +16,4 @@ export class DocTemplateUtils {
   static getStatusLabel(isPublished: boolean): string {
     return isPublished ? 'Опубліковано' : 'Чернетка';
   }
-
-  /** @deprecated використовуйте formatDate() напряму */
-  static formatDate = formatDate;
-
-  /** @deprecated використовуйте parseDateString() напряму */
-  static parseDateString = parseDateString;
 }
