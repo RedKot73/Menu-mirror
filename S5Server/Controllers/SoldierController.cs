@@ -21,6 +21,9 @@ public class SoldierController : ControllerBase
     private readonly DbSet<Soldier> _set;
     private readonly ILogger<SoldierController> _logger;
 
+    /// <summary>
+    /// API контролер для управління особовим складом (військовослужбовцями), включаючи операції отримання, створення, оновлення, видалення та призначення до підрозділів.
+    /// </summary>
     public SoldierController(MainDbContext db, ILogger<SoldierController> logger)
     {
         _db = db;
@@ -29,7 +32,7 @@ public class SoldierController : ControllerBase
     }
 
     /// <summary>
-    /// Список військовослужбовців з фільтрацією.
+    /// Перелік військовослужбовців з фільтрацією.
     /// </summary>
     /// <param name="search">Пошук по ПІБ / позивному / номеру частини підрозділу.</param>
     /// <param name="unitId">Фільтр по основному підрозділу.</param>
@@ -115,7 +118,7 @@ public class SoldierController : ControllerBase
     }
 
     /// <summary>
-    /// Список військовослужбовців за приданим підрозділом.
+    /// Перелік військовослужбовців за приданим підрозділом.
     /// </summary>
     [HttpGet("by-assigned")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -165,7 +168,7 @@ public class SoldierController : ControllerBase
     }
 
     /// <summary>
-    /// Список військовослужбовців за оперативним підрозділом.
+    /// Перелік військовослужбовців за оперативним підрозділом.
     /// </summary>
     [HttpGet("by-involved")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -256,6 +259,17 @@ public class SoldierController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Retrieves a soldier by the specified unique identifier.
+    /// </summary>
+    /// <remarks>Returns a 200 OK response with the soldier data if found. Returns a 404 Not Found response if
+    /// no soldier exists with the specified identifier. Returns a 400 Bad Request response if <paramref name="id"/> is
+    /// empty. If the operation is canceled, returns a 499 status code. For unexpected errors, returns a 500 Internal
+    /// Server Error.</remarks>
+    /// <param name="id">The unique identifier of the soldier to retrieve. Must not be <see cref="Guid.Empty"/>.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>An <see cref="ActionResult{SoldierDto}"/> containing the soldier data if found; otherwise, a result indicating
+    /// the error condition, such as not found or bad request.</returns>
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -284,6 +298,17 @@ public class SoldierController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Creates a new soldier record based on the provided data.
+    /// </summary>
+    /// <remarks>Returns validation errors if required fields are missing or invalid. Handles uniqueness and
+    /// concurrency conflicts by returning appropriate HTTP status codes. The created soldier is returned in the
+    /// response body upon success.</remarks>
+    /// <param name="dto">The data transfer object containing information required to create a new soldier. Must include valid values for
+    /// all required fields.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>A 201 Created response containing the created soldier if successful; a 400 Bad Request response if the input is
+    /// invalid; or a 409 Conflict response if a uniqueness or concurrency conflict occurs.</returns>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -420,6 +445,15 @@ public class SoldierController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Deletes the entity with the specified identifier.
+    /// </summary>
+    /// <remarks>Returns 400 Bad Request if the identifier is empty. Returns 499 if the operation is canceled
+    /// by the client. Returns 500 Internal Server Error for unexpected errors.</remarks>
+    /// <param name="id">The unique identifier of the entity to delete. Cannot be empty.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the delete operation.</param>
+    /// <returns>A result indicating the outcome of the delete operation. Returns 204 No Content if the entity was deleted
+    /// successfully, or 404 Not Found if the entity does not exist.</returns>
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

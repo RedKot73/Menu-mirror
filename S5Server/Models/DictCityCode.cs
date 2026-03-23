@@ -170,7 +170,7 @@ namespace S5Server.Models
         /// </summary>
         /// <remarks>The value must be a non-empty string with a maximum length of one character. This
         /// property is required and validation will fail if it is not provided.</remarks>
-        [StringLength(1), Required(ErrorMessage = UIConstant.RequiredMsg)]
+        [StringLength(1), Required]
         public string CodeId { get; set; } = string.Empty;
         /// <summary>
         /// Gets or sets the collection of city codes associated with the entity.
@@ -296,7 +296,7 @@ namespace S5Server.Models
         /// <summary>
         /// Gets or sets the string value associated with this property.
         /// </summary>
-        [StringLength(100), Required(ErrorMessage = UIConstant.RequiredMsg)]
+        [StringLength(100), Required]
         public string Value { get; set; } = string.Empty;
         /// <summary>
         /// Gets or sets a value indicating whether the current entity has child entities.
