@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using S5Server.Data;
 using S5Server.Models;
 using S5Server.Utils;
+using System.Data;
 
 namespace S5Server.Controllers;
 
@@ -35,7 +36,7 @@ public class TemplateDataSetController : ControllerBase
     /// validation, uniqueness conflicts, and not found scenarios. Logging is used to record significant actions and errors.
     /// All endpoints require valid input parameters and may return detailed error information in case of
     /// failures.</remarks>
-    public TemplateDataSetController(MainDbContext db, 
+    public TemplateDataSetController(MainDbContext db,
         ILogger<TemplateDataSetController> logger)
     {
         _db = db;
@@ -79,93 +80,6 @@ public class TemplateDataSetController : ControllerBase
         }
     }
 
-
-
-    /// <summary>
-    /// Отримати чернову версію набору даних для дозаповнення користувачем (БЕЗ збереження)
-    /// </summary>
-    [HttpGet("data-sets/add")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult AddDataSet()
-    {
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        var draft = new TemplateDataSetDto(
-            Id: Guid.CreateVersion7(),
-            IsParentDocUsed: false,
-            ParentDocNumber: null,
-            ParentDocDate: null,
-            Name: string.Empty,
-            DocNumber: string.Empty,
-            DocDate: today,
-            IsPublished: false,
-            PublishedAtUtc: null,
-            CreatedAtUtc: DateTime.UtcNow,
-            ValidFrom: DateTime.UtcNow);
-
-        return Ok(draft);
-    }
-
-    /// <summary>
-    /// Створити новий набір даних
-    /// </summary>
-    [HttpPost("data-sets")]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> CreateDataSet(
-        [FromBody] TemplateDataSetUpSertDto dto,
-        CancellationToken ct = default)
-    {
-        if (!ModelState.IsValid)
-            return ValidationProblem(ModelState);
-
-        // ✅ Валідація через extension-метод
-        var (isValid, errorMessage) = dto.ValidateParentDoc();
-        if (!isValid)
-            return BadRequest(errorMessage);
-
-        try
-        {
-            var ds = dto.FromCreateDto(User.Identity?.Name ?? "System");
-            _set.Add(ds);
-            try
-            {
-                await _db.SaveChangesAsync(ct);
-
-                if (_logger.IsEnabled(LogLevel.Information))
-                    _logger.LogInformation(
-                        "Створено набір даних DataSetId={Id}, Name={Name}, DocNumber={DocNumber}",
-                        ds.Id, ds.Name, ds.DocNumber);
-
-                return CreatedAtAction(
-                    nameof(GetDataSet), 
-                    new { dataSetId = ds.Id }, 
-                    ds.ToDto());
-            }
-            catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
-            {
-                if (_logger.IsEnabled(LogLevel.Information))
-                    _logger.LogInformation(ex, "Конфлікт унікальності набору даних Name={Name}", ds.Name);
-                
-                return Problem(
-                    statusCode: 409,
-                    title: "Конфлікт унікальності",
-                    detail: $"Набір даних з іменем \"{ds.Name}\" вже існує.",
-                    extensions: new Dictionary<string, object?> { ["field"] = "Name", ["value"] = ds.Name });
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            return Problem(statusCode: 499, title: "Скасовано кліентом");
-        }
-        catch (Exception ex)
-        {
-            if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Помилка створення набору даних");
-            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
-        }
-    }
-
     /// <summary>
     /// Отримати набір даних за ID (БЕЗ деталей)
     /// </summary>
@@ -198,6 +112,75 @@ public class TemplateDataSetController : ControllerBase
     }
 
     /// <summary>
+    /// Створити новий набір даних
+    /// </summary>
+    [HttpPost("data-sets")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<TemplateDataSetDto>> CreateDataSet(
+        [FromBody] TemplateDataSetCreateDto dto,
+        CancellationToken ct = default)
+    {
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        // Валідація через extension-метод
+        var (isValid, errorMessage) = dto.ValidateParentDoc();
+        if (!isValid)
+            return BadRequest(errorMessage);
+
+        try
+        {
+            var ds = dto.FromCreateDto(User.Identity?.Name ?? "System");
+            _set.Add(ds);
+            try
+            {
+                await _db.SaveChangesAsync(ct);
+                var result = await _set.AsNoTracking()
+                    .Where(t => t.Id == ds.Id)
+                    .Select(t => t.ToDto())
+                    .FirstOrDefaultAsync(ct);
+
+                if (result == null)
+                    return Problem(statusCode: 404, title: "Помилка створення, не знайдено", detail: $"DataSetId={ds.Id}");
+
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation(
+                        "Створено набір даних DataSetId={Id}, Name={Name}, DocNumber={DocNumber}",
+                        ds.Id, ds.Name, ds.DocNumber);
+
+                return CreatedAtAction(
+                    nameof(GetDataSet),
+                    new { dataSetId = ds.Id },
+                    result);
+            }
+            catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
+            {
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation(ex, "Конфлікт унікальності набору даних Name={Name}", ds.Name);
+
+                return Problem(
+                    statusCode: 409,
+                    title: "Конфлікт унікальності",
+                    detail: $"Набір даних з іменем \"{ds.Name}\" вже існує.",
+                    extensions: new Dictionary<string, object?> { ["field"] = "Name", ["value"] = ds.Name });
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка створення набору даних");
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+    /// <summary>
     /// Upsert набору даних: оновлює якщо існує, створює якщо ні
     /// </summary>
     [HttpPut("data-sets/{id}")]
@@ -205,9 +188,9 @@ public class TemplateDataSetController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> UpdateDataSet(
+    public async Task<ActionResult<TemplateDataSetDto>> UpdateDataSet(
         Guid id,
-        [FromBody] TemplateDataSetUpSertDto dto,
+        [FromBody] TemplateDataSetDto dto,
         CancellationToken ct = default)
     {
         if (id == Guid.Empty)
@@ -226,41 +209,22 @@ public class TemplateDataSetController : ControllerBase
             var ds = await _set
                 .AsTracking()
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
-
-            var isNew = ds == null;
             if (ds == null)
-            {
-                ds = dto.FromCreateDto(changedBy);
-                ds.Id = id;
-                _set.Add(ds);
-            }
-            else
-            {
-                if (ds.IsEqualTo(dto))
-                    return Ok(ds.ToDto());
-                ds.UpdateFrom(dto, changedBy);
-            }
+                return Problem(statusCode: 404, title: "Не знайдено", detail: $"DataSetId={id}");
+
+            if (ds.IsEqualTo(dto))
+                return Ok(ds.ToDto());
+
+            ds.UpdateFrom(dto, changedBy);
 
             await _db.SaveChangesAsync(ct);
-
             if (_logger.IsEnabled(LogLevel.Information))
-                if (isNew)
-                {
-                    _logger.LogInformation(
-                        "Upsert (CREATE) набір даних DataSetId={Id}, Name={Name}",
-                    id, isNew ? ds.Name : dto.IsPublished);
-                }
-                else
-                {
-                    _logger.LogInformation(
-                        "Оновлено набір даних DataSetId={Id}, IsPublished={IsPublished}",
-                    id, isNew ? ds.Name : dto.IsPublished);
-                }
+                _logger.LogInformation(
+                    "Оновлено набір даних DataSetId={Id}, IsPublished={IsPublished}",
+                id, dto.IsPublished);
 
             var result = ds.ToDto();
-            return isNew
-                ? CreatedAtAction(nameof(GetDataSet), new { dataSetId = id }, result)
-                : Ok(result);
+            return Ok(result);
         }
         catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
@@ -308,7 +272,7 @@ public class TemplateDataSetController : ControllerBase
         {
             var ds = await _set
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
-            
+
             if (ds == null)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"DataSetId={id}");
 
@@ -395,7 +359,7 @@ public class TemplateDataSetController : ControllerBase
                 query = query.Where(ds => ds.IsPublished == isPublished.Value);
 
             var items = await query
-                .Select(ds => new 
+                .Select(ds => new
                 {
                     ds.Id,
                     ds.Name,

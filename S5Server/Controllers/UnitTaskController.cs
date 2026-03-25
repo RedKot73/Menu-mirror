@@ -1,3 +1,4 @@
+using DocumentFormat.OpenXml.Office2021.DocumentTasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -6,7 +7,6 @@ using S5Server.Data;
 using S5Server.Models;
 using S5Server.Services;
 using S5Server.Utils;
-using System.Data;
 
 namespace S5Server.Controllers;
 
@@ -53,7 +53,7 @@ public class UnitTaskController : ControllerBase
     /// </summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll(
+    public async Task<ActionResult<IEnumerable<UnitTaskDto>>> GetAll(
         [FromQuery] Guid? dataSetId,
         CancellationToken ct = default)
     {
@@ -139,10 +139,10 @@ public class UnitTaskController : ControllerBase
     /// <param name="dataSetId">ID набору даних</param>
     /// <param name="unitId">ID підрозділу</param>
     /// <param name="ct">Токен скасування</param>
-    [HttpGet("add-unit-task")]
+    [HttpPost("create-default")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<UnitTaskDto>> AddUnitTask(
+    public async Task<ActionResult<UnitTaskDto>> CreateDefault(
         [FromQuery] Guid dataSetId,
         [FromQuery] Guid unitId,
         CancellationToken ct = default)
@@ -162,7 +162,18 @@ public class UnitTaskController : ControllerBase
                 changedBy, ct);
             if (error != null) return error;
 
-            return Ok(unitTask!.ToDto());
+            _set.Add(unitTask!);
+            await _db.SaveChangesAsync(ct);
+
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation(
+                    "Створено знімок підрозділу UnitId={UnitId}, TaskId={TaskId}, UnitTaskId={UnitTaskId}",
+                    unitId, ControllerFunctions.NotSetGuid, unitTask!.Id);
+
+            var created = (await BaseQuery()
+                .FirstAsync(t => t.Id == unitTask!.Id, ct)).ToDto();
+
+            return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
         }
         catch (OperationCanceledException)
         {
@@ -190,12 +201,6 @@ public class UnitTaskController : ControllerBase
     {
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
-
-        var dataSetExists = await _db.TemplateDataSets
-            .AnyAsync(ds => ds.Id == dto.DataSetId, ct);
-        if (!dataSetExists)
-            return Problem(statusCode: 404, title: "Не знайдено",
-                detail: $"Набір даних з ID '{dto.DataSetId}' не знайдено");
 
         try
         {
@@ -256,7 +261,8 @@ public class UnitTaskController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Update(
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<ActionResult<UnitTaskDto>> Update(
         Guid id,
         [FromBody] UnitTaskDto dto,
         CancellationToken ct = default)
@@ -276,50 +282,32 @@ public class UnitTaskController : ControllerBase
             return (Problem(statusCode: 404, title: "Не знайдено",
                 detail: $"Набір даних з ID '{dto.DataSetId}' не знайдено"));
 
-        var changedBy = User.Identity?.Name ?? "Unknown";
-
         try
         {
             var ds = await _set
                 .AsTracking()
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
+            if (ds == null)
+                return Problem(statusCode: 404, title: "Не знайдено", detail: $"Завдання з ID '{id}' не знайдено");
+            if (ds.IsPublished)
+                return Problem(statusCode: 422, title: "Неможливо змінити опубліковане завдання");
 
-            var isNew = ds == null;
-            if (isNew)
-            {
-                // CREATE path (upsert)
-                var (error, newTask) = await BuildUnitTaskAsync(
-                    dto.DataSetId, dto.UnitId, dto.TaskId, dto.AreaId, changedBy, ct);
-                if (error != null) return error;
+            if (ds!.IsEqualTo(dto))
+                return NoContent();
 
-                newTask!.Id = id;
-                _set.Add(newTask);
-            }
-            else
-            {
-                // UPDATE path
-                if (ds!.IsEqualTo(dto))
-                    return NoContent();
-
-                ds!.UpdateFromDto(dto, changedBy);
-            }
+            var changedBy = User.Identity?.Name ?? "Unknown";
+            ds!.UpdateFromDto(dto, changedBy);
             await _db.SaveChangesAsync(ct);
+
             if (_logger.IsEnabled(LogLevel.Information))
-                if (isNew)
-                {
-                    _logger.LogInformation(
-                        "Upsert (CREATE) знімок підрозділу UnitId={UnitId}, TaskId={TaskId}, UnitTaskId={UnitTaskId}",
-                        dto.UnitId, dto.TaskId, id);
-                }
-                else
-                {
-                    _logger.LogInformation(
-                        "Upsert (UPDATE) знімок підрозділу UnitId={UnitId}, TaskId={TaskId}, UnitTaskId={UnitTaskId}",
-                        dto.UnitId, dto.TaskId, id);
-                }
+            {
+                _logger.LogInformation(
+                    "Оновлено завдання підрозділу UnitId={UnitId}, TaskId={TaskId}, UnitTaskId={UnitTaskId}",
+                    dto.UnitId, dto.TaskId, id);
+            }
 
             var result = (await BaseQuery().FirstAsync(x => x.Id == id, ct)).ToDto();
-            return isNew ? CreatedAtAction(nameof(Get), new { id }, result) : Ok(result);
+            return Ok(result);
         }
         catch (DbUpdateException ex) when (ControllerFunctions.IsUniqueViolation(ex))
         {
@@ -365,14 +353,11 @@ public class UnitTaskController : ControllerBase
         Guid dataSetId, Guid unitId, Guid taskId, Guid areaId,
         string changedBy, CancellationToken ct)
     {
-        /*
         var dataSetExists = await _db.TemplateDataSets
             .AnyAsync(ds => ds.Id == dataSetId, ct);
         if (!dataSetExists)
             return (Problem(statusCode: 404, title: "Не знайдено",
                 detail: $"Набір даних з ID '{dataSetId}' не знайдено"), null);
-        */
-        //DataSet не проверяем, он может быть еще не сохранен
 
         var task = await _db.DictUnitTasks
             .AsTracking()
@@ -405,7 +390,7 @@ public class UnitTaskController : ControllerBase
     /// </summary>
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
     {
@@ -419,8 +404,8 @@ public class UnitTaskController : ControllerBase
 
             if (task == null)
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Завдання з ID '{id}' не знайдено");
-            if(task.IsPublished)
-                return Problem(statusCode: 400, title: "Неможливо видалити опубліковане завдання");
+            if (task.IsPublished)
+                return Problem(statusCode: 422, title: "Неможливо видалити опубліковане завдання");
 
             var changedBy = User.Identity?.Name ?? "Unknown";
             await task.DeleteSoldierSnapshot(_db, changedBy, ct);
@@ -448,10 +433,10 @@ public class UnitTaskController : ControllerBase
     /// <summary>
     /// Змінити статус публікації завдання
     /// </summary>
-    [HttpPost("{id}/publish/{set_publish}")]
+    [HttpPost("{id}/publish/{setPublish}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Publish(Guid id, bool set_publish, CancellationToken ct = default)
+    public async Task<IActionResult> Publish(Guid id, bool setPublish, CancellationToken ct = default)
     {
         if (id == Guid.Empty)
             return BadRequest("Id обов'язковий");
@@ -466,7 +451,7 @@ public class UnitTaskController : ControllerBase
                 return Problem(statusCode: 404, title: "Не знайдено", detail: $"Завдання з ID '{id}' не знайдено");
 
             var changedBy = User.Identity?.Name ?? "Unknown";
-            task.Publish(set_publish, changedBy);
+            task.Publish(setPublish, changedBy);
             if (task.IsPublished)
             {
                 await task.CreateSoldierSnapshot(_db, changedBy, ct);
@@ -480,7 +465,7 @@ public class UnitTaskController : ControllerBase
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation(
                     "Змінено статус публікації завдання UnitTaskId={Id}, IsPublished={IsPublished}",
-                    id, set_publish);
+                    id, setPublish);
 
             return NoContent();
         }
