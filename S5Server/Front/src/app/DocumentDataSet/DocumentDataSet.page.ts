@@ -11,7 +11,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatTabsModule } from '@angular/material/tabs';
 
 import { DocDataSetsTableComponent } from './Components/DocDataSetsTable.component';
-import { TemplateDataSetDto } from '../DocumentTemplates/models/template-dataset.models';
+import { TemplateDataSetDto } from './models/template-dataset.models';
 import { UnitsTaskEditor } from './Components/UnitsTaskEditor.component';
 import { MasterDetailLayoutComponent } from '../shared/components/MasterDetailLayout.component';
 

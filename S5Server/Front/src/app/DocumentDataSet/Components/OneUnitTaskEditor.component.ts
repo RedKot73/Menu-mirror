@@ -34,9 +34,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import {
   UnitTaskDto,
-  UnitTaskCreateDto,
   DroneModelTaskDto,
-} from '../../DocumentTemplates/models/template-dataset.models';
+} from '../models/template-dataset.models';
 import { DictUnitTasksService, DictUnitTask } from '../../../ServerService/dictUnitTasks.service';
 import { DictAreasService, DictArea } from '../../../ServerService/dictAreas.service';
 import { DroneModelTaskService } from '../../../ServerService/drone-model-task.service';
@@ -234,45 +233,9 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
    * Завантажує особовий склад підрозділу для завдання
    */
   reloadSoldiers(): void {
-    const unitTaskId = this.unitTask.id;
-
-    if (!unitTaskId) {
-      const unitId = this.unitTask.unitId;
-      // Якщо завдання ще не збережено - завантажуємо актуальний склад підрозділу
-      if (!unitId) {
-        this.snackBar.open('Не вказано підрозділ', 'Закрити', { duration: 3000 });
-        return;
-      }
-
-      this.isLoadingSoldiers.set(true);
-      this.soldierTaskService
-        .getByUnit(unitId)
-        .pipe(
-          takeUntil(this.destroy$),
-          finalize(() => this.isLoadingSoldiers.set(false)),
-        )
-        .subscribe({
-          next: (soldiers: SoldierTaskDto[]) => {
-            this.soldiers.set(soldiers);
-            this.soldierDataSource.data = soldiers;
-            this.soldierDataSource.sort = this.sort;
-          },
-          error: (error: unknown) => {
-            console.error('Помилка завантаження особового складу підрозділу:', error);
-            const errorMessage = S5App_ErrorHandler.handleHttpError(
-              error,
-              'Помилка завантаження особового складу підрозділу',
-            );
-            this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-          },
-        });
-      return;
-    }
-
-    // Якщо завдання збережено - завантажуємоSnapshot
     this.isLoadingSoldiers.set(true);
     this.soldierTaskService
-      .getByUnitTask(unitTaskId)
+      .getByUnitTask(this.unitTask.id)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => this.isLoadingSoldiers.set(false)),
@@ -282,7 +245,6 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
           this.soldiers.set(soldiers);
           this.soldierDataSource.data = soldiers;
           this.soldierDataSource.sort = this.sort;
-          //this.soldierCount.set(soldiers.length);
         },
         error: (error: unknown) => {
           console.error('Помилка завантаження особового складу:', error);
@@ -299,16 +261,6 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
    * Завантажує засоби (дрони) для завдання підрозділу (Master-Detail)
    */
   loadMeans(): void {
-    const unitTaskId = this.unitTask.id;
-    if (!unitTaskId) {
-      // UnitTask ще не збережено - показуємо локально додані засоби
-      if (this.unitTask.means && this.unitTask.means.length > 0) {
-        this.means.set(this.unitTask.means);
-        this.meansDataSource.data = this.unitTask.means;
-      }
-      return;
-    }
-
     // Якщо вже завантажено - не перезавантажуємо
     if (this.means().length > 0) {
       return;
@@ -316,7 +268,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
 
     this.isLoadingMeans.set(true);
     this.droneModelTaskService
-      .getByUnitTask(unitTaskId)
+      .getByUnitTask(this.unitTask.id)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => this.isLoadingMeans.set(false)),
@@ -359,10 +311,6 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
 
     ref.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
-        if(!unit.id) {
-          this.remove.emit(unit.id);
-          return;
-        }
         this.unitTaskService.delete(unit.id).subscribe({
           next: () => {
             this.remove.emit(unit.id);
@@ -435,8 +383,9 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
 
   /**
    * Обробник зміни області (РВЗ)
+   * Автоматично зберігає на сервері якщо всі обов'язкові поля заповнені
    */
-  onAreaChange(area: DictArea | null): void {
+  async onAreaChange(area: DictArea | null): Promise<void> {
     const updatedUnit: UnitTaskDto = {
       ...this.unitTask,
       areaId: area ? area.id : '',
@@ -444,7 +393,21 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     };
     this.unitTaskSignal.set(updatedUnit);
     this.unitChange.emit(updatedUnit);
-    this.hasUnsavedChanges.set(true);
+
+    // Зберігаємо автоматично тільки якщо обидва обов'язкові поля заповнені.
+    // hasUnsavedChanges НЕ виставляємо тут — saveUnitTask() сам скине в false при успіху
+    // або поверне в true при помилці, щоб кнопка "Зберегти" батька не активувалась даремно.
+    if (area && this.unitTask.taskId) {
+      const [success, errorMsg] = await this.saveUnitTask();
+      if (success) {
+        this.snackBar.open('Збережено', 'Закрити', { duration: 2000 });
+      } else if (errorMsg) {
+        this.snackBar.open(errorMsg, 'Закрити', { duration: 5000 });
+      }
+    } else {
+      // Неможливо зберегти (area = null або taskId не вибрано) — позначаємо як незбережено
+      this.hasUnsavedChanges.set(true);
+    }
   }
 
   /**
@@ -565,7 +528,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
         // Додаємо локально (збереження буде через saveUnitTask)
         const newMean: DroneModelTaskDto = {
           id: '', // Буде створено при збереженні
-          unitTaskId: this.unitTask.id || '',
+          unitTaskId: this.unitTask.id,
           droneModelId: selectedDrone.id,
           droneModelValue: selectedDrone.value,
           droneTypeName: selectedDrone.droneTypeName,
@@ -709,7 +672,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
    * Зберігає UnitTask + його засоби (means)
    * Викликається з батьківського компонента при загальному збереженні
    */
-  async saveUnitTask(dataSetId: string): Promise<[boolean, string]> {
+  async saveUnitTask(): Promise<[boolean, string]> {
     // Перевіряємо обов'язкові поля перед збереженням
     if (!this.unitTask.taskId) {
       const msg = `Підрозділ "${this.unitTask.unitShortName}": заповніть завдання`;
@@ -724,26 +687,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     this.isSaving.set(true);
 
     try {
-      // 1. Створюємо або оновлюємо UnitTask
-      if (this.unitTask.id) {
-        // Оновлюємо існуючий
-        await firstValueFrom(this.unitTaskService.update(this.unitTask.id, this.unitTask));
-      } else {
-        // Створюємо новий
-        const createDto: UnitTaskCreateDto = {
-          dataSetId: dataSetId,
-          unitId: this.unitTask.unitId,
-          taskId: this.unitTask.taskId,
-          areaId: this.unitTask.areaId,
-        };
-        const result = await firstValueFrom(this.unitTaskService.create(createDto));
-        // Оновлюємо ID
-        this.unitTaskSignal.set({...this.unitTask, id: result.id})
-
-        // Синхронізуємо ID з батьківським компонентом
-        this.unitChange.emit({ ...this.unitTask, id: result.id });
-      }
-
+      await firstValueFrom(this.unitTaskService.update(this.unitTask.id, this.unitTask));
       await this.saveAndReloadMeans(this.unitTask.id);
       this.hasUnsavedChanges.set(false);
 
@@ -761,11 +705,8 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  /** Зберігаємо засоби */
   private async saveAndReloadMeans(unitTaskId: string): Promise<void> {
-    if (!unitTaskId) {
-      return;
-    }
-
     this.isSavingMeans.set(true);
     try {
       // 2. Зберігаємо засоби через bulkSave
@@ -798,10 +739,6 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
    */
   async publishUnitTask(isPublished: boolean): Promise<[boolean, string]> {
     const currentUnitTask = this.unitTask;
-    if (!currentUnitTask.id) {
-      return [false, `Підрозділ "${currentUnitTask.unitShortName}": завдання не збережено`];
-    }
-
     if (currentUnitTask.isPublished === isPublished) {
       return [true, ''];
     }
@@ -837,20 +774,12 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   async onPublishStatusChange(isPublished: boolean): Promise<void> {
     // Якщо є незбережені зміни — спочатку зберігаємо
     if (this.hasUnsavedChanges()) {
-      const [saved, errorMsg] = await this.saveUnitTask(this.unitTask.dataSetId ?? '');
+      const [saved, errorMsg] = await this.saveUnitTask();
       if (!saved) {
         this.snackBar.open(errorMsg || 'Помилка збереження', 'Закрити', { duration: 5000 });
         this.publishStatusControl.setValue(this.unitTask.isPublished, { emitEvent: false });
         return;
       }
-    }
-
-    if (!this.unitTask.id) {
-      this.publishStatusControl.setValue(this.unitTask.isPublished, { emitEvent: false });
-      this.snackBar.open('Неможливо змінити статус: завдання не збережено', 'Закрити', {
-        duration: 3000,
-      });
-      return;
     }
 
     // Превентивно скидаємо контрол до поточного стану — publishUnitTask оновить при успіху
