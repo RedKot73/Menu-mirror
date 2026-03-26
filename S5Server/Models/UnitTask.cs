@@ -202,6 +202,13 @@ public class UnitTask
     public DictArea Area { get; set; } = default!;
 
     /// <summary>
+    /// Район виконання завдань (РВЗ)
+    /// Повна адреса: конкатенація рівнів через кому
+    /// </summary>
+    [NotMapped]
+    public VCityFullName? AreaCityFullName { get; set; }
+
+    /// <summary>
     /// Дрони, задіяні при виконанні завдання (Master-Detail: завантажується окремо через DroneModelTaskController)
     /// </summary>
     //[NotMapped]

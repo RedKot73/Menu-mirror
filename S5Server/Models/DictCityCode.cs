@@ -479,4 +479,20 @@ namespace S5Server.Models
                    cityCode.Value == dto.Value.Trim();
         }
     }
+
+    /// <summary>
+    /// Представлення dict.v_city_full_name — повна адреса населеного пункту
+    /// у вигляді: «Область, Район, Громада, Місто»
+    /// </summary>
+    public class VCityFullName
+    {
+        /// <summary>
+        /// ID запису кодифікатора (відповідає DictCityCode.Id)
+        /// </summary>
+        public string Id { get; set; } = string.Empty;
+        /// <summary>
+        /// Повна адреса: конкатенація рівнів через кому
+        /// </summary>
+        public string Value { get; set; } = string.Empty;
+    }
 }

@@ -1305,6 +1305,14 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
             entity.HasIndex(e => e.DroneModelId);
             entity.HasIndex(e => new { e.UnitTaskId, e.DroneModelId }).IsUnique();
         });
+
+        modelBuilder.Entity<VCityFullName>(entity =>
+        {
+            entity.ToView("v_city_full_name", "dict");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnType("varchar(20)");
+            entity.Property(e => e.Value).HasColumnType("text");
+        });
     }
 
     /// <summary>
@@ -1316,6 +1324,10 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
     /// та територій територіальних громад
     /// </summary>
     public DbSet<DictCityCode> DictCityCodes { get; set; }
+    /// <summary>
+    /// Представлення повної адреси населеного пункту (dict.v_city_full_name)
+    /// </summary>
+    public DbSet<VCityFullName> CityFullNames { get; set; }
     /// <summary>
     /// Напрямок ЛБЗ
     /// </summary>

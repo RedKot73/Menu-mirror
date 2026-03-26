@@ -65,7 +65,38 @@ public class Query
 
         if (dataSet == null) return null;
 
-        // 2. Для кожного UnitTask вручную завантажуємо бійців за логікою UNION
+        /* Подумать над оптимизацией количества запросов 
+         * к БД для загрузки SoldierTasks для всех UnitTasks. Варианты:
+var unitIds = dataSet.UnitTasks.Select(ut => ut.UnitId).Distinct().ToList();
+
+var unitSoldiers = await db.SoldierTasks
+    .Where(t => unitIds.Contains(t.UnitId) && t.AssignedUnitId == null && t.InvolvedUnitId == null)
+    .ToListAsync();
+
+var assSoldiers = await db.SoldierTasks
+    .Where(t => t.AssignedUnitId != null && unitIds.Contains(t.AssignedUnitId.Value))
+    .ToListAsync();
+
+var invSoldiers = await db.SoldierTasks
+    .Where(t => t.InvolvedUnitId != null && unitIds.Contains(t.InvolvedUnitId.Value))
+    .ToListAsync();
+
+var allSoldiers = unitSoldiers.Concat(assSoldiers).Concat(invSoldiers).ToList();
+        */
+
+        // 2. Визначаємо унікальні CityCodeId для всіх UnitTasks, щоб завантажити CityFullNames одним запитом
+        var cityCodeIds = dataSet.UnitTasks
+            .Select(ut => ut.Area.CityCodeId)
+            .Where(id => id != null)
+            .Distinct()
+            .ToList();
+
+        // Завантажуємо CityFullNames одним запитом для всіх Area.CityCodeId
+        var cityFullNames = await db.CityFullNames
+            .Where(v => cityCodeIds.Contains(v.Id))
+            .ToDictionaryAsync(v => v.Id);
+
+        // 3. Для кожного UnitTask вручную завантажуємо бійців за логікою UNION
         foreach (var unitTask in dataSet.UnitTasks)
         {
             var unitId = unitTask.UnitId;
@@ -87,6 +118,10 @@ public class Query
                     .ThenInclude(t => t.DroneType)
                 .Where(t => t.UnitTaskId == taskId)
                 .ToListAsync();
+
+            unitTask.AreaCityFullName = unitTask.Area.CityCodeId != null
+                ? cityFullNames.GetValueOrDefault(unitTask.Area.CityCodeId)
+                : null;
 
             var taskItems = await db.DictUnitTaskItems
                 .Where(t => t.UnitTaskId == unitTask.TaskId && t.TemplateCategoryId == templateCategoryId)
