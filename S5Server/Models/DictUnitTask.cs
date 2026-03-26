@@ -46,15 +46,22 @@ namespace S5Server.Models
     [Table("dict_unit_task")]
     public class DictUnitTask
     {
+        /// <summary>
+        /// Gets or sets the unique identifier for the entity.
+        /// </summary>
         [Key]
         public Guid Id { get; set; } = Guid.CreateVersion7();
 
         /// <summary>
         /// Назва
         /// </summary>
-        [StringLength(100), Required(ErrorMessage = UIConstant.RequiredMsg)]
+        [StringLength(100), Required]
         public string Value { get; set; } = string.Empty;
-
+        /// <summary>
+        /// Gets or sets an optional comment associated with the entity.
+        /// </summary>
+        /// <remarks>The comment is limited to a maximum of 250 characters. This property can be null if
+        /// no comment is provided.</remarks>
         [StringLength(250)]
         public string? Comment { get; set; }
 

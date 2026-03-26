@@ -1,59 +1,106 @@
 stages:
-  - build
-  - deploy
-variables:
-  # Используем переменную для удобства
-  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
-  DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: "" # если не используете TLS
-# Сборка образа
-build-job:
+- build
+- update_manifest
+
+.build_image_template:
   stage: build
-  image: docker:latest
   tags:
-  - wsl-runner.S5
-
-  services:
-  - docker:dind # <--- ДОБАВИТЬ ЭТУ СТРОКУ
+  - k8s-oci
+  image:
+    name: moby/buildkit:rootless
+  variables:
+    SSL_CERT_DIR: "/etc/ssl/certs:${SELFSIGNED_CA_PATH}"
+    CACHE_IMAGE: $CI_REGISTRY_IMAGE:cache
+    DOCKER_FILE: "Dockerfile"
+    IMAGE_TAG: nil
+    IMAGE_TAG_LATEST: nil
+  before_script:
+  - mkdir -p ~/.docker
+  - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > ~/.docker/config.json
   script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build --provenance=false -t $IMAGE_TAG .
-    - docker push $IMAGE_TAG
+  - |
+    buildctl \
+      --addr "${BUILDKIT_ADDR}" \
+      --tlscacert "${BUILDKIT_TLS_CA_FILE}" \
+      --tlscert "${BUILDKIT_TLS_CERT_FILE}" \
+      --tlskey "${BUILDKIT_TLS_KEY_FILE}" \
+      build \
+        --frontend dockerfile.v0 \
+        --local context=. \
+        --local dockerfile=. \
+        --frontend-opt filename=./${DOCKER_FILE} \
+        --export-cache type=registry,ref=$CACHE_IMAGE \
+        --import-cache type=registry,ref=$CACHE_IMAGE \
+        --output type=image,name=$CI_REGISTRY_IMAGE:$IMAGE_TAG,push=true \
+        --output type=image,name=$CI_REGISTRY_IMAGE:$IMAGE_TAG_LATEST,push=true
 
-# Деплой на DEV (Автоматически из develop)
-deploy-dev:
-  stage: deploy
-  image: docker:latest
-  tags:
-  - wsl-runner.S5
-  environment:
-    name: development
-  script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker pull $IMAGE_TAG
-    - docker rm -f app-dev || true
-    #- docker run -d --name app-dev -e ASPNETCORE_ENVIRONMENT=Development -p 8081:8080 $IMAGE_TAG
-    - docker run -d --name app-dev  -p 8080:8080 -p 8081:8081 -e ASPNETCORE_ENVIRONMENT=Development -e DOTNET_GENERATE_ASPNET_CERTIFICATE=false -e ASPNETCORE_URLS="http://+:8080;https://+:8081" $IMAGE_TAG
-    - docker image prune -af
+build-app-image:
+  extends:
+  - .build_image_template
+  variables:
+    IMAGE_TAG: "app-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}"
+    IMAGE_TAG_LATEST: "app-latest"
+    DOCKER_FILE: "Dockerfile"
   rules:
-    - if: $CI_COMMIT_BRANCH == "development"
+  - if: $CI_COMMIT_BRANCH == "main"
+    when: manual
+  - if: $CI_COMMIT_BRANCH == "development"
+    when: manual
 
-# Деплой на PROD (Вручную из main)
-deploy-prod:
-  stage: deploy
-  image: docker:latest
-  tags:
-  - wsl-runner.S5
-  environment:
-    name: production
-  script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker pull $IMAGE_TAG
-    - docker rm -f app-prod || true
-    #- docker run -d --name app-prod -e ASPNETCORE_ENVIRONMENT=Production -p 80:8080 $IMAGE_TAG
-    # Запуск с ограничением логов (max-size=10m)
-    - docker run -d --name app-prod --log-opt max-size=10m --log-opt max-file=3 -e ASPNETCORE_ENVIRONMENT=Production -p 80:8080 $IMAGE_TAG
-    - docker image prune -af
+build-db-image:
+  extends:
+  - .build_image_template
+  variables:
+    IMAGE_TAG: "db-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}"
+    IMAGE_TAG_LATEST: "db-latest"
+    DOCKER_FILE: "Dockerfile.db"
   rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      when: manual
+  - if: $CI_COMMIT_BRANCH == "main"
+  - if: $CI_COMMIT_BRANCH == "development"
+  needs:
+  - job: build-app-image
+
+.update_manifest_template:
+  stage: update_manifest
+  tags:
+  - k8s-shared
+  needs:
+  - job: build-app-image
+  - job: build-db-image
+  image:
+    name: alpine/git:latest
+    pull_policy: if-not-present
+    entrypoint: [""]
+  variables:
+    REPO_BRANCH: nil
+    ENVIRONMENT: nil
+    MANIFEST_BASE_PATH: "${CI_PROJECT_DIR}/apps/s5/overlays/${ENVIRONMENT}/patches"
+    DEPLOYMENT_YAML: "${MANIFEST_BASE_PATH}/deployment.yaml"
+    PROJECT_URL: s5-group/fluxcd
+  before_script:
+  - git config user.email "job-runner@gitlab.com822.dom"
+  - git config user.name "CI Job Runner"
+  - git config http.sslCAInfo "${SELFSIGNED_CA_PATH}/ca.crt"
+  - git remote set-url origin https://${GROUP_AT_NAME}:${GROUP_AT_TOKEN}@${CI_SERVER_HOST}/${PROJECT_URL}.git
+  - git remote set-url --push origin https://${GROUP_AT_NAME}:${GROUP_AT_TOKEN}@${CI_SERVER_HOST}/${PROJECT_URL}.git
+  script:
+  - git fetch origin ${REPO_BRANCH}
+  - git checkout ${REPO_BRANCH}
+  - git pull --rebase origin ${REPO_BRANCH}
+  - >
+    sed -ir "s|image: $CI_REGISTRY_IMAGE:app-.*|image: $CI_REGISTRY_IMAGE:app-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}|" \
+        -ir "s|image: $CI_REGISTRY_IMAGE:db-.*|image: $CI_REGISTRY_IMAGE:db-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}|" \
+        ${DEPLOYMENT_YAML}
+  - git add ${DEPLOYMENT_YAML}
+  - git commit -m "Update app image tag to ${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}"
+  - git push origin HEAD:${REPO_BRANCH} -o ci.skip
+
+update_manifest-development-job:
+  extends: 
+  - .update_manifest_template
+  rules:
+  - if: $CI_COMMIT_BRANCH == "development"
+    when: on_success
+  variables:
+    REPO_BRANCH: "main"
+    ENVIRONMENT: "development"

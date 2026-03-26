@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: s5-db-init-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: importer
+        image: s5-db # Твой образ с дампом
+        env:
+          # Берём хост базы из конфига
+          - name: PGHOST
+            value: s5-db-cluster-rw 
+          # Берём имя базы и юзера из общего ConfigMap
+          - name: PGDATABASE
+            valueFrom:
+              configMapKeyRef:
+                name: s5-db-params
+                key: DB_NAME
+          - name: PGUSER
+            valueFrom:
+              configMapKeyRef:
+                name: s5-db-params
+                key: DB_USER
+          # Пароль из секрета
+          - name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: s5-db-credentials
+                key: password
+        command:
+        - sh
+        - -c
+        - |
+          # 1. Ждем, пока база станет доступна по сети
+          echo "Waiting for PostgreSQL at $PGHOST..."
+          until pg_isready -h $PGHOST; do
+            sleep 2
+          done
+
+          # 2. Проверяем, есть ли уже таблицы (чтобы не затереть данные при перезапуске)
+          TABLE_COUNT=$(psql -t -c "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public';")
+          
+          if [ "$TABLE_COUNT" -eq 0 ]; then
+            echo "Database is empty. Starting import..."
+            zcat /docker-entrypoint-initdb.d/init-dump.sql.gz | psql
+            echo "Import finished!"
+          else
+            echo "Database already contains $TABLE_COUNT tables. Skipping import."
+          fi
+      restartPolicy: OnFailure
+  # Удалять Job через 100 секунд после успешного завершения, чтобы не мозолил глаза
+  ttlSecondsAfterFinished: 100
