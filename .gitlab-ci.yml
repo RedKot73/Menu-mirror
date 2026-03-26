@@ -28,7 +28,7 @@ stages:
         --frontend dockerfile.v0 \
         --local context=. \
         --local dockerfile=. \
-        --frontend-opt filename=./${DOCKER_FILE} \
+        --opt filename=./${DOCKER_FILE} \
         --export-cache type=registry,ref=$CACHE_IMAGE \
         --import-cache type=registry,ref=$CACHE_IMAGE \
         --output type=image,name=$CI_REGISTRY_IMAGE:$IMAGE_TAG,push=true \
