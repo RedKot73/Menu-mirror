@@ -1,72 +1,82 @@
 stages:
-- build
-- update_manifest
+  - build           # Стадия сборки Docker-образов
+  - update_manifest # Стадия обновления тегов в манифестах FluxCD/Kubernetes
 
+# Шаблон для сборки образов с использованием BuildKit
 .build_image_template:
   stage: build
   tags:
-  - k8s-oci
+    - k8s-oci       # Запуск на раннерах с поддержкой OCI
   image:
-    name: moby/buildkit:rootless
+    name: moby/buildkit:rootless # Использование rootless образа BuildKit для безопасности
   variables:
+    # Пути к сертификатам, включая самоподписанные CA
     SSL_CERT_DIR: "/etc/ssl/certs:${SELFSIGNED_CA_PATH}"
+    # Образ для хранения кэша сборки в реестре
     CACHE_IMAGE: $CI_REGISTRY_IMAGE:cache
     DOCKER_FILE: "Dockerfile"
     IMAGE_TAG: nil
     IMAGE_TAG_LATEST: nil
   before_script:
-  - mkdir -p ~/.docker
-  - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > ~/.docker/config.json
+    # Создание директории для конфигурации Docker
+    - mkdir -p ~/.docker
+    # Аутентификация в GitLab Container Registry через переменные окружения CI
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > ~/.docker/config.json
   script:
-  - |
-    buildctl \
-      --addr "${BUILDKIT_ADDR}" \
-      --tlscacert "${BUILDKIT_TLS_CA_FILE}" \
-      --tlscert "${BUILDKIT_TLS_CERT_FILE}" \
-      --tlskey "${BUILDKIT_TLS_KEY_FILE}" \
-      build \
-        --frontend dockerfile.v0 \
-        --local context=. \
-        --local dockerfile=. \
-        --opt filename=./${DOCKER_FILE} \
-        --export-cache type=registry,ref=$CACHE_IMAGE \
-        --import-cache type=registry,ref=$CACHE_IMAGE \
-        --output type=image,name=$CI_REGISTRY_IMAGE:$IMAGE_TAG,push=true \
-        --output type=image,name=$CI_REGISTRY_IMAGE:$IMAGE_TAG_LATEST,push=true
+    - |
+      buildctl \
+        --addr "${BUILDKIT_ADDR}" \
+        --tlscacert "${BUILDKIT_TLS_CA_FILE}" \
+        --tlscert "${BUILDKIT_TLS_CERT_FILE}" \
+        --tlskey "${BUILDKIT_TLS_KEY_FILE}" \
+        build \
+          --frontend dockerfile.v0 \
+          --local context=. \
+          --local dockerfile=. \
+          --opt filename=${DOCKER_FILE} \
+          --export-cache type=registry,ref=$CACHE_IMAGE,mode=max \
+          --import-cache type=registry,ref=$CACHE_IMAGE \
+          --output type=image,name=$CI_REGISTRY_IMAGE:$IMAGE_TAG,push=true \
+          --output type=image,name=$CI_REGISTRY_IMAGE:$IMAGE_TAG_LATEST,push=true
 
+# Сборка основного приложения
 build-app-image:
   extends:
-  - .build_image_template
+    - .build_image_template
   variables:
+    # Формирование уникального тега (ветка + короткий SHA) 
     IMAGE_TAG: "app-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}"
     IMAGE_TAG_LATEST: "app-latest"
     DOCKER_FILE: "Dockerfile"
   rules:
-  - if: $CI_COMMIT_BRANCH == "main"
-    when: manual
-  - if: $CI_COMMIT_BRANCH == "development"
-    when: manual
+    # Ручной запуск для веток main и development
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+    - if: $CI_COMMIT_BRANCH == "development"
+      when: manual
 
+# Сборка образа базы данных (или доп. инструментов)
 build-db-image:
   extends:
-  - .build_image_template
+    - .build_image_template
   variables:
     IMAGE_TAG: "db-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}"
     IMAGE_TAG_LATEST: "db-latest"
     DOCKER_FILE: "Dockerfile.db"
   rules:
-  - if: $CI_COMMIT_BRANCH == "main"
-  - if: $CI_COMMIT_BRANCH == "development"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "development"
   needs:
-  - job: build-app-image
+    - job: build-app-image # Начинать только после успешной сборки приложения
 
+# Шаблон для обновления манифестов в Git-репозитории (FluxCD)
 .update_manifest_template:
   stage: update_manifest
   tags:
-  - k8s-shared
+    - k8s-shared
   needs:
-  - job: build-app-image
-  - job: build-db-image
+    - job: build-app-image
+    - job: build-db-image
   image:
     name: alpine/git:latest
     pull_policy: if-not-present
@@ -78,29 +88,40 @@ build-db-image:
     DEPLOYMENT_YAML: "${MANIFEST_BASE_PATH}/deployment.yaml"
     PROJECT_URL: s5-group/fluxcd
   before_script:
-  - git config user.email "job-runner@gitlab.com822.dom"
-  - git config user.name "CI Job Runner"
-  - git config http.sslCAInfo "${SELFSIGNED_CA_PATH}/ca.crt"
-  - git remote set-url origin https://${GROUP_AT_NAME}:${GROUP_AT_TOKEN}@${CI_SERVER_HOST}/${PROJECT_URL}.git
-  - git remote set-url --push origin https://${GROUP_AT_NAME}:${GROUP_AT_TOKEN}@${CI_SERVER_HOST}/${PROJECT_URL}.git
+    # Настройка почты и имени для коммитов от имени CI
+    - git config user.email "job-runner@gitlab.com822.dom"
+    - git config user.name "CI Job Runner"
+    # Настройка SSL для работы с внутренним GitLab через самоподписанный сертификат
+    - git config http.sslCAInfo "${SELFSIGNED_CA_PATH}/ca.crt"
+    # Переопределение URL репозитория для авторизации через Access Token
+    - git remote set-url origin https://${GROUP_AT_NAME}:${GROUP_AT_TOKEN}@${CI_SERVER_HOST}/${PROJECT_URL}.git
+    - git remote set-url --push origin https://${GROUP_AT_NAME}:${GROUP_AT_TOKEN}@${CI_SERVER_HOST}/${PROJECT_URL}.git
   script:
-  - git fetch origin ${REPO_BRANCH}
-  - git checkout ${REPO_BRANCH}
-  - git pull --rebase origin ${REPO_BRANCH}
-  - >
-    sed -ir "s|image: $CI_REGISTRY_IMAGE:app-.*|image: $CI_REGISTRY_IMAGE:app-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}|" \
-        -ir "s|image: $CI_REGISTRY_IMAGE:db-.*|image: $CI_REGISTRY_IMAGE:db-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}|" \
-        ${DEPLOYMENT_YAML}
-  - git add ${DEPLOYMENT_YAML}
-  - git commit -m "Update app image tag to ${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}"
-  - git push origin HEAD:${REPO_BRANCH} -o ci.skip
+    # Получение актуального состояния веток
+    - git fetch origin ${REPO_BRANCH}
+    # Переключение на целевую ветку репозитория манифестов
+    - git checkout ${REPO_BRANCH}
+    # Слияние изменений (rebase) для чистой истории коммитов
+    - git pull --rebase origin ${REPO_BRANCH}
+    # Обновление тегов образов в YAML файле с помощью регулярного выражения sed
+    - >
+      sed -i "s|image: $CI_REGISTRY_IMAGE:app-.*|image: $CI_REGISTRY_IMAGE:app-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}|" ${DEPLOYMENT_YAML}
+    - >
+      sed -i "s|image: $CI_REGISTRY_IMAGE:db-.*|image: $CI_REGISTRY_IMAGE:db-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}|" ${DEPLOYMENT_YAML}
+    # Индексация измененного файла
+    - git add ${DEPLOYMENT_YAML}
+    # Создание коммита с описанием нового тега
+    - git commit -m "Update app image tag to ${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}"
+    # Пуш изменений обратно в репозиторий с флагом ci.skip, чтобы не зацикливать пайплайн
+    - git push origin HEAD:${REPO_BRANCH} -o ci.skip
 
+# Задача для обновления манифестов окружения development
 update_manifest-development-job:
   extends: 
-  - .update_manifest_template
+    - .update_manifest_template
   rules:
-  - if: $CI_COMMIT_BRANCH == "development"
-    when: on_success
+    - if: $CI_COMMIT_BRANCH == "development"
+      when: on_success # Запуск только при успехе предыдущих стадий
   variables:
-    REPO_BRANCH: "main"
-    ENVIRONMENT: "development"
+    REPO_BRANCH: "main" # Ветка в репозитории FluxCD
+    ENVIRONMENT: "development" # Папка окружения
