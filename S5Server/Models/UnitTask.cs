@@ -81,7 +81,7 @@ public class UnitTask
     /// <summary>
     /// Скорочена назва підрозділу
     /// </summary>
-    [StringLength(100), Required(ErrorMessage = UIConstant.RequiredMsg)]
+    [StringLength(100), Required]
     public string UnitShortName { get; set; } = string.Empty;
 
     /// <summary>
@@ -96,7 +96,7 @@ public class UnitTask
     /// <summary>
     /// Основний підрозділ
     /// </summary>
-    [StringLength(100), Required(ErrorMessage = UIConstant.RequiredMsg)]
+    [StringLength(100), Required]
     public string ParentShortName { get; set; } = string.Empty;
 
     /// <summary>

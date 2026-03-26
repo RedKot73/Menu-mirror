@@ -1,0 +1,39 @@
+services:
+  db:
+    build:
+      context: ./deploy/database
+      dockerfile: Dockerfile.local
+    container_name: s5-db-local
+    environment:
+      # Настройка самого Postgres
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    ports:
+      - "${DB_EXTERNAL_PORT}:5432"
+    volumes:
+      - pg_local_data:/var/lib/postgresql/data/pgdata
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: s5-server-local
+    depends_on:
+      - db
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      # РЕШЕНИЕ ПРОБЛЕМЫ ХОСТА: используем имя сервиса 'db' 
+      - PrimaryConnection__DB_Host=db
+      - PrimaryConnection__Port=5432
+      # РЕШЕНИЕ РЕКУРСИИ: маппинг переменных происходит здесь
+      - PrimaryConnection__DB_Name=${DB_NAME}
+      - PrimaryConnection__DB_Username=${DB_USER}
+      - PrimaryConnection__DB_Password=${DB_PASSWORD}
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+
+volumes:
+  pg_local_data:

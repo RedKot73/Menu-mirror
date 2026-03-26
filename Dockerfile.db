@@ -1,0 +1,3 @@
+FROM postgres:18.3
+COPY --chown=postgres:postgres docker.db/init-dump.sql.gz /docker-entrypoint-initdb.d/
+USER postgres

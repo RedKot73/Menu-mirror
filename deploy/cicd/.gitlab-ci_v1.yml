@@ -1,0 +1,146 @@
+stages:
+  - build
+  - validate
+  - deploy-db
+  - deploy-app
+  - verify
+
+variables:
+  # Теперь тег будет выглядеть как development-a1b2c3d4
+  APP_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA
+  DB_IMAGE: $CI_REGISTRY_IMAGE-db:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA
+  DOCKER_TLS_CERTDIR: ""
+
+build-app:
+  stage: build
+  image: docker:latest
+  tags:
+    - wsl-runner.S5
+  services:
+    - name: docker:dind
+      alias: docker
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    # Сборка основного образа приложения
+    - docker build --provenance=false -t $APP_IMAGE . 
+    - docker push $APP_IMAGE
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "development"
+
+build-db:
+  stage: build
+  image: docker:latest
+  tags:
+    - wsl-runner.S5
+  services:
+    - name: docker:dind
+      alias: docker
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    # Сборка образа базы данных
+    # Запускаем из корня ( . ), чтобы видеть init-dump.sql.gz
+    - docker build --provenance=false -f ./deploy/database/Dockerfile.kuber -t $DB_IMAGE . 
+    - docker push $DB_IMAGE
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "development"
+      changes:
+        - deploy/database/**/*
+        - init-dump.sql.gz
+
+deploy-db-dev:
+  stage: deploy-db
+  image: google/cloud-sdk:latest
+  tags:
+    - wsl-runner.S5
+  variables:
+    K8S_NAMESPACE: s5-dev
+  script:
+    - echo "Preparing dev environment for DB deployment..."
+    
+    # ВАЖНО: Дублируем переменные для CloudNativePG.
+    # Оператор CNPG требует ключи 'username' и 'password' (в нижнем регистре) для инициализации суперпользователя кластера.
+    - echo "username=${DB_USER}" > deploy/k8s/overlays/dev/dev.env
+    - echo "password=${DB_PASSWORD}" >> deploy/k8s/overlays/dev/dev.env
+    
+    # Стандартные переменные для приложения (используются в ConnectionString и Job).
+    - echo "DB_USER=${DB_USER}" >> deploy/k8s/overlays/dev/dev.env
+    - echo "DB_PASSWORD=${DB_PASSWORD}" >> deploy/k8s/overlays/dev/dev.env
+    - echo "DB_NAME=${DB_NAME}" >> deploy/k8s/overlays/dev/dev.env
+    - echo "DB_PORT=${DB_PORT}" >> deploy/k8s/overlays/dev/dev.env
+    
+    # Динамическая подстановка уникального образа в манифест через Kustomize.
+    - (cd deploy/k8s/overlays/dev && kustomize edit set image s5-db=$DB_IMAGE)
+    
+    # Удаляем старый Job, чтобы K8s запустил новый импорт данных при деплое.
+    - echo "Deleting old DB init job..."
+    - kubectl delete job s5-db-init-job -n $K8S_NAMESPACE --ignore-not-found
+    
+    - echo "Deploying DB to Kubernetes using dev overlay..."
+    - kustomize build deploy/k8s/overlays/dev | kubectl apply -f -
+  rules:
+    - if: $CI_COMMIT_BRANCH == "development"
+
+deploy-db-prod:
+  stage: deploy-db
+  image: google/cloud-sdk:latest
+  tags:
+    - wsl-runner.S5
+  variables:
+    K8S_NAMESPACE: s5-prod
+  script:
+    - echo "Preparing prod environment for DB deployment..."
+    
+    # Аналогичное дублирование для PROD: удовлетворяем требования оператора CNPG.
+    - echo "username=${DB_USER}" > deploy/k8s/overlays/prod/prod.env
+    - echo "password=${DB_PASSWORD}" >> deploy/k8s/overlays/prod/prod.env
+    
+    # Оригинальные ключи для кода приложения и скриптов инициализации.
+    - echo "DB_USER=${DB_USER}" >> deploy/k8s/overlays/prod/prod.env
+    - echo "DB_PASSWORD=${DB_PASSWORD}" >> deploy/k8s/overlays/prod/prod.env
+    - echo "DB_NAME=${DB_NAME}" >> deploy/k8s/overlays/prod/prod.env
+    - echo "DB_PORT=${DB_PORT}" >> deploy/k8s/overlays/prod/prod.env
+    
+    - (cd deploy/k8s/overlays/prod && kustomize edit set image s5-db=$DB_IMAGE)
+    - echo "Deleting old DB init job..."
+    - kubectl delete job s5-db-init-job -n $K8S_NAMESPACE --ignore-not-found
+    
+    - echo "Deploying DB to Kubernetes using prod overlay..."
+    - kustomize build deploy/k8s/overlays/prod | kubectl apply -f -
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+
+deploy-app-dev:
+  stage: deploy-app
+  image: google/cloud-sdk:latest
+  tags:
+    - wsl-runner.S5
+  variables:
+    K8S_NAMESPACE: s5-dev
+  script:
+    - echo "Setting images for dev..."
+    # Подставляем новый тег образа (ветка-SHA), чтобы K8s увидел изменения и обновил поды.
+    - (cd deploy/k8s/overlays/dev && kustomize edit set image s5-server=$APP_IMAGE)
+    - echo "Deploying to Kubernetes using dev overlay..."
+    - kubectl apply -k deploy/k8s/overlays/dev/
+  rules:
+    - if: $CI_COMMIT_BRANCH == "development"
+
+deploy-app-prod:
+  stage: deploy-app
+  image: google/cloud-sdk:latest
+  tags:
+    - wsl-runner.S5
+  variables:
+    K8S_NAMESPACE: s5-prod
+  script:
+    - echo "Setting images for prod..."
+    - (cd deploy/k8s/overlays/prod && kustomize edit set image s5-server=$APP_IMAGE)
+    - echo "Deploying to Kubernetes using prod overlay..."
+    - kubectl apply -k deploy/k8s/overlays/prod/
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual

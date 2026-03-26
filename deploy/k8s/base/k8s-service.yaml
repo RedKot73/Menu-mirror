@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: s5-server-service
+spec:
+  # МЕНЯЕМ Type на LoadBalancer для автоматического доступа через localhost
+  type: LoadBalancer 
+  selector:
+    # Оставляем без изменений: должен совпадать с labels в Deployment
+    app: s5-server
+  ports:
+    - name: http
+      protocol: TCP
+      # Порт, который ты будешь вводить в браузере (http://localhost)
+      port: 80
+      # Ссылается на имя порта 'http' (8080) в твоем Deployment
+      targetPort: http 
+    - name: https
+      protocol: TCP
+      # Порт для защищенного соединения (https://localhost)
+      port: 443
+      # Ссылается на имя порта 'https' (8081) в твоем Deployment
+      targetPort: https

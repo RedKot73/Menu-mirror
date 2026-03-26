@@ -103,8 +103,10 @@ public class Unit
     /// <summary>
     /// ID для запису БД представляючого "Екіпаж"
     /// </summary>
-    public const string Crew_GUID = "00000000-0000-0000-0000-000000000002";
-
+    //public const string Crew_GUID = "00000000-0000-0000-0000-000000000002";
+    /// <summary>
+    /// Gets or sets the unique identifier for the entity.
+    /// </summary>
     [Key]
     public Guid Id { get; set; } = Guid.CreateVersion7();
 
@@ -131,13 +133,13 @@ public class Unit
     /// <summary>
     /// Назва підрозділу
     /// </summary>
-    [StringLength(100), Required(ErrorMessage = UIConstant.RequiredMsg)]
+    [StringLength(100), Required]
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
     /// Скорочена назва підрозділу
     /// </summary>
-    [StringLength(100), Required(ErrorMessage = UIConstant.RequiredMsg)]
+    [StringLength(100), Required]
     public string ShortName { get; set; } = string.Empty;
 
     /// <summary>
@@ -167,7 +169,9 @@ public class Unit
     /// </summary>
     [ValidateNever]
     public DictUnitType? UnitType { get; set; }
-
+    /// <summary>
+    /// Gets or sets the order value associated with the item.
+    /// </summary>
     public int OrderVal { get; set; } = 1;
 
     /// <summary>
@@ -185,7 +189,9 @@ public class Unit
     /// </summary>
     [ValidateNever]
     public DictArea? PersistentLocation { get; set; }
-
+    /// <summary>
+    /// Gets or sets an optional comment associated with the object.
+    /// </summary>
     public string? Comment { get; set; }
 
     /// <summary>

@@ -17,7 +17,7 @@ namespace S5Server.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.4")
+                .HasAnnotation("ProductVersion", "10.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "citext");
@@ -1047,11 +1047,7 @@ namespace S5Server.Migrations
                         {
                             t.HasComment("Особовий склад");
 
-                            t.HasTrigger("trg_soldiers_delete_history");
-
-                            t.HasTrigger("trg_soldiers_insert_history");
-
-                            t.HasTrigger("trg_soldiers_update_history");
+                            t.HasTrigger("trg_soldiers_history");
                         });
                 });
 
@@ -1682,11 +1678,7 @@ namespace S5Server.Migrations
                         {
                             t.HasComment("Підрозділи");
 
-                            t.HasTrigger("trg_units_delete_history");
-
-                            t.HasTrigger("trg_units_insert_history");
-
-                            t.HasTrigger("trg_units_update_history");
+                            t.HasTrigger("trg_units_history");
                         });
                 });
 
@@ -1963,6 +1955,163 @@ namespace S5Server.Migrations
                     b.ToTable("units_task", "docs", t =>
                         {
                             t.HasComment("Снимок состояния подразделения на момент назначения задачи");
+
+                            t.HasTrigger("trg_units_task_history");
+                        });
+                });
+
+            modelBuilder.Entity("S5Server.Models.UnitTaskHist", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AreaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("area_id")
+                        .HasComment("РВЗ (Район виконання завдань)");
+
+                    b.Property<string>("AreaValue")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("citext")
+                        .HasColumnName("area_value")
+                        .HasComment("Назва РВЗ (Район виконання завдань)");
+
+                    b.Property<string>("AssignedShortName")
+                        .HasMaxLength(100)
+                        .HasColumnType("citext")
+                        .HasColumnName("assigned_short_name")
+                        .HasComment("Приданий до підрозділу");
+
+                    b.Property<Guid?>("AssignedUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assigned_unit_id")
+                        .HasComment("Приданий до підрозділу");
+
+                    b.Property<string>("ChangedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("changed_by");
+
+                    b.Property<Guid>("DataSetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("data_set_id")
+                        .HasComment("Сохранённый набор данных для подстановки в шаблон документа (БР/БД)");
+
+                    b.Property<bool>("IsInvolved")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_involved")
+                        .HasComment("True - Позаштатний/Оперативний/Тимчасовий підрозділ");
+
+                    b.Property<bool>("IsPublished")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_published")
+                        .HasComment("Чернетка/Опубліковано");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("operation");
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("parent_id");
+
+                    b.Property<string>("ParentShortName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("citext")
+                        .HasColumnName("parent_short_name");
+
+                    b.Property<Guid?>("PersistentLocationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("persistent_location_id")
+                        .HasComment("ППД (Постійне приміщення дислокації)");
+
+                    b.Property<string>("PersistentLocationValue")
+                        .HasMaxLength(100)
+                        .HasColumnType("citext")
+                        .HasColumnName("persistent_location_value")
+                        .HasComment("ППД (Постійне приміщення дислокації)");
+
+                    b.Property<DateTime?>("PublishedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at_utc");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("task_id")
+                        .HasComment("Завдання підрозділу");
+
+                    b.Property<string>("TaskValue")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("citext")
+                        .HasColumnName("task_value")
+                        .HasComment("Назва завдання підрозділу");
+
+                    b.Property<Guid>("UnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("unit_id")
+                        .HasComment("Штатний підрозділ");
+
+                    b.Property<string>("UnitShortName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("citext")
+                        .HasColumnName("unit_short_name")
+                        .HasComment("Штатний підрозділ");
+
+                    b.Property<Guid>("UnitTaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("unit_task_id")
+                        .HasComment("Ссылка на оригинальную запись задачи подразделения");
+
+                    b.Property<Guid?>("UnitTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("unit_type_id");
+
+                    b.Property<string>("UnitTypeName")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("unit_type_name");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valid_from")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("ValidTo")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valid_to");
+
+                    b.HasKey("Id")
+                        .HasName("pk_units_task_hist");
+
+                    b.HasIndex("Operation")
+                        .HasDatabaseName("ix_units_task_hist_operation");
+
+                    b.HasIndex("UnitId")
+                        .HasDatabaseName("ix_units_task_hist_unit_id");
+
+                    b.HasIndex("UnitTaskId")
+                        .HasDatabaseName("ix_units_task_hist_unit_task_id");
+
+                    b.HasIndex("UnitTaskId", "ValidFrom")
+                        .HasDatabaseName("ix_units_task_hist_unit_task_id_valid_from");
+
+                    b.ToTable("units_task_hist", "history", t =>
+                        {
+                            t.HasComment("Историческая таблица изменений задач подразделений");
                         });
                 });
 

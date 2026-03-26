@@ -1,0 +1,17 @@
+я делал експот стандартніми командами
+
+
+
+docker run --name temp-pg -e POSTGRES_PASSWORD=secret -p 5432:5432 -d postgres:18.3
+
+docker cp ./dump-S5_DB.tar temp-pg:/tmp/dump-S5_DB.tar
+
+docker exec temp-pg pg_restore -U postgres -d "S5_DB" -1 /tmp/dump-S5_DB.tar
+
+docker exec temp-pg pg_dump -U postgres -d "S5_DB" -F p --clean --if-exists -f /tmp/init-dump.sql
+
+docker exec temp-pg createdb -U postgres S5_DB
+
+docker exec temp-pg pg_restore -U postgres -d S5_DB -O -x /tmp/dump-S5_DB.tar
+
+docker cp temp-pg:/tmp/init-dump.sql ./init-dump.sql

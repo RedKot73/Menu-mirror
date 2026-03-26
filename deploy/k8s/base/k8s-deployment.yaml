@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s5-server-deployment
+  labels:
+    app: s5-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: s5-server
+  template:
+    metadata:
+      labels:
+        app: s5-server
+    spec:
+      # --- БЛОК МИГРАЦИИ (InitContainer) ---
+      # Этот контейнер выполнится ПЕРЕД стартом основного сервера
+      initContainers:
+        - name: db-migration
+          image: s5-server # Kustomize заменит этот плейсхолдер реальным образом при деплое
+          command: ["dotnet", "S5Server.dll", "--migrate"]
+          env:
+            - name: PrimaryConnection__DB_Host
+              valueFrom:
+                configMapKeyRef:
+                  name: s5-app-config
+                  key: DB_HOST
+            - name: PrimaryConnection__DB_Password
+              valueFrom:
+                secretKeyRef:
+                  name: s5-db-credentials
+                  key: password
+            - name: PrimaryConnection__DB_Username
+              valueFrom:
+                configMapKeyRef:
+                  name: s5-db-params
+                  key: DB_USER
+            - name: PrimaryConnection__DB_Name
+              valueFrom:
+                configMapKeyRef:
+                  name: s5-db-params
+                  key: DB_NAME
+
+      containers:
+        - name: s5-server
+          # Kustomize заменит этот плейсхолдер реальным образом при деплое
+          image: s5-server
+          ports:
+            - containerPort: 8080
+              name: http
+            - containerPort: 8081
+              name: https
+          env:
+            # --- Настройки для работы HTTPS через сертификат ---
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080;https://+:8081"
+            - name: ASPNETCORE_Kestrel__Certificates__Default__Path
+              valueFrom:
+                secretKeyRef: # Изменено с configMapKeyRef на secretKeyRef
+                  name: s5-https-cert # Имя секрета из kustomization.yaml
+                  key: KESTREL_CERT_PATH
+            - name: ASPNETCORE_Kestrel__Certificates__Default__Password
+              valueFrom:
+                secretKeyRef: # Изменено с configMapKeyRef на secretKeyRef
+                  name: s5-https-cert # Имя секрета из kustomization.yaml
+                  key: KESTREL_CERT_PASSWORD
+
+            # --- Маппинг переменных из ConfigMap и Secret в формат .NET ---
+            - name: PrimaryConnection__DB_Host
+              valueFrom:
+                configMapKeyRef:
+                  name: s5-app-config
+                  key: DB_HOST
+            - name: PrimaryConnection__Port
+              valueFrom:
+                configMapKeyRef: # Порт берем из ConfigMap, созданного в CI
+                  name: s5-db-params
+                  key: DB_PORT
+            - name: PrimaryConnection__DB_Name
+              valueFrom:
+                configMapKeyRef: # Имя базы берем из ConfigMap, созданного в CI
+                  name: s5-db-params
+                  key: DB_NAME
+            - name: PrimaryConnection__DB_Username
+              valueFrom:
+                configMapKeyRef: # Имя пользователя берем из ConfigMap, созданного в CI
+                  name: s5-db-params
+                  key: DB_USER
+            - name: PrimaryConnection__DB_Password
+              valueFrom:
+                secretKeyRef:
+                  name: s5-db-credentials
+                  key: password # В секрете s5-db-credentials CNPG использует ключ password
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: s5-app-config
+                  key: ASPNETCORE_ENVIRONMENT
+
+          # --- Настройки liveness и readiness проб ---
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10

@@ -90,6 +90,9 @@ namespace S5Server.Models
         /// </summary>
         [Required]
         public string Category { get; set; } = default!;
+        /// <summary>
+        /// Gets or sets the unique identifier of the associated category.
+        /// </summary>
         [Required]
         public Guid CategoryId { get; set; } = default!;
         /// <summary>
@@ -177,8 +180,16 @@ namespace S5Server.Models
     [Table("dict_city_category")]
     public class DictCityCategory : ShortDictBase, IShortDictBase
     {
-        [StringLength(1), Required(ErrorMessage = UIConstant.RequiredMsg)]
+        /// <summary>
+        /// Gets or sets the code identifier.
+        /// </summary>
+        /// <remarks>The code identifier must be a non-empty string with a maximum length of one
+        /// character.</remarks>
+        [StringLength(1), Required]
         public string CodeId { get; set; } = string.Empty;
+        /// <summary>
+        /// Gets or sets the collection of city codes associated with the entity.
+        /// </summary>
         [NotMapped]
         public List<DictCityCode> CityCodes { get; set; } = [];
     }
@@ -190,6 +201,11 @@ namespace S5Server.Models
     [Table("dict_city_code")]
     public class DictCityCode
     {
+        /// <summary>
+        /// Represents the code for the root city in the city code hierarchy.
+        /// Додано вручну для побудови дерева кодифікаторів,
+        /// оскільки в даних відсутній єдиний кореневий код для всіх записів.
+        /// </summary>
         public const string RootCityCode = "UA00000000000000000";
 
         /// <summary>
@@ -201,6 +217,9 @@ namespace S5Server.Models
         /// Тут саме string оскільки формат UA01020000000022387
         /// </summary>
         public string? ParentId { get; set; }
+        /// <summary>
+        /// Gets or sets the parent city code associated with this instance.
+        /// </summary>
         [ValidateNever]
         public DictCityCode Parent { get; set; } = default!;
 
@@ -286,11 +305,19 @@ namespace S5Server.Models
         /// </summary>
         [ValidateNever]
         public DictCityCategory Category { get; set; } = default!;
-
-        [StringLength(100), Required(ErrorMessage = UIConstant.RequiredMsg)]
+        /// <summary>
+        /// Gets or sets the string value associated with this property.
+        /// </summary>
+        [StringLength(100), Required]
         public string Value { get; set; } = string.Empty;
+        /// <summary>
+        /// Gets or sets a value indicating whether the current entity has child entities.
+        /// </summary>
         [NotMapped]
         public bool HasChildren { get; set; } = false;
+        /// <summary>
+        /// Gets or sets the collection of child city codes associated with this entity.
+        /// </summary>
         [NotMapped]
         public List<DictCityCode> Children { get; set; } = [];
     }
