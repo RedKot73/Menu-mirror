@@ -69,19 +69,17 @@ public class Query
          * к БД для загрузки SoldierTasks для всех UnitTasks. Варианты:
 var unitIds = dataSet.UnitTasks.Select(ut => ut.UnitId).Distinct().ToList();
 
-var unitSoldiers = await db.SoldierTasks
-    .Where(t => unitIds.Contains(t.UnitId) && t.AssignedUnitId == null && t.InvolvedUnitId == null)
-    .ToListAsync();
+var unitSoldiers = db.SoldierTasks
+    .Where(t => unitIds.Contains(t.UnitId) && t.AssignedUnitId == null && t.InvolvedUnitId == null);
 
-var assSoldiers = await db.SoldierTasks
-    .Where(t => t.AssignedUnitId != null && unitIds.Contains(t.AssignedUnitId.Value))
-    .ToListAsync();
+var assSoldiers = db.SoldierTasks
+    .Where(t => t.AssignedUnitId != null && unitIds.Contains(t.AssignedUnitId.Value));
 
 var invSoldiers = await db.SoldierTasks
-    .Where(t => t.InvolvedUnitId != null && unitIds.Contains(t.InvolvedUnitId.Value))
-    .ToListAsync();
+    .Where(t => t.InvolvedUnitId != null && unitIds.Contains(t.InvolvedUnitId.Value));
 
-var allSoldiers = unitSoldiers.Concat(assSoldiers).Concat(invSoldiers).ToList();
+var allSoldiers = await unitSoldiers.Union(assSoldiers).Union(invSoldiers)
+                .ToListAsync();
         */
 
         // 2. Визначаємо унікальні CityCodeId для всіх UnitTasks, щоб завантажити CityFullNames одним запитом

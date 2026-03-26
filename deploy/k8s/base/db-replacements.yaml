@@ -1,0 +1,22 @@
+- source:
+    kind: ConfigMap
+    name: s5-db-params         # Новое имя источника
+    fieldPath: data.DB_NAME
+  targets:
+  - select:
+      kind: Cluster
+      name: s5-db-cluster
+    fieldPaths:
+      - spec.bootstrap.initdb.database
+
+- source:
+    kind: ConfigMap
+    name: s5-db-params
+    fieldPath: data.DB_USER
+  targets:
+  - select:
+      kind: Cluster
+      name: s5-db-cluster
+    fieldPaths:
+      - spec.bootstrap.initdb.owner
+      - spec.managed.roles.0.name

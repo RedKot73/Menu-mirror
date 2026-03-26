@@ -171,12 +171,21 @@ namespace S5Server.Models
         /// <remarks>The value must be a non-empty string with a maximum length of one character. This
         /// property is required and validation will fail if it is not provided.</remarks>
         [StringLength(1), Required]
+        /// <summary>
+        /// Gets or sets the code identifier.
+        /// </summary>
+        /// <remarks>The code identifier must be a non-empty string with a maximum length of one
+        /// character.</remarks>
+        [StringLength(1), Required]
         public string CodeId { get; set; } = string.Empty;
         /// <summary>
         /// Gets or sets the collection of city codes associated with the entity.
         /// </summary>
         /// <remarks>This property is not mapped to the database and is intended for use in application
         /// logic. The collection may be empty if no city codes are associated.</remarks>
+        /// <summary>
+        /// Gets or sets the collection of city codes associated with the entity.
+        /// </summary>
         [NotMapped]
         public List<DictCityCode> CityCodes { get; set; } = [];
     }
@@ -194,6 +203,11 @@ namespace S5Server.Models
         /// <remarks>This constant can be used to identify the root or top-level city in hierarchical city
         /// structures. It is typically used when a specific city code is not available or when referencing the entire
         /// city hierarchy.</remarks>
+        /// <summary>
+        /// Represents the code for the root city in the city code hierarchy.
+        /// Додано вручну для побудови дерева кодифікаторів,
+        /// оскільки в даних відсутній єдиний кореневий код для всіх записів.
+        /// </summary>
         public const string RootCityCode = "UA00000000000000000";
 
         /// <summary>
@@ -305,6 +319,9 @@ namespace S5Server.Models
         public bool HasChildren { get; set; } = false;
         /// <summary>
         /// Gets or sets the collection of child city code entries associated with this instance.
+        /// </summary>
+        /// <summary>
+        /// Gets or sets the collection of child city codes associated with this entity.
         /// </summary>
         [NotMapped]
         public List<DictCityCode> Children { get; set; } = [];

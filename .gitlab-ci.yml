@@ -1,149 +1,127 @@
 stages:
-  - build
-  - validate
-  - deploy
-  - verify
+  - build           # Стадия сборки Docker-образов
+  - update_manifest # Стадия обновления тегов в манифестах FluxCD/Kubernetes
 
-variables:
-  # Формируем базовое имя образа из настроек GitLab
-  APP_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
-  DB_IMAGE: $CI_REGISTRY_IMAGE-db:$CI_COMMIT_REF_SLUG
-  DOCKER_TLS_CERTDIR: ""
-
-build-app:
+# Шаблон для сборки образов с использованием BuildKit
+.build_image_template:
   stage: build
-  image: docker:latest
   tags:
-    - wsl-runner.S5
-  services:
-    - name: docker:dind
-      alias: docker
+    - k8s-oci       # Запуск на раннерах с поддержкой OCI
+  image:
+    name: moby/buildkit:rootless # Использование rootless образа BuildKit для безопасности
+  variables:
+    # Пути к сертификатам, включая самоподписанные CA
+    SSL_CERT_DIR: "/etc/ssl/certs:${SELFSIGNED_CA_PATH}"
+    # Образ для хранения кэша сборки в реестре
+    CACHE_IMAGE: $CI_REGISTRY_IMAGE:cache
+    DOCKER_FILE: "Dockerfile"
+    IMAGE_TAG: nil
+    IMAGE_TAG_LATEST: nil
   before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    # Создание директории для конфигурации Docker
+    - mkdir -p ~/.docker
+    # Аутентификация в GitLab Container Registry через переменные окружения CI
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > ~/.docker/config.json
   script:
-    - echo "Building app image: $APP_IMAGE"
-    # Сборка основного образа приложения
-    - docker build --provenance=false -f Dockerfile -t $APP_IMAGE .
-    - docker push $APP_IMAGE
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-    - if: $CI_COMMIT_BRANCH == "development"
-
-build-db:
-  stage: build
-  image: docker:latest
-  tags:
-    - wsl-runner.S5
-  services:
-    - name: docker:dind
-      alias: docker
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
-    - echo "Building database image: $DB_IMAGE"
-    # Сборка образа базы данных
-    - docker build --provenance=false -f ./deploy/database/Dockerfile.kuber -t $DB_IMAGE ./deploy/database
-    - docker push $DB_IMAGE
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-    - if: $CI_COMMIT_BRANCH == "development"
-
-dry-run-dev:
-  stage: validate
-  image: google/cloud-sdk:latest
-  tags:
-    - wsl-runner.S5
-  script:
-    - echo "Preparing dev environment for dry-run..."
-    # Create .env file to prevent kustomize error
-    - echo "DB_USER=${DB_USER}" > deploy/k8s/overlays/dev/dev.env
-    - echo "DB_PASSWORD=${DB_PASSWORD}" >> deploy/k8s/overlays/dev/dev.env
-    - echo "DB_NAME=${DB_NAME}" >> deploy/k8s/overlays/dev/dev.env
-    - echo "DB_PORT=${DB_PORT}" >> deploy/k8s/overlays/dev/dev.env
-    - echo "Setting image for dev dry-run..."
-    - (cd deploy/k8s/overlays/dev && kustomize edit set image s5-server=$APP_IMAGE)
-    - echo "Running dry-run for dev..."
-    - kubectl apply -k deploy/k8s/overlays/dev/ --dry-run=client
-    - echo "Rendering final YAML for review..."
-    - kubectl kustomize deploy/k8s/overlays/dev/
-  rules:
-    - if: $CI_COMMIT_BRANCH == "development"
-
-deploy-dev:
-  stage: deploy
-  image: google/cloud-sdk:latest
-  tags:
-    - wsl-runner.S5
-  script:
-    - echo "Preparing dev environment deployment..."
-    # Create .env file for kustomize secretGenerator from GitLab variables
-    - echo "DB_USER=${DB_USER}" > deploy/k8s/overlays/dev/dev.env
-    - echo "DB_PASSWORD=${DB_PASSWORD}" >> deploy/k8s/overlays/dev/dev.env
-    - echo "DB_NAME=${DB_NAME}" >> deploy/k8s/overlays/dev/dev.env
-    - echo "DB_PORT=${DB_PORT}" >> deploy/k8s/overlays/dev/dev.env
-    - echo "Setting image for dev..."
-    - (cd deploy/k8s/overlays/dev && kustomize edit set image s5-server=$APP_IMAGE)
-    - echo "Deploying to Kubernetes using dev overlay..."
-    - kubectl apply -k deploy/k8s/overlays/dev/
-  rules:
-    - if: $CI_COMMIT_BRANCH == "development"
-
-deploy-prod:
-  stage: deploy
-  image: google/cloud-sdk:latest
-  tags:
-    - wsl-runner.S5
-  script:
-    - echo "Preparing prod environment deployment..."
-    # Create .env file for kustomize secretGenerator from GitLab variables
-    - echo "DB_USER=${DB_USER}" > deploy/k8s/overlays/prod/prod.env
-    - echo "DB_PASSWORD=${DB_PASSWORD}" >> deploy/k8s/overlays/prod/prod.env
-    - echo "DB_NAME=${DB_NAME}" >> deploy/k8s/overlays/prod/prod.env
-    - echo "DB_PORT=${DB_PORT}" >> deploy/k8s/overlays/prod/prod.env
-    - echo "Setting image for prod..."
-    - (cd deploy/k8s/overlays/prod && kustomize edit set image s5-server=$APP_IMAGE)
-    - echo "Deploying to Kubernetes using prod overlay..."
-    - kubectl apply -k deploy/k8s/overlays/prod/
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-  when: manual
-
-verify-db-cluster:
-  stage: verify
-  image: google/cloud-sdk:latest
-  tags:
-    - wsl-runner.S5
-  script:
-    - echo "Verifying database cluster readiness..."
-    - TIMEOUT=900 # 15 минут таймаут
-    - SECONDS=0
     - |
-      while [ $SECONDS -lt $TIMEOUT ]; do
-        # Получаем статус инстансов
-        READY_INSTANCES=$(kubectl get cluster s5-db-cluster -n default -o jsonpath='{.status.readyInstances}')
-        TOTAL_INSTANCES=$(kubectl get cluster s5-db-cluster -n default -o jsonpath='{.spec.instances}')
-        
-        if [ "$READY_INSTANCES" == "$TOTAL_INSTANCES" ] && [ -n "$READY_INSTANCES" ]; then
-          echo "Cluster is ready! ($READY_INSTANCES/$TOTAL_INSTANCES instances)"
-          POD_NAME=$(kubectl get pods -n default -l cnpg.io/cluster=s5-db-cluster,cnpg.io/instanceRole=primary -o jsonpath='{.items[0].metadata.name}')
-          echo "Checking logs of pod: $POD_NAME"
-          # "database system is ready to accept connections" - стандартное сообщение о готовности Postgres
-          if kubectl logs $POD_NAME -n default | grep "database system is ready to accept connections"; then
-            echo "Verification successful: Database is ready and accepting connections."
-            exit 0
-          else
-            echo "Error: Cluster is ready, but log verification failed."
-            kubectl logs $POD_NAME -n default
-            exit 1
-          fi
-        fi
-        
-        echo "Waiting for cluster to be ready... ($READY_INSTANCES/$TOTAL_INSTANCES ready)"
-        sleep 30
-        SECONDS=$((SECONDS + 30))
-      done
-    - echo "Timeout waiting for cluster to become ready."
-    - exit 1
+      buildctl \
+        --addr "${BUILDKIT_ADDR}" \
+        --tlscacert "${BUILDKIT_TLS_CA_FILE}" \
+        --tlscert "${BUILDKIT_TLS_CERT_FILE}" \
+        --tlskey "${BUILDKIT_TLS_KEY_FILE}" \
+        build \
+          --frontend dockerfile.v0 \
+          --local context=. \
+          --local dockerfile=. \
+          --opt filename=${DOCKER_FILE} \
+          --export-cache type=registry,ref=$CACHE_IMAGE,mode=max \
+          --import-cache type=registry,ref=$CACHE_IMAGE \
+          --output type=image,name=$CI_REGISTRY_IMAGE:$IMAGE_TAG,push=true \
+          --output type=image,name=$CI_REGISTRY_IMAGE:$IMAGE_TAG_LATEST,push=true
+
+# Сборка основного приложения
+build-app-image:
+  extends:
+    - .build_image_template
+  variables:
+    # Формирование уникального тега (ветка + короткий SHA) 
+    IMAGE_TAG: "app-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}"
+    IMAGE_TAG_LATEST: "app-latest"
+    DOCKER_FILE: "Dockerfile"
+  rules:
+    # Ручной запуск для веток main и development
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+    - if: $CI_COMMIT_BRANCH == "development"
+      when: manual
+
+# Сборка образа базы данных (или доп. инструментов)
+build-db-image:
+  extends:
+    - .build_image_template
+  variables:
+    IMAGE_TAG: "db-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}"
+    IMAGE_TAG_LATEST: "db-latest"
+    DOCKER_FILE: "Dockerfile.db"
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_BRANCH == "development"
+  needs:
+    - job: build-app-image # Начинать только после успешной сборки приложения
+
+# Шаблон для обновления манифестов в Git-репозитории (FluxCD)
+.update_manifest_template:
+  stage: update_manifest
+  tags:
+    - k8s-shared
+  needs:
+    - job: build-app-image
+    - job: build-db-image
+  image:
+    name: alpine/git:latest
+    pull_policy: if-not-present
+    entrypoint: [""]
+  variables:
+    REPO_BRANCH: nil
+    ENVIRONMENT: nil
+    MANIFEST_BASE_PATH: "${CI_PROJECT_DIR}/apps/s5/overlays/${ENVIRONMENT}/patches"
+    DEPLOYMENT_YAML: "${MANIFEST_BASE_PATH}/deployment.yaml"
+    PROJECT_URL: s5-group/fluxcd
+  before_script:
+    # Настройка почты и имени для коммитов от имени CI
+    - git config user.email "job-runner@gitlab.com822.dom"
+    - git config user.name "CI Job Runner"
+    # Настройка SSL для работы с внутренним GitLab через самоподписанный сертификат
+    - git config http.sslCAInfo "${SELFSIGNED_CA_PATH}/ca.crt"
+    # Переопределение URL репозитория для авторизации через Access Token
+    - git remote set-url origin https://${GROUP_AT_NAME}:${GROUP_AT_TOKEN}@${CI_SERVER_HOST}/${PROJECT_URL}.git
+    - git remote set-url --push origin https://${GROUP_AT_NAME}:${GROUP_AT_TOKEN}@${CI_SERVER_HOST}/${PROJECT_URL}.git
+  script:
+    # Получение актуального состояния веток
+    - git fetch origin ${REPO_BRANCH}
+    # Переключение на целевую ветку репозитория манифестов
+    - git checkout ${REPO_BRANCH}
+    # Слияние изменений (rebase) для чистой истории коммитов
+    - git pull --rebase origin ${REPO_BRANCH}
+    # Обновление тегов образов в YAML файле с помощью регулярного выражения sed
+    - >
+      sed -i "s|image: $CI_REGISTRY_IMAGE:app-.*|image: $CI_REGISTRY_IMAGE:app-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}|" ${DEPLOYMENT_YAML}
+    - >
+      sed -i "s|image: $CI_REGISTRY_IMAGE:db-.*|image: $CI_REGISTRY_IMAGE:db-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}|" ${DEPLOYMENT_YAML}
+    # Индексация измененного файла
+    - git add ${DEPLOYMENT_YAML}
+    # Создание коммита с описанием нового тега
+    - git commit -m "Update app image tag to ${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}"
+    # Пуш изменений обратно в репозиторий с флагом ci.skip, чтобы не зацикливать пайплайн
+    - git push origin HEAD:${REPO_BRANCH} -o ci.skip
+
+# Задача для обновления манифестов окружения development
+update_manifest-development-job:
+  extends: 
+    - .update_manifest_template
+  rules:
+    - if: $CI_COMMIT_BRANCH == "development"
+      when: on_success # Запуск только при успехе предыдущих стадий
+  variables:
+    REPO_BRANCH: "main" # Ветка в репозитории FluxCD
+    ENVIRONMENT: "development" # Папка окружения

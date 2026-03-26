@@ -4,7 +4,20 @@ resources:
   - k8s-deployment.yaml
   - k8s-service.yaml
   - k8s-db-cluster.yaml
+  - db-init-job.yaml
+ 
+# Подключаем правила замены имен
+# Теперь они применяются автоматически ко всем, кто использует base
+# Добавляем "заглушку", чтобы replacements видели целевой объект
+configMapGenerator:
+  - name: s5-db-params
+    literals:
+      - DB_NAME=placeholder
+      - DB_USER=placeholder
+      - DB_HOST=s5-db-cluster-rw  # Устанавливаем системное имя здесь
+      
 
-images:
-  - name: s5-server
-    newTag: placeholder
+
+
+configurations:
+  - kustomize-config.yaml

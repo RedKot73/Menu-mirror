@@ -207,7 +207,7 @@ builder.Services
     .AddProjections()                       // ✅ Оптимізація Include/Select
     .AddFiltering()                         // ✅ Фільтрація (where)
     .AddSorting();                          // ✅ Сортування (orderBy)
-                                            // ✅ DbContext вже зареєстрований через AddPooledDbContextFactory!
+// ✅ DbContext вже зареєстрований через AddPooledDbContextFactory!
 
 builder.Services.AddControllers();
 
@@ -256,7 +256,7 @@ if (args.Contains("--migrate"))
     Log.Information("=== Запуск режима миграций ===");
 
     using var scope = app.Services.CreateScope();
-    // Достаем ваш MainDbContext
+    // Достаем MainDbContext
     var dbContext = scope.ServiceProvider.GetRequiredService<MainDbContext>();
     try
     {

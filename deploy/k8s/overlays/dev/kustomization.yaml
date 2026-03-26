@@ -1,19 +1,44 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Inherit from the base configuration
+generatorOptions:
+  disableNameSuffixHash: true
+
 resources:
-  - ../../base
+- ../../base
 
-# Generate the ConfigMap for the development environment
-configMapGenerator:
-- name: s5-app-config
-  literals:
-  - ASPNETCORE_ENVIRONMENT=Development
-  - DB_HOST=s5-db-cluster-rw # This could be a different dev-specific host
+namespace: s5-dev
 
-# Generate the Secret from the .env file
+# 1. Сначала подтягиваем замены (replacements)
+# Они должны быть ЗДЕСЬ, чтобы видеть финальные значения из .env
+replacements:
+  - path: ../../base/db-replacements.yaml
+
 secretGenerator:
 - name: s5-db-credentials
   envs:
   - dev.env
+- name: s5-https-cert # Добавлена секция для HTTPS (берет KESTREL_CERT_PATH и KESTREL_CERT_PASSWORD из dev.env)
+  envs:
+  - dev.env
+
+configMapGenerator:
+- name: s5-db-params
+  behavior: merge # ГОВОРИМ: "Возьми тот, что в base, и обнови его"
+  envs:
+  - dev.env
+- name: s5-app-config
+  literals:
+  - ASPNETCORE_ENVIRONMENT=Development
+  - DB_HOST=s5-db-cluster-rw
+
+images:
+- name: s5-db # Имя должно совпадать с названием в base, чтобы GitLab CI мог его заменить
+  newName: s5-db
+  newTag: 18.3-v1.0.0
+- name: s5-server
+  newName: s5-server
+  newTag: 1.0.0
+
+# Блок replacements удален отсюда и перенесен в base/kustomization.yaml
+# Это гарантирует отсутствие ошибок доступа к файлам при сборке оверлея

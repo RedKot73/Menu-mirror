@@ -2,27 +2,62 @@ apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
   name: s5-db-cluster
-  namespace: default
 spec:
   instances: 1
-  imageName: ${DB_IMAGE}
+  # ВАЖНО: Укажи здесь имя своего собранного образа
+  imageName: s5-db 
 
-  # Описание подключения к базе данных
-  database:
-    name:
-      configMapKeyRef:
-        name: s5-app-config
-        key: DB_NAME
-    owner:
-      secretKeyRef:
-        name: s5-db-credentials
-        key: DB_USER
-  
-  # Настройки хранилища
+  # --- Секция инициализации базы данных ---
+  bootstrap:
+    initdb:
+      # Kustomize заменит 'change-me' на чистый текст из ConfigMap (DB_NAME и DB_USER)
+      # Это решает проблему с Base64 кодировкой при создании базы.
+      database: change-me 
+      owner: change-me    
+      # Ссылка на секрет, где лежат пароли. 
+      # Оператор сам найдет в нем ключи 'username' и 'password'.
+      secret:
+        name: s5-db-credentials 
+
+      # Способ 2: Импорт через системную команду после инициализации
+      # Мы используем COPY (программный интерфейс Postgres) для вызова скрипта шелла
+      # postInitApplicationSQL:
+      # - |
+      #     -- Используем одну строку для импорта, чтобы избежать конфликтов с Kustomize
+      #     -- Мы вызываем bash напрямую, чтобы он прокинул текущие переменные окружения
+      #     CREATE TEMP TABLE run_import(output text);
+      #     COPY run_import FROM PROGRAM 'zcat /docker-entrypoint-initdb.d/init-dump.sql.gz | psql -U S5Master_user -d S5_DB_local';
+      #     DROP TABLE run_import;
+        # - |
+        #   -- Динамический импорт без дублирования имен
+        #   DO $$
+        #   BEGIN
+        #     -- Создаем временную таблицу для выполнения системной команды
+        #     CREATE TEMP TABLE run_import(output text);
+            
+        #     -- Выполняем распаковку и импорт дампа, который лежит в образе
+        #     -- %I автоматически подставит текущего владельца и базу из конфига выше
+        #     EXECUTE format('COPY run_import FROM PROGRAM ''zcat /docker-entrypoint-initdb.d/init-dump.sql.gz | psql -U %I -d %I''', current_user, current_database());
+            
+        #     DROP TABLE run_import;
+        #   END $$;
+
+  # --- Управление ролями и доступом ---
+  managed:
+    roles:
+      - name: change-me  # Будет заменено на реальное имя пользователя (DB_USER)
+        ensure: present
+        login: true
+        # Оператор использует этот секрет для установки пароля роли.
+        # Он автоматически декодирует Base64 значение ключа 'password'.
+        passwordSecret:
+          name: s5-db-credentials
+
+  # --- Настройки хранилища данных ---
   storage:
     size: 1Gi
-    storageClass: standard # Укажите ваш StorageClass, если он отличается
-  
-  # Мониторинг (опционально, можно включить позже)
+    storageClass: standard 
+
+  # --- Дополнительные настройки (опционально) ---
   # monitoring:
   #   enablePodMonitor: true

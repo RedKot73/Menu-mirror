@@ -1,92 +1,56 @@
-# Kustomize-based Deployment Guide for Kubernetes
+Вот финальный вариант инструкции k8s_deploy_readme.txt, где каждое предложение и команда вынесены на новую строку для максимальной читаемости.🚀 Инструкция по развертыванию S5 (K8s Deployment Guide) 📋 Шаг 1: Установка инструментов (Runtime) Администратор должен установить базовое ПО на сервере, где запущен GitLab Runner (executor: shell).Docker Engine (необходим для сборки образов): Bashsudo apt-get update && sudo apt-get install docker.io -y
+sudo systemctl enable --now docker
+Kubectl и Kustomize (инструменты управления манифестами): Bash# Установка Kubectl
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 
-This guide explains how to deploy the application and its database to a Kubernetes cluster (local or remote) using the Kustomize setup.
+# Установка Kustomize
+curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash [cite: 25]
+sudo mv kustomize /usr/local/bin/ [cite: 25]
+⚙️ Шаг 2: Настройка переменных GitLab (CI/CD) Внесите переменные в Settings -> CI/CD -> Variables.
+Данные автоматически запишутся в .env.
+Список переменных: DB_USER: 
+S5Master_user (Имя пользователя БД).
+DB_PASSWORD: YourSecurePassword123 
+(Пароль, используйте Masked).
+DB_NAME: S5_DB_local (Имя базы данных).
+KESTREL_CERT_PATH: /app/aspnetapp.pfx (ПУТЬ В КОНТЕЙНЕРЕ строго этот).
+KESTREL_CERT_PASSWORD: devpass (Пароль от вашего .pfx файла).
 
-## Directory Structure Overview
 
-The Kubernetes manifests are organized using Kustomize to manage different environments:
+Важно: Пайплайн продублирует их для оператора БД и создаст секрет s5-https-cert.🌐 Шаг 3: Подготовка пространств имен (Namespaces) Создайте изоляцию для окружений перед первым деплоем.Bash# Для LOCAL
+kubectl create namespace s5-local --dry-run=client -o yaml | kubectl apply -f - 
 
-- `base/`: Contains the common, "template" Kubernetes manifests (`k8s-deployment.yaml`, `k8s-service.yaml`). The deployment manifest now expects `/healthz` and `/ready` endpoints for probes.
-- `overlays/`: Contains environment-specific configurations.
-  - `dev/`: Configuration for the development environment. Deploys from the `development` branch.
-  - `prod/`: Configuration for the production environment. Deploys from the `main` branch (manual trigger).
-  - `local/`: Configuration for local development and testing (e.g., with Minikube, Docker Desktop).
+# Для DEV
+kubectl create namespace s5-dev --dry-run=client -o yaml | kubectl apply -f - [cite: 28]
 
----
+# Для PROD
+kubectl create namespace s5-prod --dry-run=client -o yaml | kubectl apply -f - 
+🐘 Шаг 4: Установка Оператора БД Манифесты kind: Cluster требуют наличия оператора CloudNativePG.Bash# Установка оператора
+kubectl apply -f https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/main/releases/cnpg-1.22.1.yaml
 
-## Automated Deployment with GitLab CI/CD
+# Проверка (дождитесь статуса Running)
+kubectl get pods -n cnpg-system 
+💻 Шаг 5: Команды для локального деплоя (WSL/Local) Выполняйте команды из корня проекта.1. Сборка образов: Bashdocker build -t s5-server:local . 
+docker build -f ./deploy/database/Dockerfile.kuber -t s5-db:local . 
+2. Полный сброс (Reset): Bashkubectl delete cluster s5-db-cluster -n s5-local 
+kubectl delete pvc -l "cnpg.io/cluster=s5-db-cluster" -n s5-local 
+kubectl delete secret s5-db-credentials s5-https-cert -n s5-local --ignore-not-found 
+3. Применение манифестов: Bashkustomize build deploy/k8s/overlays/local --load-restrictor LoadRestrictionsNone | kubectl apply -f - 
+🔍 Шаг 6: Диагностика Проверка секретов:
+kubectl get secret s5-https-cert -n s5-local -o yaml
 
-Deployment to `development` and `production` environments is automated via `.gitlab-ci.yml`.
+Проверка базы:kubectl get cluster s5-db-cluster -n s5-local
 
-### How it Works
-1.  **Trigger**: A push to the `development` branch (for dev) or a manual trigger on the `main` branch (for prod).
-2.  **Build**: Docker images for the app and database are built and pushed to the GitLab registry.
-3.  **Deploy**:
-    - The CI job selects the correct overlay (`dev` or `prod`).
-    - It creates a temporary `.env` file (e.g., `dev.env`) inside the overlay directory, populating it with `DB_USER` and `DB_PASSWORD` from GitLab's CI/CD variables.
-    - It uses `kustomize edit set image` to update the image tag to the one just built.
-    - It runs `kubectl apply -k <overlay-path>` to deploy all resources. `kustomize` builds the final manifests, creating the `s5-db-credentials` secret from the `.env` file and the `s5-app-config` ConfigMap with environment-specific settings.
 
-You do not need to run `kubectl` commands manually for these environments.
+Логи импорта:kubectl logs -l job-name=s5-db-init-job -n s5-local
 
----
+Перезапуск приложения (если сервер запустился раньше базы):
+kubectl rollout restart deployment s5-server-deployment -n s5-local
 
-## Local Deployment and Testing
+Додайте в Шаг 6 (Диагностика): 
 
-For local development, you'll use the `local` overlay, which sources its secrets from the main `.env` file in the project root.
+Логи миграции: kubectl logs -l app=s5-server -n s5-local -c db-migration.
 
-### Step 1: Prepare Local Secrets
-- Edit the `.env` file in the root of the project.
-- Fill in the `DB_USER`, `DB_PASSWORD`, `DB_NAME`, etc., for your local database instance. The `local` Kustomize overlay is configured to read this file.
-
-### Step 2: Preview the Generated Manifests (Optional but Recommended)
-Before applying any changes, you can preview all the Kubernetes resources that Kustomize will generate. This is a great way to verify that your secrets and configurations are correct.
-```shell
-# Run this from the project root
-kubectl kustomize deploy/k8s/overlays/local
-```
-This command will print the final `Deployment`, `Service`, `ConfigMap`, and `Secret` manifests to the console.
-
-### Step 3: Deploy the Database Cluster
-This step is the same as before. It sets up the CloudNativePG PostgreSQL cluster.
-```shell
-# Apply the cluster definition
-kubectl apply -f deploy/k8s/k8s-db-cluster.yaml
-
-# Wait for the cluster to become healthy (may take a few minutes)
-# Look for "Cluster in healthy state"
-kubectl get cluster -n default
-```
-
-### Step 4: Deploy the Application using the `local` Overlay
-This single command deploys the application and its configuration.
-```shell
-# This command builds the final manifests from 'base' and the 'local' overlay
-# and applies them to your cluster.
-kubectl apply -k deploy/k8s/overlays/local/
-```
-**Note**: For this to work, your application image must be available in your local cluster's Docker daemon. You may need to build it locally and, if using Minikube, run `minikube image load <your-image-name>:<tag>`.
-
-### Step 5: Verification and Access
-```shell
-# Check that the deployment was successful and the pod is ready
-kubectl get deployments
-
-# Forward the service port to your local machine to access the app
-kubectl port-forward service/s5-server-service 8080:80
-```
-You can now access the application at `http://localhost:8080`.
-
----
-
-## Cleaning Up Resources
-
-To remove the deployed resources from your local cluster:
-
-```shell
-# Delete the application resources created by the 'local' overlay
-kubectl delete -k deploy/k8s/overlays/local/
-
-# Delete the database cluster separately
-kubectl delete -f deploy/k8s/k8s-db-cluster.yaml
-```
+Примітка: Оскільки міграція — це окремий контейнер всередині пода, 
+прапор -c db-migration обов'язковий, інакше ви побачите логи основного сервера.
