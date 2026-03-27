@@ -14,17 +14,61 @@ services:
       - "${DB_EXTERNAL_PORT}:5432"
     volumes:
       - pg_local_data:/var/lib/postgresql/data/pgdata
+    # ПРОВЕРКА ГОТОВНОСТИ: проверяем, что база не просто запустилась, а готова принимать запросы
+    healthcheck:
+      # pg_isready вернет 0 только когда база реально готова
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # БЛОК МИГРАЦИИ: отдельный сервис, который обновит БД перед стартом приложения
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: s5-migration-local
+    # Логика вывода: выводим статус начала, выполняем команду, и выводим результат
+    entrypoint: ["/bin/sh", "-c"]
+    command: 
+      - |
+        echo ">>> [STEP 2/3] STARTING DATABASE MIGRATIONS..."
+        dotnet S5Server.dll --migrate
+        if [ $$? -eq 0 ]; then
+          echo ">>> [STEP 2/3] SUCCESS: MIGRATIONS COMPLETED SUCCESSFULLY."
+        else
+          echo ">>> [STEP 2/3] ERROR: MIGRATIONS FAILED!"
+          exit 1
+        fi
+    depends_on:
+      db:
+        condition: service_healthy # Ждем успешного выполнения healthcheck базы
+    environment:
+      - PrimaryConnection__DB_Host=db
+      - PrimaryConnection__Port=5432
+      - PrimaryConnection__DB_Name=${DB_NAME}
+      - PrimaryConnection__DB_Username=${DB_USER}
+      - PrimaryConnection__DB_Password=${DB_PASSWORD}
 
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: s5-server-local
+    # Логика вывода: подтверждаем старт сервера после всех проверок
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo ">>> [STEP 3/3] ALL CHECKS PASSED. STARTING S5 SERVER..."
+        dotnet S5Server.dll
     depends_on:
-      - db
+      db:
+        condition: service_healthy # Ждем готовности базы
+      migration:
+        condition: service_completed_successfully # Ждем успешного завершения всех миграций
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
-      # РЕШЕНИЕ ПРОБЛЕМЫ ХОСТА: используем имя сервиса 'db' 
+      # РЕШЕНИЕ ПРОБЛЕМЫ ХОСТА: используем имя сервиса 'db'
       - PrimaryConnection__DB_Host=db
       - PrimaryConnection__Port=5432
       # РЕШЕНИЕ РЕКУРСИИ: маппинг переменных происходит здесь
