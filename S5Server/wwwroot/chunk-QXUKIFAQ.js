@@ -234,6 +234,9 @@ Expecting `+he.join(", ")+", got '"+(this.terminals_[E]||E)+"'":ye="Parse error 
                 value
             }
         }
+        areaCityFullName{
+          value
+        }
         area {
           value
         }
