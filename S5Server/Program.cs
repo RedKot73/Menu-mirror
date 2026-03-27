@@ -260,32 +260,9 @@ if (args.Contains("--migrate"))
     var dbContext = scope.ServiceProvider.GetRequiredService<MainDbContext>();
     try
     {
-        // Перевіряємо, чи є в БД таблиці, але немає записів у __EFMigrationsHistory
-        //var allMigrations = dbContext.Database.GetMigrations().ToList();
-        //var appliedMigrations = (await dbContext.Database.GetAppliedMigrationsAsync()).ToList();
-        /*
-        var tmp = dbContext.Database.SqlQuery<string>(@$"SELECT migration_id
-FROM public.""__EFMigrationsHistory""
-ORDER BY migration_id").ToList();
-        */
-        /*
-        if (appliedMigrations.Count == 0)
-        {
-            // Таблиці вже існують (відновлено з дампу) — реєструємо всі міграції як застосовані
-            foreach (var migration in allMigrations)
-            {
-                await dbContext.Database.ExecuteSqlAsync(
-                    $"""INSERT INTO public."__EFMigrationsHistory" ("MigrationId", "ProductVersion") VALUES ('{migration}', '10.0.4') ON CONFLICT DO NOTHING""");
-            }
-            Log.Information("=== Міграції зареєстровано як застосовані (дамп) ===");
-        }
-        else
-        */
-        {
-            // Накатываем миграции поверх дампа
-            await dbContext.Database.MigrateAsync();
-            Log.Information("=== Миграции успешно применены! ===");
-        }
+        // Накатываем миграции поверх дампа
+        await dbContext.Database.MigrateAsync();
+        Log.Information("=== Миграции успешно применены! ===");
     }
     catch (Exception ex)
     {
