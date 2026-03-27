@@ -454,6 +454,10 @@ public class UnitTaskController : ControllerBase
             task.Publish(setPublish, changedBy);
             if (task.IsPublished)
             {
+                task.Amount = await _db.DictUnitTasks
+                    .Where(t => t.Id == task.TaskId)
+                    .Select(t => t.Amount)
+                    .FirstOrDefaultAsync(ct);
                 await task.CreateSoldierSnapshot(_db, changedBy, ct);
             }
             else

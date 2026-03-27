@@ -189,6 +189,11 @@ public class UnitTask
     /// </summary>
     [StringLength(100), Required]
     public string TaskValue { get; set; } = default!;
+    /// <summary>
+    /// Сума (грн)
+    /// </summary>
+    [Column(TypeName = "numeric(18, 2)")]
+    public decimal Amount { get; set; }
 
     /// <summary>
     /// Район виконання завдань (РВЗ)

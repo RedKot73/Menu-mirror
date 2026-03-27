@@ -1064,6 +1064,9 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
                 .HasMaxLength(100)
                 .HasColumnType("citext")
                 .HasComment("Завдання підрозділу для використання в документах БР/БД");
+            entity.Property(e => e.Amount)
+                .HasColumnType("numeric(18, 2)")
+                .HasComment("Тариф в грн. за завдання");
             entity.Property(e => e.AreaId).IsRequired().HasColumnType("uuid")
                 .HasComment("РВЗ (Район виконання завдань)");
             entity.Property(e => e.IsPublished).HasColumnType("boolean")
