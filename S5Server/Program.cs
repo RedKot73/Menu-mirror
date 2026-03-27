@@ -261,8 +261,8 @@ if (args.Contains("--migrate"))
     try
     {
         // Перевіряємо, чи є в БД таблиці, але немає записів у __EFMigrationsHistory
-        var allMigrations = dbContext.Database.GetMigrations().ToList();
-        var appliedMigrations = (await dbContext.Database.GetAppliedMigrationsAsync()).ToList();
+        //var allMigrations = dbContext.Database.GetMigrations().ToList();
+        //var appliedMigrations = (await dbContext.Database.GetAppliedMigrationsAsync()).ToList();
         /*
         var tmp = dbContext.Database.SqlQuery<string>(@$"SELECT migration_id
 FROM public.""__EFMigrationsHistory""

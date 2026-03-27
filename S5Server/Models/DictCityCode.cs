@@ -166,12 +166,6 @@ namespace S5Server.Models
     public class DictCityCategory : ShortDictBase, IShortDictBase
     {
         /// <summary>
-        /// Gets or sets the identifier code associated with the entity.
-        /// </summary>
-        /// <remarks>The value must be a non-empty string with a maximum length of one character. This
-        /// property is required and validation will fail if it is not provided.</remarks>
-        [StringLength(1), Required]
-        /// <summary>
         /// Gets or sets the code identifier.
         /// </summary>
         /// <remarks>The code identifier must be a non-empty string with a maximum length of one
