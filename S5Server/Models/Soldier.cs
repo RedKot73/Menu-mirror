@@ -31,6 +31,8 @@ public record SoldierCreateDto(
 /// <summary>
 /// DTO для передачи Soldier
 /// </summary>
+/// <param name="ChangedBy">User, що вніс зміни</param>
+/// <param name="ValidFrom">Дата начала действия записи</param>
 public record SoldierDto(
 //Базові поля
     string FirstName,
@@ -56,13 +58,7 @@ public record SoldierDto(
     string RankShortValue,
     string PositionValue,
     string StateValue,
-    /// <summary>
-    /// User, що вніс зміни
-    /// </summary>
     string ChangedBy,
-    /// <summary>
-    /// Дата начала действия записи
-    /// </summary>
     DateTime ValidFrom
 ) : SoldierCreateDto(
     FirstName,

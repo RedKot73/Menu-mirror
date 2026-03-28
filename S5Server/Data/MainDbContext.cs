@@ -14,12 +14,6 @@ namespace S5Server.Data;
 /// <remarks>Класс наследуется от IdentityDbContext и расширяет стандартную схему Identity.</remarks>
 public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, Guid>
 {
-/// <summary>
-/// Представляет основной контекст базы данных приложения
-/// Используется для работы с данными через Entity Framework
-/// Core и ASP.NET Core Identity
-/// </summary>
-/// <remarks>Класс наследуется от IdentityDbContext и расширяет стандартную схему Identity.</remarks>
 
     public MainDbContext(DbContextOptions<MainDbContext> options)
         : base(options)

@@ -100,13 +100,6 @@ public record UnitTreeItemDto(
 [Table("units")]
 public class Unit
 {
-    /// <summary>
-    /// ID для запису БД представляючого "Екіпаж"
-    /// </summary>
-    //public const string Crew_GUID = "00000000-0000-0000-0000-000000000002";
-    /// <summary>
-    /// Gets or sets the unique identifier for the entity.
-    /// </summary>
     [Key]
     public Guid Id { get; set; } = Guid.CreateVersion7();
 

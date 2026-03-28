@@ -31,6 +31,9 @@ namespace S5Server.Services
             _logger = logger;
 
         }
+        /// <summary>
+        /// Подія, що сповіщає про перебіг імпорту.
+        /// </summary>
         public static event Action<ImportCityCodesProgress>? Progress;
         private static void Report(ImportCityCodesProgress p)
         {
@@ -46,7 +49,12 @@ namespace S5Server.Services
             }
         }
 
-        // Буферизація файла до запуска фоновой задачи, чтобы избежать ObjectDisposedException
+        /// <summary>
+        /// Зберігає завантажений файл у пам'ять та запускає фонову задачу для імпорту.
+        /// </summary>
+        /// <param name="file">Файл Excel для імпорту.</param>
+        /// <param name="ct">Токен скасування.</param>
+        /// <returns>Кортеж, що містить статус запуску, поточний статус імпорту та повідомлення про помилку, якщо вона є.</returns>
         public static (bool started, CityCodesProgressStatus status, string? error) TryStartBackground(IFormFile file, CancellationToken ct = default)
         {
             lock (_sync)
@@ -100,6 +108,11 @@ namespace S5Server.Services
             return string.IsNullOrEmpty(trimmed) ? null : trimmed;
         }
 
+        /// <summary>
+        /// Виконує основну логіку імпорту кодифікатора з наданого масиву байтів.
+        /// </summary>
+        /// <param name="sourceData">Масив байтів, що містить дані файлу Excel.</param>
+        /// <param name="ct">Токен скасування.</param>
         public static async Task DoImport(byte[] sourceData, CancellationToken ct = default)
         {
             var processed = 0;

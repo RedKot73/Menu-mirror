@@ -1,11 +1,26 @@
+# 1. Описываем общие настройки для всех .NET сервисов (якорь &common-env)
+x-environment-common: &common-env
+  PrimaryConnection__DB_Host: db
+  PrimaryConnection__Port: 5432
+  PrimaryConnection__DB_Name: ${DB_NAME}
+  PrimaryConnection__DB_Username: ${DB_USER}
+  PrimaryConnection__DB_Password: ${DB_PASSWORD}
+  # Убедитесь, что эта переменная совпадает с логикой в Program.cs
+  ASPNETCORE_ENVIRONMENT: Development
+  
 services:
   db:
     build:
       context: ./deploy/database
       dockerfile: Dockerfile.local
     container_name: s5-db-local
+    # Явно указываем команду запуска с SSL, чтобы переопределить стандартное поведение
+    command: >
+      postgres 
+      -c ssl=on 
+      -c ssl_cert_file=/etc/postgresql/ssl/server.crt 
+      -c ssl_key_file=/etc/postgresql/ssl/server.key
     environment:
-      # Настройка самого Postgres
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
@@ -14,21 +29,19 @@ services:
       - "${DB_EXTERNAL_PORT}:5432"
     volumes:
       - pg_local_data:/var/lib/postgresql/data/pgdata
-    # ПРОВЕРКА ГОТОВНОСТИ: проверяем, что база не просто запустилась, а готова принимать запросы
     healthcheck:
-      # pg_isready вернет 0 только когда база реально готова
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} || exit 1"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
 
-  # БЛОК МИГРАЦИИ: отдельный сервис, который обновит БД перед стартом приложения
   migration:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: s5-migration-local
-    # Логика вывода: выводим статус начала, выполняем команду, и выводим результат
+    environment:
+      <<: *common-env
     entrypoint: ["/bin/sh", "-c"]
     command: 
       - |
@@ -42,20 +55,16 @@ services:
         fi
     depends_on:
       db:
-        condition: service_healthy # Ждем успешного выполнения healthcheck базы
-    environment:
-      - PrimaryConnection__DB_Host=db
-      - PrimaryConnection__Port=5432
-      - PrimaryConnection__DB_Name=${DB_NAME}
-      - PrimaryConnection__DB_Username=${DB_USER}
-      - PrimaryConnection__DB_Password=${DB_PASSWORD}
+        condition: service_healthy
 
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: s5-server-local
-    # Логика вывода: подтверждаем старт сервера после всех проверок
+    environment:
+      <<: *common-env
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
@@ -63,18 +72,9 @@ services:
         dotnet S5Server.dll
     depends_on:
       db:
-        condition: service_healthy # Ждем готовности базы
+        condition: service_healthy
       migration:
-        condition: service_completed_successfully # Ждем успешного завершения всех миграций
-    environment:
-      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
-      # РЕШЕНИЕ ПРОБЛЕМЫ ХОСТА: используем имя сервиса 'db'
-      - PrimaryConnection__DB_Host=db
-      - PrimaryConnection__Port=5432
-      # РЕШЕНИЕ РЕКУРСИИ: маппинг переменных происходит здесь
-      - PrimaryConnection__DB_Name=${DB_NAME}
-      - PrimaryConnection__DB_Username=${DB_USER}
-      - PrimaryConnection__DB_Password=${DB_PASSWORD}
+        condition: service_completed_successfully
     ports:
       - "8080:8080"
       - "8081:8081"
