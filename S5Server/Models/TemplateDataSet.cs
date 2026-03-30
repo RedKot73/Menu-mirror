@@ -1,11 +1,18 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace S5Server.Models;
 
 /// <summary>
-/// DTO для створення TemplateDataSet
+/// DTO для створення набору даних шаблона документа.
 /// </summary>
+/// <param name="IsParentDocUsed">Чи використовується документ вищого штабу.</param>
+/// <param name="ParentDocNumber">Номер документа вищого штабу.</param>
+/// <param name="ParentDocDate">Дата документа вищого штабу.</param>
+/// <param name="Name">Назва набору даних.</param>
+/// <param name="DocNumber">Номер створюваного документа.</param>
+/// <param name="DocDate">Дата створюваного документа.</param>
+/// <param name="IsPublished">Чи опубліковано набір даних.</param>
 public record TemplateDataSetCreateDto(
     bool IsParentDocUsed,
     string? ParentDocNumber,
@@ -16,8 +23,19 @@ public record TemplateDataSetCreateDto(
     bool IsPublished);
 
 /// <summary>
-/// DTO для читання TemplateDataSet (БЕЗ деталей)
+/// DTO для читання набору даних шаблона (без підпорядкованих завдань).
 /// </summary>
+/// <param name="Id">ID набору даних.</param>
+/// <param name="IsParentDocUsed">Чи використовується документ вищого штабу.</param>
+/// <param name="ParentDocNumber">Номер документа вищого штабу.</param>
+/// <param name="ParentDocDate">Дата документа вищого штабу.</param>
+/// <param name="Name">Назва набору даних.</param>
+/// <param name="DocNumber">Номер документа.</param>
+/// <param name="DocDate">Дата документа.</param>
+/// <param name="IsPublished">Ознака публікації.</param>
+/// <param name="PublishedAtUtc">Час публікації (UTC).</param>
+/// <param name="CreatedAtUtc">Час створення (UTC).</param>
+/// <param name="ValidFrom">Дата початку дії запису.</param>
 public record TemplateDataSetDto(
     Guid Id,
     bool IsParentDocUsed,

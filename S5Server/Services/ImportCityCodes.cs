@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +9,26 @@ using S5Server.Utils;
 
 namespace S5Server.Services
 {
-    public enum CityCodesProgressStatus { Start, Done, Failed }
+    /// <summary>
+    /// Статус процесу імпорту кодифікатора.
+    /// </summary>
+    public enum CityCodesProgressStatus 
+    { 
+        /// <summary> Імпорт запущено. </summary>
+        Start, 
+        /// <summary> Імпорт успішно завершено. </summary>
+        Done, 
+        /// <summary> Помилка під час імпорту. </summary>
+        Failed 
+    }
+
+    /// <summary>
+    /// Прогрес імпорту кодифікатора.
+    /// </summary>
+    /// <param name="Status">Поточний статус.</param>
+    /// <param name="Processed">Кількість оброблених записів.</param>
+    /// <param name="Total">Загальна кількість записів (якщо відомо).</param>
+    /// <param name="Message">Повідомлення про поточну дію.</param>
     public record ImportCityCodesProgress(CityCodesProgressStatus Status, int Processed, int Total, string? Message);
 
     /// <summary>
@@ -24,6 +43,12 @@ namespace S5Server.Services
         // Фабрика контекста для фоновых операций импорта
         private static IDbContextFactory<MainDbContext>? _dbFactory;
         private static ILogger? _logger;
+
+        /// <summary>
+        /// Конфігурує фабрику контексту та логер для імпорту.
+        /// </summary>
+        /// <param name="dbFactory">Фабрика контексту БД.</param>
+        /// <param name="logger">Логер.</param>
         public static void Configure(IDbContextFactory<MainDbContext> dbFactory,
             ILogger logger)
         {

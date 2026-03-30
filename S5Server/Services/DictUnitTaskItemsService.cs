@@ -1,12 +1,20 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 using S5Server.Data;
 using S5Server.Models;
 
 namespace S5Server.Services
 {
+    /// <summary>
+    /// Сервіс для роботи з елементами завдань підрозділу (DictUnitTaskItem).
+    /// </summary>
     public class DictUnitTaskItemsService
     {
+        /// <summary>
+        /// Повертає базовий запит для отримання елементів завдань із завантаженими пов'язаними даними.
+        /// </summary>
+        /// <param name="set">Набір даних (DbSet) елементів завдань.</param>
+        /// <returns>IQueryable із завантаженими TemplateCategory та UnitTask.</returns>
         public static IQueryable<DictUnitTaskItem> Query(DbSet<DictUnitTaskItem> set) => set.AsNoTracking()
             .Include(x => x.TemplateCategory)
             .Include(x => x.UnitTask);

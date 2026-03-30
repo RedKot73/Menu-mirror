@@ -16,6 +16,13 @@ public record PagedResult<T>(
     int PageSize,
     int TotalPages)
 {
+    /// <summary>
+    /// Ознака наявності попередньої сторінки.
+    /// </summary>
     public bool HasPreviousPage => Page > 1;
+    
+    /// <summary>
+    /// Ознака наявності наступної сторінки.
+    /// </summary>
     public bool HasNextPage => Page < TotalPages;
 }

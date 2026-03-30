@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace S5Server.Models
@@ -9,6 +9,9 @@ namespace S5Server.Models
     [Table("dict_soldier_state"), Display(Name = Caption)]
     public class DictSoldierState : SimpleDictBase, ISimpleDict
     {
+        /// <summary>
+        /// Текстовий заголовок для статусу бійця.
+        /// </summary>
         public const string Caption = "Статус бійця";
     }
 }

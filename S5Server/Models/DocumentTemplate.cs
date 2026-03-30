@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
@@ -7,6 +7,17 @@ using S5Server.Utils;
 
 namespace S5Server.Models
 {
+    /// <summary>
+    /// DTO для передачі базових даних про шаблон документа.
+    /// </summary>
+    /// <param name="Id">Унікальний ідентифікатор шаблону.</param>
+    /// <param name="Name">Назва шаблону.</param>
+    /// <param name="Description">Опис шаблону.</param>
+    /// <param name="TemplateCategoryId">ID категорії шаблону.</param>
+    /// <param name="TemplateCategoryName">Назва категорії шаблону.</param>
+    /// <param name="IsPublished">Ознака публікації.</param>
+    /// <param name="CreatedAtUtc">Дата створення в UTC.</param>
+    /// <param name="ValidFrom">Дата початку дії.</param>
     public record TemplateDto(
         Guid Id,
         string Name,
@@ -35,6 +46,11 @@ namespace S5Server.Models
                 e.ValidFrom
             );
 
+        /// <summary>
+        /// Оновлює сутність шаблону даними з DTO.
+        /// </summary>
+        /// <param name="e">Сутність шаблону для оновлення.</param>
+        /// <param name="dto">Джерело даних (DTO).</param>
         public static void ApplyDto(DocumentTemplate e, TemplateDto dto)
         {
             e.Name = dto.Name.Trim();
@@ -98,16 +114,30 @@ namespace S5Server.Models
     [Table("document_templates")]
     public class DocumentTemplate
     {
+        /// <summary>
+        /// Унікальний ідентифікатор запису.
+        /// </summary>
         [Key]
         public Guid Id { get; set; } = Guid.CreateVersion7();
 
+        /// <summary>
+        /// Назва шаблону документа.
+        /// </summary>
         [StringLength(150), Required]
         public string Name { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Довільний опис шаблону.
+        /// </summary>
         [StringLength(300)]
         public string? Description { get; set; }
+        
+        /// <summary>
+        /// Вміст шаблону (HTML/Handlebars).
+        /// </summary>
         [Required]
         public string Content { get; set; } = string.Empty;
+        
         /// <summary>
         /// Категория шаблона документа
         /// </summary>
@@ -122,10 +152,23 @@ namespace S5Server.Models
         /// Gets or sets a value indicating whether the content is published.
         /// </summary>
         public bool IsPublished { get; set; }
+        
+        /// <summary>
+        /// Дата і час публікації (UTC).
+        /// </summary>
         public DateTime? PublishedAtUtc { get; set; }
+        
+        /// <summary>
+        /// Користувач, який опублікував шаблон.
+        /// </summary>
         [StringLength(100)]
         public string? PublishedBy { get; set; }
+        
+        /// <summary>
+        /// Дата створення запису (UTC).
+        /// </summary>
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+        
         /// <summary>
         /// Кто внёс изменение (UserId или "ImportSystem")
         /// </summary>

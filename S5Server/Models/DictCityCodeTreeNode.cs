@@ -1,4 +1,4 @@
-﻿namespace S5Server.Models
+namespace S5Server.Models
 {
     /// <summary>
     /// Запис Кодифікатору адміністративно-територіальних одиниць
@@ -15,12 +15,15 @@
         /// Тут саме string оскільки формат UA01020000000022387
         /// </summary>
         public string? ParentId { get; set; }
+        /// <summary>
+        /// Посилання на батьківський вузол.
+        /// </summary>
         public DictCityCodeTreeNode? Parent { get; set; }
         
         /// <summary>
         /// Категорія об'єкта
         /// «О» – Автономна Республіка Крим, області
-        /// «К» – міста, що мають спеціальний статус
+        /// «К» – міста, що мають спеціальный статус
         /// «Р» – райони в областях та Автономній Республіці Крим
         /// «Н» – території територіальних громад
         ///     (назви територіальних громад) в областях,
@@ -38,8 +41,19 @@
         /// </summary>
         public DictCityCategory? Category { get; set; }
         
+        /// <summary>
+        /// Назва населеного пункту або території.
+        /// </summary>
         public string Value { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// Ознака наявності дочірніх вузлів.
+        /// </summary>
         public bool HasChildren { get; set; } = false;
+        
+        /// <summary>
+        /// Список дочірніх вузлів у дереві Кодифікатора.
+        /// </summary>
         public List<DictCityCodeTreeNode> Children { get; set; } = [];
     }
 

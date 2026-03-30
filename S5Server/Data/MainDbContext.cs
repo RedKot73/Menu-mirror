@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,6 +15,10 @@ namespace S5Server.Data;
 public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, Guid>
 {
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MainDbContext"/> class using the specified options.
+    /// </summary>
+    /// <param name="options">The options to be used by this <see cref="DbContext"/>.</param>
     public MainDbContext(DbContextOptions<MainDbContext> options)
         : base(options)
     {
