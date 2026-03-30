@@ -57,47 +57,52 @@ public class UnitTaskController : ControllerBase
         [FromQuery] Guid? dataSetId,
         CancellationToken ct = default)
     {
-        try
-        {
-            var baseQuery = BaseQuery();
-            if (dataSetId.HasValueGuid())
-                baseQuery = baseQuery.Where(t => t.DataSetId == dataSetId);
+        var baseQuery = BaseQuery();
+        if (dataSetId.HasValueGuid())
+            baseQuery = baseQuery.Where(t => t.DataSetId == dataSetId);
 
-            var qry1 = await baseQuery
-                .Where(t => t.IsPublished)
-                .Select(t => t.ToDto())
-                .ToListAsync(ct)
-                ;
-            var qry2 = await baseQuery
-                .Where(t => !t.IsPublished)
-                .Include(t => t.Unit)
-                    .ThenInclude(u => u.Parent)
-                .Include(t => t.Unit)
-                    .ThenInclude(u => u.AssignedUnit)
-                .Include(t => t.Unit)
-                    .ThenInclude(u => u.UnitType)
-                .Include(t => t.Unit)
-                    .ThenInclude(u => u.PersistentLocation)
-                .Select(t => t.ToDto())
-                .ToListAsync(ct)
-                ;
+        var qry1 = await baseQuery
+            .Where(t => t.IsPublished)
+            .Select(t => t.ToDto())
+            .ToListAsync(ct);
+        var qry2 = await baseQuery
+            .Where(t => !t.IsPublished)
+            .Include(t => t.Unit)
+                .ThenInclude(u => u.Parent)
+            .Include(t => t.Unit)
+                .ThenInclude(u => u.AssignedUnit)
+            .Include(t => t.Unit)
+                .ThenInclude(u => u.UnitType)
+            .Include(t => t.Unit)
+                .ThenInclude(u => u.PersistentLocation)
+            .Select(t => t.ToDto())
+            .ToListAsync(ct);
 
-            var result = qry1.Union(qry2)
-                .OrderByDescending(t => t.PublishedAtUtc)
-                .ThenByDescending(t => t.ValidFrom)
-                ;
-            return Ok(result);
-        }
-        catch (OperationCanceledException)
-        {
-            return Problem(statusCode: 499, title: "Скасовано кліентом");
-        }
-        catch (Exception ex)
-        {
-            if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Помилка отримання списку завдань підрозділів");
-            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
-        }
+        var result = qry1.Union(qry2)
+            .OrderByDescending(t => t.PublishedAtUtc)
+            .ThenByDescending(t => t.ValidFrom);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Отримати всі опубліковані завдання для вказаного підрозділу
+    /// </summary>
+    [HttpGet("by-unit/{unitId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<IEnumerable<UnitTaskDto>>> GetUnitTasks(Guid unitId,
+        CancellationToken ct = default)
+    {
+        if (unitId == Guid.Empty)
+            return BadRequest("unitId обов'язковий");
+
+        var result = await BaseQuery()
+            .Where(t => t.UnitId == unitId && t.IsPublished)
+            .OrderByDescending(t => t.PublishedAtUtc)
+            .Select(t => t.ToDto())
+            .ToListAsync(ct);
+
+        return Ok(result);
     }
 
     /// <summary>
@@ -111,26 +116,13 @@ public class UnitTaskController : ControllerBase
         if (id == Guid.Empty)
             return BadRequest("Id обов'язковий");
 
-        try
-        {
-            var task = await BaseQuery()
-                .FirstOrDefaultAsync(t => t.Id == id, ct);
+        var task = await BaseQuery()
+            .FirstOrDefaultAsync(t => t.Id == id, ct);
 
-            if (task == null)
-                return Problem(statusCode: 404, title: "Не знайдено", detail: $"Завдання з ID '{id}' не знайдено");
+        if (task == null)
+            return Problem(statusCode: 404, title: "Не знайдено", detail: $"Завдання з ID '{id}' не знайдено");
 
-            return Ok(task.ToDto());
-        }
-        catch (OperationCanceledException)
-        {
-            return Problem(statusCode: 499, title: "Скасовано кліентом");
-        }
-        catch (Exception ex)
-        {
-            if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Помилка отримання завдання підрозділу Id={Id}", id);
-            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
-        }
+        return Ok(task.ToDto());
     }
 
     /// <summary>
@@ -152,39 +144,26 @@ public class UnitTaskController : ControllerBase
         if (unitId == Guid.Empty)
             return BadRequest("unitId обов'язковий");
 
-        try
-        {
-            var changedBy = User.Identity?.Name ?? "Unknown";
-            var (error, unitTask) = await BuildUnitTaskAsync(
-                dataSetId, unitId,
-                ControllerFunctions.NotSetGuid,
-                ControllerFunctions.NotSetGuid,
-                changedBy, ct);
-            if (error != null) return error;
+        var changedBy = User.Identity?.Name ?? "Unknown";
+        var (error, unitTask) = await BuildUnitTaskAsync(
+            dataSetId, unitId,
+            ControllerFunctions.NotSetGuid,
+            ControllerFunctions.NotSetGuid,
+            changedBy, ct);
+        if (error != null) return error;
 
-            _set.Add(unitTask!);
-            await _db.SaveChangesAsync(ct);
+        _set.Add(unitTask!);
+        await _db.SaveChangesAsync(ct);
 
-            if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation(
-                    "Створено знімок підрозділу UnitId={UnitId}, TaskId={TaskId}, UnitTaskId={UnitTaskId}",
-                    unitId, ControllerFunctions.NotSetGuid, unitTask!.Id);
+        if (_logger.IsEnabled(LogLevel.Information))
+            _logger.LogInformation(
+                "Створено знімок підрозділу UnitId={UnitId}, TaskId={TaskId}, UnitTaskId={UnitTaskId}",
+                unitId, ControllerFunctions.NotSetGuid, unitTask!.Id);
 
-            var created = (await BaseQuery()
-                .FirstAsync(t => t.Id == unitTask!.Id, ct)).ToDto();
+        var created = (await BaseQuery()
+            .FirstAsync(t => t.Id == unitTask!.Id, ct)).ToDto();
 
-            return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
-        }
-        catch (OperationCanceledException)
-        {
-            return Problem(statusCode: 499, title: "Скасовано кліентом");
-        }
-        catch (Exception ex)
-        {
-            if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Помилка отримання чернетки завдання UnitId={UnitId}", unitId);
-            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
-        }
+        return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
     }
 
     /// <summary>
@@ -238,17 +217,6 @@ public class UnitTaskController : ControllerBase
                     ["unitId"] = dto.UnitId,
                     ["taskId"] = dto.TaskId
                 });
-        }
-        catch (OperationCanceledException)
-        {
-            return Problem(statusCode: 499, title: "Скасовано кліентом");
-        }
-        catch (Exception ex)
-        {
-            if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Помилка при створенні знімку підрозділу UnitId={UnitId} TaskId={TaskId}",
-                    dto.UnitId, dto.TaskId);
-            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
 
@@ -333,16 +301,6 @@ public class UnitTaskController : ControllerBase
 
             return Problem(statusCode: 409, title: "Конкурентний конфлікт");
         }
-        catch (OperationCanceledException)
-        {
-            return Problem(statusCode: 499, title: "Скасовано кліентом");
-        }
-        catch (Exception ex)
-        {
-            if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Помилка при upsert завдання UnitTaskId={Id}", id);
-            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
-        }
     }
 
     /// <summary>
@@ -397,37 +355,24 @@ public class UnitTaskController : ControllerBase
         if (id == Guid.Empty)
             return BadRequest("Id обов'язковий");
 
-        try
-        {
-            var task = await _set
-                .FirstOrDefaultAsync(x => x.Id == id, ct);
+        var task = await _set
+            .FirstOrDefaultAsync(x => x.Id == id, ct);
 
-            if (task == null)
-                return Problem(statusCode: 404, title: "Не знайдено", detail: $"Завдання з ID '{id}' не знайдено");
-            if (task.IsPublished)
-                return Problem(statusCode: 422, title: "Неможливо видалити опубліковане завдання");
+        if (task == null)
+            return Problem(statusCode: 404, title: "Не знайдено", detail: $"Завдання з ID '{id}' не знайдено");
+        if (task.IsPublished)
+            return Problem(statusCode: 422, title: "Неможливо видалити опубліковане завдання");
 
-            var changedBy = User.Identity?.Name ?? "Unknown";
-            await task.DeleteSoldierSnapshot(_db, changedBy, ct);
+        var changedBy = User.Identity?.Name ?? "Unknown";
+        await task.DeleteSoldierSnapshot(_db, changedBy, ct);
 
-            _set.Remove(task);
-            await _db.SaveChangesAsync(ct);
+        _set.Remove(task);
+        await _db.SaveChangesAsync(ct);
 
-            if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation("Видалено завдання UnitTaskId={Id}, UnitId={UnitId}", id, task.UnitId);
+        if (_logger.IsEnabled(LogLevel.Information))
+            _logger.LogInformation("Видалено завдання UnitTaskId={Id}, UnitId={UnitId}", id, task.UnitId);
 
-            return NoContent();
-        }
-        catch (OperationCanceledException)
-        {
-            return Problem(statusCode: 499, title: "Скасовано кліентом");
-        }
-        catch (Exception ex)
-        {
-            if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Помилка видалення завдання UnitTaskId={Id}", id);
-            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
-        }
+        return NoContent();
     }
 
     /// <summary>
@@ -441,47 +386,34 @@ public class UnitTaskController : ControllerBase
         if (id == Guid.Empty)
             return BadRequest("Id обов'язковий");
 
-        try
+        var task = await _set
+            .AsTracking()
+            .FirstOrDefaultAsync(x => x.Id == id, ct);
+
+        if (task == null)
+            return Problem(statusCode: 404, title: "Не знайдено", detail: $"Завдання з ID '{id}' не знайдено");
+
+        var changedBy = User.Identity?.Name ?? "Unknown";
+        task.Publish(setPublish, changedBy);
+        if (task.IsPublished)
         {
-            var task = await _set
-                .AsTracking()
-                .FirstOrDefaultAsync(x => x.Id == id, ct);
-
-            if (task == null)
-                return Problem(statusCode: 404, title: "Не знайдено", detail: $"Завдання з ID '{id}' не знайдено");
-
-            var changedBy = User.Identity?.Name ?? "Unknown";
-            task.Publish(setPublish, changedBy);
-            if (task.IsPublished)
-            {
-                task.Amount = await _db.DictUnitTasks
-                    .Where(t => t.Id == task.TaskId)
-                    .Select(t => t.Amount)
-                    .FirstOrDefaultAsync(ct);
-                await task.CreateSoldierSnapshot(_db, changedBy, ct);
-            }
-            else
-            {
-                await task.DeleteSoldierSnapshot(_db, changedBy, ct);
-            }
-            await _db.SaveChangesAsync(ct);
-
-            if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation(
-                    "Змінено статус публікації завдання UnitTaskId={Id}, IsPublished={IsPublished}",
-                    id, setPublish);
-
-            return NoContent();
+            task.Amount = await _db.DictUnitTasks
+                .Where(t => t.Id == task.TaskId)
+                .Select(t => t.Amount)
+                .FirstOrDefaultAsync(ct);
+            await task.CreateSoldierSnapshot(_db, changedBy, ct);
         }
-        catch (OperationCanceledException)
+        else
         {
-            return Problem(statusCode: 499, title: "Скасовано кліентом");
+            await task.DeleteSoldierSnapshot(_db, changedBy, ct);
         }
-        catch (Exception ex)
-        {
-            if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Помилка зміни статусу публікації завдання UnitTaskId={Id}", id);
-            return Problem(statusCode: 500, title: "Помилка публікації завдання");
-        }
+        await _db.SaveChangesAsync(ct);
+
+        if (_logger.IsEnabled(LogLevel.Information))
+            _logger.LogInformation(
+                "Змінено статус публікації завдання UnitTaskId={Id}, IsPublished={IsPublished}",
+                id, setPublish);
+
+        return NoContent();
     }
 }

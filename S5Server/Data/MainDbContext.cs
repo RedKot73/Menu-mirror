@@ -1316,6 +1316,30 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
             entity.Property(e => e.Id).HasColumnType("varchar(20)");
             entity.Property(e => e.Value).HasColumnType("text");
         });
+        modelBuilder.Entity<UnitAreas>(entity =>
+        {
+            entity.ToTable("unit_areas", "core",
+                t => t.HasComment("Зв'язок багато-до-багатьох між підрозділами та РВЗ"));
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnType("uuid");
+            entity.Property(e => e.UnitId).IsRequired().HasColumnType("uuid");
+            entity.Property(e => e.AreaId).IsRequired().HasColumnType("uuid");
+            entity.Property(e => e.ChangedBy).IsRequired().HasColumnType("varchar(100)");
+            entity.Property(e => e.ValidFrom).IsRequired()
+                .HasColumnType("timestamp with time zone")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasOne(e => e.Unit)
+                .WithMany(u => u.Areas)
+                .HasForeignKey(e => e.UnitId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Area)
+                .WithMany(a => a.Units)
+                .HasForeignKey(e => e.AreaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => new { e.UnitId, e.AreaId }).IsUnique();
+        });
     }
 
     /// <summary>
@@ -1422,4 +1446,8 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
     /// Сохранённый набор данных для подстановки в шаблон документа (БР/БД)
     /// </summary>
     public DbSet<TemplateDataSet> TemplateDataSets { get; set; }
+    /// <summary>
+    /// Связь многие-ко-многим между подразделениями и районами выполнения задач (РВЗ)
+    /// </summary>
+    public DbSet<UnitAreas> UnitAreas { get; set; }
 }
