@@ -1,12 +1,37 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace S5Server.Models;
 
 /// <summary>
-/// DTO для SoldierTask
+/// DTO для передачі даних про солдата в конкретному завданні (знімок стану).
 /// </summary>
+/// <param name="Id">ID запису завдання солдата.</param>
+/// <param name="UnitTaskId">ID завдання підрозділу.</param>
+/// <param name="SoldierId">ID оригінального солдата.</param>
+/// <param name="ExternId">Зовнішній ідентифікатор.</param>
+/// <param name="FirstName">Ім'я.</param>
+/// <param name="MidleName">По батькові.</param>
+/// <param name="LastName">Прізвище.</param>
+/// <param name="NickName">Позивний.</param>
+/// <param name="UnitId">ID підрозділу.</param>
+/// <param name="UnitShortName">Коротка назва підрозділу.</param>
+/// <param name="ArrivedAt">Дата прибуття.</param>
+/// <param name="DepartedAt">Дата вибуття.</param>
+/// <param name="AssignedUnitId">ID приданого підрозділу.</param>
+/// <param name="AssignedUnitShortName">Коротка назва приданого підрозділу.</param>
+/// <param name="InvolvedUnitId">ID задіяного підрозділу.</param>
+/// <param name="InvolvedUnitShortName">Коротка назва задіяного підрозділу.</param>
+/// <param name="RankId">ID звання.</param>
+/// <param name="RankShortValue">Коротка назва звання.</param>
+/// <param name="PositionId">ID посади.</param>
+/// <param name="PositionValue">Назва посади.</param>
+/// <param name="StateId">ID статусу.</param>
+/// <param name="StateValue">Назва статусу.</param>
+/// <param name="Comment">Коментар.</param>
+/// <param name="ChangedBy">Хто вніс зміни.</param>
+/// <param name="ValidFrom">Дата створення знімку.</param>
 public record SoldierTaskDto(
     Guid Id,
     Guid UnitTaskId,
@@ -15,7 +40,6 @@ public record SoldierTaskDto(
     string FirstName,
     string? MidleName,
     string? LastName,
-    //DateOnly? BirthDate,
     string? NickName,
     Guid UnitId,
     string UnitShortName,
@@ -32,8 +56,6 @@ public record SoldierTaskDto(
     Guid StateId,
     string StateValue,
     string? Comment,
-    //DateOnly? ArrivedAt,
-    //DateOnly? DepartedAt,
     string ChangedBy,
     DateTime ValidFrom);
 
@@ -50,6 +72,9 @@ public record SoldierCountDto(
 [Table("soldiers_task")]
 public class SoldierTask
 {
+    /// <summary>
+    /// Унікальний ідентифікатор запису (snapshot-ID).
+    /// </summary>
     [Key]
     public Guid Id { get; set; } = Guid.CreateVersion7();
 
@@ -82,18 +107,30 @@ public class SoldierTask
     /// </summary>
     public int? ExternId { get; set; }
 
+    /// <summary>
+    /// Ім'я.
+    /// </summary>
     [StringLength(50), Required]
     public string FirstName { get; set; } = string.Empty;
 
+    /// <summary>
+    /// По батькові.
+    /// </summary>
     [StringLength(50)]
     public string? MidleName { get; set; }
 
+    /// <summary>
+    /// Прізвище.
+    /// </summary>
     [StringLength(50)]
     public string? LastName { get; set; }
 
     private string MName => string.IsNullOrEmpty(MidleName) ? string.Empty : MidleName[..1];
     private string LName => string.IsNullOrEmpty(LastName) ? string.Empty : LastName[..1];
 
+    /// <summary>
+    /// Прізвище та ініціали (ПІБ скорочено).
+    /// </summary>
     [NotMapped]
     public string FIO => string.IsNullOrEmpty(MidleName + LastName) 
         ? FirstName 
@@ -180,6 +217,9 @@ public class SoldierTask
     [StringLength(50), Required]
     public string StateValue { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Довільний коментар.
+    /// </summary>
     public string? Comment { get; set; }
 
     /// <summary>

@@ -1,19 +1,18 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace S5Server.Models;
 
 /// <summary>
-/// Заглушка для створення UnitTask без Id
+/// DTO для створення UnitTask (застарілий варіант).
 /// </summary>
-/// <param name="Id">The unique identifier for the unit task.</param>
-/// <param name="DataSetId">The identifier of the dataset associated with the unit task.</param>
-/// <param name="UnitId">The identifier of the unit to which the task is assigned.</param>
-/// <param name="TaskId">The identifier of the task being created.</param>
-/// <param name="AreaId">The identifier of the area related to the unit task.</param>
-/// <param name="IsPublished">Indicates whether the unit task is published. Set to <see langword="true"/> if published; otherwise, <see
-/// langword="false"/>.</param>
+/// <param name="Id">ID завдання.</param>
+/// <param name="DataSetId">ID набору даних.</param>
+/// <param name="UnitId">ID підрозділу.</param>
+/// <param name="TaskId">ID типу завдання.</param>
+/// <param name="AreaId">ID району.</param>
+/// <param name="IsPublished">Чи опубліковано.</param>
 public record UnitTaskNewDTO(
     Guid Id,
     Guid DataSetId,
@@ -23,8 +22,12 @@ public record UnitTaskNewDTO(
     bool IsPublished);
 
 /// <summary>
-/// DTO для створення UnitTask
+/// DTO для створення завдання підрозділу.
 /// </summary>
+/// <param name="DataSetId">ID набору даних.</param>
+/// <param name="UnitId">ID підрозділу.</param>
+/// <param name="TaskId">ID типу завдання.</param>
+/// <param name="AreaId">ID району.</param>
 public record UnitTaskCreateDto(
     Guid DataSetId,
     Guid UnitId,
@@ -32,8 +35,30 @@ public record UnitTaskCreateDto(
     Guid AreaId);
 
 /// <summary>
-/// DTO для UnitTask (БЕЗ деталей - Master-Detail Pattern)
+/// DTO для передачі даних про завдання підрозділу (Master-Detail Pattern).
 /// </summary>
+/// <param name="Id">ID завдання.</param>
+/// <param name="DataSetId">ID набору даних.</param>
+/// <param name="UnitId">ID підрозділу.</param>
+/// <param name="UnitShortName">Коротка назва підрозділу.</param>
+/// <param name="ParentId">ID вищого підрозділу.</param>
+/// <param name="ParentShortName">Коротка назва вищого підрозділу.</param>
+/// <param name="AssignedUnitId">ID приданого підрозділу.</param>
+/// <param name="AssignedShortName">Коротка назва приданого підрозділу.</param>
+/// <param name="UnitTypeId">ID типу підрозділу.</param>
+/// <param name="UnitTypeName">Назва типу підрозділу.</param>
+/// <param name="IsInvolved">Ознака задіяності.</param>
+/// <param name="PersistentLocationId">ID ППД.</param>
+/// <param name="PersistentLocationValue">Назва ППД.</param>
+/// <param name="TaskId">ID типу завдання.</param>
+/// <param name="TaskValue">Назва завдання.</param>
+/// <param name="TaskWithMeans">Чи потребує завдання вказання засобів (БПЛА).</param>
+/// <param name="AreaId">ID району.</param>
+/// <param name="AreaValue">Назва району.</param>
+/// <param name="IsPublished">Ознака публікації.</param>
+/// <param name="PublishedAtUtc">Час публікації (UTC).</param>
+/// <param name="ChangedBy">Хто змінив.</param>
+/// <param name="ValidFrom">Дата початку дії.</param>
 public record UnitTaskDto(
     Guid Id,
     Guid DataSetId,
@@ -52,7 +77,7 @@ public record UnitTaskDto(
     string TaskValue,
     bool TaskWithMeans,
     Guid AreaId,
-    string? AreaValue,          // ✅ ДОДАНО: назва району
+    string? AreaValue,
     bool IsPublished,
     DateTime? PublishedAtUtc,
     string ChangedBy,

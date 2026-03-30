@@ -4,8 +4,30 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace S5Server.Models;
 
 /// <summary>
-/// DTO для передачі UnitHist
+/// DTO для передачі історичних даних про зміни в записі підрозділу.
 /// </summary>
+/// <param name="Id">Унікальний ідентифікатор запису історії.</param>
+/// <param name="UnitId">ID підрозділу.</param>
+/// <param name="ParentId">ID вищого підрозділу.</param>
+/// <param name="ParentShortName">Коротка назва вищого підрозділу.</param>
+/// <param name="AssignedUnitId">ID приданого підрозділу.</param>
+/// <param name="AssignedUnitShortName">Коротка назва приданого підрозділу.</param>
+/// <param name="Name">Повна назва.</param>
+/// <param name="ShortName">Скорочена назва.</param>
+/// <param name="MilitaryNumber">Номер в/ч.</param>
+/// <param name="ForceTypeId">ID виду військ.</param>
+/// <param name="ForceTypeShortValue">Коротка назва виду військ.</param>
+/// <param name="UnitTypeId">ID типу підрозділу.</param>
+/// <param name="UnitTypeShortValue">Коротка назва типу підрозділу.</param>
+/// <param name="OrderVal">Порядок сортування.</param>
+/// <param name="IsInvolved">Ознака задіяності.</param>
+/// <param name="PersistentLocationId">ID ППД.</param>
+/// <param name="PersistentLocationValue">Назва ППД.</param>
+/// <param name="Comment">Коментар.</param>
+/// <param name="ChangedBy">Хто змінив.</param>
+/// <param name="Operation">Тип операції.</param>
+/// <param name="ValidFrom">Дата початку дії.</param>
+/// <param name="ValidTo">Дата закінчення дії.</param>
 public record UnitHistDto(
     Guid Id,
     Guid UnitId,
@@ -36,6 +58,9 @@ public record UnitHistDto(
 [Table("units_hist")]
 public class UnitHist
 {
+    /// <summary>
+    /// Унікальний ідентифікатор запису в таблиці історії.
+    /// </summary>
     [Key]
     public Guid Id { get; set; } = Guid.CreateVersion7();
 

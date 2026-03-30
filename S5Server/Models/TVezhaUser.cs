@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 using Microsoft.AspNetCore.Identity;
@@ -197,8 +197,25 @@ public record SetLockoutDto(
 );
 
 /// <summary>
-/// Повна інформація про користувача
+/// Повна інформація про користувача.
 /// </summary>
+/// <param name="Id">ID користувача.</param>
+/// <param name="UserName">Логін.</param>
+/// <param name="Email">Електронна пошта.</param>
+/// <param name="EmailConfirmed">Чи підтверджено Email.</param>
+/// <param name="PhoneNumber">Номер телефону.</param>
+/// <param name="PhoneNumberConfirmed">Чи підтверджено телефон.</param>
+/// <param name="TwoFactorEnabled">Чи увімкнено 2FA.</param>
+/// <param name="LastLoginDate">Дата останнього входу.</param>
+/// <param name="RegistrationDate">Дата реєстрації.</param>
+/// <param name="LockoutEnd">Час завершення блокування.</param>
+/// <param name="LockoutEnabled">Чи дозволено блокування.</param>
+/// <param name="IsLocked">Чи заблоковано на даний момент.</param>
+/// <param name="AccessFailedCount">Кількість невдалих спроб входу.</param>
+/// <param name="RequirePasswordChange">Чи потрібно змінити пароль.</param>
+/// <param name="LastPasswordChangeDate">Дата останньої зміни пароля.</param>
+/// <param name="Soldier">Дані про солдата.</param>
+/// <param name="Roles">Список ролей.</param>
 public record UserDto(
     Guid Id,
     string UserName,
@@ -220,8 +237,17 @@ public record UserDto(
 );
 
 /// <summary>
-/// Коротка інформація про користувача (для Login, GetCurrentUser)
+/// Коротка інформація про користувача (для Login, GetCurrentUser).
 /// </summary>
+/// <param name="Id">ID користувача.</param>
+/// <param name="UserName">Логін.</param>
+/// <param name="Email">Email.</param>
+/// <param name="SoldierId">ID солдата.</param>
+/// <param name="LastLoginDate">Дата останнього входу.</param>
+/// <param name="RequirePasswordChange">Чи потрібно змінити пароль.</param>
+/// <param name="LastPasswordChangeDate">Дата останньої зміни пароля.</param>
+/// <param name="Soldier">Дані про солдата (опціонально).</param>
+/// <param name="Roles">Список ролей.</param>
 public record UserInfoDto(
     Guid Id,
     string UserName,
