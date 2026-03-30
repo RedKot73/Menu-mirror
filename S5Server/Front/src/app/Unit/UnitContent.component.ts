@@ -6,6 +6,9 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { UnitDto } from '../../ServerService/unit.service';
 import { SoldiersComponent } from '../Soldier/Soldier.component';
+import { UnitAreasComponent } from './UnitAreas.component';
+import { UnitAdjacentComponent } from './UnitAdjacent.component';
+import { UnitTasksComponent } from './UnitTasks.component';
 
 @Component({
   selector: 'unit-content',
@@ -17,6 +20,9 @@ import { SoldiersComponent } from '../Soldier/Soldier.component';
     MatDividerModule,
     MatExpansionModule,
     SoldiersComponent,
+    UnitAreasComponent,
+    UnitAdjacentComponent,
+    UnitTasksComponent,
   ],
   templateUrl: './UnitContent.component.html',
   styleUrl: './UnitContent.component.scss',
@@ -27,4 +33,7 @@ export class UnitContentComponent {
 
   /** Ленива ініціалізація панелі особового складу */
   soldiersPanelOpened = signal(false);
+  unitAreasPanelOpened = signal(false);
+  adjacentPanelOpened = signal(false);
+  tasksPanelOpened = signal(false);
 }
