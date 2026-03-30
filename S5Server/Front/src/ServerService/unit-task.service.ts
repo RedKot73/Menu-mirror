@@ -43,6 +43,22 @@ export class UnitTaskService {
   }
 
   /**
+   * Отримати всі опубліковані завдання для вказаного підрозділу
+   * GET /api/unit-tasks/by-unit/{unitId}
+   */
+  getByUnit(unitId: string): Observable<UnitTaskDto[]> {
+    return this.http.get<UnitTaskDto[]>(`${this.baseUrl}/by-unit/${unitId}`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося отримати завдання підрозділу',
+        );
+        return throwError(() => new Error(message));
+      }),
+    );
+  }
+
+  /**
    * Отримати UnitTask за ID
    * GET /api/unit-tasks/{id}
    */
@@ -142,22 +158,4 @@ export class UnitTaskService {
       }),
     );
   }
-
-  /**
-   * Отримати набір даних для формування документу (для Angular)
-   * GET /api/unit-tasks/{id}/data-set
-   */
-  /*
-  getDataSet(id: string): Observable<UnitTaskDto> {
-    return this.http.get<UnitTaskDto>(`${this.baseUrl}/${id}/data-set`).pipe(
-      catchError((error: HttpErrorResponse) => {
-        const message = S5App_ErrorHandler.handleHttpError(
-          error,
-          'Не вдалося отримати набір даних для документу',
-        );
-        return throwError(() => new Error(message));
-      }),
-    );
-  }
-  */
 }
