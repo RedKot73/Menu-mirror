@@ -13,7 +13,7 @@ import { DocDataSetsTableComponent } from '../DocumentDataSet/Components/DocData
 import { TemplateEditorComponent } from './components/TemplateEditor.component';
 import { ResultEditorComponent } from './components/ResultEditor.component';
 import { TemplateDto } from './models/document-template.models';
-import { TemplateDataSetDto } from './models/template-dataset.models';
+import { TemplateDataSetDto } from '../DocumentDataSet/models/template-dataset.models';
 import { UnitsTaskViewer } from './components/UnitsTaskViewer.component'; //'../DocumentDataSet/Components/UnitsTaskEditor.component';
 import { MasterDetailLayoutComponent } from '../shared/components/MasterDetailLayout.component';
 

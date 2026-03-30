@@ -16,9 +16,10 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { TemplateDataSetService } from '../../../ServerService/template-dataset.service';
-import { TemplateDataSetDto } from '../../DocumentTemplates/models/template-dataset.models';
+import { TemplateDataSetDto } from '../models/template-dataset.models';
 import { ConfirmDialogComponent } from '../../dialogs/ConfirmDialog.component';
 import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';
+import { formatDate } from '../../shared/utils/date.utils';
 
 @Component({
   selector: 'app-template-dataset-table',
@@ -92,15 +93,23 @@ export class DocDataSetsTableComponent implements OnInit {
   }
 
   /**
-   * Загружает наборы данных
+   * Загружает наборы данных.
+   * @param selectId — если передан, после загрузки выбирает строку с этим id
    */
-  loadDataSets(): void {
+  loadDataSets(selectId?: string): void {
     this.isLoading.set(true);
     this.templateDataSetService.getDataSets().subscribe({
       next: (datasets) => {
         this.dataSets.set(datasets);
         this.dataSource.sort = this._sort;
         this.isLoading.set(false);
+        if (selectId) {
+          const found = datasets.find((item) => item.id === selectId);
+          if (found) {
+            this.selectedDataSet.set(found);
+            this.dataSetSelected.emit(found);
+          }
+        }
       },
       error: (error) => {
         console.error('Error loading datasets:', error);
@@ -118,14 +127,6 @@ export class DocDataSetsTableComponent implements OnInit {
     this.selectedDataSet.set(dataSet);
     this.dataSetSelected.emit(dataSet);
   }
-
-  /*
-  addDraftDataSet(dataSet: TemplateDataSetDto): void {
-    this.dataSets.update((items) => [dataSet, ...items.filter((item) => item.id !== dataSet.id)]);
-    this.selectedDataSet.set(dataSet);
-    this.dataSetSelected.emit(dataSet);
-  }
-  */
 
   /**
    * Клонирует набор данных
@@ -189,6 +190,13 @@ export class DocDataSetsTableComponent implements OnInit {
   }
 
   /**
+   * Оновлює таблицю після збереження/публікації та виділяє оновлений рядок
+   */
+  updateDataSetRow(updated: TemplateDataSetDto): void {
+    this.loadDataSets(updated.id);
+  }
+
+  /**
    * Получает читаемое название статуса публикации
    */
   getStatusLabel(isPublished: boolean): string {
@@ -198,8 +206,8 @@ export class DocDataSetsTableComponent implements OnInit {
   /**
    * Форматує дату для відображення
    */
-  formatDate(dateString: string): string {
-    return DocTemplateUtils.formatDate(dateString);
+  formatDate(date: Date | string | null | undefined): string {
+    return formatDate(date);
   }
 
   cloneDataSet(_dataSet: TemplateDataSetDto) {

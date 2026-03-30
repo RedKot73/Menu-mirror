@@ -48,6 +48,9 @@ const GET_COMPLETE_DATA_SET = gql`
                 value
             }
         }
+        areaCityFullName{
+          value
+        }
         area {
           value
         }

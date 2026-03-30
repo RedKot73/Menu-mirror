@@ -3,58 +3,113 @@
 namespace S5Server.Models
 {
     // DTO для внешнего API
+    /// <summary>
+    /// Represents a simple dictionary entry for use in external APIs.
+    /// </summary>
+    /// <param name="Id">The unique identifier of the dictionary entry. Must not be empty.</param>
+    /// <param name="Value">The display value or name of the dictionary entry. Cannot be null and must not exceed 100 characters.</param>
+    /// <param name="Comment">An optional comment or description associated with the dictionary entry.</param>
     public record SimpleDictDto(
         [Required] Guid Id,
         [Required, StringLength(100)] string Value,
         string? Comment)
     {
     }
-
+    /// <summary>
+    /// Represents the data required to create a simple dictionary entry.
+    /// </summary>
+    /// <param name="Value">The value of the dictionary entry. Must not be null and cannot exceed 100 characters.</param>
+    /// <param name="Comment">An optional comment providing additional information about the dictionary entry.</param>
     public record SimpleDictCreateDto(
         [Required, StringLength(100)] string Value,
         string? Comment);
 
-
+    /// <summary>
+    /// Represents a simple key-value dictionary entry with an identifier, value, and optional comment.
+    /// </summary>
     public interface ISimpleDict
     {
+        /// <summary>
+        /// Gets or sets the unique identifier for the entity.
+        /// </summary>
         Guid Id { get; set; }
+        /// <summary>
+        /// Gets or sets the string value associated with this instance.
+        /// </summary>
         string Value { get; set; }
+        /// <summary>
+        /// Gets or sets an optional comment associated with the current object.
+        /// </summary>
         string? Comment { get; set; }
     }
-
+    /// <summary>
+    /// Provides a base class for simple dictionary entities with an identifier, value, and optional comment.
+    /// </summary>
+    /// <remarks>This abstract class is intended to be inherited by concrete dictionary types that require a
+    /// unique identifier and a value with optional descriptive comments. The class enforces maximum lengths for the
+    /// value and comment properties to support data validation scenarios.</remarks>
     public abstract class SimpleDictBase : ISimpleDict
     {
+        /// <summary>
+        /// Gets or sets the unique identifier for the entity.
+        /// </summary>
         [Key]
         public Guid Id { get; set; } = Guid.CreateVersion7();
-
-        [StringLength(100), Required(ErrorMessage = UIConstant.RequiredMsg)]
+        /// <summary>
+        /// Gets or sets the string value associated with this property.
+        /// </summary>
+        [StringLength(100), Required]
         public string Value { get; set; } = string.Empty;
-
+        /// <summary>
+        /// Gets or sets an optional comment or note associated with the entity.
+        /// </summary>
+        /// <remarks>The comment is limited to a maximum of 250 characters. This property may be used to
+        /// store user-provided remarks or additional information relevant to the entity.</remarks>
         [StringLength(250)]
         public string? Comment { get; set; }
     }
-
+    /// <summary>
+    /// Defines a contract for objects that expose a short string value.
+    /// </summary>
     public interface IShortDictBase
     {
+        /// <summary>
+        /// Gets or sets the short string value associated with this instance.
+        /// </summary>
         string ShortValue { get; set; }
     }
 
     /// <summary>
-    /// DTO для справочников с ShortValue
+    /// Represents a short dictionary entry with an identifier, value, short value, and optional comment.
     /// </summary>
+    /// <param name="Id">The unique identifier for the dictionary entry.</param>
+    /// <param name="Value">The full value or description of the dictionary entry. Must not be null and cannot exceed 100 characters.</param>
+    /// <param name="ShortValue">The abbreviated value or code for the dictionary entry. Must not be null and cannot exceed 50 characters.</param>
+    /// <param name="Comment">An optional comment providing additional information about the dictionary entry, or null if not specified.</param>
     public record ShortDictDto(
         [Required] Guid Id,
         [Required, StringLength(100)] string Value,
         [Required, StringLength(50)] string ShortValue,
         string? Comment);
+    /// <summary>
+    /// Represents the data required to create a new short dictionary entry.
+    /// </summary>
+    /// <param name="Value">The full value of the dictionary entry. Must not be null and cannot exceed 100 characters.</param>
+    /// <param name="ShortValue">The abbreviated or short form of the dictionary entry. Must not be null and cannot exceed 50 characters.</param>
+    /// <param name="Comment">An optional comment providing additional information about the dictionary entry.</param>
     public record ShortDictCreateDto(
         [Required, StringLength(100)] string Value,
         [Required, StringLength(50)] string ShortValue,
         string? Comment);
-
+    /// <summary>
+    /// Represents a base class for dictionary entries that include a short string value.
+    /// </summary>
+    /// <remarks>This class provides a common structure for derived types that require a short value field,
+    /// typically used for concise representations or codes. The maximum allowed length for the short value is 50
+    /// characters.</remarks>
     public class ShortDictBase : SimpleDictBase, IShortDictBase
     {
-        [StringLength(50), Required(ErrorMessage = UIConstant.RequiredMsg)]
+        [StringLength(50), Required]
         public string ShortValue { get; set; } = string.Empty;
     }
 

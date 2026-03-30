@@ -7,7 +7,7 @@ import {
   UnitTaskDto,
   // UnitTaskFullDto,
   UnitTaskCreateDto,
-} from '../app/DocumentTemplates/models/template-dataset.models';
+} from '../app/DocumentDataSet/models/template-dataset.models';
 import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
 
 @Injectable({
@@ -77,9 +77,10 @@ export class UnitTaskService {
   /**
    * Оновити завдання підрозділу
    * PUT /api/unit-tasks/{id}
+   * 200 OK + UnitTaskDto — оновлено; 204 NoContent — змін немає
    */
-  update(id: string, dto: UnitTaskDto): Observable<void> {
-    return this.http.put<void>(`${this.baseUrl}/${id}`, dto).pipe(
+  update(id: string, dto: UnitTaskDto): Observable<UnitTaskDto | null> {
+    return this.http.put<UnitTaskDto | null>(`${this.baseUrl}/${id}`, dto).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = S5App_ErrorHandler.handleHttpError(
           error,
@@ -123,9 +124,30 @@ export class UnitTaskService {
   }
 
   /**
+   * Отримати чернетку нового UnitTask для підрозділу
+   * POST /api/unit-tasks/create-default?dataSetId={dataSetId}&unitId={unitId}
+   */
+  createDefault(dataSetId: string, unitId: string): Observable<UnitTaskDto> {
+    const params = new HttpParams()
+      .set('dataSetId', dataSetId)
+      .set('unitId', unitId);
+    return this.http.post<UnitTaskDto>(`${this.baseUrl}/create-default`, {}, { params })
+    .pipe(
+      catchError((error: HttpErrorResponse) => {
+        const message = S5App_ErrorHandler.handleHttpError(
+          error,
+          'Не вдалося отримати чернетку завдання підрозділу',
+        );
+        return throwError(() => new Error(message));
+      }),
+    );
+  }
+
+  /**
    * Отримати набір даних для формування документу (для Angular)
    * GET /api/unit-tasks/{id}/data-set
    */
+  /*
   getDataSet(id: string): Observable<UnitTaskDto> {
     return this.http.get<UnitTaskDto>(`${this.baseUrl}/${id}/data-set`).pipe(
       catchError((error: HttpErrorResponse) => {
@@ -137,4 +159,5 @@ export class UnitTaskService {
       }),
     );
   }
+  */
 }

@@ -1,0 +1,59 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+resources:
+- ../../base
+
+namespace: s5-prod
+
+# 1. Сначала подтягиваем замены (replacements)
+# Они должны быть ЗДЕСЬ, чтобы видеть финальные значения из .env
+replacements:
+  - path: ../../base/db-replacements.yaml
+
+# Генератор секретов из файла, создаваемого в GitLab CI пайплайне
+secretGenerator:
+- name: s5-db-credentials
+  envs:
+  - prod.env
+- name: s5-https-cert # Добавлена секция для HTTPS (берет KESTREL_CERT_PATH и KESTREL_CERT_PASSWORD из prod.env)
+  envs:
+  - prod.env
+
+# Генератор конфигмапов для параметров подключения и настроек приложения
+configMapGenerator:
+- name: s5-db-params
+  behavior: merge # ГОВОРИМ: "Возьми тот, что в base, и обнови его"
+  envs:
+  - prod.env
+- name: s5-app-config
+  literals:
+  - ASPNETCORE_ENVIRONMENT=Production
+  - DB_HOST=s5-db-cluster-rw
+
+images:
+- name: s5-db # Имя должно строго совпадать с base для замены в CI
+  newName: s5-db
+  newTag: 18.3-v1.0.0 # Будет заменено на актуальный тег из Registry
+- name: s5-server
+  newName: s5-server
+  newTag: 1.0.0
+
+# Патчи для промышленной среды: увеличиваем количество узлов и объем диска
+patches:
+  - patch: |-
+      - op: replace
+        path: /spec/instances
+        value: 3
+      - op: replace
+        path: /spec/storage/size
+        value: 10Gi
+    target:
+      kind: Cluster
+      name: s5-db-cluster
+
+# Блок replacements удален отсюда и перенесен в base/kustomization.yaml
+# Это предотвращает ошибки доступа к путям при сборке через kubectl/kustomize

@@ -20,6 +20,9 @@ public class DroneModelTaskController : ControllerBase
     private readonly DbSet<DroneModelTask> _set;
     private readonly ILogger<DroneModelTaskController> _logger;
 
+    /// <summary>
+    /// Контролер для управління моделями БПЛА в завданнях підрозділів
+    /// </summary>
     public DroneModelTaskController(
         MainDbContext db, 
         ILogger<DroneModelTaskController> logger)
@@ -41,7 +44,6 @@ public class DroneModelTaskController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<DroneModelTaskDto>>> GetAll(
         [FromQuery] Guid? unitTaskId,
-        //[FromQuery] string? droneModelId,
         CancellationToken ct = default)
     {
         try
@@ -51,10 +53,6 @@ public class DroneModelTaskController : ControllerBase
 
             if (unitTaskId.HasValueGuid())
                 query = query.Where(x => x.UnitTaskId == unitTaskId);
-            /*
-            if (!string.IsNullOrWhiteSpace(droneModelId))
-                query = query.Where(x => x.DroneModelId == droneModelId);
-            */
             var list = await query
                 .OrderBy(x => x.DroneModel.Value)
                 .Select(x => x.ToDto())  // ✅ Extension-метод
@@ -251,7 +249,7 @@ public class DroneModelTaskController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<DroneModelTaskDto>> Update(
         Guid id,
-        [FromBody] DroneModelTaskUpSertDto dto,  // ✅ Використовуємо UpdateDto
+        [FromBody] DroneModelTaskUpSertDto dto,
         CancellationToken ct = default)
     {
         if (!ModelState.IsValid)
@@ -483,6 +481,7 @@ public class DroneModelTaskController : ControllerBase
             {
                 // 2. Завантажити існуючі Means
                 var existingMeans = await _set
+                    .AsTracking()
                     .Where(m => m.UnitTaskId == unitTaskId)
                     .ToListAsync(ct);
 

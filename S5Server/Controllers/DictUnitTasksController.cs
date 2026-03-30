@@ -9,6 +9,15 @@ using S5Server.Utils;
 
 namespace S5Server.Controllers;
 
+/// <summary>
+/// Provides API endpoints for managing unit task dictionary entries, including retrieval, creation, update, deletion,
+/// and lookup operations. Supports operations for both unit tasks and their associated items.
+/// </summary>
+/// <remarks>This controller is secured with authorization and is intended for use in administrative or
+/// configuration scenarios. All endpoints return appropriate HTTP status codes for success and error conditions,
+/// including validation, concurrency, and uniqueness conflicts. The controller leverages Entity Framework Core for data
+/// access and includes logging for error and conflict scenarios. Usage of cancellation tokens is supported for all
+/// asynchronous operations.</remarks>
 [Authorize]
 [ApiController]
 [Route("api/dict-unit-tasks")]
@@ -18,6 +27,15 @@ public class DictUnitTasksController : ControllerBase
     private readonly DbSet<DictUnitTask> _set;
     private readonly ILogger<DictUnitTasksController> _logger;
 
+    /// <summary>
+    /// Provides API endpoints for managing unit task dictionary entries, including retrieval, creation, update, deletion,
+    /// and lookup operations. Supports operations for both unit tasks and their associated items.
+    /// </summary>
+    /// <remarks>This controller is secured with authorization and is intended for use in administrative or
+    /// configuration scenarios. All endpoints return appropriate HTTP status codes for success and error conditions,
+    /// including validation, concurrency, and uniqueness conflicts. The controller leverages Entity Framework Core for data
+    /// access and includes logging for error and conflict scenarios. Usage of cancellation tokens is supported for all
+    /// asynchronous operations.</remarks>
     public DictUnitTasksController(
         MainDbContext db,
         ILogger<DictUnitTasksController> logger)

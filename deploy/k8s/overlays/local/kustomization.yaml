@@ -1,0 +1,50 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+resources:
+  - ../../base
+
+namespace: s5-local
+
+# 1. Сначала подтягиваем замены (replacements)
+# Они должны быть ЗДЕСЬ, чтобы видеть финальные значения из .env
+replacements:
+  - path: ../../base/db-replacements.yaml
+
+# 1. Генератор Секретов (Для паролей)
+secretGenerator:
+  - name: s5-db-credentials
+    envs:
+      - ../../../../.env # Берём переменные из твоего локального .env
+  - name: s5-https-cert # НОВЫЙ СЕКРЕТ ДЛЯ HTTPS (подтягивает KESTREL_CERT_PATH и KESTREL_CERT_PASSWORD из .env)
+    envs:
+      - ../../../../.env
+
+# 2. Генератор ConfigMap (Для имен базы, портов и настроек приложения)
+configMapGenerator:
+  - name: s5-db-params
+    behavior: merge # ГОВОРИМ: "Возьми тот, что в base, и обнови его"
+    envs:
+      - ../../../../.env
+  - name: s5-app-config
+    # envs УДАЛЕН отсюда, чтобы не было конфликта ключа DB_HOST с локальным .env
+    literals:
+      - DB_HOST=s5-db-cluster-rw # Хост для подключения внутри кластера (приоритет над .env)
+      #- ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_ENVIRONMENT=Development # Фиксируем окружение для K8s
+
+
+# 3. Подмена образов
+# Имена (name) теперь СТРОГО совпадают с манифестами в base
+images:
+  - name: s5-db
+    newName: s5-db
+    newTag: 18.3-v1.0.0 # # Тег для локальной сборки "1.0.0" # Тег для локальной сборки
+  - name: s5-server
+    newName: s5-server
+    newTag: "1.0.1" # Тег для локальной сборки
+
+# Блок replacements удален отсюда, так как он теперь в base/kustomization.yaml

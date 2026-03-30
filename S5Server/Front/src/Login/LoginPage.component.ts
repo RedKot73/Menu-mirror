@@ -62,7 +62,8 @@ import {
         }
       </button>
     </form>
-  </div>`,
+  </div>
+  <div class="version-info">Версія: 1.0.0</div>`,
   imports: [
     ReactiveFormsModule,
     MatFormFieldModule,
@@ -96,6 +97,13 @@ import {
         height: 48px;
         font-size: 16px;
         margin-top: 8px;
+      }
+      .version-info {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        font-size: 12px;
+        color: #aaa;
       }
     `,
   ],

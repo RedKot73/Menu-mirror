@@ -23,16 +23,17 @@ import { Observable, of, switchMap, tap } from 'rxjs';
 import { map as rxMap } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { UnitTaskDto } from '../../DocumentTemplates/models/template-dataset.models';
+import { UnitTaskDto } from '../../DocumentDataSet/models/template-dataset.models';
 import { TemplateDataSetService } from '../../../ServerService/template-dataset.service';
 import { UnitTaskService } from '../../../ServerService/unit-task.service';
 import { OneUnitTaskViewer } from './OneUnitTaskViewer.component';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
-import { TemplateDataSetDto } from '../../DocumentTemplates/models/template-dataset.models';
+import { TemplateDataSetDto } from '../../DocumentDataSet/models/template-dataset.models';
 import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';
 import { VerticalLayoutComponent } from '../../shared/components/VerticalLayout.component';
 import { JsonEditorDialogComponent } from './JsonEditorDialog.component';
 import { GraphqlDataService } from '../../../ServerService/graphql-data.service';
+import { formatDate } from '../../shared/utils/date.utils';
 
 @Component({
   selector: 'app-units-task-viewer',
@@ -206,7 +207,7 @@ export class UnitsTaskViewer {
   }
 
   formatDate(dateString: string): string {
-    return DocTemplateUtils.formatDate(dateString);
+    return formatDate(dateString);
   }
 
   showJson(): void {

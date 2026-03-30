@@ -11,7 +11,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatTabsModule } from '@angular/material/tabs';
 
 import { DocDataSetsTableComponent } from './Components/DocDataSetsTable.component';
-import { TemplateDataSetDto } from '../DocumentTemplates/models/template-dataset.models';
+import { TemplateDataSetDto } from './models/template-dataset.models';
 import { UnitsTaskEditor } from './Components/UnitsTaskEditor.component';
 import { MasterDetailLayoutComponent } from '../shared/components/MasterDetailLayout.component';
 
@@ -54,15 +54,15 @@ export class DocumentDataSetComponent {
    */
   createNewDataSet(): void {
     this.unitsTaskEditor.createNewDataSet();
-    /*
-    this.unitsTaskEditor.createNewDataSet((draftDataSet) => {
-      this.dataSetTable.addDraftDataSet(draftDataSet);
-    });
-    */
   }
 
   /** Оновлю таблицю наборів даних */
   loadDataSets(): void {
     this.dataSetTable.loadDataSets();
+  }
+
+  /** Оновлює рядок таблиці після збереження/публікації в редакторі */
+  onDataSetChanged(dataSet: TemplateDataSetDto): void {
+    this.dataSetTable.updateDataSetRow(dataSet);
   }
 }

@@ -14,12 +14,6 @@ namespace S5Server.Data;
 /// <remarks>Класс наследуется от IdentityDbContext и расширяет стандартную схему Identity.</remarks>
 public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, Guid>
 {
-/// <summary>
-/// Представляет основной контекст базы данных приложения
-/// Используется для работы с данными через Entity Framework
-/// Core и ASP.NET Core Identity
-/// </summary>
-/// <remarks>Класс наследуется от IdentityDbContext и расширяет стандартную схему Identity.</remarks>
 
     public MainDbContext(DbContextOptions<MainDbContext> options)
         : base(options)
@@ -703,9 +697,7 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
                   .HasForeignKey(u => u.PersistentLocationId)
                   .OnDelete(DeleteBehavior.Restrict);
 
-            entity.ToTable(tb => tb.HasTrigger("trg_units_insert_history"))
-                .ToTable(tb => tb.HasTrigger("trg_units_update_history"))
-                .ToTable(tb => tb.HasTrigger("trg_units_delete_history"));
+            entity.ToTable(tb => tb.HasTrigger("trg_units_history"));
         });
 
         modelBuilder.Entity<UnitHist>(entity =>
@@ -848,9 +840,7 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
                   .HasForeignKey<TVezhaUser>(u => u.SoldierId)
                   .OnDelete(DeleteBehavior.SetNull);
 
-            entity.ToTable(tb => tb.HasTrigger("trg_soldiers_insert_history"))
-                .ToTable(tb => tb.HasTrigger("trg_soldiers_update_history"))
-                .ToTable(tb => tb.HasTrigger("trg_soldiers_delete_history"));
+            entity.ToTable(tb => tb.HasTrigger("trg_soldiers_history"));
             /*
             // Індекси
             entity.HasIndex(e => e.UnitId);
@@ -859,10 +849,6 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
             entity.HasIndex(e => e.PositionId);
             entity.HasIndex(e => e.StateId);
             */
-            // Triggers
-            entity.ToTable(tb => tb.HasTrigger("trg_soldiers_insert_history"))
-                  .ToTable(tb => tb.HasTrigger("trg_soldiers_update_history"))
-                  .ToTable(tb => tb.HasTrigger("trg_soldiers_delete_history"));
         });
 
         modelBuilder.Entity<SoldierHist>(entity =>
@@ -1072,6 +1058,9 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
                 .HasMaxLength(100)
                 .HasColumnType("citext")
                 .HasComment("Завдання підрозділу для використання в документах БР/БД");
+            entity.Property(e => e.Amount)
+                .HasColumnType("numeric(18, 2)")
+                .HasComment("Тариф в грн. за завдання");
             entity.Property(e => e.AreaId).IsRequired().HasColumnType("uuid")
                 .HasComment("РВЗ (Район виконання завдань)");
             entity.Property(e => e.IsPublished).HasColumnType("boolean")
@@ -1118,6 +1107,75 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
             entity.HasIndex(e => e.TaskId);
             //entity.HasIndex(e => e.IsPublished);
             entity.HasIndex(e => new { e.UnitId, e.DataSetId }).IsUnique();
+
+            entity.ToTable(tb => tb.HasTrigger("trg_units_task_history"));
+        });
+        modelBuilder.Entity<UnitTaskHist>(entity =>
+        {
+            entity.ToTable("units_task_hist", "history",
+                t => t.HasComment("Историческая таблица изменений задач подразделений"));
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasColumnType("uuid");
+            entity.Property(e => e.UnitTaskId).IsRequired().HasColumnType("uuid")
+                .HasComment("Ссылка на оригинальную запись задачи подразделения");
+            entity.Property(e => e.DataSetId).IsRequired().HasColumnType("uuid")
+                .HasComment("Сохранённый набор данных для подстановки в шаблон документа (БР/БД)");
+            entity.Property(e => e.UnitId).IsRequired().HasColumnType("uuid")
+                .HasComment("Штатний підрозділ");
+            entity.Property(e => e.UnitShortName).IsRequired()
+                .HasMaxLength(100)
+                .HasColumnType("citext")
+                .HasComment("Штатний підрозділ");
+            entity.Property(e => e.ParentId).HasColumnType("uuid");
+            entity.Property(e => e.ParentShortName).IsRequired()
+                .HasMaxLength(100)
+                .HasColumnType("citext");
+            entity.Property(e => e.AssignedUnitId).HasColumnType("uuid")
+                .HasComment("Приданий до підрозділу");
+            entity.Property(e => e.AssignedShortName)
+                .HasMaxLength(100)
+                .HasColumnType("citext")
+                .HasComment("Приданий до підрозділу");
+            entity.Property(e => e.UnitTypeId).HasColumnType("uuid");
+            entity.Property(e => e.UnitTypeName).HasColumnType("varchar(100)");
+            entity.Property(e => e.IsInvolved).HasColumnType("boolean")
+                .HasDefaultValue(false)
+                .HasComment("True - Позаштатний/Оперативний/Тимчасовий підрозділ");
+            entity.Property(e => e.PersistentLocationId).HasColumnType("uuid")
+                .HasComment("ППД (Постійне приміщення дислокації)");
+            entity.Property(e => e.PersistentLocationValue)
+                .HasMaxLength(100)
+                .HasColumnType("citext")
+                .HasComment("ППД (Постійне приміщення дислокації)");
+            entity.Property(e => e.TaskId).IsRequired().HasColumnType("uuid")
+                .HasComment("Завдання підрозділу");
+            entity.Property(e => e.TaskValue).IsRequired()
+                .HasMaxLength(100)
+                .HasColumnType("citext")
+                .HasComment("Назва завдання підрозділу");
+            entity.Property(e => e.AreaId).IsRequired().HasColumnType("uuid")
+                .HasComment("РВЗ (Район виконання завдань)");
+            entity.Property(e => e.AreaValue).IsRequired()
+                .HasMaxLength(100)
+                .HasColumnType("citext")
+                .HasComment("Назва РВЗ (Район виконання завдань)");
+            entity.Property(e => e.IsPublished).HasColumnType("boolean")
+                .HasDefaultValue(false)
+                .HasComment("Чернетка/Опубліковано");
+            entity.Property(e => e.PublishedAtUtc).HasColumnType("timestamp with time zone");
+            entity.Property(e => e.ChangedBy).IsRequired().HasColumnType("varchar(100)");
+            entity.Property(e => e.Operation).IsRequired().HasColumnType("varchar(10)");
+            entity.Property(e => e.ValidFrom).IsRequired()
+                .HasColumnType("timestamp with time zone")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.ValidTo).HasColumnType("timestamp with time zone");
+
+            // Індекси для аудиту та аналітики
+            entity.HasIndex(e => e.UnitTaskId);
+            entity.HasIndex(e => new { e.UnitTaskId, e.ValidFrom });
+            entity.HasIndex(e => e.UnitId);
+            entity.HasIndex(e => e.Operation);
         });
         modelBuilder.Entity<SoldierTask>(entity =>
         {
@@ -1244,6 +1302,14 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
             entity.HasIndex(e => e.DroneModelId);
             entity.HasIndex(e => new { e.UnitTaskId, e.DroneModelId }).IsUnique();
         });
+
+        modelBuilder.Entity<VCityFullName>(entity =>
+        {
+            entity.ToView("v_city_full_name", "dict");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnType("varchar(20)");
+            entity.Property(e => e.Value).HasColumnType("text");
+        });
     }
 
     /// <summary>
@@ -1255,6 +1321,10 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
     /// та територій територіальних громад
     /// </summary>
     public DbSet<DictCityCode> DictCityCodes { get; set; }
+    /// <summary>
+    /// Представлення повної адреси населеного пункту (dict.v_city_full_name)
+    /// </summary>
+    public DbSet<VCityFullName> CityFullNames { get; set; }
     /// <summary>
     /// Напрямок ЛБЗ
     /// </summary>
@@ -1316,6 +1386,10 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
     /// Снимок состояния подразделения на момент назначения задачи
     /// </summary>
     public DbSet<UnitTask> UnitTasks { get; set; }
+    /// <summary>
+    /// Историческая таблица изменений задач подразделений
+    /// </summary>
+    public DbSet<UnitTaskHist> UnitTaskHistories { get; set; }
     /// <summary>
     /// Військовослужбовці (бійці)
     /// </summary>

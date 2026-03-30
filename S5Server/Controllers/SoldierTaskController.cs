@@ -265,41 +265,6 @@ public class SoldierTaskController : ControllerBase
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
-
-    /// <summary>
-    /// Отримати кількість бійців для завдання
-    /// </summary>
-    /*
-    [HttpGet("count/{unitTaskId}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<SoldierCountDto>> GetCount(
-        Guid unitTaskId,
-        CancellationToken ct = default)
-    {
-        if (unitTaskId == Guid.Empty)
-            return BadRequest("unitTaskId обов'язковий");
-
-        try
-        {
-            var count = await _set
-                .CountAsync(s => s.UnitTaskId == unitTaskId, ct);
-
-            return Ok(new SoldierCountDto(unitTaskId, count));
-        }
-        catch (OperationCanceledException)
-        {
-            return Problem(statusCode: 499, title: "Скасовано кліентом");
-        }
-        catch (Exception ex)
-        {
-            if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex,
-                    "Помилка при підрахунку SoldierTask для UnitTaskId={UnitTaskId}",
-                    unitTaskId);
-            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
-        }
-    }
-    */
 }
 
 

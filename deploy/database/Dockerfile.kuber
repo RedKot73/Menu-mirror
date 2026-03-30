@@ -1,0 +1,46 @@
+# 1. Берем официальный базовый образ CNPG (PostgreSQL 18.3)
+FROM ghcr.io/cloudnative-pg/postgresql:18.3
+
+# 2. Переключаемся на root для установки системных пакетов
+USER root
+
+# 3. Устанавливаем локали и openssl (ОБЯЗАТЕЛЬНО для работы SSL и кириллицы)
+RUN apt-get update && apt-get install -y locales openssl \
+    && rm -rf /var/lib/apt/lists/*
+
+# 4. Генерируем нужные локали.
+# Замените en_US и uk_UA на те, которые использовались в вашей старой базе, если они другие.
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    sed -i -e 's/# uk_UA.UTF-8 UTF-8/uk_UA.UTF-8 UTF-8/' /etc/locale.gen && \
+    locale-gen
+
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
+# --- НОВАЯ ЧАСТЬ: НАСТРОЙКА SSL ДЛЯ K8S ---
+# Создаем директорию для сертификатов. 
+# В образе CNPG мы используем UID 26 (стандарт для этого образа)
+RUN mkdir -p /etc/postgresql/ssl \
+    && openssl req -new -x509 -days 3650 -nodes \
+       -text -out /etc/postgresql/ssl/server.crt \
+       -keyout /etc/postgresql/ssl/server.key \
+       -subj "/CN=db" \
+    && chown -R 26:26 /etc/postgresql/ssl \
+    && chmod 600 /etc/postgresql/ssl/server.key
+# ------------------------------------------
+
+# 5. КОПИРУЕМ СЖАТЫЙ ДАМП ВНУТРЬ ОБРАЗА
+# Папка /docker-entrypoint-initdb.d/ — это специальная директория.
+# При первом запуске пустого контейнера все .sql скрипты из нее выполнятся автоматически.
+# Скрипт entrypoint умеет работать с .gz архивами. Используем UID 26.
+COPY --chown=26:26 init-dump.sql.gz /docker-entrypoint-initdb.d/
+
+# 6. Возвращаем права системному пользователю postgres (UID 26 - стандарт CNPG)
+USER 26
+
+# 7. Запуск PostgreSQL с принудительным включением SSL
+# Эти параметры гарантируют, что база будет ждать SSL-соединение, которое требует ваше приложение
+CMD ["postgres", \
+     "-c", "ssl=on", \
+     "-c", "ssl_cert_file=/etc/postgresql/ssl/server.crt", \
+     "-c", "ssl_key_file=/etc/postgresql/ssl/server.key"]

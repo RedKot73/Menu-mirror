@@ -11,6 +11,16 @@ using S5Server.Utils;
 
 namespace S5Server.Controllers;
 
+/// <summary>
+/// Provides API endpoints for managing units, including retrieval, creation, update, deletion, and related operations
+/// such as assigning, importing, and querying unit relationships.
+/// </summary>
+/// <remarks>This controller exposes RESTful endpoints for unit management within the application. All actions
+/// require authorization and are accessible via routes prefixed with 'api/unit'. Endpoints support filtering, lookup,
+/// hierarchical operations, and bulk import functionality. Responses follow standard HTTP status codes and include
+/// error handling for common scenarios such as invalid input, not found, concurrency conflicts, and uniqueness
+/// violations. Thread safety is ensured by the ASP.NET Core framework. Usage of this controller is intended for clients
+/// interacting with unit data in organizational contexts.</remarks>
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
@@ -24,6 +34,16 @@ public class UnitController : ControllerBase
         PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
     };
 
+    /// <summary>
+    /// Provides API endpoints for managing units, including retrieval, creation, update, deletion, and related operations
+    /// such as assigning, importing, and querying unit relationships.
+    /// </summary>
+    /// <remarks>This controller exposes RESTful endpoints for unit management within the application. All actions
+    /// require authorization and are accessible via routes prefixed with 'api/unit'. Endpoints support filtering, lookup,
+    /// hierarchical operations, and bulk import functionality. Responses follow standard HTTP status codes and include
+    /// error handling for common scenarios such as invalid input, not found, concurrency conflicts, and uniqueness
+    /// violations. Thread safety is ensured by the ASP.NET Core framework. Usage of this controller is intended for clients
+    /// interacting with unit data in organizational contexts.</remarks>
     public UnitController(MainDbContext db, ILogger<UnitController> logger)
     {
         _db = db;
@@ -32,19 +52,6 @@ public class UnitController : ControllerBase
     }
 
     private IQueryable<Unit> Query() => _set.AsNoTracking();
-
-    /// <summary>
-    /// Завантажує повну інформацію про підрозділ (Include всіх навігаційних властивостей)
-    /// </summary>
-    private static IQueryable<Unit> QueryWithIncludes(IQueryable<Unit> query)
-    {
-        return query
-            .Include(t => t.Parent)
-            .Include(t => t.AssignedUnit)
-            .Include(t => t.ForceType)
-            .Include(t => t.UnitType)
-            .Include(t => t.PersistentLocation);
-    }
 
     /// <summary>
     /// Отримати список всіх підрозділів з можливістю фільтрації
@@ -73,7 +80,7 @@ public class UnitController : ControllerBase
             if (parentId.HasValueGuid())
                 q = q.Where(x => x.ParentId == parentId);
 
-            q = QueryWithIncludes(q);
+            q = q.QueryWithIncludes();
 
             var list = await q
                 .OrderBy(x => x.OrderVal)
@@ -150,7 +157,7 @@ public class UnitController : ControllerBase
         try
         {
             var q = Query().Where(x => x.Id == id);
-            q = QueryWithIncludes(q);
+            q = q.QueryWithIncludes();
 
             var e = await q.FirstOrDefaultAsync(ct);
             
@@ -209,7 +216,7 @@ public class UnitController : ControllerBase
 
             // Завантажуємо створений запис з навігаційними властивостями
             var q = Query().Where(x => x.Id == entity.Id);
-            q = QueryWithIncludes(q);
+            q = q.QueryWithIncludes();
             var created = await q.FirstAsync(ct);
             
             return CreatedAtAction(nameof(Get), new { id = created.Id }, created.ToDto());
@@ -394,7 +401,7 @@ public class UnitController : ControllerBase
             var q = Query()
                 .Where(x => x.ParentId == id);
             
-            q = QueryWithIncludes(q);
+            q = q.QueryWithIncludes();
 
             var children = await q
                 .OrderBy(x => x.OrderVal)
@@ -460,7 +467,7 @@ public class UnitController : ControllerBase
             var q = Query()
                 .Where(x => x.AssignedUnitId == id);
             
-            q = QueryWithIncludes(q);
+            q = q.QueryWithIncludes();
 
             var assigned = await q
                 .OrderBy(x => x.OrderVal)

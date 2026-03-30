@@ -4,6 +4,18 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace S5Server.Models;
 
 /// <summary>
+/// DTO для створення TemplateDataSet
+/// </summary>
+public record TemplateDataSetCreateDto(
+    bool IsParentDocUsed,
+    string? ParentDocNumber,
+    DateOnly? ParentDocDate,
+    string Name,
+    string DocNumber,
+    DateOnly DocDate,
+    bool IsPublished);
+
+/// <summary>
 /// DTO для читання TemplateDataSet (БЕЗ деталей)
 /// </summary>
 public record TemplateDataSetDto(
@@ -17,19 +29,15 @@ public record TemplateDataSetDto(
     bool IsPublished,
     DateTime? PublishedAtUtc,
     DateTime CreatedAtUtc,
-    DateTime ValidFrom);
-
-/// <summary>
-/// DTO для оновлення TemplateDataSet
-/// </summary>
-public record TemplateDataSetUpSertDto(
-    bool IsParentDocUsed,
-    string? ParentDocNumber,
-    DateOnly? ParentDocDate,
-    string Name,
-    string DocNumber,
-    DateOnly DocDate,
-    bool IsPublished);
+    DateTime ValidFrom)
+    : TemplateDataSetCreateDto(
+        IsParentDocUsed,
+        ParentDocNumber,
+        ParentDocDate,
+        Name,
+        DocNumber,
+        DocDate,
+        IsPublished);
 
 /// <summary>
 /// Сохранённый набор данных для подстановки в шаблон документа (БР/БД)
@@ -128,7 +136,7 @@ public static class TemplateDataSetExtensions
     /// <summary>
     /// Створює TemplateDataSet з DTO
     /// </summary>
-    public static TemplateDataSet FromCreateDto(this TemplateDataSetUpSertDto dto, string changedBy) =>
+    public static TemplateDataSet FromCreateDto(this TemplateDataSetCreateDto dto, string changedBy) =>
         new()
         {
             Id = Guid.CreateVersion7(),
@@ -164,7 +172,7 @@ public static class TemplateDataSetExtensions
     /// <summary>
     /// Перевірка чи змінились дані
     /// </summary>
-    public static bool IsEqualTo(this TemplateDataSet ds, TemplateDataSetUpSertDto dto) =>
+    public static bool IsEqualTo(this TemplateDataSet ds, TemplateDataSetDto dto) =>
         ds.IsParentDocUsed == dto.IsParentDocUsed &&
         ds.ParentDocNumber == dto.ParentDocNumber &&
         ds.ParentDocDate == dto.ParentDocDate &&
@@ -180,7 +188,7 @@ public static class TemplateDataSetExtensions
     {
         ds.IsPublished = setPublish;
         ds.PublishedAtUtc = setPublish ? DateTime.UtcNow : null;
-        ds.ValidFrom = DateTime.UtcNow;
+        ds.PublishedBy = setPublish ? changedBy : null;
         ds.ValidFrom = DateTime.UtcNow;
         ds.ChangedBy = changedBy;
     }
@@ -188,7 +196,7 @@ public static class TemplateDataSetExtensions
     /// <summary>
     /// Оновити поля з DTO
     /// </summary>
-    public static void UpdateFrom(this TemplateDataSet ds, TemplateDataSetUpSertDto dto, string changedBy)
+    public static void UpdateFrom(this TemplateDataSet ds, TemplateDataSetDto dto, string changedBy)
     {
         var publishStateChanged = ds.IsPublished != dto.IsPublished;
 
@@ -210,7 +218,7 @@ public static class TemplateDataSetExtensions
     /// <summary>
     /// Валідація ParentDoc полів
     /// </summary>
-    public static (bool IsValid, string? ErrorMessage) ValidateParentDoc(this TemplateDataSetUpSertDto dto)
+    public static (bool IsValid, string? ErrorMessage) ValidateParentDoc(this TemplateDataSetCreateDto dto)
     {
         if (!dto.IsParentDocUsed)
             return (true, null);

@@ -7,6 +7,7 @@ import {
   ElementRef,
   ViewChildren,
   QueryList,
+  output,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Component } from '@angular/core';
@@ -23,24 +24,27 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { firstValueFrom, switchMap, tap } from 'rxjs';
+import { firstValueFrom, map, switchMap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import {
-  TemplateDataSetUpSertDto,
-  UnitTaskDto,
-} from '../../DocumentTemplates/models/template-dataset.models';
-import { TemplateDataSetService } from '../../../ServerService/template-dataset.service';
-import { UnitTaskService } from '../../../ServerService/unit-task.service';
-import { UnitService } from '../../../ServerService/unit.service';
-import { OneUnitTaskEditor } from './OneUnitTaskEditor.component';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
-import { TemplateDataSetDto } from '../../DocumentTemplates/models/template-dataset.models';
-import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';
 import { VerticalLayoutComponent } from '../../shared/components/VerticalLayout.component';
 import { DateMaskDirective } from '../../shared/directives/date-mask.directive';
-import { formatDate } from '../../shared/utils/date.utils';
+import { formatDate, parseDateString } from '../../shared/utils/date.utils';
 import { UnitSelectDialogComponent } from '../../dialogs/UnitSelect-dialog.component';
+import { ErrorListSnackBarComponent } from '../../dialogs/ErrorListSnackbar.component';
+import {
+  TemplateDataSetCreateDto,
+  UnitTaskDto,
+  TemplateDataSetDto,
+} from '../models/template-dataset.models';
+import { TemplateDataSetService } from '../../../ServerService/template-dataset.service';
+import { UnitTaskService } from '../../../ServerService/unit-task.service';
+import { OneUnitTaskEditor } from './OneUnitTaskEditor.component';
+import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';
+import {
+  CreateDataSetDialogComponent,
+} from '../../dialogs/CreateDataSet-dialog.component';
 
 @Component({
   selector: 'app-units-task-editor',
@@ -71,7 +75,6 @@ export class UnitsTaskEditor {
   private dialog = inject(MatDialog);
 
   private dataSetService = inject(TemplateDataSetService);
-  private unitService = inject(UnitService);
   private unitTaskService = inject(UnitTaskService);
 
   @ViewChild('parentDateInput') parentDateInput?: ElementRef<HTMLInputElement>;
@@ -101,12 +104,17 @@ export class UnitsTaskEditor {
   // --- Save State ---
   protected isSaving = signal<boolean>(false);
   protected hasUnsavedChanges = signal<boolean>(false);
+  /** Множина UnitTask ID з незбереженими змінами */
+  protected unitsWithUnsavedChanges = signal<Set<string>>(new Set());
   /** Контрол для статусу публікації
    * Предотвращает переключение визуального контрола
    * при ошибках в изменении статуса публикации из-за
    * асинхронного обновления unitTask после сохранения.
    */
   protected publishStatusControl = new FormControl<boolean>(false, { nonNullable: true });
+
+  /** Emits the updated TemplateDataSetDto after a successful save or publish */
+  dataSetChanged = output<TemplateDataSetDto>();
 
   /**
    * Обробник зміни підрозділу з дочірнього компонента
@@ -117,8 +125,26 @@ export class UnitsTaskEditor {
     if (unitIndex !== -1) {
       units[unitIndex] = updatedUnit;
       this.selectedUnits.set(units);
-      this.hasUnsavedChanges.set(true);
+      // hasUnsavedChanges НЕ встановлюємо тут — OneUnitTaskEditor сам управляє цим статусом
+      // через hasUnsavedChanges.set() → effect → unsavedChangesChange.emit() → onUnitUnsavedChanges()
     }
+  }
+
+  /**
+   * Обробник зміни стану збереження з дочірнього компонента OneUnitTaskEditor
+   * Відстежує які карточки мають незбережені зміни
+   */
+  onUnitUnsavedChanges(unitId: string, hasUnsaved: boolean): void {
+    const unsavedUnits = new Set(this.unitsWithUnsavedChanges());
+
+    if (hasUnsaved) {
+      unsavedUnits.add(unitId);
+      this.hasUnsavedChanges.set(true);
+    } else {
+      unsavedUnits.delete(unitId);
+    }
+
+    this.unitsWithUnsavedChanges.set(unsavedUnits);
   }
 
   /**
@@ -137,7 +163,7 @@ export class UnitsTaskEditor {
     const inputElement = event.targetElement as HTMLInputElement;
 
     // Пытаемся распарсить то, что ввел пользователь вручную
-    const manualDate = DocTemplateUtils.parseDateString(inputElement.value);
+    const manualDate = parseDateString(inputElement.value);
 
     // Если ручной парсинг удался — берем его, иначе берем то, что определил Material
     const finalDate = manualDate || event.value;
@@ -151,7 +177,7 @@ export class UnitsTaskEditor {
    */
   onParentDocumentNumberChange(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.parentDocumentNumber.set(input.value);
+    this.parentDocumentNumber.set(input.value.trim());
     this.hasUnsavedChanges.set(true);
   }
 
@@ -162,7 +188,7 @@ export class UnitsTaskEditor {
     const inputElement = event.targetElement as HTMLInputElement;
 
     // Пытаемся распарсить то, что ввел пользователь вручную
-    const manualDate = DocTemplateUtils.parseDateString(inputElement.value);
+    const manualDate = parseDateString(inputElement.value);
 
     // Если ручной парсинг удался — берем его, иначе берем то, что определил Material
     const finalDate = manualDate || event.value;
@@ -175,7 +201,7 @@ export class UnitsTaskEditor {
    */
   onDocumentNumberChange(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.documentNumber.set(input.value);
+    this.documentNumber.set(input.value.trim());
     this.hasUnsavedChanges.set(true);
   }
 
@@ -224,56 +250,34 @@ export class UnitsTaskEditor {
 
   /**
    * Додає підрозділ до списку вибраних
-   * Завантажує Unit через UnitService
    */
   addUnitToSelection(unitId: string) {
     const currentList = this.selectedUnits();
     // Перевіряємо, чи немає вже цього підрозділу в списку
     if (currentList.find((u) => u.unitId === unitId)) {
-      this.snackBar.open('Цей підрозділ вже додано до списку', 'Закрити', { duration: 3000 });
+      this.snackBar.open('Цей підрозділ вже додано до переліку', 'Закрити', { duration: 3000 });
       return;
     }
 
-    // Завантажуємо дані підрозділу через UnitService
-    this.unitService
-      .getById(unitId)
+    const dataSetId = this.dataSet()?.id;
+
+    if (!dataSetId) {
+      this.snackBar.open('Спочатку збережіть набір даних', 'Закрити', { duration: 3000 });
+      return;
+    }
+
+    this.unitTaskService
+      .createDefault(dataSetId, unitId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (unit) => {
-          // Створюємо новий UnitTask (ще не збережений на сервері)
-          const unitTask: UnitTaskDto = {
-            id: '', // Ще не створено на сервері
-            unitId: unit.id,
-            unitShortName: unit.shortName || '',
-            parentId: unit.parentId,
-            parentShortName: unit.parentShortName || '',
-            assignedUnitId: unit.assignedUnitId,
-            assignedShortName: unit.assignedShortName,
-            unitTypeId: unit.unitTypeId,
-            unitTypeName: unit.unitType,
-            isInvolved: false,
-            persistentLocationId: unit.persistentLocationId,
-            persistentLocationValue: unit.persistentLocation,
-            taskId: '', // Користувач має вибрати
-            taskValue: '',
-            taskWithMeans: false, // За замовчуванням вважаємо, що завдання не має засобів
-            areaId: '', // Користувач має вибрати РВЗ
-            areaValue: '',
-            means: [], //завантажується окремо
-            isPublished: false,
-            publishedAtUtc: undefined,
-            changedBy: '',
-            validFrom: new Date().toISOString(),
-          };
-
+        next: (unitTask) => {
           this.selectedUnits.set([...currentList, unitTask]);
-          this.hasUnsavedChanges.set(true);
         },
         error: (error) => {
-          console.error('Помилка завантаження даних підрозділу:', error);
+          console.error('Помилка отримання чернетки завдання підрозділу:', error);
           const errorMessage = S5App_ErrorHandler.handleHttpError(
             error,
-            'Помилка завантаження даних підрозділу',
+            'Помилка отримання чернетки завдання підрозділу',
           );
           this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
         },
@@ -306,26 +310,16 @@ export class UnitsTaskEditor {
     this.dataSetService
       .getDataSetById(dataSetId)
       .pipe(
-        tap((dataSet) => {
-          // Зберігаємо інформацію про поточний DataSet
-          this.dataSet.set(dataSet);
-
-          // Оновлюємо дані документа старшого начальника
-          this.isParentDocUsed.set(dataSet.isParentDocUsed);
-          this.parentDocumentDate.set(
-            dataSet.parentDocDate ? new Date(dataSet.parentDocDate) : null,
-          );
-          this.parentDocumentNumber.set(dataSet.parentDocNumber || '');
-
-          // Оновлюємо дату та номер документа
-          this.documentDate.set(new Date(dataSet.docDate));
-          this.documentNumber.set(dataSet.docNumber);
-        }),
-        switchMap((dataSet) => this.unitTaskService.getAll({ dataSetId: dataSet.id })),
+        switchMap((dataSet) =>
+          this.unitTaskService
+            .getAll({ dataSetId: dataSet.id })
+            .pipe(map((unitTasks) => ({ dataSet, unitTasks }))),
+        ),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: (unitTasks) => {
+        next: ({ dataSet, unitTasks }) => {
+          this.setDataSet(dataSet);
           this.selectedUnits.set(unitTasks);
           this.hasUnsavedChanges.set(false);
         },
@@ -402,72 +396,38 @@ export class UnitsTaskEditor {
       return false;
     }
 
-    // Перевірка обов'язкових полів для кожного підрозділу
-    const units = this.selectedUnits();
-    for (let i = 0; i < units.length; i++) {
-      const unit = units[i];
-
-      if (!unit.taskId) {
-        this.snackBar.open(
-          `Підрозділ "${unit.unitShortName}" (${i + 1}): заповніть завдання`,
-          'Закрити',
-          { duration: 5000 },
-        );
-        return false;
-      }
-
-      if (!unit.areaId) {
-        this.snackBar.open(
-          `Підрозділ "${unit.unitShortName}" (${i + 1}): заповніть район виконання завдань (РВЗ)`,
-          'Закрити',
-          { duration: 5000 },
-        );
-        return false;
-      }
-    }
-
     // Генеруємо назву на основі дати та номера документа
-    const date = this.documentDate();
-    const dateStr = date ? new Intl.DateTimeFormat('uk-UA').format(date) : '';
-    const docNum = this.documentNumber().trim();
-    const dataSetName = `Дані документа від ${dateStr} № ${docNum}`;
+    const dateStr = new Intl.DateTimeFormat('uk-UA').format(this.documentDate()!);
+    const dataSetName = `Дані документа від ${dateStr} № ${this.documentNumber()}`;
 
     this.isSaving.set(true);
 
-    const currentDataSet = this.dataSet();
-    /** Id = пусто значит это новый набор данных */
-    const hasPersistedDataSetId = !!currentDataSet?.id?.trim();
+    // dataSet гарантовано існує на сервері: або завантажений через loadDataSet(),
+    // або щойно створений через createNewDataSet() — мертва гілка "create" видалена.
+    const currentDataSet = this.dataSet()!;
 
-    // Формуємо DTO для створення або оновлення
-    const dataSetDto: TemplateDataSetUpSertDto = {
+    const updateDto: TemplateDataSetDto = {
+      ...currentDataSet,
       name: dataSetName,
       isParentDocUsed: this.isParentDocUsed(),
       parentDocNumber: this.isParentDocUsed() ? this.parentDocumentNumber() : null,
-      parentDocDate: this.isParentDocUsed()
-        ? this.parentDocumentDate()?.toISOString().split('T')[0] || null
-        : null,
+      parentDocDate: this.isParentDocUsed() ? this.parentDocumentDate() : null,
       docNumber: this.documentNumber(),
-      docDate: this.documentDate()!.toISOString().split('T')[0],
-      isPublished: currentDataSet?.isPublished || false,
+      docDate: this.documentDate()!,
     };
 
     try {
-      if (hasPersistedDataSetId && currentDataSet) {
-        await firstValueFrom(
-          this.dataSetService
-            .updateDataSet(currentDataSet.id, dataSetDto)
-            .pipe(takeUntilDestroyed(this.destroyRef)),
-        );
-        return await this.saveUnitTasks(currentDataSet.id);
-      }
-
-      const createdDataSet = await firstValueFrom(
-        this.dataSetService.createDataSet(dataSetDto).pipe(takeUntilDestroyed(this.destroyRef)),
+      const savedDto = await firstValueFrom(
+        this.dataSetService
+          .updateDataSet(currentDataSet.id, updateDto)
+          .pipe(takeUntilDestroyed(this.destroyRef)),
       );
-      //Показываем на UI DataSet поля которого могли
-      // поменяться после сохранения (наприклад, id, createdAtUtc)
-      this.dataSet.set(createdDataSet);
-      return await this.saveUnitTasks(createdDataSet.id);
+      const saved = await this.saveUnitTasks();
+      if (saved) {
+        this.dataSet.set(savedDto);
+        this.dataSetChanged.emit(savedDto);
+      }
+      return saved;
     } catch (error) {
       this.isSaving.set(false);
       console.error('Error saving dataset:', error);
@@ -481,7 +441,7 @@ export class UnitsTaskEditor {
    * Зберігає UnitTask для кожного підрозділу
    * Координує збереження через виклик card.saveUnitTask()
    */
-  private async saveUnitTasks(dataSetId: string): Promise<boolean> {
+  private async saveUnitTasks(): Promise<boolean> {
     const cards = this.unitTaskCards.toArray();
 
     if (cards.length === 0) {
@@ -492,29 +452,33 @@ export class UnitsTaskEditor {
 
     try {
       let successCount = 0;
-      let failedCount = 0;
+      const errors: string[] = [];
 
       // Зберігаємо кожну картку послідовно
       for (const card of cards) {
-        const success = await card.saveUnitTask(dataSetId);
+        const [success, errorMsg] = await card.saveUnitTask();
         if (success) {
           successCount++;
         } else {
-          failedCount++;
+          if (errorMsg) {
+            errors.push(errorMsg);
+          }
         }
       }
 
       this.isSaving.set(false);
 
-      if (failedCount === 0) {
+      if (errors.length === 0) {
         this.hasUnsavedChanges.set(false);
-        this.snackBar.open(`Дані успішно збережено (${successCount} підрозділів)`, 'Закрити', {
+        this.unitsWithUnsavedChanges.set(new Set()); // Очищуємо множину не збережених карточек
+        this.snackBar.open(`Дані ${successCount} підрозділів збережено`, 'Закрити', {
           duration: 3000,
         });
         return true;
       } else {
-        this.snackBar.open(`Збережено: ${successCount}, Помилок: ${failedCount}`, 'Закрити', {
-          duration: 5000,
+        this.snackBar.openFromComponent(ErrorListSnackBarComponent, {
+          data: errors,
+          duration: 10000,
         });
         return false;
       }
@@ -531,53 +495,48 @@ export class UnitsTaskEditor {
   }
 
   /**
-   * Створює новий набір даних (очищає форму)
+   * Створює новий набір даних і відкриває діалог вибору підрозділу для першого додавання
    */
-  //  createNewDataSet(onCreated?: (dataSet: TemplateDataSetDto) => void): void {
   createNewDataSet(): void {
     // Перевіряємо наявність незбережених змін
     if (!this.checkUnsavedChanges()) {
       return;
     }
 
-    this.openUnitSelectDialog((unit) => {
-      // Очищаємо поточний DataSet
-      this.dataSet.set(null);
+    const dialogRef = this.dialog.open(CreateDataSetDialogComponent, {
+      width: '480px',
+      maxHeight: '90vh',
+      autoFocus: false,
+    });
 
-      // Очищуємо всі дані
+    dialogRef.afterClosed().subscribe((result: TemplateDataSetCreateDto | undefined) => {
+      if (!result) { return; }
+
+      this.setDataSet(null);
       this.selectedUnits.set([]);
-      this.isParentDocUsed.set(false);
-      this.parentDocumentDate.set(null);
-      this.parentDocumentNumber.set('');
-      this.documentDate.set(new Date());
-      this.documentNumber.set('');
-      this.publishStatusControl.setValue(false, { emitEvent: false });
 
-      const nowIso = new Date().toISOString();
-      const draftDataSet: TemplateDataSetDto = {
-        id: '',
-        name: `Набір даних ${Date.now()}`,
-        isParentDocUsed: false,
-        parentDocNumber: null,
-        parentDocDate: null,
-        docNumber: '',
-        docDate: nowIso,
-        isPublished: false,
-        //publishedAtUtc: undefined,
-        createdAtUtc: nowIso,
-        validFrom: nowIso,
-      };
-      //onCreated?.(draftDataSet);
-
-      //показываем на странице новый набор данных,
-      // чтобы пользователь видел, что он сейчас редактирует
-      this.dataSet.set(draftDataSet);
-      // Після створення нового набору одразу додаємо вибраний підрозділ
-      this.addUnitToSelection(unit.id);
-      this.hasUnsavedChanges.set(true);
-
-      this.snackBar.open('Створено новий набір даних і додано підрозділ', 'Закрити', {
-        duration: 3000,
+      this.openUnitSelectDialog((unit) => {
+        this.dataSetService
+          .createDataSet(result)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: (newDataSet) => {
+              this.setDataSet(newDataSet);
+              this.dataSetChanged.emit(newDataSet);
+              this.addUnitToSelection(unit.id);
+              this.snackBar.open('Створено новий набір даних і додано підрозділ', 'Закрити', {
+                duration: 3000,
+              });
+            },
+            error: (error) => {
+              console.error('Помилка створення нового набору даних:', error);
+              const errorMessage = S5App_ErrorHandler.handleHttpError(
+                error,
+                'Помилка створення нового набору даних',
+              );
+              this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+            },
+          });
       });
     });
   }
@@ -587,62 +546,100 @@ export class UnitsTaskEditor {
    */
   async onPublishStatusChange(isPublished: boolean): Promise<void> {
     const initialDataSet = this.dataSet();
+    if (!initialDataSet) {
+      this.publishStatusControl.setValue(false, { emitEvent: false });
+      this.snackBar.open('Набір даних не завантажено', 'Закрити', { duration: 3000 });
+      return;
+    }
+    const oldStatus = initialDataSet.isPublished;
+    const cards = this.unitTaskCards.toArray();
+    if (cards.length === 0) {
+      this.publishStatusControl.setValue(oldStatus, { emitEvent: false });
+      this.snackBar.open('У наборі даних відсутні підрозділи', 'Закрити', { duration: 3000 });
+      return;
+    }
 
+    //Если необходимо - сохраняем изменения перед публикацией,
+    // чтобы не потерять данные из-за асинхронного обновления после сохранения
     if (this.hasUnsavedChanges()) {
       const saveSuccess = await this.saveSelectedUnitsAsDataSet();
       if (!saveSuccess) {
-        this.publishStatusControl.setValue(initialDataSet?.isPublished ?? false, {
-          emitEvent: false,
-        });
+        // Если сохранение не удалось, возвращаем переключатель в исходное состояние
+        this.publishStatusControl.setValue(oldStatus, { emitEvent: false });
         return;
       }
     }
 
-    const currentDataSet = this.dataSet();
-    if (!currentDataSet?.id?.trim()) {
-      this.publishStatusControl.setValue(false, { emitEvent: false });
-      this.snackBar.open('Набір даних не збережено', 'Закрити', { duration: 3000 });
-      return;
-    }
-
-    // Перевіряємо чи статус дійсно змінився
-    if (currentDataSet.isPublished === isPublished) {
-      return;
-    }
-
-    this.publishStatusControl.setValue(currentDataSet.isPublished, { emitEvent: false });
     this.isSaving.set(true);
-
     try {
-      await firstValueFrom(
+      // Координуємо зміну статусу публікації з кожною карткою підрозділу
+      const publishErrors: string[] = [];
+      for (const card of cards) {
+        const [success, errorMsg] = await card.publishUnitTask(isPublished);
+        if (!success && errorMsg) {
+          publishErrors.push(errorMsg);
+        }
+      }
+      if (publishErrors.length > 0) {
+        this.publishStatusControl.setValue(oldStatus, { emitEvent: false });
+        this.snackBar.openFromComponent(ErrorListSnackBarComponent, {
+          data: publishErrors,
+          duration: 10000,
+        });
+        return;
+      }
+
+      // После сохранения данных набора тут не может быть null
+      const currentDataSet = this.dataSet()!;
+      const updatedDataSet = await firstValueFrom(
         this.dataSetService
           .publish(currentDataSet.id, isPublished)
           .pipe(takeUntilDestroyed(this.destroyRef)),
       );
 
-      this.isSaving.set(false);
-      this.dataSet.set({
-        ...currentDataSet,
-        isPublished,
-        publishedAtUtc: isPublished ? new Date().toISOString() : undefined,
-        validFrom: new Date().toISOString(),
-      });
-      this.publishStatusControl.setValue(isPublished, { emitEvent: false });
+      this.setDataSet(updatedDataSet);
+      this.dataSetChanged.emit(updatedDataSet);
 
       const statusText = isPublished ? 'опубліковано' : 'знято з публікації';
       this.snackBar.open(`Набір "${currentDataSet.name}" ${statusText}`, 'Закрити', {
         duration: 3000,
       });
     } catch (error) {
-      this.isSaving.set(false);
-      this.publishStatusControl.setValue(currentDataSet.isPublished, { emitEvent: false });
+      this.publishStatusControl.setValue(oldStatus, { emitEvent: false });
       console.error('Error changing publish status:', error);
       const errorMessage = S5App_ErrorHandler.handleHttpError(
         error,
         'Помилка зміни статусу публікації',
       );
       this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+    } finally {
+      this.isSaving.set(false);
     }
+  }
+
+  /**
+   * Встановлює поточний DataSet і синхронізує всі поля форми.
+   * При null — скидає форму до значень за замовчуванням.
+   */
+  private setDataSet(dataSet: TemplateDataSetDto | null): void {
+    this.dataSet.set(dataSet);
+
+    if (!dataSet) {
+      this.isParentDocUsed.set(false);
+      this.parentDocumentDate.set(null);
+      this.parentDocumentNumber.set('');
+      this.documentDate.set(new Date());
+      this.documentNumber.set('');
+      this.publishStatusControl.setValue(false, { emitEvent: false });
+      return;
+    }
+
+    this.isParentDocUsed.set(dataSet.isParentDocUsed);
+    this.parentDocumentDate.set(dataSet.parentDocDate ?? null);
+    this.parentDocumentNumber.set(dataSet.parentDocNumber || '');
+    this.documentDate.set(dataSet.docDate ?? new Date());
+    this.documentNumber.set(dataSet.docNumber || '');
+    this.publishStatusControl.setValue(dataSet.isPublished, { emitEvent: false });
   }
 
   /**
@@ -676,7 +673,7 @@ export class UnitsTaskEditor {
   /**
    * Форматує дату у читабельний формат
    */
-  formatDate(dateString: string): string {
-    return formatDate(dateString);
+  formatDate(date: Date | string | null | undefined): string {
+    return formatDate(date);
   }
 }

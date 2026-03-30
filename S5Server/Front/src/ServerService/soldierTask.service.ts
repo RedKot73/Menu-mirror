@@ -9,12 +9,7 @@ export interface SoldierTaskDto extends SoldierDto {
   soldierId: string;
   externId: number | null;
 }
-/*
-export interface SoldierCountDto {
-  unitTaskId: string;
-  count: number;
-}
-*/
+
 @Injectable({
   providedIn: 'root',
 })

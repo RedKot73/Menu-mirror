@@ -34,6 +34,7 @@ import {
 import { ConfirmDialogComponent } from '../../dialogs/ConfirmDialog.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
+import { formatDate } from '../../shared/utils/date.utils';
 
 export type DocumentTemplate = TemplateDto;
 
@@ -304,6 +305,6 @@ export class DocTemplatesTableComponent implements AfterViewInit {
    * Форматирует дату для отображения
    */
   formatDate(dateString: string): string {
-    return DocTemplateUtils.formatDate(dateString);
+    return formatDate(dateString);
   }
 }

@@ -1,0 +1,9 @@
+**/Properties/launchSettings.json
+
+src/
+*.sln
+bin/
+obj/
+.git/
+.github/
+.vscode/

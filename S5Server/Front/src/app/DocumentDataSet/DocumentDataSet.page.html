@@ -25,6 +25,9 @@
 
   <!-- Right Panel: Дані документа -->
   <div rightPanel style="display: flex; flex-direction: column; height: 100%">
-    <app-units-task-editor #unitsTaskEditor></app-units-task-editor>
+    <app-units-task-editor
+      #unitsTaskEditor
+      (dataSetChanged)="onDataSetChanged($event)"
+    ></app-units-task-editor>
   </div>
 </app-master-detail-layout>

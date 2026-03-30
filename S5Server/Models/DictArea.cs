@@ -7,45 +7,35 @@ namespace S5Server.Models;
 /// <summary>
 /// DTO для Району виконання завдань (РВЗ)
 /// </summary>
+/// <param name="Id">Унікальний ідентифікатор</param>
+/// <param name="Value">Назва</param>
+/// <param name="Comment">Коментар</param>
+/// <param name="AreaTypeId">Ідентифікатор типу Району виконання завдань (РВЗ)</param>
+/// <param name="AreaType">Тип Району виконання завдань (РВЗ)</param>
+/// <param name="Coords">Координати/Перелік координат РВЗ</param>
+/// <param name="CityCodeInfo">Запис Кодифікатору адміністративно-територіальних одиниць</param>
 public record DictAreaDto(
     Guid Id,
-    /// <summary>
-    /// Назва
-    /// </summary>
     string Value,
     string? Comment,
-    /// <summary>
-    /// Тип Району виконання завдань (РВЗ)
-    /// </summary>
     Guid AreaTypeId,
-    /// <summary>
-    /// Тип Району виконання завдань (РВЗ)
-    /// </summary>
     string AreaType,
-    /// <summary>
-    /// Координати/Перелік координат РВЗ
-    /// </summary>
     string? Coords,
-    CityCodeInfo? CityCodeInfo);  // ✅ Вкладений record
+    CityCodeInfo? CityCodeInfo);
 
 /// <summary>
 /// DTO для створення Району виконання завдань (РВЗ)
 /// </summary>
+/// <param name="Value">Назва</param>
+/// <param name="Comment">Коментар</param>
+/// <param name="AreaTypeId">Тип Району виконання завдань (РВЗ)</param>
+/// <param name="CityCodeId">Кодифікатор адмін-територіальних одиниць (опціонально). Формат: UA01020000000022387</param>
+/// <param name="Coords">Координати/Перелік координат РВЗ</param>
 public record DictAreaCreateDto(
     string Value,
     string? Comment,
-    /// <summary>
-    /// Тип Району виконання завдань (РВЗ)
-    /// </summary>
     Guid AreaTypeId,
-    /// <summary>
-    /// Кодифікатор адмін-територіальних одиниць (опціонально)
-    /// Тут саме string оскільки формат UA01020000000022387
-    /// </summary>
     string? CityCodeId,
-    /// <summary>
-    /// Координати/Перелік координат РВЗ
-    /// </summary>
     string? Coords);
 
 /// <summary>
@@ -156,7 +146,11 @@ public static class DictAreaExtensions
                area.CityCodeId == dto.CityCodeInfo?.CityCodeId &&
                area.Coords == (string.IsNullOrWhiteSpace(dto.Coords) ? null : dto.Coords.Trim());
     }
-
+    /// <summary>
+    /// Converts a DictArea instance to a LookupDto for use in lookup scenarios.
+    /// </summary>
+    /// <param name="area">The DictArea object to convert. Cannot be null.</param>
+    /// <returns>A LookupDto containing the identifier and value from the specified DictArea.</returns>
     public static LookupDto ToLookupDto(this DictArea area)
     {
         return new LookupDto(area.Id, area.Value);

@@ -31,6 +31,8 @@ public record SoldierCreateDto(
 /// <summary>
 /// DTO для передачи Soldier
 /// </summary>
+/// <param name="ChangedBy">User, що вніс зміни</param>
+/// <param name="ValidFrom">Дата начала действия записи</param>
 public record SoldierDto(
 //Базові поля
     string FirstName,
@@ -56,13 +58,7 @@ public record SoldierDto(
     string RankShortValue,
     string PositionValue,
     string StateValue,
-    /// <summary>
-    /// User, що вніс зміни
-    /// </summary>
     string ChangedBy,
-    /// <summary>
-    /// Дата начала действия записи
-    /// </summary>
     DateTime ValidFrom
 ) : SoldierCreateDto(
     FirstName,
@@ -101,7 +97,7 @@ public class Soldier
     /// Gets or sets the first name of the person.
     /// </summary>
 
-    [StringLength(50), Display(Name = "Прізвище"), Required(ErrorMessage = UIConstant.RequiredMsg)]
+    [StringLength(50), Display(Name = "Прізвище"), Required]
     public string FirstName { get; set; } = string.Empty;
     /// <summary>
     /// Gets or sets the middle name of the person.
@@ -139,15 +135,13 @@ public class Soldier
     /// <summary>
     /// Підрозділ
     /// </summary>
-    [ForeignKey(nameof(Unit)),
-        Required(ErrorMessage = UIConstant.RequiredMsg)]
+    [ForeignKey(nameof(Unit)), Required]
     public Guid UnitId { get; set; } = default!;
 
     /// <summary>
     /// Підрозділ
     /// </summary>
-    [ValidateNever,
-        Required(ErrorMessage = UIConstant.RequiredMsg)]
+    [ValidateNever, Required]
     public Unit Unit { get; set; } = default!;
 
     /// <summary>
@@ -218,19 +212,16 @@ public class Soldier
     /// <summary>
     /// Коментар
     /// </summary>
-    [Display(Name = UIConstant.CommentCaption)]
     public string? Comment { get; set; }
 
     /// <summary>
     /// Прибув до підрозділу
     /// </summary>
-    [Display(Name = "Прибув до підрозділу")]
     public DateOnly? ArrivedAt { get; set; }
 
     /// <summary>
     /// Вибув з підрозділу
     /// </summary>
-    [Display(Name = "Вибув з підрозділу")]
     public DateOnly? DepartedAt { get; set; }
 
     /// <summary>

@@ -9,6 +9,15 @@ using S5Server.Utils;
 
 namespace S5Server.Controllers;
 
+/// <summary>
+/// Предоставляет API-контроллер для управления элементами завдань підрозділів (DictUnitTaskItem), включая операции
+/// получения, создания, обновления, удаления и поиска элементов. Доступ к методам контроллера ограничен авторизацией.
+/// </summary>
+/// <remarks>Контроллер реализует стандартные CRUD-операции и дополнительные методы для поиска и фильтрации
+/// элементов по различным параметрам, таким как UnitTaskId и TemplateCategoryId. Все методы поддерживают отмену через
+/// CancellationToken и возвращают стандартные HTTP-ответы с кодами состояния. Для корректной работы требуется наличие
+/// связанных сущностей (категорий шаблонов и завдань підрозділів). Контроллер логирует ошибки и конфликтные ситуации
+/// для упрощения диагностики.</remarks>
 [Authorize]
 [ApiController]
 [Route("api/dict-unit-task-items")]
@@ -17,6 +26,16 @@ public class DictUnitTaskItemsController : ControllerBase
     private readonly MainDbContext _db;
     private readonly DbSet<DictUnitTaskItem> _set;
     private readonly ILogger<DictUnitTaskItemsController> _logger;
+
+    /// <summary>
+    /// Предоставляет API-контроллер для управления элементами завдань підрозділів (DictUnitTaskItem), включая операции
+    /// получения, создания, обновления, удаления и поиска элементов. Доступ к методам контроллера ограничен авторизацией.
+    /// </summary>
+    /// <remarks>Контроллер реализует стандартные CRUD-операции и дополнительные методы для поиска и фильтрации
+    /// элементов по различным параметрам, таким как UnitTaskId и TemplateCategoryId. Все методы поддерживают отмену через
+    /// CancellationToken и возвращают стандартные HTTP-ответы с кодами состояния. Для корректной работы требуется наличие
+    /// связанных сущностей (категорий шаблонов и завдань підрозділів). Контроллер логирует ошибки и конфликтные ситуации
+    /// для упрощения диагностики.</remarks>
 
     public DictUnitTaskItemsController(
         MainDbContext db,
@@ -28,11 +47,6 @@ public class DictUnitTaskItemsController : ControllerBase
     }
 
     private IQueryable<DictUnitTaskItem> Query() => DictUnitTaskItemsService.Query(_set);
-    /*
-        _set.AsNoTracking()
-        .Include(x => x.TemplateCategory);
-    */
-        //.Include(x => x.UnitTask);
 
     /// <summary>
     /// Отримати список елементів завдань підрозділів

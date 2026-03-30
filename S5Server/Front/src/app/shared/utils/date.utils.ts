@@ -59,7 +59,24 @@ export function parseDateString(value: string): Date | null {
   return null;
 }
 
-// ── Серіалізація для сервера ─────────────
+// ── Серіалізація / десеріалізація для сервера ────────────────────
+
+/**
+ * Парсить рядок 'yyyy-MM-dd' (DateOnly з сервера) у Date у локальному часі.
+ * Уникає зсуву UTC, що виникає при new Date('yyyy-MM-dd').
+ * Повертає null, якщо значення відсутнє або невалідне.
+ */
+export function parseDateOnly(value: string | null | undefined): Date | null {
+  if (!value) {
+    return null;
+  }
+  const parts = value.split('-');
+  if (parts.length < 3) {
+    return null;
+  }
+  const [year, month, day] = parts.map(Number);
+  return new Date(year, month - 1, day);
+}
 
 /**
  * Конвертує Date | string | null | undefined → рядок 'yyyy-MM-dd'

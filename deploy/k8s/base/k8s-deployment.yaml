@@ -1,0 +1,145 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s5-server-deployment
+  labels:
+    app: s5-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: s5-server
+  template:
+    metadata:
+      labels:
+        app: s5-server
+    spec:
+      # =======================================================================
+      # ПОДРОБНОЕ ОПИСАНИЕ ПОРЯДКА ЗАПУСКА (LIFECYCLE):
+      # 
+      # 1. ЭТАП [wait-for-db]: Ждет, пока откроется порт 5432. Это защита от 
+      #    ошибки "Connection refused".
+      # 
+      # 2. ЭТАП [db-migration]: Запускает приложение с флагом --migrate. 
+      #    Благодаря разделению command и args, флаг гарантированно попадает 
+      #    в Program.cs. Контейнер завершится (Exit 0) после миграций.
+      # 
+      # 3. ФИНАЛ [s5-server]: Основной веб-сервер. Запускается только когда 
+      #    все предыдущие шаги успешно завершены.
+      # =======================================================================
+      
+      # --- БЛОК ИНИЦИАЛИЗАЦИИ (InitContainers) ---
+      initContainers:
+        # НОВЫЙ БЛОК: Ожидание готовности сетевого порта базы данных
+        # Это предотвращает ошибку "Connection refused", если база еще запускается
+        - name: wait-for-db
+          image: postgres:18.3 # Используем легковесный образ с утилитой pg_isready
+          command: 
+            - sh
+            - -c
+            - |
+              echo "Waiting for PostgreSQL at s5-db-cluster-rw:5432..."
+              # Цикл будет работать, пока pg_isready не вернет успех
+              until pg_isready -h s5-db-cluster-rw -p 5432; do
+                echo "Database is not ready yet. Sleeping 5s..."
+                sleep 5
+              done
+              echo "Database is reachable! Proceeding..."
+
+        # ЭТОТ КОНТЕЙНЕР ВЫПОЛНИТСЯ ПЕРЕД СТАРТОМ ОСНОВНОГО СЕРВЕРА
+        - name: db-migration
+          image: s5-server # Kustomize заменит этот плейсхолдер реальным образом при деплое
+          # ИСПРАВЛЕНИЕ: Разделяем команду и аргументы для 100% распознавания флага --migrate
+          command: ["dotnet"] 
+          args: ["S5Server.dll", "--migrate"]
+          env:
+            - name: PrimaryConnection__DB_Host
+              valueFrom:
+                configMapKeyRef:
+                  name: s5-app-config
+                  key: DB_HOST
+            - name: PrimaryConnection__DB_Password
+              valueFrom:
+                secretKeyRef:
+                  name: s5-db-credentials
+                  key: password
+            - name: PrimaryConnection__DB_Username
+              valueFrom:
+                configMapKeyRef:
+                  name: s5-db-params
+                  key: DB_USER
+            - name: PrimaryConnection__DB_Name
+              valueFrom:
+                configMapKeyRef:
+                  name: s5-db-params
+                  key: DB_NAME
+
+      containers:
+        - name: s5-server
+          # Kustomize заменит этот плейсхолдер реальным образом при деплое
+          image: s5-server
+          ports:
+            - containerPort: 8080
+              name: http
+            - containerPort: 8081
+              name: https
+          env:
+            # --- Настройки для работы HTTPS через сертификат ---
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080;https://+:8081"
+            - name: ASPNETCORE_Kestrel__Certificates__Default__Path
+              valueFrom:
+                secretKeyRef: # Изменено с configMapKeyRef на secretKeyRef
+                  name: s5-https-cert # Имя секрета из kustomization.yaml
+                  key: KESTREL_CERT_PATH
+            - name: ASPNETCORE_Kestrel__Certificates__Default__Password
+              valueFrom:
+                secretKeyRef: # Изменено с configMapKeyRef на secretKeyRef
+                  name: s5-https-cert # Имя секрета из kustomization.yaml
+                  key: KESTREL_CERT_PASSWORD
+
+            # --- Маппинг переменных из ConfigMap и Secret в формат .NET ---
+            - name: PrimaryConnection__DB_Host
+              valueFrom:
+                configMapKeyRef:
+                  name: s5-app-config
+                  key: DB_HOST
+            - name: PrimaryConnection__Port
+              valueFrom:
+                configMapKeyRef: # Порт берем из ConfigMap, созданного в CI
+                  name: s5-db-params
+                  key: DB_PORT
+            - name: PrimaryConnection__DB_Name
+              valueFrom:
+                configMapKeyRef: # Имя базы берем из ConfigMap, созданного в CI
+                  name: s5-db-params
+                  key: DB_NAME
+            - name: PrimaryConnection__DB_Username
+              valueFrom:
+                configMapKeyRef: # Имя пользователя берем из ConfigMap, созданного в CI
+                  name: s5-db-params
+                  key: DB_USER
+            - name: PrimaryConnection__DB_Password
+              valueFrom:
+                secretKeyRef:
+                  name: s5-db-credentials
+                  key: password # В секрете s5-db-credentials CNPG использует ключ password
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: s5-app-config
+                  key: ASPNETCORE_ENVIRONMENT
+
+          # --- Настройки liveness и readiness проб ---
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
