@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using S5Server.Data;
 using S5Server.Models;
+using S5Server.Utils;
 using Serilog;
 using System.Globalization;
 using System.Text;
@@ -32,14 +33,7 @@ Log.Logger = new LoggerConfiguration()
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
 
-// ✅ Application Insights отримає логи через вбудовану інтеграцію ASP.NET Core
 builder.Host.UseSerilog();
-
-// ✅ Application Insights (тільки для production/Azure)
-if (builder.Environment.IsProduction())
-{
-    builder.Services.AddApplicationInsightsTelemetry();
-}
 
 // --- ВРЕМЕННАЯ ПРОВЕРКА ДЛЯ ОТЛАДКИ ---
 // Читаем локальный .env файл (в продакшене K8s его не будет, и метод просто ничего не сделает)
@@ -209,6 +203,10 @@ builder.Services
     .AddSorting();                          // ✅ Сортування (orderBy)
 // ✅ DbContext вже зареєстрований через AddPooledDbContextFactory!
 
+builder.Services.AddExceptionHandler<ClientCanceledExceptionHandler>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 builder.Services.AddControllers();
 
 builder.Services.AddCors(options =>
@@ -237,12 +235,7 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            // ✅ FALLBACK: дозволити Azure Web App origin
-            policy.SetIsOriginAllowed(origin =>
-                    origin.Contains(".azurewebsites.net", StringComparison.OrdinalIgnoreCase))
-                  .AllowAnyMethod()
-                  .AllowAnyHeader()
-                  .AllowCredentials();
+            Log.Warning("AllowedOrigins не налаштовано — CORS заборонено для production");
         }
     });
 });
@@ -298,9 +291,10 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
+
+app.UseExceptionHandler();
 
 // ✅ Редирект на HTTPS (только если запрос пришел по HTTP через проксі)
 //app.UseHttpsRedirection();
