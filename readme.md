@@ -1,21 +1,70 @@
+🛠 Полная инструкция по управлению средой S5
+Все команды выполняются из корневой директории проекта, где находится файл .env.
+
 1. Запуск всей системы
+Используйте эти команды для автоматической сборки, запуска базы, выполнения миграций и старта сервера.
+
+Bash
+# Сборка и запуск в фоновом режиме (рекомендуется при изменении кода)
 docker-compose -f docker-compose.local.yml up --build -d
 
+# Пересоберет только 'app' и 'migration', а базу просто поднимет из готового образа
+docker-compose -f docker-compose.local.yml up --build app migration
 
-2. Проверка логов (Самый важный этап)
-docker logs -f s5-server-local
-docker logs --tail 50 -f s5-server-local
-
-3. Проверка базы данных и статуса базы
-docker logs --tail 50 -f s5-server-local
-
-
-docker exec -it s5-db-local psql -U S5Master_user -d S5_DB -c "\dn"
-docker exec -it s5-db-local psql -U S5Master_user -d S5_DB -c "\dt *.*"
-docker exec -it s5-db-local psql -U S5Master_user -d S5_DB -c "\dt *.*"
-
-q - выход, enter, пагинация
-
-4. перезапуск системы и выключение
+# Быстрый перезапуск без пересборки образов
 docker-compose -f docker-compose.local.yml up -d
+2. Мониторинг и логи
+Самый эффективный способ понять, что происходит внутри контейнеров.
+
+Bash
+# Просмотр логов приложения в реальном времени
+docker logs -f s5-server-local
+
+# Посмотреть последние 50 строк логов приложения и ждать новых
+docker logs --tail 50 -f s5-server-local
+
+# Если приложение не запускается, проверьте логи мигратора
+docker logs -f s5-migration-local
+3. Работа с Базой Данных (PostgreSQL)
+Выполнение команд напрямую внутри контейнера s5-db-local.
+
+Полезные "горячие клавиши" в консоли psql:
+
+q — выход из режима просмотра длинных таблиц (пагинации).
+
+Enter — прокрутка списка вниз.
+
+\q — полный выход из консоли psql.
+
+Диагностические команды:
+
+Bash
+# Проверка структуры: список всех схем
+docker exec -it s5-db-local psql -U S5Master_user -d S5_DB -c "\dn"
+
+# Проверка структуры: список ВСЕХ таблиц во всех схемах
+docker exec -it s5-db-local psql -U S5Master_user -d S5_DB -c "\dt *.*"
+
+# Быстрый просмотр данных: первые 10 записей из таблицы (замените TableName)
+docker exec -it s5-db-local psql -U S5Master_user -d S5_DB -c "SELECT * FROM \"TableName\" LIMIT 10;"
+
+# Интерактивный вход в терминал Postgres для написания SQL вручную
+docker exec -it s5-db-local psql -U S5Master_user -d S5_DB
+4. Управление жизненным циклом
+Bash
+# Остановить и удалить все контейнеры и виртуальные сети проекта
 docker-compose -f docker-compose.local.yml down
+
+# Остановка с ПОЛНЫМ УДАЛЕНИЕМ ДАННЫХ базы (очистка volume)
+docker-compose -f docker-compose.local.yml down -v
+
+# Перезапуск конкретного сервиса (например, только базы)
+docker-compose -f docker-compose.local.yml restart db
+💡 Шпаргалка по флагам и аргументам:
+-d (detached): Запускает всё "в фоне", не блокируя терминал.
+
+--build: Принудительно пересобирает образы из вашего Dockerfile (нужно, если вы меняли C# код).
+
+exec -it: Позволяет войти внутрь работающего контейнера и выполнять там команды.
+
+--tail 50: Ограничивает вывод логов последними 50 строками, чтобы не ждать загрузки всей истории.

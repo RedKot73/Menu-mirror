@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace S5Server.Models
 {
@@ -109,6 +109,9 @@ namespace S5Server.Models
     /// characters.</remarks>
     public class ShortDictBase : SimpleDictBase, IShortDictBase
     {
+        /// <summary>
+        /// Gets or sets the short string value associated with this instance.
+        /// </summary>
         [StringLength(50), Required]
         public string ShortValue { get; set; } = string.Empty;
     }
@@ -130,6 +133,9 @@ namespace S5Server.Models
         /// <summary>
         /// Створює новий екземпляр SimpleDictBase з DTO (використовується для конкретних типів)
         /// </summary>
+        /// <typeparam name="T">Тип сутності, що наслідується від SimpleDictBase.</typeparam>
+        /// <param name="dto">DTO з даними.</param>
+        /// <returns>Новий екземпляр сутності.</returns>
         public static T ToEntity<T>(this SimpleDictDto dto) where T : SimpleDictBase, new() =>
             new()
             {
@@ -141,6 +147,9 @@ namespace S5Server.Models
         /// <summary>
         /// Створює новий екземпляр SimpleDictBase з CreateDTO
         /// </summary>
+        /// <typeparam name="T">Тип сутності, що наслідується від SimpleDictBase.</typeparam>
+        /// <param name="dto">DTO з даними для створення.</param>
+        /// <returns>Новий екземпляр сутності.</returns>
         public static T ToEntity<T>(this SimpleDictCreateDto dto) where T : SimpleDictBase, new() =>
             new()
             {
@@ -186,6 +195,9 @@ namespace S5Server.Models
         /// <summary>
         /// Створює новий екземпляр ShortDictBase з DTO
         /// </summary>
+        /// <typeparam name="T">Тип сутності, що наслідується від ShortDictBase.</typeparam>
+        /// <param name="dto">DTO з даними.</param>
+        /// <returns>Новий екземпляр сутності.</returns>
         public static T ToEntity<T>(this ShortDictDto dto) where T : ShortDictBase, new() =>
             new()
             {
@@ -198,6 +210,9 @@ namespace S5Server.Models
         /// <summary>
         /// Створює новий екземпляр ShortDictBase з CreateDTO
         /// </summary>
+        /// <typeparam name="T">Тип сутності, що наслідується від ShortDictBase.</typeparam>
+        /// <param name="dto">DTO з даними для створення.</param>
+        /// <returns>Новий екземпляр сутності.</returns>
         public static T ToEntity<T>(this ShortDictCreateDto dto) where T : ShortDictBase, new() =>
             new()
             {

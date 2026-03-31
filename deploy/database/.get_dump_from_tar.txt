@@ -1,17 +1,45 @@
-я делал експот стандартніми командами
+#!/bin/bash
 
+# ==========================================================================================
+# ОПИСАНИЕ СКРИПТА:
+# Данный сценарий предназначен для преобразования бинарного дампа PostgreSQL (.tar) 
+# в очищенный и сжатый текстовый SQL-файл (.sql.gz)[cite: 16].
+# 
+# ЧТО ДЕЛАЕТ СКРИПТ:
+# 1. Разворачивает временный контейнер PostgreSQL 18.3[cite: 1, 17].
+# 2. Создает чистую базу данных и импортирует в нее данные из архива[cite: 1, 18].
+# 3. Генерирует текстовый дамп, удаляя специфические команды (RESTRICT/UNRESTRICT)[cite: 19].
+# 4. Сжимает результат в .gz для финального использования в Docker-образе.
+# 5. Удаляет временные ресурсы после завершения работы[cite: 20].
+# ==========================================================================================
 
-
+# 1. Запускаем временный контейнер PostgreSQL 18.3 в фоновом режиме [cite: 1]
 docker run --name temp-pg -e POSTGRES_PASSWORD=secret -p 5432:5432 -d postgres:18.3
 
+# 2. Копируем исходный файл архива (dump-S5_DB.tar) внутрь контейнера [cite: 1]
 docker cp ./dump-S5_DB.tar temp-pg:/tmp/dump-S5_DB.tar
 
-docker exec temp-pg pg_restore -U postgres -d "S5_DB" -1 /tmp/dump-S5_DB.tar
-
-docker exec temp-pg pg_dump -U postgres -d "S5_DB" -F p --clean --if-exists -f /tmp/init-dump.sql
-
+# 3. Создаем в контейнере пустую базу данных S5_DB [cite: 1]
 docker exec temp-pg createdb -U postgres S5_DB
 
+# 4. Восстанавливаем данные из архива в созданную базу [cite: 1]
+# Флаги -O и -x отключают привязку к владельцам и правам для универсальности дампа
 docker exec temp-pg pg_restore -U postgres -d S5_DB -O -x /tmp/dump-S5_DB.tar
 
-docker cp temp-pg:/tmp/init-dump.sql ./init-dump.sql
+# 5. Экспорт в SQL с фильтрацией проблемных строк (restrict/unrestrict) [cite: 21]
+# Используем sed для удаления строк, мешающих инициализации, и сохраняем результат в init-dump.sql
+docker exec temp-pg pg_dump -U postgres -d S5_DB -F p --clean --if-exists --no-owner --no-privileges | \
+sed -E '/(restrict|unrestrict)/Id' > ./init-dump.sql
+
+# 6. Проверка: ищем остались ли запрещенные слова в итоговом файле
+# Если вывод пустой — файл успешно очищен
+grep -Ei "restrict|unrestrict" init-dump.sql
+
+# 7. Завершение: принудительно удаляем временный контейнер [cite: 1]
+docker rm -f temp-pg
+
+# 8. ФИНАЛЬНЫЙ ШАГ: Подготовка сжатого дампа для образа
+# Мы упаковываем очищенный SQL-файл в архив .gz. 
+# Именно файл 'init-dump.sql.gz' будет "запекаться" в ваш финальный Docker-образ 
+# (через COPY в Dockerfile), обеспечивая минимальный размер и автозапуск при старте базы.
+gzip -c ./init-dump.sql > ./init-dump.sql.gz

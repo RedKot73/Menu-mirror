@@ -1,4 +1,4 @@
-﻿using S5Server.Utils;
+using S5Server.Utils;
 
 namespace S5Server.Models;
 
@@ -85,13 +85,9 @@ public record ImportedSoldier(
     /// <summary>
     /// Determines whether the specified soldier's personal and service details differ from the current instance.
     /// </summary>
-    /// <remarks>The comparison includes first name, middle name, last name, birth date, arrival and
-    /// departure dates, rank ID, and position ID. Use this method to detect changes before updating or saving
-    /// soldier information.</remarks>
     /// <param name="soldier">The soldier to compare with the current instance. Cannot be null.</param>
-    /// <returns>true if any of the compared fields differ between the specified soldier and the current instance; otherwise,
-    /// false.</returns>
-    public bool Chnaged(Soldier soldier)
+    /// <returns>true if any of the compared fields differ between the specified soldier and the current instance; otherwise, false.</returns>
+    public bool Changed(Soldier soldier)
     {
         var res = soldier.FirstName != FirstName ||
             soldier.MidleName != MidleName ||
@@ -109,27 +105,24 @@ public record ImportedSoldier(
 /// <summary>
 /// Specifies the possible outcomes for a soldier record during an import operation.
 /// </summary>
-/// <remarks>Use this enumeration to determine whether a soldier record was inserted, updated, or deleted
-/// as a result of the import process. This can be useful for tracking changes or providing feedback to users after
-/// an import completes.</remarks>
 public enum ImportSoldierStatus
 {
     /// <summary>
-    /// Gets a value indicating whether the item has been inserted into the collection.
+    /// Запис було вставлено.
     /// </summary>
     Inserted,
     /// <summary>
-    /// Gets or sets the date and time when the entity was last updated.
+    /// Запис було оновлено.
     /// </summary>
     Updated,
     /// <summary>
-    /// Gets or sets a value indicating whether the item has been marked as deleted.
+    /// Запис було видалено.
     /// </summary>
     Deleted
 }
+
 /// <summary>
-/// Represents the result of importing a soldier, including the imported soldier's data and the status of the import
-/// operation.
+/// Represents the result of importing a soldier, including the imported soldier's data and the status of the import operation.
 /// </summary>
 /// <param name="Soldier">The data transfer object containing information about the imported soldier.</param>
 /// <param name="Status">The status indicating the outcome of the import operation for the soldier.</param>
@@ -151,72 +144,68 @@ public record ImportedSoldierResult(
         return res;
     }
 }
+
 /// <summary>
 /// Specifies the status of an import operation or its individual units.
 /// </summary>
-/// <remarks>Use this enumeration to track and report the progress of an import process. The values
-/// indicate the overall state (such as start, completion, or failure) as well as the status of individual units or
-/// records within the import. This can be useful for providing feedback to users or for logging purposes during
-/// batch data import scenarios.</remarks>
 public enum ImportProgressStatus
 {
     /// <summary>
-    /// Gets or sets the start value or position.
+    /// Початок імпорту.
     /// </summary>
     Start,
     /// <summary>
-    /// Indicates that the operation has been completed.
+    /// Імпорт завершено.
     /// </summary>
     Done,
     /// <summary>
-    /// Indicates that the operation has failed.
+    /// Помилка імпорту.
     /// </summary>
     Failed,
     /// <summary>
-    /// Gets or sets the start value of the unit range.
+    /// Початок імпорту підрозділу.
     /// </summary>
     UnitStart,
     /// <summary>
-    /// Indicates that a unit of work has been completed.
+    /// Імпорт підрозділу завершено.
     /// </summary>
     UnitDone,
     /// <summary>
-    /// Indicates that the specified unit could not be found.
+    /// Підрозділ не знайдено.
     /// </summary>
     UnitNotFound,
     /// <summary>
-    /// Gets or sets a value indicating whether the record operation has completed.
+    /// Обробку запису завершено.
     /// </summary>
     RecordDone
 }
+
 /// <summary>
-/// Represents a unit being imported, including its name, current import status, and the results of imported
-/// soldiers.
+/// Represents a unit being imported, including its name, current import status, and the results of imported soldiers.
 /// </summary>
-/// <remarks>Use this class to track the progress and results of importing a single unit, including the
-/// collection of soldiers associated with the unit. The import status indicates the current stage of the import
-/// process for this unit.</remarks>
 public class ImportUnit
 {
     /// <summary>
-    /// Gets or sets the name associated with the object.
+    /// Назва підрозділу.
     /// </summary>
     public string Name { get; set; }
+
     /// <summary>
-    /// Gets or sets the current status of the import progress.
+    /// Статус прогресу імпорту.
     /// </summary>
     public ImportProgressStatus Status { get; set; } = ImportProgressStatus.UnitStart;
+
     /// <summary>
-    /// Gets the collection of results for imported soldiers.
+    /// Список результатів імпорту бійців.
     /// </summary>
     public List<ImportedSoldierResult> ImportedSoldiers { get; init; } = [];
+
     /// <summary>
-    /// Initializes a new instance of the ImportUnit class with the specified name, import status, and list of
-    /// imported soldiers.
+    /// Конструктор одиниці імпорту.
     /// </summary>
-    /// <param name="name">The name of the import unit. Cannot be null.</param>
-    /// <param name="status">The current progress status of the import operation.</param>
-    /// <param name="imports">A list of results for each imported soldier. Cannot be null.</param>
+    /// <param name="name">Назва підрозділу.</param>
+    /// <param name="status">Статус.</param>
+    /// <param name="imports">Результати імпорту.</param>
     public ImportUnit(string name, ImportProgressStatus status, List<ImportedSoldierResult> imports)
     {
         Name = name;
@@ -224,67 +213,69 @@ public class ImportUnit
         ImportedSoldiers = imports;
     }
 }
+
 /// <summary>
 /// Specifies the status of an import job operation.
 /// </summary>
-/// <remarks>Use this enumeration to determine the current state of an import job, such as whether it is
-/// running, has completed successfully, has failed, or is not currently active. The status can be used to monitor
-/// progress and handle different outcomes appropriately.</remarks>
 public enum ImportJobStatus
 {
     /// <summary>
-    /// Indicates that the entity is not currently active.
+    /// Неактивний.
     /// </summary>
     NotActive,
     /// <summary>
-    /// Indicates that the current operation or process is running.
+    /// В процесі виконання.
     /// </summary>
     Running,
     /// <summary>
-    /// Indicates that the operation completed successfully.
+    /// Завершено успішно.
     /// </summary>
     Succeeded,
     /// <summary>
-    /// Indicates that the operation has failed.
+    /// Помилка.
     /// </summary>
     Failed
 }
+
 /// <summary>
-/// Represents a record of an import job, including its status, associated unit, timestamps, and any error
-/// information.
+/// Represents a record of an import job, including its status, associated unit, timestamps, and any error information.
 /// </summary>
 public record ImportJob
 {
     /// <summary>
-    /// Gets or sets the unique identifier for the unit.
+    /// ID підрозділу.
     /// </summary>
     public Guid UnitId { get; set; } = default!;
+
     /// <summary>
-    /// Gets or sets the current status of the import job.
+    /// Поточний статус завдання.
     /// </summary>
     public ImportJobStatus Status { get; set; } = ImportJobStatus.NotActive;
+
     /// <summary>
-    /// Gets or sets the date and time, in Coordinated Universal Time (UTC), when the operation started.
+    /// Час початку (UTC).
     /// </summary>
     public DateTime StartedAtUtc { get; set; } = DateTime.UtcNow;
+
     /// <summary>
-    /// Gets or sets the date and time, in Coordinated Universal Time (UTC), when the operation was completed.
+    /// Час закінчення (UTC).
     /// </summary>
     public DateTime? FinishedAtUtc { get; set; }
+
     /// <summary>
-    /// Gets or sets the error message associated with the current operation.
+    /// Повідомлення про помилку.
     /// </summary>
     public string? Error { get; set; }
 }
+
 /// <summary>
-/// Represents the progress of an import operation, including the current sheet, status, processed item count, total
-/// item count, and an optional message.
+/// Represents the progress of an import operation, including the current sheet, status, processed item count, total item count, and an optional message.
 /// </summary>
-/// <param name="Sheet">The name of the sheet currently being imported, or null if not applicable.</param>
-/// <param name="Status">The current status of the import operation.</param>
-/// <param name="Processed">The number of items that have been processed so far.</param>
-/// <param name="Total">The total number of items to be processed.</param>
-/// <param name="Message">An optional message providing additional information about the import progress, or null if not set.</param>
+/// <param name="Sheet">Назва аркуша.</param>
+/// <param name="Status">Статус.</param>
+/// <param name="Processed">Кількість оброблених записів.</param>
+/// <param name="Total">Загальна кількість записів.</param>
+/// <param name="Message">Повідомлення.</param>
 public record ImportProgress(
     string? Sheet,
     ImportProgressStatus Status,

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace S5Server.Data;
@@ -8,6 +8,11 @@ namespace S5Server.Data;
 /// </summary>
 public class MainDbContextFactory : IDesignTimeDbContextFactory<MainDbContext>
 {
+    /// <summary>
+    /// Creates a new instance of the <see cref="MainDbContext"/> for design-time operations such as migrations.
+    /// </summary>
+    /// <param name="args">Command-line arguments (not used here).</param>
+    /// <returns>A new <see cref="MainDbContext"/> instance configured for Postgres.</returns>
     public MainDbContext CreateDbContext(string[] args)
     {
         // ✅ Налаштування для міграцій

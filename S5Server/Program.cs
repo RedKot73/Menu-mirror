@@ -18,6 +18,7 @@ Console.InputEncoding = Encoding.UTF8;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 // ✅ Serilog - єдине джерело логування
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
@@ -33,11 +34,20 @@ Log.Logger = new LoggerConfiguration()
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
 
+
+// Добавьте это в самое начало файла (после логгера), чтобы видеть, что пришло от K8s
+Log.Information("Запуск приложения с аргументами: {Args}", string.Join(", ", args));
+
+// ✅ Application Insights отримає логи через вбудовану інтеграцію ASP.NET Core
 builder.Host.UseSerilog();
 
 // --- ВРЕМЕННАЯ ПРОВЕРКА ДЛЯ ОТЛАДКИ ---
 // Читаем локальный .env файл (в продакшене K8s его не будет, и метод просто ничего не сделает)
-DotNetEnv.Env.Load();
+// Загружаем .env только если мы работаем локально (Development)
+if (builder.Environment.IsDevelopment())
+{
+    DotNetEnv.Env.Load();
+}
 var testHost = builder.Configuration["PrimaryConnection:DB_Host"];
 if (string.IsNullOrEmpty(testHost))
 {
@@ -62,31 +72,78 @@ var connBuilder = new NpgsqlConnectionStringBuilder
     Port = pgConnConfig.Port,
     SearchPath = pgConnConfig.SearchPath,
 
+// Вот эта строка решит проблему доверия к сертификату:
+    TrustServerCertificate = true,
+
     SslMode = builder.Environment.IsDevelopment()
         ? SslMode.Prefer      // Dev: опціонально
         : SslMode.Require,    // Prod: обов'язково
     Timezone = "UTC",
     Encoding = "UTF8"
 };
+// 1. Формируем строку подключения из билдера
 var connectionString = connBuilder.ConnectionString;
+// Проверка, что строка не пустая (важно для безопасности)
 ArgumentException.ThrowIfNullOrEmpty(connectionString);
 
+// 2. Настраиваем DataSourceBuilder
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-//Налаштувати обробку infinity
+
+// Разрешаем работу с JSONB (необходимо для современных БД)
 dataSourceBuilder.EnableDynamicJson();
-//Конвертувати infinity → DateTime.MaxValue/MinValue
+
+// Настройка формата даты (ISO) для корректной работы с PostgreSQL
 dataSourceBuilder.ConnectionStringBuilder.Options = "-c DateStyle=ISO";
-//Увімкнути legacy behavior для timestamp
+
+// Совместимость со старым поведением DateTime (важно для миграций)
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-if (builder.Environment.IsProduction())
-{
-    // Аналог TrustServerCertificate = true
-    dataSourceBuilder.UseSslClientAuthenticationOptionsCallback(options =>
-    {
-        options.RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => true;
-    });
-}
+
+/* ПРИМЕЧАНИЕ: Блок с 'if (builder.Environment.IsProduction())' и Callback 
+   больше не нужен, так как мы добавили 'TrustServerCertificate = true' 
+   прямо в connBuilder. Это работает во всех средах одинаково надежно.
+*/
+
+// Создаем итоговый DataSource
 var dataSource = dataSourceBuilder.Build();
+
+// 3. ЦИКЛ ПОВТОРОВ (RETRIES)
+int maxRetries = 3; // Количество попыток
+for (int i = 1; i <= maxRetries; i++)
+{
+    try
+    {
+        Log.Information("Попытка подключения к PostgreSQL {Attempt}/{Max}...", i, maxRetries);
+        
+        // Открываем соединение, используя настроенный DataSource
+        await using var testConnection = await dataSource.OpenConnectionAsync();
+        
+        // Проверочный запрос
+        await using var cmd = testConnection.CreateCommand();
+        cmd.CommandText = "SELECT version()";
+        await cmd.ExecuteScalarAsync();
+
+        Log.Information("✅ PostgreSQL подключен: {Database}@{Host}:{Port}", 
+            pgConnConfig.DB_Name, pgConnConfig.DB_Host, pgConnConfig.Port);
+        
+        await testConnection.CloseAsync();
+        break; // Успех — выходим из цикла
+    }
+    catch (Exception ex)
+    {
+        Log.Warning("⚠️ Попытка {Attempt} не удалась (Connection refused или SSL). Ошибка: {Message}", i, ex.Message);
+        
+        if (i < maxRetries)
+        {
+            Log.Information("Ожидание 5 секунд перед повтором...");
+            await Task.Delay(5000); // Пауза 3 секунды
+        }
+        else
+        {
+            Log.Fatal(ex, "❌ Все попытки подключения провалены. Завершение работы.");
+            return; // Завершаем приложение
+        }
+    }
+}
 
 // ✅ Використати DataSource замість connectionString
 builder.Services.AddPooledDbContextFactory<MainDbContext>(options =>
@@ -103,32 +160,6 @@ builder.Services.AddScoped<MainDbContext>(sp =>
     return factory.CreateDbContext();
 });
 
-//Проверка подключения к PostgreSQL с тестовым запросом
-try
-{
-    await using var testConnection = await dataSource.OpenConnectionAsync();
-    await using var cmd = testConnection.CreateCommand();
-    cmd.CommandText = "SELECT version()";
-    var version = await cmd.ExecuteScalarAsync();
-
-    Log.Information("PostgreSQL подключен: {Database}@{Host}:{Port}",
-        pgConnConfig.DB_Name, pgConnConfig.DB_Host, pgConnConfig.Port);
-    Log.Debug("PostgreSQL Version: {Version}", version);
-
-    await testConnection.CloseAsync();
-}
-catch (NpgsqlException ex)
-{
-    Log.Fatal(ex, "Ошибка аутентификации PostgreSQL. Проверьте: DB_Username={Username}, DB_Host={Host}, DB_Port={Port}",
-        pgConnConfig.DB_Username, pgConnConfig.DB_Host, pgConnConfig.Port);
-    //throw;
-}
-catch (Exception ex)
-{
-    Log.Fatal(ex, "Не удалось подключиться к PostgreSQL: {Database}@{Host}:{Port}",
-        pgConnConfig.DB_Name, pgConnConfig.DB_Host, pgConnConfig.Port);
-    //throw;
-}
 
 // ✅ Identity
 builder.Services.AddIdentity<TVezhaUser, IdentityRole<Guid>>(options =>
@@ -244,27 +275,27 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // === БЛОК АВТОМАТИЧЕСКИХ МИГРАЦИЙ ===
-if (args.Contains("--migrate"))
+// Делаем проверку регистронезависимой и ищем вхождение строки
+if (args.Any(arg => arg.Trim().Contains("--migrate", StringComparison.OrdinalIgnoreCase)))
 {
-    Log.Information("=== Запуск режима миграций ===");
+    Log.Information("=== Запуск режима миграций (обнаружен флаг --migrate) ===");
 
     using var scope = app.Services.CreateScope();
-    // Достаем MainDbContext
     var dbContext = scope.ServiceProvider.GetRequiredService<MainDbContext>();
     try
     {
-        // Накатываем миграции поверх дампа
+        Log.Information("Накатываем миграции...");
         await dbContext.Database.MigrateAsync();
         Log.Information("=== Миграции успешно применены! ===");
+        
+        // КРИТИЧЕСКИ ВАЖНО: Принудительный выход с кодом 0, чтобы Init-контейнер завершился
+        Environment.Exit(0); 
     }
     catch (Exception ex)
     {
         Log.Fatal(ex, "Ошибка при применении миграций");
-        throw; // Роняем приложение, чтобы CI/CD понял, что произошла ошибка
+        Environment.Exit(1); // Сообщаем K8s об ошибке
     }
-
-    // Завершаем работу программы, так как мы вызывали её только ради миграций
-    return;
 }
 
 // ✅ Конфігурація фонових сервісів

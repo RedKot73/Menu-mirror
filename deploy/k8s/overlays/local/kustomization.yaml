@@ -33,7 +33,9 @@ configMapGenerator:
     # envs УДАЛЕН отсюда, чтобы не было конфликта ключа DB_HOST с локальным .env
     literals:
       - DB_HOST=s5-db-cluster-rw # Хост для подключения внутри кластера (приоритет над .env)
+      #- ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_ENVIRONMENT=Development # Фиксируем окружение для K8s
+
 
 # 3. Подмена образов
 # Имена (name) теперь СТРОГО совпадают с манифестами в base
@@ -43,6 +45,6 @@ images:
     newTag: 18.3-v1.0.0 # # Тег для локальной сборки "1.0.0" # Тег для локальной сборки
   - name: s5-server
     newName: s5-server
-    newTag: "1.0.0" # Тег для локальной сборки
+    newTag: "1.0.1" # Тег для локальной сборки
 
 # Блок replacements удален отсюда, так как он теперь в base/kustomization.yaml

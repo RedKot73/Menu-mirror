@@ -1,12 +1,18 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace S5Server.Models;
 
 /// <summary>
-/// DTO для DroneModelTask
+/// DTO для передачі даних про використання БПЛА в завданні.
 /// </summary>
+/// <param name="Id">Унікальний ідентифікатор запису.</param>
+/// <param name="UnitTaskId">ID завдання підрозділу.</param>
+/// <param name="DroneModelId">ID моделі БПЛА.</param>
+/// <param name="DroneModelValue">Назва моделі БПЛА.</param>
+/// <param name="DroneTypeName">Назва типу БПЛА.</param>
+/// <param name="Quantity">Кількість.</param>
 public record DroneModelTaskDto(
     Guid Id,
     Guid UnitTaskId,
@@ -16,15 +22,23 @@ public record DroneModelTaskDto(
     int Quantity);
 
 /// <summary>
-/// DTO для оновлення DroneModelTask
+/// DTO для створення або оновлення запису про використання БПЛА.
 /// </summary>
+/// <param name="UnitTaskId">ID завдання підрозділу.</param>
+/// <param name="DroneModelId">ID моделі БПЛА.</param>
+/// <param name="Quantity">Кількість.</param>
 public record DroneModelTaskUpSertDto(
     Guid UnitTaskId,
     Guid DroneModelId,
     int Quantity);
 /// <summary>
-/// Результат масового збереження/оновлення
+/// Результат операції масового збереження даних.
 /// </summary>
+/// <param name="Success">Ознака успішності операції.</param>
+/// <param name="Created">Кількість створених записів.</param>
+/// <param name="Updated">Кількість оновлених записів.</param>
+/// <param name="Deleted">Кількість видалених записів.</param>
+/// <param name="Total">Загальна кількість оброблених записів.</param>
 public record BulkSaveResult(
     bool Success,
     int Created,
@@ -38,6 +52,9 @@ public record BulkSaveResult(
 [Table("drone_model_task")]
 public class DroneModelTask
 {
+    /// <summary>
+    /// Унікальний ідентифікатор запису.
+    /// </summary>
     [Key]
     public Guid Id { get; set; } = Guid.CreateVersion7();
 
@@ -117,6 +134,12 @@ public static class DroneModelTaskExtensions
         entity.DroneModelId == dto.DroneModelId &&
         entity.Quantity == dto.Quantity;
 
+    /// <summary>
+    /// Порівнює два списки засобів на відповідність даним у DTO.
+    /// </summary>
+    /// <param name="means">Список поточних засобів.</param>
+    /// <param name="dto">Список нових даних.</param>
+    /// <returns>True, якщо дані ідентичні.</returns>
     public static bool IsEqualTo(this List<DroneModelTask> means, List<DroneModelTaskUpSertDto> dto) =>
         means.Count == dto.Count &&
         !means.Where((t, i) => !t.IsEqualTo(dto[i])).Any();

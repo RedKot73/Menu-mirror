@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,13 +14,11 @@ namespace S5Server.Data;
 /// <remarks>Класс наследуется от IdentityDbContext и расширяет стандартную схему Identity.</remarks>
 public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, Guid>
 {
-/// <summary>
-/// Представляет основной контекст базы данных приложения
-/// Используется для работы с данными через Entity Framework
-/// Core и ASP.NET Core Identity
-/// </summary>
-/// <remarks>Класс наследуется от IdentityDbContext и расширяет стандартную схему Identity.</remarks>
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MainDbContext"/> class using the specified options.
+    /// </summary>
+    /// <param name="options">The options to be used by this <see cref="DbContext"/>.</param>
     public MainDbContext(DbContextOptions<MainDbContext> options)
         : base(options)
     {

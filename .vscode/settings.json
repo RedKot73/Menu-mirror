@@ -8,11 +8,9 @@
   "html.format.maxPreserveNewLines": 2,
   "html.format.indentHandlebars": false,
   "html.format.extraLiners": "head, body, /html",
-  
   // TypeScript/JavaScript форматирование
-  "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": false,
-  "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": false,
-  
+  "js/ts.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": false,
+  "js/ts.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": false,
   // Prettier как форматтер по умолчанию
   "[html]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -29,5 +27,8 @@
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true
-  }
+  },
+  "gemini-cli.debug.logging.enabled": true,
+  "geminicodeassist.agentYoloMode": true,
+  "geminicodeassist.agentDebugMode": true
 }

@@ -14,12 +14,44 @@ spec:
       labels:
         app: s5-server
     spec:
-      # --- БЛОК МИГРАЦИИ (InitContainer) ---
-      # Этот контейнер выполнится ПЕРЕД стартом основного сервера
+      # =======================================================================
+      # ПОДРОБНОЕ ОПИСАНИЕ ПОРЯДКА ЗАПУСКА (LIFECYCLE):
+      # 
+      # 1. ЭТАП [wait-for-db]: Ждет, пока откроется порт 5432. Это защита от 
+      #    ошибки "Connection refused".
+      # 
+      # 2. ЭТАП [db-migration]: Запускает приложение с флагом --migrate. 
+      #    Благодаря разделению command и args, флаг гарантированно попадает 
+      #    в Program.cs. Контейнер завершится (Exit 0) после миграций.
+      # 
+      # 3. ФИНАЛ [s5-server]: Основной веб-сервер. Запускается только когда 
+      #    все предыдущие шаги успешно завершены.
+      # =======================================================================
+      
+      # --- БЛОК ИНИЦИАЛИЗАЦИИ (InitContainers) ---
       initContainers:
+        # НОВЫЙ БЛОК: Ожидание готовности сетевого порта базы данных
+        # Это предотвращает ошибку "Connection refused", если база еще запускается
+        - name: wait-for-db
+          image: postgres:18.3 # Используем легковесный образ с утилитой pg_isready
+          command: 
+            - sh
+            - -c
+            - |
+              echo "Waiting for PostgreSQL at s5-db-cluster-rw:5432..."
+              # Цикл будет работать, пока pg_isready не вернет успех
+              until pg_isready -h s5-db-cluster-rw -p 5432; do
+                echo "Database is not ready yet. Sleeping 5s..."
+                sleep 5
+              done
+              echo "Database is reachable! Proceeding..."
+
+        # ЭТОТ КОНТЕЙНЕР ВЫПОЛНИТСЯ ПЕРЕД СТАРТОМ ОСНОВНОГО СЕРВЕРА
         - name: db-migration
           image: s5-server # Kustomize заменит этот плейсхолдер реальным образом при деплое
-          command: ["dotnet", "S5Server.dll", "--migrate"]
+          # ИСПРАВЛЕНИЕ: Разделяем команду и аргументы для 100% распознавания флага --migrate
+          command: ["dotnet"] 
+          args: ["S5Server.dll", "--migrate"]
           env:
             - name: PrimaryConnection__DB_Host
               valueFrom:

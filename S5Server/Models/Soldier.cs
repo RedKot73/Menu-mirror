@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 using DocumentFormat.OpenXml.Spreadsheet;
@@ -10,6 +10,21 @@ namespace S5Server.Models;
 /// <summary>
 /// DTO для создания Soldier
 /// </summary>
+/// <param name="FirstName">Ім'я</param>
+/// <param name="MidleName">По батькові</param>
+/// <param name="LastName">Прізвище</param>
+/// <param name="BirthDate">Дата народження</param>
+/// <param name="NickName">Позивний</param>
+/// <param name="UnitId">ID штатного підрозділу</param>
+/// <param name="AssignedUnitId">ID приданого підрозділу</param>
+/// <param name="InvolvedUnitId">ID задіяного підрозділу</param>
+/// <param name="ArrivedAt">Дата прибуття</param>
+/// <param name="DepartedAt">Дата вибуття</param>
+/// <param name="RankId">ID звання</param>
+/// <param name="PositionId">ID посади</param>
+/// <param name="StateId">ID статусу</param>
+/// <param name="ExternId">Зовнішній ID</param>
+/// <param name="Comment">Коментар</param>
 public record SoldierCreateDto(
     string FirstName,
     string? MidleName,
@@ -31,8 +46,31 @@ public record SoldierCreateDto(
 /// <summary>
 /// DTO для передачи Soldier
 /// </summary>
+/// <param name="FirstName">Ім'я</param>
+/// <param name="MidleName">По батькові</param>
+/// <param name="LastName">Прізвище</param>
+/// <param name="BirthDate">Дата народження</param>
+/// <param name="NickName">Позивний</param>
+/// <param name="UnitId">ID штатного підрозділу</param>
+/// <param name="AssignedUnitId">ID приданого до підрозділу</param>
+/// <param name="InvolvedUnitId">ID задіяного в підрозділі/екіпажі</param>
+/// <param name="ArrivedAt">Дата прибуття</param>
+/// <param name="DepartedAt">Дата вибуття</param>
+/// <param name="RankId">ID звання</param>
+/// <param name="PositionId">ID посади</param>
+/// <param name="StateId">ID статусу</param>
+/// <param name="ExternId">ID з зовнішньої системи</param>
+/// <param name="Comment">Коментар</param>
+/// <param name="Id">Унікальний ідентифікатор</param>
+/// <param name="UnitShortName">Коротка назва штатного підрозділу</param>
+/// <param name="AssignedUnitShortName">Коротка назва приданого підрозділу</param>
+/// <param name="InvolvedUnitShortName">Коротка назва задіяного підрозділу</param>
+/// <param name="RankShortValue">Коротка назва звання</param>
+/// <param name="PositionValue">Назва посади</param>
+/// <param name="StateValue">Назва статусу</param>
+/// <param name="ChangedBy">User, що вніс зміни</param>
+/// <param name="ValidFrom">Дата начала действия записи</param>
 public record SoldierDto(
-//Базові поля
     string FirstName,
     string? MidleName,
     string? LastName,
@@ -48,7 +86,6 @@ public record SoldierDto(
     Guid StateId,
     int? ExternId,
     string? Comment,
-//Нові поля
     Guid Id,
     string UnitShortName,
     string? AssignedUnitShortName,
@@ -56,13 +93,7 @@ public record SoldierDto(
     string RankShortValue,
     string PositionValue,
     string StateValue,
-    /// <summary>
-    /// User, що вніс зміни
-    /// </summary>
     string ChangedBy,
-    /// <summary>
-    /// Дата начала действия записи
-    /// </summary>
     DateTime ValidFrom
 ) : SoldierCreateDto(
     FirstName,

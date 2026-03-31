@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
@@ -382,7 +382,7 @@ public static class ImportSoldiersBGWorker
                         importSoldierStatus = ImportSoldierStatus.Inserted;
                     }
                     else
-                        if (sldr.Chnaged(soldier))//Дані в Exl and DB відрізняються
+                        if (sldr.Changed(soldier))//Дані в Exl and DB відрізняються
                         {
 
                             soldier.ValidFrom = DateTime.UtcNow;

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
@@ -8,6 +8,12 @@ namespace S5Server.Models
     /// <summary>
     /// Опис Завдання прив"язаний до Категорії шаблона документа
     /// </summary>
+    /// <param name="Id">Унікальний ідентифікатор елемента завдання.</param>
+    /// <param name="Value">Назва або опис завдання.</param>
+    /// <param name="Comment">Довільний коментар.</param>
+    /// <param name="TemplateCategoryId">ID категорії шаблона.</param>
+    /// <param name="TemplateCategory">Назва категорії шаблона.</param>
+    /// <param name="UnitTaskId">ID основного завдання підрозділу.</param>
     public record DictUnitTaskItemDto(
         Guid Id,
         string Value,

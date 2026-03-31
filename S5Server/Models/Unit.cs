@@ -1,12 +1,23 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace S5Server.Models;
 
 /// <summary>
-/// DTO для створення підрозділу
+/// DTO для створення підрозділу.
 /// </summary>
+/// <param name="ParentId">ID вищого підрозділу.</param>
+/// <param name="AssignedUnitId">ID приданого підрозділу.</param>
+/// <param name="Name">Повна назва підрозділу.</param>
+/// <param name="ShortName">Скорочена назва підрозділу.</param>
+/// <param name="MilitaryNumber">Номер в/ч.</param>
+/// <param name="ForceTypeId">ID виду збройних сил.</param>
+/// <param name="UnitTypeId">ID типу підрозділу.</param>
+/// <param name="OrderVal">Порядок сортування.</param>
+/// <param name="IsInvolved">Ознака задіяності.</param>
+/// <param name="PersistentLocationId">ID ППД.</param>
+/// <param name="Comment">Коментар.</param>
 public record UnitCreateDto(
     Guid? ParentId,
     Guid? AssignedUnitId,
@@ -21,8 +32,27 @@ public record UnitCreateDto(
     string? Comment);
 
 /// <summary>
-/// DTO для підрозділу
+/// DTO для передачі даних про підрозділ.
 /// </summary>
+/// <param name="Id">Унікальний ідентифікатор.</param>
+/// <param name="ParentId">ID батьківського підрозділу.</param>
+/// <param name="ParentShortName">Коротка назва батьківського підрозділу.</param>
+/// <param name="AssignedUnitId">ID приданого підрозділу.</param>
+/// <param name="AssignedShortName">Коротка назва приданого підрозділу.</param>
+/// <param name="Name">Повна назва.</param>
+/// <param name="ShortName">Скорочена назва.</param>
+/// <param name="MilitaryNumber">Номер в/ч.</param>
+/// <param name="ForceTypeId">ID виду військ.</param>
+/// <param name="ForceType">Назва виду військ.</param>
+/// <param name="UnitTypeId">ID типу підрозділу.</param>
+/// <param name="UnitType">Назва типу підрозділу.</param>
+/// <param name="IsInvolved">Ознака задіяності.</param>
+/// <param name="OrderVal">Порядок сортування.</param>
+/// <param name="PersistentLocationId">ID ППД.</param>
+/// <param name="PersistentLocation">Назва ППД.</param>
+/// <param name="Comment">Коментар.</param>
+/// <param name="ChangedBy">Хто змінив.</param>
+/// <param name="ValidFrom">Дата початку дії.</param>
 public record UnitDto(
     Guid Id,
     Guid? ParentId,
@@ -41,13 +71,32 @@ public record UnitDto(
     Guid? PersistentLocationId,
     string? PersistentLocation,
     string? Comment,
-    // ✅ ДОДАНО
     string ChangedBy,
     DateTime ValidFrom);
 
 /// <summary>
-/// Розширений DTO для дерева: додає ознаку наявності дочірніх підрозділів
+/// Розширений DTO для дерева: додає ознаку наявності дочірніх підрозділів.
 /// </summary>
+/// <param name="Id">Унікальний ідентифікатор.</param>
+/// <param name="ParentId">ID батьківського підрозділу.</param>
+/// <param name="ParentShortName">Коротка назва батьківського підрозділу.</param>
+/// <param name="AssignedUnitId">ID приданого підрозділу.</param>
+/// <param name="AssignedShortName">Коротка назва приданого підрозділу.</param>
+/// <param name="Name">Повна назва.</param>
+/// <param name="ShortName">Скорочена назва.</param>
+/// <param name="MilitaryNumber">Номер в/ч.</param>
+/// <param name="ForceTypeId">ID виду військ.</param>
+/// <param name="ForceType">Назва виду військ.</param>
+/// <param name="UnitTypeId">ID типу підрозділу.</param>
+/// <param name="UnitType">Назва типу підрозділу.</param>
+/// <param name="IsInvolved">Ознака задіяності.</param>
+/// <param name="OrderVal">Порядок сортування.</param>
+/// <param name="PersistentLocationId">ID ППД.</param>
+/// <param name="PersistentLocation">Назва ППД.</param>
+/// <param name="Comment">Коментар.</param>
+/// <param name="HasChildren">Ознака наявності дочірніх підрозділів.</param>
+/// <param name="ChangedBy">Хто змінив.</param>
+/// <param name="ValidFrom">Дата початку дії.</param>
 public record UnitTreeItemDto(
     Guid Id,
     Guid? ParentId,
@@ -67,7 +116,6 @@ public record UnitTreeItemDto(
     string? PersistentLocation,
     string? Comment,
     bool HasChildren,
-    // ✅ ДОДАНО
     string ChangedBy,
     DateTime ValidFrom) 
     : UnitDto(
@@ -101,7 +149,7 @@ public record UnitTreeItemDto(
 public class Unit
 {
     /// <summary>
-    /// Gets or sets the unique identifier for the entity.
+    /// Унікальний ідентифікатор підрозділу.
     /// </summary>
     [Key]
     public Guid Id { get; set; } = Guid.CreateVersion7();

@@ -1,34 +1,36 @@
 FROM postgres:18.3
+
 # 2. Переключаемся на root для установки системных пакетов
 USER root
-#RUN apt-get update && apt-get install -y locales 
 
-
-# 3. Устанавливаем локали (ОБЯЗАТЕЛЬНО для корректной работы сортировки и кириллицы из дампа)
-RUN apt-get update && apt-get install -y locales \
+# 3. Устанавливаем локали и openssl для генерации SSL сертификатов
+RUN apt-get update && apt-get install -y locales openssl \
     && rm -rf /var/lib/apt/lists/*
 
-# 4. Генерируем нужные локали. 
-# Замените en_US и uk_UA на те, которые использовались в вашей старой базе, если они другие.
-# 2. Установка локалей [cite: 8, 9]
-RUN apt-get update && apt-get install -y locales \
-    && rm -rf /var/lib/apt/lists/* \
-    && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
+# 4. Генерируем нужные локали (сохранено без изменений)
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
     && sed -i -e 's/# uk_UA.UTF-8 UTF-8/uk_UA.UTF-8 UTF-8/' /etc/locale.gen \
     && locale-gen
 
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 
-# 5. КОПИРУЕМ ДАМП ВНУТРЬ ОБРАЗА
-# Папка /docker-entrypoint-initdb.d/ — это специальная директория. 
-# При первом запуске пустого контейнера все .sql скрипты из нее выполнятся автоматически.
-# для сбокри  postgres:18.3
-#COPY --chown=postgres:postgres init-dump.sql /docker-entrypoint-initdb.d/
-# 5. КОПИРУЕМ СЖАТЫЙ ДАМП ВНУТРЬ ОБРАЗА
-# Образ postgres сам увидит расширение .gz, распакует его в памяти 
-# и выполнит SQL-команды при инициализации чистой базы.
+# --- НОВАЯ ЧАСТЬ: ГЕНЕРАЦИЯ SSL СЕРТИФИКАТОВ ---
+# Создаем директорию для сертификатов и генерируем самоподписанный сертификат на 10 лет
+RUN mkdir -p /etc/postgresql/ssl \
+    && openssl req -new -x509 -days 3650 -nodes \
+       -text -out /etc/postgresql/ssl/server.crt \
+       -keyout /etc/postgresql/ssl/server.key \
+       -subj "/CN=db" \
+    && chown -R postgres:postgres /etc/postgresql/ssl \
+    && chmod 600 /etc/postgresql/ssl/server.key
+# -----------------------------------------------
+
+# 5. КОПИРУЕМ СЖАТЫЙ ДАМП (сохранено без изменений)
 COPY --chown=postgres:postgres init-dump.sql.gz /docker-entrypoint-initdb.d/
 
+# Возвращаемся под пользователя postgres для безопасности
+USER postgres
 
-#USER postgres
+# Указываем дефолтную команду запуска с включенным SSL
+CMD ["postgres", "-c", "ssl=on", "-c", "ssl_cert_file=/etc/postgresql/ssl/server.crt", "-c", "ssl_key_file=/etc/postgresql/ssl/server.key"]

@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +9,26 @@ using S5Server.Utils;
 
 namespace S5Server.Services
 {
-    public enum CityCodesProgressStatus { Start, Done, Failed }
+    /// <summary>
+    /// Статус процесу імпорту кодифікатора.
+    /// </summary>
+    public enum CityCodesProgressStatus 
+    { 
+        /// <summary> Імпорт запущено. </summary>
+        Start, 
+        /// <summary> Імпорт успішно завершено. </summary>
+        Done, 
+        /// <summary> Помилка під час імпорту. </summary>
+        Failed 
+    }
+
+    /// <summary>
+    /// Прогрес імпорту кодифікатора.
+    /// </summary>
+    /// <param name="Status">Поточний статус.</param>
+    /// <param name="Processed">Кількість оброблених записів.</param>
+    /// <param name="Total">Загальна кількість записів (якщо відомо).</param>
+    /// <param name="Message">Повідомлення про поточну дію.</param>
     public record ImportCityCodesProgress(CityCodesProgressStatus Status, int Processed, int Total, string? Message);
 
     /// <summary>
@@ -24,6 +43,12 @@ namespace S5Server.Services
         // Фабрика контекста для фоновых операций импорта
         private static IDbContextFactory<MainDbContext>? _dbFactory;
         private static ILogger? _logger;
+
+        /// <summary>
+        /// Конфігурує фабрику контексту та логер для імпорту.
+        /// </summary>
+        /// <param name="dbFactory">Фабрика контексту БД.</param>
+        /// <param name="logger">Логер.</param>
         public static void Configure(IDbContextFactory<MainDbContext> dbFactory,
             ILogger logger)
         {
@@ -31,6 +56,9 @@ namespace S5Server.Services
             _logger = logger;
 
         }
+        /// <summary>
+        /// Подія, що сповіщає про перебіг імпорту.
+        /// </summary>
         public static event Action<ImportCityCodesProgress>? Progress;
         private static void Report(ImportCityCodesProgress p)
         {
@@ -46,7 +74,12 @@ namespace S5Server.Services
             }
         }
 
-        // Буферизація файла до запуска фоновой задачи, чтобы избежать ObjectDisposedException
+        /// <summary>
+        /// Зберігає завантажений файл у пам'ять та запускає фонову задачу для імпорту.
+        /// </summary>
+        /// <param name="file">Файл Excel для імпорту.</param>
+        /// <param name="ct">Токен скасування.</param>
+        /// <returns>Кортеж, що містить статус запуску, поточний статус імпорту та повідомлення про помилку, якщо вона є.</returns>
         public static (bool started, CityCodesProgressStatus status, string? error) TryStartBackground(IFormFile file, CancellationToken ct = default)
         {
             lock (_sync)
@@ -100,6 +133,11 @@ namespace S5Server.Services
             return string.IsNullOrEmpty(trimmed) ? null : trimmed;
         }
 
+        /// <summary>
+        /// Виконує основну логіку імпорту кодифікатора з наданого масиву байтів.
+        /// </summary>
+        /// <param name="sourceData">Масив байтів, що містить дані файлу Excel.</param>
+        /// <param name="ct">Токен скасування.</param>
         public static async Task DoImport(byte[] sourceData, CancellationToken ct = default)
         {
             var processed = 0;
