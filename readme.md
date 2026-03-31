@@ -8,6 +8,9 @@ Bash
 # Сборка и запуск в фоновом режиме (рекомендуется при изменении кода)
 docker-compose -f docker-compose.local.yml up --build -d
 
+# Пересоберет только 'app' и 'migration', а базу просто поднимет из готового образа
+docker-compose -f docker-compose.local.yml up --build app migration
+
 # Быстрый перезапуск без пересборки образов
 docker-compose -f docker-compose.local.yml up -d
 2. Мониторинг и логи
