@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
@@ -51,8 +51,24 @@ if (builder.Environment.IsProduction())
 // Загружаем .env только если мы работаем локально (Development)
 if (builder.Environment.IsDevelopment())
 {
-    DotNetEnv.Env.Load();
+    Console.WriteLine("--- DEBUG: Development Mode Detected ---");
+    Console.WriteLine($"Current Environment: {builder.Environment.EnvironmentName}");
+    
+    // Загружаем только из .env и выводим их
+    // Метод TraversePath() будет искать файл .env в текущей директории и выше по дереву папок
+    var loadedVars = DotNetEnv.Env.TraversePath().Load();
+    Console.WriteLine($"--- Прочитаны следующие переменные из .env ---");
+    foreach (var kvp in loadedVars)
+    {
+        Console.WriteLine($"{kvp.Key} = {kvp.Value}");
+    }
+    Console.WriteLine("-----------------------------------------");
+    
+    // Важно: нужно заставить конфигурацию (IConfiguration) перечитать переменные окружения,
+    // так как .env только что их обновил в системе (Environment)
+    builder.Configuration.AddEnvironmentVariables();
 }
+
 var testHost = builder.Configuration["PrimaryConnection:DB_Host"];
 if (string.IsNullOrEmpty(testHost))
 {
@@ -76,9 +92,6 @@ var connBuilder = new NpgsqlConnectionStringBuilder
     Timeout = pgConnConfig.Timeout,
     Port = pgConnConfig.Port,
     SearchPath = pgConnConfig.SearchPath,
-
-// Вот эта строка решит проблему доверия к сертификату:
-    TrustServerCertificate = true,
 
     SslMode = builder.Environment.IsDevelopment()
         ? SslMode.Prefer      // Dev: опціонально
@@ -176,8 +189,19 @@ builder.Services.AddIdentity<TVezhaUser, IdentityRole<Guid>>(options =>
     options.Password.RequireLowercase = false;
     options.Password.RequiredUniqueChars = 1;
     options.SignIn.RequireConfirmedAccount = false;
-    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(60);
-    options.Lockout.MaxFailedAccessAttempts = 3;
+    
+    if (builder.Environment.IsDevelopment())
+    {
+        options.Lockout.AllowedForNewUsers = false;
+        options.Lockout.MaxFailedAccessAttempts = int.MaxValue;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.Zero;
+    }
+    else
+    {
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(60);
+        options.Lockout.MaxFailedAccessAttempts = 3;
+        options.Lockout.AllowedForNewUsers = true;
+    }
 })
 .AddEntityFrameworkStores<MainDbContext>()
 .AddUserManager<UserManager<TVezhaUser>>()
@@ -401,6 +425,19 @@ try
             Log.Information("S5Server started (addresses not available)");
         }
     });
+
+    if (app.Environment.IsDevelopment())
+    {
+        using var scope = app.Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<TVezhaUser>>();
+        var havrokUser = userManager.FindByNameAsync("havrok").GetAwaiter().GetResult();
+        if (havrokUser != null)
+        {
+            userManager.SetLockoutEndDateAsync(havrokUser, null).GetAwaiter().GetResult();
+            userManager.ResetAccessFailedCountAsync(havrokUser).GetAwaiter().GetResult();
+            Log.Information("✅ AUTOMATICALLY UNLOCKED USER 'havrok' IN DEVELOPMENT MODE");
+        }
+    }
 
     app.Run();
 }
