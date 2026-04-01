@@ -8,6 +8,18 @@ export interface LoginDto {
   rememberMe?: boolean;
 }
 
+export interface LoginTwoFactorDto {
+  userId: string;
+  code: string;
+  rememberMe?: boolean;
+}
+
+export interface TwoFactorLoginResponse {
+  requiresTwoFactor: boolean;
+  userId: string;
+  rememberMe: boolean;
+}
+
 export interface AuthUser {
   id: string;
   userName: string;
@@ -18,4 +30,20 @@ export interface AuthUser {
   lastPasswordChangeDate: string | null;
   roles: string[];
   soldier?: SoldierDto;
+  // TODO: RE-ENABLE 2FA BEFORE PRODUCTION
+  debugMessage?: string;
+  token?: string;
 }
+
+export interface AuthPayload {
+  token: string | null;
+  requiresTwoFactor: boolean;
+  userId: string | null;
+  user: AuthUser | null;
+}
+
+export interface GqlResponse<T> {
+  data: T;
+  errors?: any[];
+}
+

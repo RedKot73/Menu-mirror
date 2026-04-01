@@ -33,7 +33,7 @@ import { PPD_AREA_TYPE_GUID } from '../Unit/unit.constants';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './InvolvedUnitDialog.html',
-  styleUrl: './InvolvedUnitDialog.scss',
+  styleUrl: './involvedUnitDialog.scss',
 })
 export class InvolvedUnitDialogComponent implements OnInit {
   private dictAreasService = inject(DictAreasService);

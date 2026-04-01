@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './auth/auth.guard';
+import { authGuard, twoFactorGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
   {
@@ -142,6 +142,13 @@ export const routes: Routes = [
     path: 'login',
     title: 'Вхід в систему',
     loadComponent: () => import('../Login/LoginPage.component').then((m) => m.LoginPage),
+  },
+  {
+    path: 'welcome',
+    title: 'Двофакторна автентифікація',
+    loadComponent: () =>
+      import('./pages/welcome/welcome.component').then((m) => m.WelcomeComponent),
+    canActivate: [twoFactorGuard],
   },
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   { path: '**', redirectTo: '' },

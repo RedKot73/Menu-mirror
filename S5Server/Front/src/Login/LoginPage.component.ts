@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -14,58 +15,63 @@ import {
   ChangePasswordDialogComponent,
   ChangePasswordDialogData,
 } from './dialogs/ChangePasswordDialog.component';
+import { SystemTimeService } from '../app/core/services/system-time.service';
 
 @Component({
   selector: 's5-page-login',
   standalone: true,
-  template: ` <div class="login-container">
-    <h2>Вхід в систему</h2>
+  template: `
+    <div class="login-container">
+      <h2>Вхід в систему</h2>
 
-    @if (errorMessage()) {
-      <div class="error-message">{{ errorMessage() }}</div>
-    }
+      @if (errorMessage()) {
+        <div class="error-message">{{ errorMessage() }}</div>
+      }
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-      <mat-form-field appearance="outline">
-        <mat-label>Логін</mat-label>
-        <input matInput formControlName="login" autocomplete="username" />
-        @if (loginForm.controls.login.hasError('required')) {
-          <mat-error>Логін обов'язковий</mat-error>
-        }
-      </mat-form-field>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline">
+          <mat-label>Логін</mat-label>
+          <input matInput formControlName="login" autocomplete="username" />
+          @if (loginForm.controls.login.hasError('required')) {
+            <mat-error>Логін обов'язковий</mat-error>
+          }
+        </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Пароль</mat-label>
-        <input
-          matInput
-          formControlName="password"
-          type="password"
-          autocomplete="current-password"
-        />
-        @if (loginForm.controls.password.hasError('required')) {
-          <mat-error>Пароль обов'язковий</mat-error>
-        }
-      </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Пароль</mat-label>
+          <input
+            matInput
+            formControlName="password"
+            type="password"
+            autocomplete="current-password"
+          />
+          @if (loginForm.controls.password.hasError('required')) {
+            <mat-error>Пароль обов'язковий</mat-error>
+          }
+        </mat-form-field>
 
-      <mat-checkbox formControlName="rememberMe">Запам'ятати мене</mat-checkbox>
+        <mat-checkbox formControlName="rememberMe">Запам'ятати мене</mat-checkbox>
 
-      <button
-        mat-raised-button
-        color="primary"
-        type="submit"
-        [disabled]="loginForm.invalid || isLoading()"
-      >
-        @if (isLoading()) {
-          <mat-spinner diameter="20"></mat-spinner>
-        } @else {
-          Увійти
-        }
-      </button>
-    </form>
-  </div>
-  <div class="version-info">Версія: 1.0.0</div>`,
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="loginForm.invalid || isLoading()"
+        >
+          @if (isLoading()) {
+            <mat-spinner diameter="20"></mat-spinner>
+          } @else {
+            Увійти
+          }
+        </button>
+      </form>
+    </div>
+    <div class="version-info">Версія: 1.0.0</div>
+    <div class="utc-clock">UTC: {{ utcTime$ | async | date:'yyyy-MM-dd HH:mm:ss':'UTC' }}</div>`,
   imports: [
     ReactiveFormsModule,
+    AsyncPipe,
+    DatePipe,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
@@ -76,6 +82,18 @@ import {
   ],
   styles: [
     `
+      .utc-clock {
+        position: fixed;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 12px;
+        font-weight: 500;
+        font-family: 'Roboto', sans-serif;
+        color: rgba(63, 81, 181, 0.75);
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+      }
       .login-container {
         max-width: 400px;
         margin: 80px auto;
@@ -114,9 +132,11 @@ export class LoginPage {
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private usersService = inject(UsersService);
+  private systemTimeService = inject(SystemTimeService);
 
   readonly isLoading = signal(false);
   readonly errorMessage = signal('');
+  readonly utcTime$ = this.systemTimeService.utcTime$;
 
   loginForm = new FormGroup({
     login: new FormControl('', Validators.required),
@@ -141,9 +161,16 @@ export class LoginPage {
         rememberMe: rememberMe ?? false,
       })
       .subscribe({
-        next: () => {
+        next: (payload) => {
           this.isLoading.set(false);
-          this.router.navigate(['/units']);
+          if (payload.requiresTwoFactor) {
+            this.router.navigate(['/welcome']);
+          } else if (payload.token) {
+            // Per consistency requirement: redirect to /DocumentDataSet with hard reload.
+            window.location.href = '/DocumentDataSet';
+          } else {
+            this.errorMessage.set('Неправильний логін або пароль');
+          }
         },
         error: (err) => {
           this.isLoading.set(false);
@@ -179,7 +206,6 @@ export class LoginPage {
             this.snackBar.open('Пароль успішно змінено. Увійдіть з новим паролем.', 'OK', {
               duration: 5000,
             });
-            // Update the password field with the new password and re-login
             this.loginForm.patchValue({ password: result.newPassword });
             this.isLoading.set(false);
             this.onSubmit();

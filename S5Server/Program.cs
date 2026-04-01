@@ -10,8 +10,9 @@ using S5Server.Models;
 using Serilog;
 using System.Globalization;
 using System.Text;
+using Microsoft.IdentityModel.Tokens;
 
-//Исправление кодировки консоли для отображения кириллицы в ошибках PostgreSQL
+//Исправление кодировки консоли для відображення кириллицы в ошибках PostgreSQL
 Console.OutputEncoding = Encoding.UTF8;
 Console.InputEncoding = Encoding.UTF8;
 
@@ -208,6 +209,42 @@ builder.Services.AddIdentity<TVezhaUser, IdentityRole<Guid>>(options =>
 .AddRoles<IdentityRole<Guid>>()
 .AddDefaultTokenProviders();
 
+// ✅ JWT Bearer Authentication
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secret = jwtSettings["Secret"] ?? throw new InvalidOperationException("JWT Secret not found");
+
+builder.Services.AddAuthentication(options =>
+{
+    // Default to Cookies for general UI, but allow JWT for SPA/API/GQL
+    options.DefaultAuthenticateScheme = "DefaultAuth";
+    options.DefaultChallengeScheme = "DefaultAuth";
+})
+.AddPolicyScheme("DefaultAuth", "Cookie or JWT", options =>
+{
+    options.ForwardDefaultSelector = context =>
+    {
+        string authorization = context.Request.Headers.Authorization.ToString();
+        if (!string.IsNullOrEmpty(authorization) && authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            return Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+
+        return IdentityConstants.ApplicationScheme;
+    };
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.ExpireTimeSpan = TimeSpan.FromHours(2);
@@ -257,6 +294,7 @@ builder.Services.AddRateLimiter(options =>
 builder.Services
     .AddGraphQLServer()
     .AddQueryType<S5Server.GraphQL.Query>()
+    .AddMutationType<S5Server.GraphQL.Mutation>()
     .AddAuthorization()                     // ✅ Підтримка [Authorize]
     .AddProjections()                       // ✅ Оптимізація Include/Select
     .AddFiltering()                         // ✅ Фільтрація (where)

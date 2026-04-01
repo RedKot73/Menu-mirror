@@ -1,11 +1,11 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
-
+using HotChocolate;            // Добавлено для [Service]
+using HotChocolate.Data;       // Добавлено для [UseProjection], [UseFiltering], [UseSorting]
 using HotChocolate.Authorization;
-
 using Microsoft.EntityFrameworkCore;
-
 using S5Server.Data;
 using S5Server.Models;
+
+
 
 namespace S5Server.GraphQL;
 
@@ -14,6 +14,12 @@ namespace S5Server.GraphQL;
 /// </summary>
 public class Query
 {
+    /// <summary>
+    /// Отримати поточний час сервера (UTC)
+    /// </summary>
+    [AllowAnonymous]
+    public DateTime GetServerTime() => DateTime.UtcNow;
+
     /// <summary>
     /// Отримати всі набори даних для шаблонів
     /// </summary>

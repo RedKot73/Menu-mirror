@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -23,6 +23,7 @@ public class AccountController : ControllerBase
     private readonly DbSet<TVezhaUser> _users;
     private readonly DbSet<Soldier> _soldiers;
     private readonly ILogger<AccountController> _logger;
+    private readonly IConfiguration _configuration;
 
     /// <summary>
     /// API для управління користувачами системи
@@ -32,7 +33,8 @@ public class AccountController : ControllerBase
         SignInManager<TVezhaUser> signInManager,
         RoleManager<IdentityRole<Guid>> roleManager,
         MainDbContext db,
-        ILogger<AccountController> logger)
+        ILogger<AccountController> logger,
+        IConfiguration configuration)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -41,6 +43,7 @@ public class AccountController : ControllerBase
         _users = _db.Set<TVezhaUser>();
         _soldiers = _db.Soldiers;
         _logger = logger;
+        _configuration = configuration;
     }
 
     private IQueryable<TVezhaUser> UsersQuery() => _users
@@ -405,7 +408,21 @@ public class AccountController : ControllerBase
             user.LastLoginDate = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
 
-            // ✅ Спочатку авторизуємо користувача
+            // ✅ Спочатку перевіряємо чи увімкнена 2FA
+            if (user.TwoFactorEnabled)
+            {
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation("Потрібна 2FA для UserId={UserId}", user.Id);
+
+                return Ok(new
+                {
+                    requiresTwoFactor = true,
+                    userId = user.Id,
+                    rememberMe = dto.RememberMe
+                });
+            }
+
+            // ✅ Авторизуємо користувача, якщо 2FA вимкнено
             await _signInManager.SignInAsync(user, dto.RememberMe);
 
             if (_logger.IsEnabled(LogLevel.Information))
@@ -445,6 +462,102 @@ public class AccountController : ControllerBase
         {
             if (_logger.IsEnabled(LogLevel.Error))
                 _logger.LogError(ex, "Помилка входу UserName={UserName}", dto.UserName);
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+    /// <summary>
+    /// Вхід в систему (Крок 2: Перевірка TOTP)
+    /// </summary>
+    [HttpPost("login-2fa")]
+    [EnableRateLimiting("login")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> LoginTwoFactor(
+        [FromBody] LoginTwoFactorDto dto,
+        CancellationToken ct = default)
+    {
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        try
+        {
+            ct.ThrowIfCancellationRequested();
+
+            var user = await _userManager.FindByIdAsync(dto.UserId.ToString());
+            if (user == null || !user.TwoFactorEnabled)
+            {
+                return Problem(
+                    statusCode: 401,
+                    title: "Неправильний код або користувач не знайдений");
+            }
+
+            if (await _userManager.IsLockedOutAsync(user))
+            {
+                return Problem(
+                    statusCode: 423,
+                    title: "Обліковий запис заблокований",
+                    detail: $"Обліковий запис заблокований до {user.LockoutEnd?.LocalDateTime:dd.MM.yyyy HH:mm}");
+            }
+
+            var isValid = await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, dto.Code);
+            
+            var isSoftMode = _configuration["TWO_FACTOR_MODE"]?.ToLower() == "soft";
+
+            if (!isValid)
+            {
+                if (isSoftMode)
+                {
+                    _logger.LogWarning("[DEBUG] 2FA Check Failed for user {Email}, but access granted due to Debug Mode.", user.Email ?? user.UserName);
+                }
+                else
+                {
+                    await _userManager.AccessFailedAsync(user);
+                    return Problem(
+                        statusCode: 401,
+                        title: "Неправильний код");
+                }
+            }
+            else
+            {
+                await _userManager.ResetAccessFailedCountAsync(user);
+            }
+
+            user.LastLoginDate = DateTime.UtcNow;
+            await _userManager.UpdateAsync(user);
+
+            await _signInManager.SignInAsync(user, dto.RememberMe);
+
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Успішний вхід (2FA) UserId={UserId}", user.Id);
+
+            if (user.RequirePasswordChange)
+            {
+                return Problem(
+                    statusCode: 403,
+                    title: "Потрібна зміна пароля",
+                    detail: "Для продовження роботи необхідно змінити пароль",
+                    extensions: new Dictionary<string, object?> { ["requirePasswordChange"] = true, ["userId"] = user.Id });
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var result = user.ToInfoDto(roles, includeSoldier: false);
+            
+            if (!isValid && isSoftMode) 
+            {
+                result = result with { DebugMessage = "2FA check skipped" };
+            }
+
+            return Ok(result);
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка входу (2FA) для UserId={UserId}", dto.UserId);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
