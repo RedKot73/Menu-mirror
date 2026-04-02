@@ -27,13 +27,19 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 COPY --from=build /app/aspnetapp.pfx .
 
-# === ИСПРАВЛЕННЫЙ БЛОК: Добавляем gcompat и нужные либы ===
+
+
+# Установка необходимых системных библиотек для работы .NET и Npgsql на Alpine
 RUN apk add --no-cache \
     icu-libs \
     krb5-libs \
     libintl \
-    gcompat && \
-    ln -sf /usr/lib/libgssapi_krb5.so.2 /usr/lib/libgssapi_krb5.so.2
+    gcompat \
+    libstdc++ \
+    libgcc
+
+# Исправление: безопасное создание ссылки на библиотеку GSSAPI для Kerberos/SSL
+RUN [ -f /usr/lib/libgssapi_krb5.so.2 ] || ln -sf /usr/lib/libgssapi_krb5.so /usr/lib/libgssapi_krb5.so.2
 
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 

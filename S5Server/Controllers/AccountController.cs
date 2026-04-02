@@ -21,7 +21,6 @@ public class AccountController : ControllerBase
     private readonly RoleManager<IdentityRole<Guid>> _roleManager;
     private readonly MainDbContext _db;
     private readonly DbSet<TVezhaUser> _users;
-    private readonly DbSet<Soldier> _soldiers;
     private readonly ILogger<AccountController> _logger;
     private readonly IConfiguration _configuration;
 
@@ -41,25 +40,12 @@ public class AccountController : ControllerBase
         _roleManager = roleManager;
         _db = db;
         _users = _db.Set<TVezhaUser>();
-        _soldiers = _db.Soldiers;
         _logger = logger;
         _configuration = configuration;
     }
 
     private IQueryable<TVezhaUser> UsersQuery() => _users
-        .AsNoTracking()
-        .Include(u => u.Soldier)
-            .ThenInclude(s => s.Rank)
-        .Include(u => u.Soldier)
-            .ThenInclude(s => s.Position)
-        .Include(u => u.Soldier)
-            .ThenInclude(s => s.Unit)
-        .Include(u => u.Soldier)
-            .ThenInclude(s => s.State)
-        .Include(u => u.Soldier)
-            .ThenInclude(s => s.AssignedUnit)
-        .Include(u => u.Soldier)
-            .ThenInclude(s => s.InvolvedUnit);
+        .AsNoTracking();
 
     /// <summary>
     /// Отримати всіх користувачів
@@ -81,8 +67,7 @@ public class AccountController : ControllerBase
             }
 
             var users = await query
-                .OrderBy(u => u.Soldier.LastName)
-                .ThenBy(u => u.Soldier.FirstName)
+                .OrderBy(u => u.UserName)
                 .Select(u => u.ToDto())
                 .ToListAsync(ct);
             
@@ -141,46 +126,6 @@ public class AccountController : ControllerBase
     }
 
     /// <summary>
-    /// Отримати користувача за Soldier ID
-    /// </summary>
-    [HttpGet("by-soldier/{soldierId}")]
-    [Authorize]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetBySoldier(Guid soldierId, CancellationToken ct = default)
-    {
-        if (soldierId == Guid.Empty)
-            return BadRequest("SoldierId обов'язковий");
-
-        try
-        {
-            var user = await UsersQuery()
-                .FirstOrDefaultAsync(u => u.SoldierId == soldierId, ct);
-
-            if (user == null)
-                return Problem(
-                    statusCode: 404,
-                    title: "Не знайдено",
-                    detail: $"Користувача для військовослужбовця '{soldierId}' не знайдено");
-
-            var roles = await _userManager.GetRolesAsync(user);
-            var result = user.ToDto(roles);
-
-            return Ok(result);
-        }
-        catch (OperationCanceledException)
-        {
-            return Problem(statusCode: 499, title: "Скасовано кліентом");
-        }
-        catch (Exception ex)
-        {
-            if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Помилка отримання користувача по SoldierId={SoldierId}", soldierId);
-            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
-        }
-    }
-
-    /// <summary>
     /// Створити нового користувача
     /// </summary>
     [HttpPost]
@@ -196,48 +141,9 @@ public class AccountController : ControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        if (dto.SoldierId == Guid.Empty)
-            return BadRequest("SoldierId обов'язковий");
-
         try
         {
-            // 1. Перевірка чи Soldier існує
-            var soldier = await _soldiers
-                .AsTracking()//иначе EF думает что это новая сущность и пытается ее вставить в БД
-                .FirstOrDefaultAsync(s => s.Id == dto.SoldierId, ct);
-
-            if (soldier == null)
-                return Problem(
-                    statusCode: 404,
-                    title: "Не знайдено",
-                    detail: $"Військовослужбовець з ID '{dto.SoldierId}' не знайдено");
-
-            // 2. Перевірка чи у Soldier вже є користувач
-            var existingUser = await _users
-                .FirstOrDefaultAsync(u => u.SoldierId == dto.SoldierId, ct);
-
-            ct.ThrowIfCancellationRequested();
-
-            if (existingUser != null)
-            {
-                if (_logger.IsEnabled(LogLevel.Warning))
-                    _logger.LogWarning(
-                        "Спроба створити дублікат користувача SoldierId={SoldierId}, ExistingUserId={UserId}",
-                        dto.SoldierId, existingUser.Id);
-
-                return Problem(
-                    statusCode: 409,
-                    title: "Конфлікт",
-                    detail: $"Військовослужбовець '{soldier.FirstName} {soldier.LastName}' вже має обліковий запис",
-                    extensions: new Dictionary<string, object?>
-                    {
-                        ["soldierId"] = dto.SoldierId,
-                        ["existingUserId"] = existingUser.Id,
-                        ["existingUserName"] = existingUser.UserName
-                    });
-            }
-
-            // 3. Перевірка чи Email вже використовується
+            // 1. Перевірка чи Email вже використовується
             var email = dto.Email?.Trim();
             var emailExists = string.IsNullOrEmpty(email) ? null : await _userManager.FindByEmailAsync(email);
 
@@ -251,13 +157,11 @@ public class AccountController : ControllerBase
                     detail: $"Email '{email}' вже використовується");
             }
 
-            // 4. Створення нового користувача
+            // 2. Створення нового користувача
             var user = new TVezhaUser
             {
                 UserName = dto.UserName,
                 Email = dto.Email,
-                SoldierId = dto.SoldierId,
-                Soldier = soldier,
                 RegistrationDate = DateTime.UtcNow,
                 EmailConfirmed = dto.EmailConfirmed ?? false,
                 RequirePasswordChange = true // Змінити пароль при першому вході
@@ -270,8 +174,8 @@ public class AccountController : ControllerBase
             {
                 if (_logger.IsEnabled(LogLevel.Warning))
                     _logger.LogWarning(
-                        "Помилка створення користувача SoldierId={SoldierId}: {Errors}",
-                        dto.SoldierId,
+                        "Помилка створення користувача UserName={UserName}: {Errors}",
+                        dto.UserName,
                         string.Join(", ", result.Errors.Select(e => e.Description)));
 
                 return Problem(
@@ -282,10 +186,10 @@ public class AccountController : ControllerBase
 
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation(
-                    "Створено користувача UserId={UserId}, UserName={UserName}, SoldierId={SoldierId}",
-                    user.Id, user.UserName, user.SoldierId);
+                    "Створено користувача UserId={UserId}, UserName={UserName}",
+                    user.Id, user.UserName);
 
-            // 5. Додати до ролей (якщо вказані)
+            // 3. Додати до ролей (якщо вказані)
             if (dto.Roles?.Length > 0)
             {
                 await _userManager.AddToRolesAsync(user, dto.Roles);
@@ -304,8 +208,8 @@ public class AccountController : ControllerBase
         {
             if (_logger.IsEnabled(LogLevel.Error))
                 _logger.LogError(ex,
-                    "Помилка створення користувача UserName={UserName}, SoldierId={SoldierId}",
-                    dto.UserName, dto.SoldierId);
+                    "Помилка створення користувача UserName={UserName}",
+                    dto.UserName);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -325,34 +229,6 @@ public class AccountController : ControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        /*Принудительное создание первого пользователя когда в системе нет никого
-        // 4. Створення нового користувача
-        var sldrId = Guid.Parse("06501ce2-3c5a-4732-9a1b-b7b780269682");
-        var usr = new TVezhaUser
-        {
-            UserName = dto.UserName,
-            Email = string.Empty,
-            SoldierId = sldrId,
-            RegistrationDate = DateTime.UtcNow,
-            EmailConfirmed = true
-        };
-
-        var result = await _userManager.CreateAsync(usr, dto.Password);
-
-        if (!result.Succeeded)
-        {
-            if (_logger.IsEnabled(LogLevel.Warning))
-                _logger.LogWarning(
-                    "Помилка створення користувача SoldierId={SoldierId}: {Errors}",
-                    sldrId,
-                    string.Join(", ", result.Errors.Select(e => e.Description)));
-
-            return Problem(
-                statusCode: 400,
-                title: "Помилка створення користувача",
-                detail: string.Join("; ", result.Errors.Select(e => e.Description)));
-        }
-        */
         try
         {
             ct.ThrowIfCancellationRequested();
@@ -450,7 +326,7 @@ public class AccountController : ControllerBase
             }
 
             var roles = await _userManager.GetRolesAsync(user);
-            var result = user.ToInfoDto(roles, includeSoldier: false);
+            var result = user.ToInfoDto(roles);
 
             return Ok(result);
         }
@@ -541,7 +417,7 @@ public class AccountController : ControllerBase
             }
 
             var roles = await _userManager.GetRolesAsync(user);
-            var result = user.ToInfoDto(roles, includeSoldier: false);
+            var result = user.ToInfoDto(roles);
             
             if (!isValid && isSoftMode) 
             {
@@ -860,8 +736,8 @@ public class AccountController : ControllerBase
 
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation(
-                    "Видалено користувача UserId={UserId}, UserName={UserName}, SoldierId={SoldierId}",
-                    id, user.UserName, user.SoldierId);
+                    "Видалено користувача UserId={UserId}, UserName={UserName}",
+                    id, user.UserName);
 
             return NoContent();
         }
@@ -1145,7 +1021,7 @@ public class AccountController : ControllerBase
                 return Unauthorized();
 
             var roles = await _userManager.GetRolesAsync(user);
-            var result = user.ToInfoDto(roles, includeSoldier: true);
+            var result = user.ToInfoDto(roles);
 
             return Ok(result);
         }

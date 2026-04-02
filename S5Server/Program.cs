@@ -19,19 +19,12 @@ Console.InputEncoding = Encoding.UTF8;
 var builder = WebApplication.CreateBuilder(args);
 
 
-// ✅ Serilog - єдине джерело логування
+// ✅ Serilog - єдине джерело логування (Налаштування в appsettings.json)
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
     .Enrich.WithProperty("Application", "S5Server")
     .Enrich.WithProperty("Environment", builder.Environment.EnvironmentName)
-    .WriteTo.Console(
-        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
-    .WriteTo.File(
-        path: "Logs/s5server-.txt",
-        rollingInterval: RollingInterval.Day,
-        retainedFileCountLimit: 7,
-        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
 
 
@@ -295,6 +288,7 @@ builder.Services
     .AddGraphQLServer()
     .AddQueryType<S5Server.GraphQL.Query>()
     .AddMutationType<S5Server.GraphQL.Mutation>()
+    .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = builder.Environment.IsDevelopment()) // ✅ Детальні помилки в Dev
     .AddAuthorization()                     // ✅ Підтримка [Authorize]
     .AddProjections()                       // ✅ Оптимізація Include/Select
     .AddFiltering()                         // ✅ Фільтрація (where)
@@ -313,8 +307,12 @@ builder.Services.AddCors(options =>
 
         if (builder.Environment.IsDevelopment())
         {
-            // ✅ Development: дозволити Angular dev server
-            policy.WithOrigins("http://localhost:4200")
+            // ✅ Development: дозволити будь-який порт на localhost/127.0.0.1
+            policy.SetIsOriginAllowed(origin => 
+                  {
+                      var host = new Uri(origin).Host;
+                      return host == "localhost" || host == "127.0.0.1";
+                  })
                   .AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials();

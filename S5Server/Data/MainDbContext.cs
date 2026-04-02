@@ -132,11 +132,6 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
                 .HasColumnName("registration_date")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasComment("Дата/Час коли користувача створено");
-            entity.Property(e => e.SoldierId)
-                .IsRequired()
-                .HasColumnType("uuid")
-                .HasColumnName("soldier_id")
-                .HasComment("Посилання на відповідного бійця");
             entity.Property(e => e.LastPasswordChangeDate)
                 .HasColumnType("timestamp with time zone")
                 .HasColumnName("last_password_change_date")
@@ -144,16 +139,8 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
             entity.Property(e => e.RequirePasswordChange)
                 .HasColumnType("boolean")
                 .HasColumnName("require_password_change")
-                .HasComment("При наступному вході вимагати зміну пароля (наприклад, після адміністративного скидання)");
+                .HasComment("При наступному вході вимагати зміну пароля (наприклад, после адміністративного скидання)");
 
-            entity.HasOne(u => u.Soldier)
-                  .WithOne(s => s.VezhaUser)
-                  .HasForeignKey<TVezhaUser>(u => u.SoldierId)
-                  .HasConstraintName("aspnetusers_soldiers_fk")
-                  .OnDelete(DeleteBehavior.SetNull);
-            entity.HasIndex(e => e.SoldierId)
-                .IsUnique()
-                .HasDatabaseName("aspnetusers_un_soldier_id");
             entity.HasIndex(e => e.NormalizedUserName)
                 .IsUnique()
                 .HasDatabaseName("UserNameIndex");
@@ -837,12 +824,6 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
                   .WithMany()
                   .HasForeignKey(s => s.StateId)
                   .OnDelete(DeleteBehavior.Restrict);
-
-            // Мережевий акаунт (може бути відсутній)
-            entity.HasOne(s => s.VezhaUser)
-                  .WithOne(s => s.Soldier)
-                  .HasForeignKey<TVezhaUser>(u => u.SoldierId)
-                  .OnDelete(DeleteBehavior.SetNull);
 
             entity.ToTable(tb => tb.HasTrigger("trg_soldiers_history"));
             /*

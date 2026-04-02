@@ -154,6 +154,7 @@ export class LoginPage {
 
     const { login, password, rememberMe } = this.loginForm.value;
 
+    console.log('[DEBUG] LoginPage onSubmit started');
     this.auth
       .login({
         userName: login!,
@@ -162,8 +163,10 @@ export class LoginPage {
       })
       .subscribe({
         next: (payload) => {
+          console.log('[DEBUG] Login successful', payload);
           this.isLoading.set(false);
           if (payload.requiresTwoFactor) {
+            console.log('[DEBUG] Navigating to /welcome');
             this.router.navigate(['/welcome']);
           } else if (payload.token) {
             // Per consistency requirement: redirect to /DocumentDataSet with hard reload.
@@ -173,16 +176,24 @@ export class LoginPage {
           }
         },
         error: (err) => {
+          console.error('[DEBUG] Login error', err);
           this.isLoading.set(false);
+          // GraphQL errors might come as 200 with errors array, but if they come as HTTP errors:
           if (err.status === 403 && err.error?.requirePasswordChange) {
             this.openForceChangePassword(err.error.userId, login!);
-          } else if (err.status === 401) {
+          } else if (err.status === 401 || (err.error?.errors && err.error.errors.some((e: any) => e.message?.includes('Unauthorized')))) {
             this.errorMessage.set('Неправильний логін або пароль');
           } else if (err.status === 423) {
             const detail = err.error?.detail ?? 'Обліковий запис заблокований';
             this.errorMessage.set(detail);
           } else {
-            this.errorMessage.set("Помилка з'єднання з сервером");
+            // Check if it's a GraphQL error inside the response
+            const gqlError = err.error?.errors?.[0]?.message;
+            if (gqlError) {
+              this.errorMessage.set(gqlError);
+            } else {
+              this.errorMessage.set("Помилка з'єднання з сервером");
+            }
           }
         },
       });

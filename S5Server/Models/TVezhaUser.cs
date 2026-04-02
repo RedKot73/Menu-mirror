@@ -8,7 +8,6 @@ namespace S5Server.Models;
 /// <summary>
 /// Represents the data required to create a new user, including identification, credentials, and role assignments.
 /// </summary>
-/// <param name="SoldierId">The unique identifier of the soldier associated with the user. This value is required.</param>
 /// <param name="UserName">The user name for the new user. Must be between 3 and 256 characters in length.</param>
 /// <param name="Email">The email address of the user. Must be a valid email address if provided; otherwise, null.</param>
 /// <param name="Password">The password for the new user. Must be at least 6 characters in length. This value is required.</param>
@@ -16,8 +15,6 @@ namespace S5Server.Models;
 /// unspecified.</param>
 /// <param name="Roles">An array of roles to assign to the user. May be null if no roles are specified.</param>
 public record CreateUserDto(
-    [Required]
-    Guid SoldierId,
     [Required, MinLength(3), MaxLength(256)]
     string UserName,
     [EmailAddress]
@@ -226,7 +223,6 @@ public record SetLockoutDto(
 /// <param name="AccessFailedCount">Кількість невдалих спроб входу.</param>
 /// <param name="RequirePasswordChange">Чи потрібно змінити пароль.</param>
 /// <param name="LastPasswordChangeDate">Дата останньої зміни пароля.</param>
-/// <param name="Soldier">Дані про солдата.</param>
 /// <param name="Roles">Список ролей.</param>
 public record UserDto(
     Guid Id,
@@ -244,7 +240,6 @@ public record UserDto(
     int AccessFailedCount,
     bool RequirePasswordChange,
     DateTime? LastPasswordChangeDate,
-    SoldierDto Soldier,
     IList<string> Roles
 );
 
@@ -254,21 +249,17 @@ public record UserDto(
 /// <param name="Id">ID користувача.</param>
 /// <param name="UserName">Логін.</param>
 /// <param name="Email">Email.</param>
-/// <param name="SoldierId">ID солдата.</param>
 /// <param name="LastLoginDate">Дата останнього входу.</param>
 /// <param name="RequirePasswordChange">Чи потрібно змінити пароль.</param>
 /// <param name="LastPasswordChangeDate">Дата останньої зміни пароля.</param>
-/// <param name="Soldier">Дані про солдата (опціонально).</param>
 /// <param name="Roles">Список ролей.</param>
 public record UserInfoDto(
     Guid Id,
     string UserName,
     string? Email,
-    Guid SoldierId,
     DateTime? LastLoginDate,
     bool RequirePasswordChange,
     DateTime? LastPasswordChangeDate,
-    SoldierDto? Soldier,
     IList<string> Roles,
     string? DebugMessage = null
 );
@@ -278,16 +269,6 @@ public record UserInfoDto(
 /// </summary>
 public class TVezhaUser : IdentityUser<Guid>
 {
-    /// <summary>
-    /// Солдат
-    /// </summary>
-    [ForeignKey(nameof(Soldier))]
-    public Guid SoldierId { get; set; } = default!;
-
-    /// <summary>
-    /// Солдат
-    /// </summary>
-    public Soldier Soldier { get; set; } = default!;
     /*
     [ValidateNever, Display(Name = "Підрозділи, до яких є доступ")]
     public virtual ICollection<TUserUnits>? UserUnits { get; set; }
@@ -334,7 +315,6 @@ public static class TVezhaUserExtensions
     public static UserDto ToDto(this TVezhaUser user, IList<string>? roles = null)
     {
         ArgumentNullException.ThrowIfNull(user);
-        ArgumentNullException.ThrowIfNull(user.Soldier);
 
         return new UserDto(
             user.Id,
@@ -352,7 +332,6 @@ public static class TVezhaUserExtensions
             user.AccessFailedCount,
             user.RequirePasswordChange,
             user.LastPasswordChangeDate,
-            user.Soldier.ToSoldierDto(),
             roles ?? []
         );
     }
@@ -362,9 +341,8 @@ public static class TVezhaUserExtensions
     /// </summary>
     /// <param name="user">Користувач</param>
     /// <param name="roles">Ролі користувача</param>
-    /// <param name="includeSoldier">Чи включати повну інформацію про солдата (для GetCurrentUser)</param>
     /// <returns>Короткий DTO користувача</returns>
-    public static UserInfoDto ToInfoDto(this TVezhaUser user, IList<string> roles, bool includeSoldier = false)
+    public static UserInfoDto ToInfoDto(this TVezhaUser user, IList<string> roles)
     {
         ArgumentNullException.ThrowIfNull(user);
         ArgumentNullException.ThrowIfNull(roles);
@@ -373,11 +351,9 @@ public static class TVezhaUserExtensions
             user.Id,
             user.UserName ?? string.Empty,
             user.Email,
-            user.SoldierId,
             user.LastLoginDate,
             user.RequirePasswordChange,
             user.LastPasswordChangeDate,
-            includeSoldier ? user.Soldier?.ToSoldierDto() : null,
             roles
         );
     }

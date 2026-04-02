@@ -28,7 +28,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error) => {
       // Don't redirect on login/logout failures to show error messages
       const isAuthExempt = req.url.includes('/api/account/login') || req.url.includes('/graphql');
-      
+
       if (error.status === 401 && !isAuthExempt) {
         auth.logout();
       }

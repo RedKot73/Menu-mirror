@@ -51,22 +51,35 @@ public class Mutation
         [Service] SignInManager<TVezhaUser> signInManager,
         [Service] IConfiguration config)
     {
+        Console.WriteLine($"[DEBUG] Login attempt for user: {userName}");
         var user = await userManager.FindByNameAsync(userName);
-        if (user == null || await userManager.IsLockedOutAsync(user))
+        if (user == null)
+        {
+            Console.WriteLine($"[DEBUG] User {userName} not found");
             return new AuthPayload();
+        }
+
+        if (await userManager.IsLockedOutAsync(user))
+        {
+            Console.WriteLine($"[DEBUG] User {userName} is locked out");
+            return new AuthPayload();
+        }
 
         var result = await userManager.CheckPasswordAsync(user, password);
         if (!result)
         {
+            Console.WriteLine($"[DEBUG] Invalid password for user {userName}");
             await userManager.AccessFailedAsync(user);
             return new AuthPayload();
         }
 
+        Console.WriteLine($"[DEBUG] Password check successful for user {userName}");
         await userManager.ResetAccessFailedCountAsync(user);
         var roles = await userManager.GetRolesAsync(user);
 
         if (user.TwoFactorEnabled)
         {
+            Console.WriteLine($"[DEBUG] 2FA enabled for user {userName}. Generating interim token.");
             // Step 1: Return interim token to allow /welcome access
             var interimToken = GenerateJwtToken(user, roles, config, isInterim: true);
             return new AuthPayload(
@@ -76,12 +89,13 @@ public class Mutation
             );
         }
 
+        Console.WriteLine($"[DEBUG] 2FA NOT enabled for user {userName}. Generating full token.");
         // Standard Login
         var token = GenerateJwtToken(user, roles, config);
         return new AuthPayload(
             Token: token,
             RequiresTwoFactor: false,
-            User: user.ToDto(roles)
+            User: user.ToInfoDto(roles)
         );
     }
 
@@ -149,7 +163,7 @@ public class Mutation
         return new AuthPayload(
             Token: token,
             RequiresTwoFactor: false,
-            User: user.ToDto(roles)
+            User: user.ToInfoDto(roles)
         );
     }
 }

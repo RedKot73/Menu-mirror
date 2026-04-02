@@ -34,6 +34,18 @@ export class AuthService {
     const savedToken = localStorage.getItem('auth_token');
     if (savedToken) {
       this.token.set(savedToken);
+      this.trySetPendingFromToken(savedToken);
+    }
+  }
+
+  private trySetPendingFromToken(token: string) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.requiresTwoFactor === 'true' || payload.requiresTwoFactor === true) {
+        this.pendingTwoFactor.set({ userId: payload.sub });
+      }
+    } catch {
+      // Ignore parse errors
     }
   }
 
@@ -49,17 +61,19 @@ export class AuthService {
             id
             userName
             email
+            lastLoginDate
+            requirePasswordChange
+            lastPasswordChangeDate
             roles
-            soldier {
-              id
-              firstName
-              lastName
-              rankShortValue
-            }
           }
         }
       }
-    `;
+    `.trim();
+
+    console.log('[DEBUG] AuthService.login sending request', { 
+      url: this.gql, 
+      variables: { userName: dto.userName } 
+    });
 
     return this.http
       .post<GqlResponse<{ login: AuthPayload }>>(this.gql, {
@@ -99,17 +113,14 @@ export class AuthService {
             id
             userName
             email
+            lastLoginDate
+            requirePasswordChange
+            lastPasswordChangeDate
             roles
-            soldier {
-              id
-              firstName
-              lastName
-              rankShortValue
-            }
           }
         }
       }
-    `;
+    `.trim();
 
     return this.http
       .post<GqlResponse<{ verifyTwoFactor: AuthPayload }>>(this.gql, {
@@ -138,6 +149,7 @@ export class AuthService {
   private setToken(token: string) {
     this.token.set(token);
     localStorage.setItem('auth_token', token);
+    this.trySetPendingFromToken(token);
   }
 
   /** ПІБ для відображення */
@@ -165,6 +177,12 @@ export class AuthService {
     const token = this.token();
     if (!token) {
       this.user.set(null);
+      return of(null);
+    }
+
+    // Якщо ми в стані 2FA (проміжний токен), не робимо запит до /me,
+    // бо він поверне 403/401 через обмеження JWT claim
+    if (this.requiresTwoFactor()) {
       return of(null);
     }
 

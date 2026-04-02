@@ -242,7 +242,6 @@ public class Soldier
     public string VezhaUserId { get; set; } = string.Empty;
     */
     //[ValidateNever, InverseProperty("Soldier"), Display(Name = "Мережевий аккаунт")]
-    public TVezhaUser? VezhaUser { get; set; }
 
     /// <summary>
     /// Коментар

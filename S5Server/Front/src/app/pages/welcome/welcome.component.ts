@@ -53,7 +53,7 @@ export class WelcomeComponent {
     this.auth.verifyTwoFactor(code).subscribe({
       next: (payload) => {
         if (payload.token && !payload.requiresTwoFactor) {
-          // Success: fully authenticated. 
+          // Success: fully authenticated.
           // Per user request: redirect to /DocumentDataSet with a hard page reload.
           window.location.href = '/DocumentDataSet';
         } else {
@@ -63,8 +63,14 @@ export class WelcomeComponent {
       },
 
       error: (err) => {
-        this.error.set('Помилка сервера. Спробуйте пізніше.');
         this.isLoading.set(false);
+        // Check for specific GraphQL error
+        const gqlError = err.error?.errors?.[0]?.message;
+        if (gqlError) {
+          this.error.set(gqlError);
+        } else {
+          this.error.set('Помилка сервера. Спробуйте пізніше.');
+        }
         console.error('2FA Error:', err);
       }
     });

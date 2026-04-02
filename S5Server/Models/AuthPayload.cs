@@ -13,5 +13,5 @@ public record AuthPayload(
     string? Token = null,
     bool RequiresTwoFactor = false,
     Guid? UserId = null,
-    UserDto? User = null
+    UserInfoDto? User = null
 );
