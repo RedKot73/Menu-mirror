@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/Login/dialogs/dialog-shared.scss"],
+  "sourcesContent": [".dialog-content {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n  min-width: 320px;\n}\n\n.full-width {\n  width: 100%;\n}\n\n.error-text {\n  color: var(--mat-warn-color, #f44336);\n  font-size: 12px;\n  margin: -4px 0 4px 0;\n}\n\n.hint-text {\n  color: #666;\n  font-size: 12px;\n  margin: -4px 0 8px 0;\n}\n\n.validation-errors {\n  margin: -4px 0 4px 0;\n}\n\n.icon-success {\n  color: #4caf50;\n}\n"],
+  "mappings": ";AAAA,CAAA;AACE,WAAA;AACA,kBAAA;AACA,OAAA;AACA,aAAA;;AAGF,CAAA;AACE,SAAA;;AAGF,CAAA;AACE,SAAA,IAAA,gBAAA,EAAA;AACA,aAAA;AACA,UAAA,KAAA,EAAA,IAAA;;AAGF,CAAA;AACE,SAAA;AACA,aAAA;AACA,UAAA,KAAA,EAAA,IAAA;;AAGF,CAAA;AACE,UAAA,KAAA,EAAA,IAAA;;AAGF,CAAA;AACE,SAAA;;",
+  "names": []
+}

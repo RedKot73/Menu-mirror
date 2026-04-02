@@ -34,21 +34,14 @@
               {{ user.isLocked ? 'lock' : 'person' }}
             </mat-icon>
             <div class="user-info">
-              <span class="user-name">
-                {{ user.soldier.rankShortValue ? user.soldier.rankShortValue + ' ' : '' }}
-                {{ user.soldier.firstName }}
-                {{ user.soldier.midleName }}
-                {{ user.soldier.lastName }}
-              </span>
+              <span class="user-name">{{ getSoldierDisplayName(user) }}</span>
               <span class="user-login">{{ user.userName }}</span>
             </div>
           </div>
           <div class="user-card-meta">
-            @if (user.soldier.unitShortName) {
-              <span class="user-unit">{{ user.soldier.unitShortName }}</span>
-            }
-            @if (user.soldier.positionValue) {
-              <span class="user-position">{{ user.soldier.positionValue }}</span>
+            @if (user.soldier) {
+              <span class="user-unit">{{ getSoldierUnit(user) }}</span>
+              <span class="user-position">{{ getSoldierPosition(user) }}</span>
             }
           </div>
         </div>
@@ -66,10 +59,7 @@
           <mat-card-header>
             <mat-card-title>
               <mat-icon>person</mat-icon>
-              {{ user.soldier.rankShortValue ? user.soldier.rankShortValue + ' ' : '' }}
-              {{ user.soldier.firstName }}
-              {{ user.soldier.midleName }}
-              {{ user.soldier.lastName }}
+              {{ getSoldierDisplayName(user) }}
               @if (user.isLocked) {
                 <mat-chip color="warn" highlighted>Заблоковано</mat-chip>
               }
@@ -131,11 +121,11 @@
               </div>
               <div class="info-row">
                 <span class="info-label">Підрозділ:</span>
-                <span class="info-value">{{ user.soldier.unitShortName || '—' }}</span>
+                <span class="info-value">{{ getSoldierUnit(user) }}</span>
               </div>
               <div class="info-row">
                 <span class="info-label">Посада:</span>
-                <span class="info-value">{{ user.soldier.positionValue || '—' }}</span>
+                <span class="info-value">{{ getSoldierPosition(user) }}</span>
               </div>
               <div class="info-row">
                 <span class="info-label">Останній вхід:</span>

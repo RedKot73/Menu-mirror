@@ -25,7 +25,7 @@ export interface UserListItem {
   twoFactorEnabled: boolean;
   requirePasswordChange: boolean;
   lastPasswordChangeDate: string | null;
-  soldier: SoldierDto;
+  soldier: SoldierDto | null;
   roles?: string[];
 }
 

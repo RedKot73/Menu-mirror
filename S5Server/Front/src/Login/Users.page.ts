@@ -70,6 +70,7 @@ export class UsersPage implements OnInit {
   }
 
   loadUsers(): void {
+    console.log('[DEBUG] Users list requested. Soldier included: true');
     this.usersService.getAll(this.showInactive()).subscribe({
       next: (list) => this.users.set(list),
       error: () => this.notify('Помилка завантаження користувачів'),
@@ -298,5 +299,23 @@ export class UsersPage implements OnInit {
 
   private notify(msg: string): void {
     this.snackBar.open(msg, 'OK', { duration: 3000 });
+  }
+
+  getSoldierDisplayName(user: UserListItem): string {
+    if (!user.soldier) {
+      return "Системний (без прив'язки)";
+    }
+    const s = user.soldier;
+    const rank = s.rankShortValue ? s.rankShortValue + ' ' : '';
+    const midle = s.midleName ? ' ' + s.midleName : '';
+    return `${rank}${s.lastName} ${s.firstName}${midle}`;
+  }
+
+  getSoldierUnit(user: UserListItem): string {
+    return user.soldier?.unitShortName || '—';
+  }
+
+  getSoldierPosition(user: UserListItem): string {
+    return user.soldier?.positionValue || '—';
   }
 }

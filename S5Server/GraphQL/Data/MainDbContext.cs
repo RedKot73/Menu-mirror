@@ -746,6 +746,12 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
                 t => t.HasComment("Особовий склад"));
             entity.HasKey(e => e.Id);
 
+            entity.HasOne<TVezhaUser>()
+                  .WithOne(u => u.Soldier)
+                  .HasForeignKey<Soldier>(s => s.Id)
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.Cascade);
+
             entity.Property(e => e.Id).IsRequired().HasColumnType("uuid");
             entity.Property(e => e.ExternId).HasColumnType("integer")
                 .HasComment("Id з Імпульса, Армія- ...");

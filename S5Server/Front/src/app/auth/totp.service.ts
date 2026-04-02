@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 export interface TotpSetupResponse {
   sharedKey: string;
@@ -8,11 +8,8 @@ export interface TotpSetupResponse {
 }
 
 export interface EnableTotpResponse {
+  success: boolean;
   message: string;
-  recoveryCodes: string[];
-}
-
-export interface RecoveryCodesResponse {
   recoveryCodes: string[];
 }
 
@@ -22,26 +19,64 @@ export interface TotpStatusResponse {
 
 @Injectable({ providedIn: 'root' })
 export class TotpService {
-  private readonly api = '/api/totp';
+  private readonly gql = '/graphql';
   private http = inject(HttpClient);
 
   getSetup(): Observable<TotpSetupResponse> {
-    return this.http.get<TotpSetupResponse>(`${this.api}/setup`);
+    const query = `
+      mutation GetSetup {
+        twoFactorSetup {
+          qrUri
+          manualEntryKey
+        }
+      }
+    `;
+    return this.http.post<any>(this.gql, { query }).pipe(
+      map(res => ({
+        sharedKey: res.data.twoFactorSetup.manualEntryKey,
+        authenticatorUri: res.data.twoFactorSetup.qrUri
+      }))
+    );
   }
 
   enable(code: string): Observable<EnableTotpResponse> {
-    return this.http.post<EnableTotpResponse>(`${this.api}/enable`, { code });
+    const query = `
+      mutation Enable($code: String!) {
+        enableTwoFactor(code: $code)
+      }
+    `;
+    return this.http.post<any>(this.gql, { query, variables: { code } }).pipe(
+      map(res => ({
+        success: res.data.enableTwoFactor,
+        message: res.data.enableTwoFactor ? '2FA enabled' : 'Invalid code',
+        recoveryCodes: [] // Backend doesn't return codes yet in this version of mutation
+      }))
+    );
   }
 
   disable(password: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.api}/disable`, { password });
-  }
-
-  getRecoveryCodes(): Observable<RecoveryCodesResponse> {
-    return this.http.get<RecoveryCodesResponse>(`${this.api}/recovery-codes`);
+    const query = `
+      mutation Disable($password: String!) {
+        disableTwoFactor(password: $password)
+      }
+    `;
+    return this.http.post<any>(this.gql, { query, variables: { password } }).pipe(
+      map(res => ({
+        message: res.data.disableTwoFactor ? '2FA disabled' : 'Failed to disable'
+      }))
+    );
   }
 
   getStatus(): Observable<TotpStatusResponse> {
-    return this.http.get<TotpStatusResponse>(`${this.api}/status`);
+    const query = `
+      query GetStatus {
+        twoFactorStatus
+      }
+    `;
+    return this.http.post<any>(this.gql, { query }).pipe(
+      map(res => ({
+        isTwoFactorEnabled: res.data.twoFactorStatus
+      }))
+    );
   }
 }

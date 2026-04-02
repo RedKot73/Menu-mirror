@@ -22,7 +22,8 @@ public record CreateUserDto(
     [Required, MinLength(6)]
     string Password,
     bool? EmailConfirmed,
-    string[]? Roles
+    string[]? Roles,
+    Guid? SoldierId
 );
 /// <summary>
 /// Represents the data required to perform a user login operation.
@@ -224,6 +225,7 @@ public record SetLockoutDto(
 /// <param name="RequirePasswordChange">Чи потрібно змінити пароль.</param>
 /// <param name="LastPasswordChangeDate">Дата останньої зміни пароля.</param>
 /// <param name="Roles">Список ролей.</param>
+/// <param name="Soldier">Дані військовослужбовця.</param>
 public record UserDto(
     Guid Id,
     string UserName,
@@ -240,7 +242,8 @@ public record UserDto(
     int AccessFailedCount,
     bool RequirePasswordChange,
     DateTime? LastPasswordChangeDate,
-    IList<string> Roles
+    IList<string> Roles,
+    Soldier? Soldier = null
 );
 
 /// <summary>
@@ -253,6 +256,8 @@ public record UserDto(
 /// <param name="RequirePasswordChange">Чи потрібно змінити пароль.</param>
 /// <param name="LastPasswordChangeDate">Дата останньої зміни пароля.</param>
 /// <param name="Roles">Список ролей.</param>
+/// <param name="DebugMessage">Додаткове повідомлення (для налагодження).</param>
+/// <param name="Soldier">Дані військовослужбовця.</param>
 public record UserInfoDto(
     Guid Id,
     string UserName,
@@ -273,7 +278,6 @@ public class TVezhaUser : IdentityUser<Guid>
     /// <summary>
     /// Зв'язок із таблицею Soldier
     /// </summary>
-    [ForeignKey("Id")] // Так как TVezhaUser Id это Guid, связь скорее всего по Id или отдельному полю. Оставлю без атрибута, чтобы EF сам разобрался или по умолчанию.
     // Уберу ForeignKey чтобы не сломать текущую БД, просто добавлю свойство
     public virtual Soldier? Soldier { get; set; }
     /*
@@ -339,7 +343,8 @@ public static class TVezhaUserExtensions
             user.AccessFailedCount,
             user.RequirePasswordChange,
             user.LastPasswordChangeDate,
-            roles ?? []
+            roles ?? [],
+            user.Soldier
         );
     }
 

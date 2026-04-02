@@ -45,6 +45,7 @@ public class AccountController : ControllerBase
     }
 
     private IQueryable<TVezhaUser> UsersQuery() => _users
+        .Include(u => u.Soldier)
         .AsNoTracking();
 
     /// <summary>
@@ -71,6 +72,8 @@ public class AccountController : ControllerBase
                 .Select(u => u.ToDto())
                 .ToListAsync(ct);
             
+            _logger.LogInformation("[DEBUG] Fetching users list. Soldier data included: {IsIncluded}", true);
+
             return Ok(users);
         }
         catch (OperationCanceledException)
@@ -160,6 +163,7 @@ public class AccountController : ControllerBase
             // 2. Створення нового користувача
             var user = new TVezhaUser
             {
+                Id = dto.SoldierId ?? Guid.NewGuid(),
                 UserName = dto.UserName,
                 Email = dto.Email,
                 RegistrationDate = DateTime.UtcNow,
@@ -185,9 +189,12 @@ public class AccountController : ControllerBase
             }
 
             if (_logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation(
                     "Створено користувача UserId={UserId}, UserName={UserName}",
                     user.Id, user.UserName);
+                _logger.LogInformation("[DEBUG] Creating user. Status: Success, UserID: {Id}", user.Id);
+            }
 
             // 3. Додати до ролей (якщо вказані)
             if (dto.Roles?.Length > 0)
@@ -516,7 +523,10 @@ public class AccountController : ControllerBase
             await _userManager.UpdateAsync(user);
 
             if (_logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation("Змінено пароль UserId={UserId}", id);
+                _logger.LogInformation("[DEBUG] Updating user {Id}. Payload: ChangePassword", id);
+            }
 
             return NoContent();
         }
@@ -624,9 +634,12 @@ public class AccountController : ControllerBase
             }
 
             if (_logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation(
                     "Змінено ім'я користувача UserId={UserId}: '{OldUserName}' -> '{NewUserName}'",
                     id, oldUserName, newUserName);
+                _logger.LogInformation("[DEBUG] Updating user {Id}. Payload: ChangeUsername (Old: {Old}, New: {New})", id, oldUserName, newUserName);
+            }
 
             return NoContent();
         }
@@ -683,9 +696,12 @@ public class AccountController : ControllerBase
             }
 
             if (_logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation(
                     "Змінено статус блокування UserId={UserId}, Locked={Locked}, LockoutEnd={LockoutEnd}",
                     id, dto.Lock, lockoutEnd);
+                _logger.LogInformation("[DEBUG] Updating user {Id}. Payload: SetLockout (Locked: {Locked})", id, dto.Lock);
+            }
 
             return NoContent();
         }
@@ -735,9 +751,12 @@ public class AccountController : ControllerBase
             }
 
             if (_logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation(
                     "Видалено користувача UserId={UserId}, UserName={UserName}",
                     id, user.UserName);
+                _logger.LogInformation("[DEBUG] Deleting user. Status: Success, UserID: {Id}", id);
+            }
 
             return NoContent();
         }
@@ -921,9 +940,12 @@ public class AccountController : ControllerBase
             }
 
             if (_logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation(
                     "Призначено роль UserId={UserId}, RoleName={RoleName}",
                     userId, roleName);
+                _logger.LogInformation("[DEBUG] Updating user {Id}. Payload: AddRole ({Role})", userId, roleName);
+            }
 
             return NoContent();
         }
@@ -979,9 +1001,12 @@ public class AccountController : ControllerBase
             }
 
             if (_logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation(
                     "Видалено роль UserId={UserId}, RoleName={RoleName}",
                     userId, roleName);
+                _logger.LogInformation("[DEBUG] Updating user {Id}. Payload: RemoveRole ({Role})", userId, roleName);
+            }
 
             return NoContent();
         }
@@ -1306,9 +1331,12 @@ public class AccountController : ControllerBase
             await _userManager.UpdateAsync(user);
 
             if (_logger.IsEnabled(LogLevel.Warning))
+            {
                 _logger.LogWarning(
                     "Адміністративне скидання пароля: UserId={UserId}, UserName={UserName}, Admin={AdminName}, RequireChange={RequireChange}",
                     id, user.UserName, adminName, dto.RequirePasswordChange);
+                _logger.LogInformation("[DEBUG] Updating user {Id}. Payload: AdminResetPassword", id);
+            }
 
             return NoContent();
         }
@@ -1404,9 +1432,12 @@ public class AccountController : ControllerBase
 
             var admin = User.Identity?.Name ?? "Unknown Admin";
             if (_logger.IsEnabled(LogLevel.Warning))
+            {
                 _logger.LogWarning(
                     "Адміністративна зміна імені: UserId={UserId}, '{OldUserName}' -> '{NewUserName}', Admin={AdminName}",
                     id, oldUserName, newUserName, admin);
+                _logger.LogInformation("[DEBUG] Updating user {Id}. Payload: AdminChangeUsername (New: {New})", id, newUserName);
+            }
 
             return NoContent();
         }

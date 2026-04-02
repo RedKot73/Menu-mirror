@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/dialogs/DialogShared.scss"],
+  "sourcesContent": [".title {\n  text-align: center;\n  margin: 0;\n}\n\n.content {\n  display: grid;\n  gap: 12px;\n  min-width: 280px;\n  max-width: 520px;\n  padding-top: 10px !important;\n}\n\n::ng-deep .content .mat-mdc-form-field {\n  width: 100%;\n}\n\n.actions {\n  gap: 8px;\n}\n"],
+  "mappings": ";AAAA,CAAA;AACE,cAAA;AACA,UAAA;;AAGF,CAAA;AACE,WAAA;AACA,OAAA;AACA,aAAA;AACA,aAAA;AACA,eAAA;;AAGF,UAAA,CARA,QAQA,CAAA;AACE,SAAA;;AAGF,CAAA;AACE,OAAA;;",
+  "names": []
+}

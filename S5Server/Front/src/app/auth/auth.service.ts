@@ -69,6 +69,14 @@ export class AuthService {
             requirePasswordChange
             lastPasswordChangeDate
             roles
+            soldier {
+              id
+              firstName
+              lastName
+              midleName
+              unitId
+              rankId
+            }
           }
         }
       }
@@ -121,6 +129,14 @@ export class AuthService {
             requirePasswordChange
             lastPasswordChangeDate
             roles
+            soldier {
+              id
+              firstName
+              lastName
+              midleName
+              unitId
+              rankId
+            }
           }
         }
       }

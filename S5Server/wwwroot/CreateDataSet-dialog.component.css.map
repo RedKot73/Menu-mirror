@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["angular:styles/component:css;f11f14954116fe508a378b47d8393f7d2fe27001715853e82d33ce7b92716f43;/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Front/src/app/dialogs/CreateDataSet-dialog.component.ts"],
+  "sourcesContent": ["\n    .checkbox-row {\n      display: flex;\n      align-items: center;\n      padding: 4px 0 8px;\n    }\n  "],
+  "mappings": ";AACI,CAAC;AACC,WAAS;AACT,eAAa;AACb,WAAS,IAAI,EAAE;AACjB;",
+  "names": []
+}

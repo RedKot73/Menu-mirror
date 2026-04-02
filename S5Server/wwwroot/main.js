@@ -1,12 +1,12 @@
 import {
   AuthService
-} from "./chunk-MKDEEZNH.js";
+} from "./chunk-UA4BGHXS.js";
 import {
   ApolloLink,
   InMemoryCache,
   print,
   provideApollo
-} from "./chunk-RWBUJLBH.js";
+} from "./chunk-WUTFOUQH.js";
 import {
   MAT_DATE_FORMATS,
   MatMenu,
@@ -14,23 +14,23 @@ import {
   MatMenuModule,
   MatMenuTrigger,
   provideNativeDateAdapter
-} from "./chunk-2GTJJ3IJ.js";
-import "./chunk-575Y4FGD.js";
+} from "./chunk-WUWQAPPC.js";
+import "./chunk-WAACRMV7.js";
 import {
   MatProgressSpinner,
   MatProgressSpinnerModule
-} from "./chunk-6M4I25T2.js";
+} from "./chunk-QPOXXU4H.js";
 import {
   Router,
   RouterLink,
   RouterLinkActive,
   RouterOutlet,
   provideRouter
-} from "./chunk-AY2LANKM.js";
-import "./chunk-XKAE3JBC.js";
+} from "./chunk-G7RKRMVR.js";
+import "./chunk-6L6S6KYZ.js";
 import {
   MatSnackBar
-} from "./chunk-LVBT7O2R.js";
+} from "./chunk-4WDEZQCM.js";
 import {
   MatDialog,
   MatDialogActions,
@@ -39,8 +39,8 @@ import {
   MatDialogModule,
   MatDialogRef,
   MatDialogTitle
-} from "./chunk-O3FG6F5X.js";
-import "./chunk-GFPGE5B5.js";
+} from "./chunk-PALKAU2I.js";
+import "./chunk-KRVND5CP.js";
 import {
   BidiModule,
   ChangeDetectionStrategy,
@@ -80,6 +80,7 @@ import {
   catchError,
   firstValueFrom,
   inject,
+  map,
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
   provideHttpClient,
@@ -119,7 +120,7 @@ import {
   ɵɵtext,
   ɵɵtextInterpolate,
   ɵɵtextInterpolate1
-} from "./chunk-IBDYQGEV.js";
+} from "./chunk-WAYE7YII.js";
 
 // node_modules/@angular/common/locales/uk.js
 var u = void 0;
@@ -148,15 +149,13 @@ var authInterceptor = (req, next) => {
       }
     });
   }
-  return next(authReq).pipe(
-    catchError((error) => {
-      const isAuthExempt = req.url.includes("/api/account/login") || req.url.includes("/graphql");
-      if (error.status === 401 && !isAuthExempt) {
-        auth.logout();
-      }
-      return throwError(() => error);
-    })
-  );
+  return next(authReq).pipe(catchError((error) => {
+    const isAuthExempt = req.url.includes("/api/account/login") || req.url.includes("/graphql");
+    if (error.status === 401 && !isAuthExempt) {
+      auth.logout();
+    }
+    return throwError(() => error);
+  }));
 };
 
 // node_modules/@apollo/client/link/batch/batching.js
@@ -356,13 +355,13 @@ var fetch = (req, httpClient, extractFiles) => {
   if (shouldUseMultipart && shouldUseBody) {
     const form = new FormData();
     form.append("operations", JSON.stringify(bodyOrParams.body));
-    const map = {};
+    const map2 = {};
     const files = multipartInfo.files;
     let i = 0;
     files.forEach((paths) => {
-      map[++i] = paths;
+      map2[++i] = paths;
     });
-    form.append("map", JSON.stringify(map));
+    form.append("map", JSON.stringify(map2));
     i = 0;
     files.forEach((_, file) => {
       form.append(++i + "", file, file.name);
@@ -693,133 +692,127 @@ var twoFactorGuard = () => {
 var routes = [
   {
     path: "dictDroneTypes",
-    loadComponent: () => import("./chunk-Z6JSJXIC.js").then((m) => m.DictDroneTypeComponent),
+    loadComponent: () => import("./chunk-QIYT2UVN.js").then((m) => m.DictDroneTypeComponent),
     title: "\u0422\u0438\u043F\u0438 \u0411\u041F\u041B\u0410",
     canActivate: [authGuard]
   },
   {
     path: "dictDroneModels",
-    loadComponent: () => import("./chunk-VDVY6ZMN.js").then((m) => m.DictDroneModelComponent),
+    loadComponent: () => import("./chunk-7B5TZRKN.js").then((m) => m.DictDroneModelComponent),
     title: "\u041C\u043E\u0434\u0435\u043B\u0456 \u0411\u041F\u041B\u0410",
     canActivate: [authGuard]
   },
   {
     path: "dictForcesTypes",
-    loadComponent: () => import("./chunk-BSOGLBNO.js").then((m) => m.DictForcesTypeComponent),
+    loadComponent: () => import("./chunk-DDLE64JQ.js").then((m) => m.DictForcesTypeComponent),
     title: "\u0412\u0438\u0434\u0438 \u0437\u0431\u0440\u043E\u0439\u043D\u0438\u0445 \u0441\u0438\u043B",
     canActivate: [authGuard]
   },
   {
     path: "dictPosition",
-    loadComponent: () => import("./chunk-BP6EWBPZ.js").then((m) => m.DictPositionComponent),
+    loadComponent: () => import("./chunk-P64VGLPQ.js").then((m) => m.DictPositionComponent),
     title: "\u041F\u043E\u0441\u0430\u0434\u0438",
     canActivate: [authGuard]
   },
   {
     path: "dictRanks",
-    loadComponent: () => import("./chunk-HYUWF2NS.js").then((m) => m.DictRanksComponent),
+    loadComponent: () => import("./chunk-3HMDXJA7.js").then((m) => m.DictRanksComponent),
     title: "\u0412\u0456\u0439\u0441\u044C\u043A\u043E\u0432\u0456 \u0437\u0432\u0430\u043D\u043D\u044F",
     canActivate: [authGuard]
   },
   {
     path: "dictSoldierStates",
-    loadComponent: () => import("./chunk-XND27ROG.js").then(
-      (m) => m.DictSoldierStatesComponent
-    ),
+    loadComponent: () => import("./chunk-XV23FNVW.js").then((m) => m.DictSoldierStatesComponent),
     title: "\u0421\u0442\u0430\u0442\u0443\u0441\u0438 \u043E\u0441\u043E\u0431\u043E\u0432\u043E\u0433\u043E \u0441\u043A\u043B\u0430\u0434\u0443",
     canActivate: [authGuard]
   },
   {
     path: "dictUnitTypes",
-    loadComponent: () => import("./chunk-IYE2YIXQ.js").then((m) => m.DictUnitTypesComponent),
+    loadComponent: () => import("./chunk-XZCMJVYW.js").then((m) => m.DictUnitTypesComponent),
     title: "\u0422\u0438\u043F\u0438 \u043F\u0456\u0434\u0440\u043E\u0437\u0434\u0456\u043B\u0456\u0432",
     canActivate: [authGuard]
   },
   {
     path: "dictAreaTypes",
-    loadComponent: () => import("./chunk-XZY2ONHE.js").then((m) => m.DictAreaTypeComponent),
+    loadComponent: () => import("./chunk-7VBN6ZLU.js").then((m) => m.DictAreaTypeComponent),
     title: "\u0422\u0438\u043F\u0438 \u041D\u0430\u043F\u0440\u044F\u043C\u043A\u0443 \u041B\u0411\u0417",
     canActivate: [authGuard]
   },
   {
     path: "dictCityCategories",
-    loadComponent: () => import("./chunk-4J4PF36C.js").then((m) => m.DictCityCategoryComponent),
+    loadComponent: () => import("./chunk-4JKVPKHI.js").then((m) => m.DictCityCategoryComponent),
     title: "\u041A\u0430\u0442\u0435\u0433\u043E\u0440\u0456\u0457 \u043E\u0431'\u0454\u043A\u0442\u0456\u0432 \u0430\u0434\u043C\u0456\u043D\u0456\u0441\u0442\u0440\u0430\u0442\u0438\u0432\u043D\u043E-\u0442\u0435\u0440\u0438\u0442\u043E\u0440\u0456\u0430\u043B\u044C\u043D\u0438\u0445 \u043E\u0434\u0438\u043D\u0438\u0446\u044C",
     canActivate: [authGuard]
   },
   {
     path: "dictCityCodes",
-    loadComponent: () => import("./chunk-2Z6FOYWX.js").then(
-      (m) => m.CityCodePageComponent
-    ),
+    loadComponent: () => import("./chunk-6UCAJVC2.js").then((m) => m.CityCodePageComponent),
     title: "\u041A\u043E\u0434\u0438\u0444\u0456\u043A\u0430\u0442\u043E\u0440 \u0430\u0434\u043C\u0456\u043D\u0456\u0441\u0442\u0440\u0430\u0442\u0438\u0432\u043D\u043E-\u0442\u0435\u0440\u0438\u0442\u043E\u0440\u0456\u0430\u043B\u044C\u043D\u0438\u0445 \u043E\u0434\u0438\u043D\u0438\u0446\u044C",
     canActivate: [authGuard]
   },
   {
     path: "dictArea",
-    loadComponent: () => import("./chunk-A5TRGL4X.js").then((m) => m.DictAreaPage),
+    loadComponent: () => import("./chunk-A7GRE3HS.js").then((m) => m.DictAreaPage),
     title: "\u041D\u0430\u043F\u0440\u044F\u043C\u043E\u043A \u041B\u0411\u0417",
     canActivate: [authGuard]
   },
   {
     path: "dictTemplateCategories",
-    loadComponent: () => import("./chunk-637MXNZF.js").then(
-      (m) => m.DictTemplateCategoriesComponent
-    ),
+    loadComponent: () => import("./chunk-TCSVQ6D6.js").then((m) => m.DictTemplateCategoriesComponent),
     title: "\u041A\u0430\u0442\u0435\u0433\u043E\u0440\u0456\u0457 \u0448\u0430\u0431\u043B\u043E\u043D\u0456\u0432 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0456\u0432",
     canActivate: [authGuard]
   },
   {
     path: "dictUnitTasks",
-    loadComponent: () => import("./chunk-TFDX3R7J.js").then((m) => m.DictUnitTaskPage),
+    loadComponent: () => import("./chunk-7EUM6QCE.js").then((m) => m.DictUnitTaskPage),
     title: "\u0417\u0430\u0432\u0434\u0430\u043D\u043D\u044F \u043F\u0456\u0434\u0440\u043E\u0437\u0434\u0456\u043B\u0456\u0432",
     canActivate: [authGuard]
   },
   {
     path: "units",
     title: "\u041F\u0456\u0434\u0440\u043E\u0437\u0434\u0456\u043B\u0438",
-    loadComponent: () => import("./chunk-Y6PTLKYG.js").then((m) => m.UnitsComponent),
+    loadComponent: () => import("./chunk-MM5UOKWQ.js").then((m) => m.UnitsComponent),
     canActivate: [authGuard]
   },
   {
     path: "unit/import",
     title: "\u0406\u043C\u043F\u043E\u0440\u0442 \u043E\u0441\u043E\u0431\u043E\u0432\u043E\u0433\u043E \u0441\u043A\u043B\u0430\u0434\u0443",
-    loadComponent: () => import("./chunk-MDHIWCQJ.js").then((m) => m.ImportProgressPage),
+    loadComponent: () => import("./chunk-5HGK4VP5.js").then((m) => m.ImportProgressPage),
     canActivate: [authGuard]
   },
   {
     path: "personnel",
     title: "\u041E\u0441\u043E\u0431\u043E\u0432\u0438\u0439 \u0441\u043A\u043B\u0430\u0434",
-    loadComponent: () => import("./chunk-TALKL6HA.js").then((m) => m.PersonnelPage),
+    loadComponent: () => import("./chunk-BJA75PDW.js").then((m) => m.PersonnelPage),
     canActivate: [authGuard]
   },
   {
     path: "DocumentDataSet",
-    loadComponent: () => import("./chunk-7ZJQXEUW.js").then((m) => m.DocumentDataSetComponent),
+    loadComponent: () => import("./chunk-ZPPZNXDH.js").then((m) => m.DocumentDataSetComponent),
     title: "\u0414\u0430\u043D\u0456 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0456\u0432",
     canActivate: [authGuard]
   },
   {
     path: "templates",
     title: "\u0428\u0430\u0431\u043B\u043E\u043D\u0438 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0456\u0432",
-    loadComponent: () => import("./chunk-Z3JDQNDJ.js").then((m) => m.DocTemplatesTree),
+    loadComponent: () => import("./chunk-BFAPUPDV.js").then((m) => m.DocTemplatesTree),
     canActivate: [authGuard]
   },
   {
     path: "users",
     title: "\u041A\u043E\u0440\u0438\u0441\u0442\u0443\u0432\u0430\u0447\u0456",
-    loadComponent: () => import("./chunk-ETRFY4HO.js").then((m) => m.UsersPage),
+    loadComponent: () => import("./chunk-YBTUSXFE.js").then((m) => m.UsersPage),
     canActivate: [authGuard]
   },
   {
     path: "login",
     title: "\u0412\u0445\u0456\u0434 \u0432 \u0441\u0438\u0441\u0442\u0435\u043C\u0443",
-    loadComponent: () => import("./chunk-2ASTSGWJ.js").then((m) => m.LoginPage)
+    loadComponent: () => import("./chunk-2VTKMMGQ.js").then((m) => m.LoginPage)
   },
   {
     path: "welcome",
     title: "\u0414\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u0430 \u0430\u0432\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u044F",
-    loadComponent: () => import("./chunk-ZGUS7QMO.js").then((m) => m.WelcomeComponent),
+    loadComponent: () => import("./chunk-IDOLRSYP.js").then((m) => m.WelcomeComponent),
     canActivate: [twoFactorGuard]
   },
   { path: "", pathMatch: "full", redirectTo: "login" },
@@ -1012,22 +1005,54 @@ var MatToolbarModule = class _MatToolbarModule {
 
 // src/app/auth/totp.service.ts
 var TotpService = class _TotpService {
-  api = "/api/totp";
+  gql = "/graphql";
   http = inject(HttpClient);
   getSetup() {
-    return this.http.get(`${this.api}/setup`);
+    const query = `
+      mutation GetSetup {
+        twoFactorSetup {
+          qrUri
+          manualEntryKey
+        }
+      }
+    `;
+    return this.http.post(this.gql, { query }).pipe(map((res) => ({
+      sharedKey: res.data.twoFactorSetup.manualEntryKey,
+      authenticatorUri: res.data.twoFactorSetup.qrUri
+    })));
   }
   enable(code) {
-    return this.http.post(`${this.api}/enable`, { code });
+    const query = `
+      mutation Enable($code: String!) {
+        enableTwoFactor(code: $code)
+      }
+    `;
+    return this.http.post(this.gql, { query, variables: { code } }).pipe(map((res) => ({
+      success: res.data.enableTwoFactor,
+      message: res.data.enableTwoFactor ? "2FA enabled" : "Invalid code",
+      recoveryCodes: []
+      // Backend doesn't return codes yet in this version of mutation
+    })));
   }
   disable(password) {
-    return this.http.post(`${this.api}/disable`, { password });
-  }
-  getRecoveryCodes() {
-    return this.http.get(`${this.api}/recovery-codes`);
+    const query = `
+      mutation Disable($password: String!) {
+        disableTwoFactor(password: $password)
+      }
+    `;
+    return this.http.post(this.gql, { query, variables: { password } }).pipe(map((res) => ({
+      message: res.data.disableTwoFactor ? "2FA disabled" : "Failed to disable"
+    })));
   }
   getStatus() {
-    return this.http.get(`${this.api}/status`);
+    const query = `
+      query GetStatus {
+        twoFactorStatus
+      }
+    `;
+    return this.http.post(this.gql, { query }).pipe(map((res) => ({
+      isTwoFactorEnabled: res.data.twoFactorStatus
+    })));
   }
   static \u0275fac = function TotpService_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _TotpService)();
@@ -1584,7 +1609,7 @@ var NavigatorComponent = class _NavigatorComponent {
       \u0275\u0275advance(2);
       \u0275\u0275property("matMenuTriggerFor", dictGeneralInfo_r5);
     }
-  }, dependencies: [RouterLink, RouterLinkActive, MatToolbarModule, MatToolbar, MatButtonModule, MatButton, MatMenuModule, MatMenu, MatMenuItem, MatMenuTrigger], styles: ["\n\nmat-toolbar[_ngcontent-%COMP%] {\n  background: lightcyan;\n}\n.spacer[_ngcontent-%COMP%] {\n  flex: 1;\n}\n.user-info[_ngcontent-%COMP%] {\n  font-size: 14px;\n  margin-right: 8px;\n  opacity: 0.8;\n}\n.active-link[_ngcontent-%COMP%] {\n  background-color: #1976d2 !important;\n  color: white !important;\n  font-weight: bold !important;\n  border-radius: 4px;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);\n}\n.active-link[_ngcontent-%COMP%]:hover {\n  background-color: #1565c0 !important;\n}\nbutton[matButton][_ngcontent-%COMP%]:not(.active-link):hover {\n  background-color: rgba(25, 118, 210, 0.1);\n  border-radius: 4px;\n}\n.active-menu-item[_ngcontent-%COMP%] {\n  background-color: #e3f2fd !important;\n  color: #1976d2 !important;\n  font-weight: bold !important;\n}\n.active-menu-item[_ngcontent-%COMP%]:hover {\n  background-color: #bbdefb !important;\n}"] });
+  }, dependencies: [RouterLink, RouterLinkActive, MatToolbarModule, MatToolbar, MatButtonModule, MatButton, MatMenuModule, MatMenu, MatMenuItem, MatMenuTrigger], styles: ["\n\nmat-toolbar[_ngcontent-%COMP%] {\n  background: lightcyan;\n}\n.spacer[_ngcontent-%COMP%] {\n  flex: 1;\n}\n.user-info[_ngcontent-%COMP%] {\n  font-size: 14px;\n  margin-right: 8px;\n  opacity: 0.8;\n}\n.active-link[_ngcontent-%COMP%] {\n  background-color: #1976d2 !important;\n  color: white !important;\n  font-weight: bold !important;\n  border-radius: 4px;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);\n}\n.active-link[_ngcontent-%COMP%]:hover {\n  background-color: #1565c0 !important;\n}\nbutton[matButton][_ngcontent-%COMP%]:not(.active-link):hover {\n  background-color: rgba(25, 118, 210, 0.1);\n  border-radius: 4px;\n}\n.active-menu-item[_ngcontent-%COMP%] {\n  background-color: #e3f2fd !important;\n  color: #1976d2 !important;\n  font-weight: bold !important;\n}\n.active-menu-item[_ngcontent-%COMP%]:hover {\n  background-color: #bbdefb !important;\n}\n/*# sourceMappingURL=navigator.component.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(NavigatorComponent, [{
@@ -1672,7 +1697,7 @@ var NavigatorComponent = class _NavigatorComponent {
         </button>
       </mat-menu>
     </mat-toolbar>
-  `, imports: [RouterLink, RouterLinkActive, MatToolbarModule, MatButtonModule, MatMenuModule], styles: ["/* angular:styles/component:css;9b7f63ad5d396a5d0049dbb467efc71669edc311055b29e0916daf58b98a60a6;/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Front/src/navigator/navigator.component.ts */\nmat-toolbar {\n  background: lightcyan;\n}\n.spacer {\n  flex: 1;\n}\n.user-info {\n  font-size: 14px;\n  margin-right: 8px;\n  opacity: 0.8;\n}\n.active-link {\n  background-color: #1976d2 !important;\n  color: white !important;\n  font-weight: bold !important;\n  border-radius: 4px;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);\n}\n.active-link:hover {\n  background-color: #1565c0 !important;\n}\nbutton[matButton]:not(.active-link):hover {\n  background-color: rgba(25, 118, 210, 0.1);\n  border-radius: 4px;\n}\n.active-menu-item {\n  background-color: #e3f2fd !important;\n  color: #1976d2 !important;\n  font-weight: bold !important;\n}\n.active-menu-item:hover {\n  background-color: #bbdefb !important;\n}\n"] }]
+  `, imports: [RouterLink, RouterLinkActive, MatToolbarModule, MatButtonModule, MatMenuModule], styles: ["/* angular:styles/component:css;9b7f63ad5d396a5d0049dbb467efc71669edc311055b29e0916daf58b98a60a6;/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Front/src/navigator/navigator.component.ts */\nmat-toolbar {\n  background: lightcyan;\n}\n.spacer {\n  flex: 1;\n}\n.user-info {\n  font-size: 14px;\n  margin-right: 8px;\n  opacity: 0.8;\n}\n.active-link {\n  background-color: #1976d2 !important;\n  color: white !important;\n  font-weight: bold !important;\n  border-radius: 4px;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);\n}\n.active-link:hover {\n  background-color: #1565c0 !important;\n}\nbutton[matButton]:not(.active-link):hover {\n  background-color: rgba(25, 118, 210, 0.1);\n  border-radius: 4px;\n}\n.active-menu-item {\n  background-color: #e3f2fd !important;\n  color: #1976d2 !important;\n  font-weight: bold !important;\n}\n.active-menu-item:hover {\n  background-color: #bbdefb !important;\n}\n/*# sourceMappingURL=navigator.component.css.map */\n"] }]
   }], null, null);
 })();
 (() => {
@@ -1715,3 +1740,4 @@ bootstrapApplication(App, appConfig).catch((err) => console.error(err));
    * found in the LICENSE file at https://angular.dev/license
    *)
 */
+//# sourceMappingURL=main.js.map

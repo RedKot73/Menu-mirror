@@ -21,6 +21,11 @@ export HOME=/tmp
 export DOTNET_CLI_HOME=/tmp/.dotnet
 export NUGET_PACKAGES="$(pwd)/S5Server/packages"
 
+#!/bin/bash
+export APP_PORT=5000
+# Сохраняем значение в файл, чтобы другие могли его прочитать
+echo $APP_PORT > .app_active_port
+
 cd S5Server
-export ASPNETCORE_URLS="http://0.0.0.0:8080"
+export ASPNETCORE_URLS="http://0.0.0.0:$APP_PORT"
 dotnet watch run --no-restore --non-interactive --no-launch-profile

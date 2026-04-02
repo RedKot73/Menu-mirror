@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["angular:styles/component:css;68b94b95be9b301488d132c754ac46849f6fd8aba50565c70ca6fa71bc949c06;/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Front/src/app/dialogs/DictCityCode-dialog.component.ts"],
+  "sourcesContent": ["\n      .dialog-content {\n        display: flex;\n        flex-direction: column;\n        gap: 16px;\n        min-width: 800px;\n        max-width: 95vw;\n        height: 600px;\n        max-height: 80vh;\n      }\n\n      .action-panel {\n        display: flex;\n        align-items: center;\n        gap: 12px;\n        flex-wrap: wrap;\n      }\n\n      .search-field {\n        flex: 1;\n        min-width: 250px;\n      }\n\n      .content-panel {\n        flex: 1;\n        overflow: auto;\n        border: 1px solid #e0e0e0;\n        border-radius: 4px;\n      }\n\n      mat-dialog-content {\n        padding: 0 24px !important;\n        overflow: hidden !important;\n      }\n    "],
+  "mappings": ";AACM,CAAC;AACC,WAAS;AACT,kBAAgB;AAChB,OAAK;AACL,aAAW;AACX,aAAW;AACX,UAAQ;AACR,cAAY;AACd;AAEA,CAAC;AACC,WAAS;AACT,eAAa;AACb,OAAK;AACL,aAAW;AACb;AAEA,CAAC;AACC,QAAM;AACN,aAAW;AACb;AAEA,CAAC;AACC,QAAM;AACN,YAAU;AACV,UAAQ,IAAI,MAAM;AAClB,iBAAe;AACjB;AAEA;AACE,WAAS,EAAE;AACX,YAAU;AACZ;",
+  "names": []
+}

@@ -240,9 +240,11 @@ public class Soldier
     [ValidateNever, Display(Name = "Статус")]
     public DictSoldierState State { get; set; } = default!;
 
+    /*
     /// <summary>
     /// Мережевий аккаунт
     /// </summary>
+    */
     /*
     [ForeignKey(nameof(VezhaUser)), Display(Name = DictPosition.Caption)]
     public string VezhaUserId { get; set; } = string.Empty;
