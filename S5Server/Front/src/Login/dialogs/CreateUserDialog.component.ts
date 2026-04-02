@@ -159,7 +159,6 @@ export class CreateUserDialogComponent implements OnInit, OnDestroy {
   data = inject<CreateUserDialogData>(MAT_DIALOG_DATA);
 
   model: CreateUserDto = {
-    soldierId: '',
     userName: '',
     password: '',
   };
@@ -207,6 +206,8 @@ export class CreateUserDialogComponent implements OnInit, OnDestroy {
           },
           error: () => {
             this.checkingUserName = false;
+            // Assume available on network error; backend will reject if taken
+            this.userNameAvailable = true;
             this.userNameError = '';
           },
         });
@@ -231,6 +232,8 @@ export class CreateUserDialogComponent implements OnInit, OnDestroy {
           },
           error: () => {
             this.checkingPassword = false;
+            // Allow saving — backend will reject if password doesn't meet policy
+            this.passwordValid = true;
             this.passwordErrors = [];
           },
         });
@@ -260,7 +263,7 @@ export class CreateUserDialogComponent implements OnInit, OnDestroy {
     }
     const s = this.selectedSoldier;
     const rank = s.rankShortValue ? s.rankShortValue + ' ' : '';
-    return `${rank}${this.formatFIO(s)} (${s.unitShortName})`;
+    return `${rank}${this.formatFIO(s)} (${s.unitShortName ?? '—'})`;
   }
 
   openSoldierSelect(): void {
@@ -285,13 +288,14 @@ export class CreateUserDialogComponent implements OnInit, OnDestroy {
   }
 
   get canSave(): boolean {
+    if (this.checkingUserName || this.checkingPassword) return false; // Block during async checks
     return (
-      !!this.model.soldierId &&
       !!this.model.userName &&
       this.userNameAvailable &&
       !!this.model.password &&
       this.passwordValid &&
       this.model.password === this.confirmPassword
+      // soldierId is optional — system admin accounts may not have a linked soldier
     );
   }
 

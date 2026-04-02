@@ -30,7 +30,7 @@ export interface UserListItem {
 }
 
 export interface CreateUserDto {
-  soldierId: string;
+  soldierId?: string;   // Optional: account may exist without a linked soldier (e.g. system admin)
   userName: string;
   password: string;
   email?: string;

@@ -213,7 +213,7 @@ export class UsersPage implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         if (adminChange) {
-          this.usersService.adminChangeUsername(user.id, result.newUserName).subscribe({
+          this.usersService.adminChangeUsername(user.id, { newUserName: result.newUserName }).subscribe({
             next: () => {
               this.notify('Логін змінено');
               this.loadUsers();

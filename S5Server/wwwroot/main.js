@@ -801,13 +801,13 @@ var routes = [
   {
     path: "users",
     title: "\u041A\u043E\u0440\u0438\u0441\u0442\u0443\u0432\u0430\u0447\u0456",
-    loadComponent: () => import("./chunk-YBTUSXFE.js").then((m) => m.UsersPage),
+    loadComponent: () => import("./chunk-4EDNGXGO.js").then((m) => m.UsersPage),
     canActivate: [authGuard]
   },
   {
     path: "login",
     title: "\u0412\u0445\u0456\u0434 \u0432 \u0441\u0438\u0441\u0442\u0435\u043C\u0443",
-    loadComponent: () => import("./chunk-2VTKMMGQ.js").then((m) => m.LoginPage)
+    loadComponent: () => import("./chunk-D3P5LPAW.js").then((m) => m.LoginPage)
   },
   {
     path: "welcome",

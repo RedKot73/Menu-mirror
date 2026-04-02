@@ -139,6 +139,8 @@ export class ChangePasswordDialogComponent implements OnInit, OnDestroy {
           },
           error: () => {
             this.checkingPassword = false;
+            // Allow saving — backend will reject if password doesn't meet policy
+            this.passwordValid = true;
             this.passwordErrors = [];
           },
         });
@@ -161,6 +163,7 @@ export class ChangePasswordDialogComponent implements OnInit, OnDestroy {
   }
 
   get canSave(): boolean {
+    if (this.checkingPassword) return false; // Block while async validation is in-flight
     const passwordOk = this.data.adminChange || !!this.model.currentPassword;
     return (
       passwordOk &&
