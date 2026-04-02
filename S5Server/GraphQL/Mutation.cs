@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using OtpNet;
 using S5Server.Models;
+using S5Server.Data; // Добавлено для MainDbContext
 
 namespace S5Server.GraphQL;
 
@@ -48,8 +49,8 @@ public class Mutation
         string userName,
         string password,
         [Service] UserManager<TVezhaUser> userManager,
-        [Service] SignInManager<TVezhaUser> signInManager,
-        [Service] IConfiguration config)
+        [Service] IConfiguration config,
+        [Service] MainDbContext context)
     {
         Console.WriteLine($"[DEBUG] Login attempt for user: {userName}");
         var user = await userManager.FindByNameAsync(userName);
@@ -70,12 +71,15 @@ public class Mutation
         {
             Console.WriteLine($"[DEBUG] Invalid password for user {userName}");
             await userManager.AccessFailedAsync(user);
-            return new AuthPayload();
+            throw new GraphQLException("Invalid password");
         }
 
         Console.WriteLine($"[DEBUG] Password check successful for user {userName}");
         await userManager.ResetAccessFailedCountAsync(user);
         var roles = await userManager.GetRolesAsync(user);
+
+        await context.Entry(user).Reference(u => u.Soldier).LoadAsync();
+        Console.WriteLine($"[DEBUG] Soldier loaded: {user.Soldier != null}");
 
         if (user.TwoFactorEnabled)
         {
@@ -104,7 +108,8 @@ public class Mutation
         string code,
         [Service] UserManager<TVezhaUser> userManager,
         [Service] ClaimsPrincipal principal,
-        [Service] IConfiguration config)
+        [Service] IConfiguration config,
+        [Service] MainDbContext context)
     {
         var userIdStr = principal.FindFirstValue(ClaimTypes.NameIdentifier) 
                        ?? principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
@@ -156,6 +161,10 @@ public class Mutation
         }
 
         var roles = await userManager.GetRolesAsync(user);
+        
+        await context.Entry(user).Reference(u => u.Soldier).LoadAsync();
+        Console.WriteLine($"[DEBUG] Soldier loaded in Verify: {user.Soldier != null}");
+
         var token = GenerateJwtToken(user, roles, config);
         
         Console.WriteLine($"[DEBUG] 2FA SUCCESS for user {user.UserName}. Token length: {token?.Length}");

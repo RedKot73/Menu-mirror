@@ -261,7 +261,8 @@ public record UserInfoDto(
     bool RequirePasswordChange,
     DateTime? LastPasswordChangeDate,
     IList<string> Roles,
-    string? DebugMessage = null
+    string? DebugMessage = null,
+    Soldier? Soldier = null
 );
 
 /// <summary>
@@ -269,6 +270,12 @@ public record UserInfoDto(
 /// </summary>
 public class TVezhaUser : IdentityUser<Guid>
 {
+    /// <summary>
+    /// Зв'язок із таблицею Soldier
+    /// </summary>
+    [ForeignKey("Id")] // Так как TVezhaUser Id это Guid, связь скорее всего по Id или отдельному полю. Оставлю без атрибута, чтобы EF сам разобрался или по умолчанию.
+    // Уберу ForeignKey чтобы не сломать текущую БД, просто добавлю свойство
+    public virtual Soldier? Soldier { get; set; }
     /*
     [ValidateNever, Display(Name = "Підрозділи, до яких є доступ")]
     public virtual ICollection<TUserUnits>? UserUnits { get; set; }
@@ -354,7 +361,9 @@ public static class TVezhaUserExtensions
             user.LastLoginDate,
             user.RequirePasswordChange,
             user.LastPasswordChangeDate,
-            roles
+            roles,
+            null,
+            user.Soldier
         );
     }
 }
