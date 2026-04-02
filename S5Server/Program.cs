@@ -287,7 +287,7 @@ builder.Services.AddRateLimiter(options =>
 builder.Services
     .AddGraphQLServer()
     .AddQueryType<S5Server.GraphQL.Query>()
-    .AddMutationType<S5Server.GraphQL.Mutation>()
+    .AddMutationType<S5Server.GraphQL.AuthMutation>()
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = builder.Environment.IsDevelopment()) // ✅ Детальні помилки в Dev
     .AddAuthorization()                     // ✅ Підтримка [Authorize]
     .AddProjections()                       // ✅ Оптимізація Include/Select
@@ -471,7 +471,12 @@ try
         {
             userManager.SetLockoutEndDateAsync(havrokUser, null).GetAwaiter().GetResult();
             userManager.ResetAccessFailedCountAsync(havrokUser).GetAwaiter().GetResult();
-            Log.Information("✅ AUTOMATICALLY UNLOCKED USER 'havrok' IN DEVELOPMENT MODE");
+            
+            // Temporary password reset as requested by user
+            havrokUser.PasswordHash = userManager.PasswordHasher.HashPassword(havrokUser, "A4742A4742!");
+            userManager.UpdateAsync(havrokUser).GetAwaiter().GetResult();
+            
+            Log.Information("✅ AUTOMATICALLY UNLOCKED & RESET PASSWORD FOR USER 'havrok' TO 'A4742A4742!' IN DEVELOPMENT MODE");
         }
     }
 

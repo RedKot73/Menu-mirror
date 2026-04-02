@@ -1,1 +1,0 @@
-bash "./down.app.sh"

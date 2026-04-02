@@ -28,6 +28,13 @@
           </div>
         }
 
+        @if (countdown() > 0 && !isLoading()) {
+          <div class="timer-info">
+            <mat-icon>timer</mat-icon>
+            <span>Автоматичний вхід через {{ countdown() }} сек...</span>
+          </div>
+        }
+
         <div class="actions">
           <button mat-flat-button 
                   color="primary" 

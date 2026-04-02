@@ -56,6 +56,27 @@
       }
     }
 
+    .timer-info {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #ffd740; // Warning amber
+      background: rgba(255, 215, 64, 0.1);
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-top: 16px;
+      border: 1px dashed rgba(255, 215, 64, 0.3);
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+
     .error-message {
       display: flex;
       align-items: center;

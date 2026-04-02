@@ -19,6 +19,9 @@ export class AuthService {
 
   /** Стан очікування 2FA (зберігаємо UserId) */
   readonly pendingTwoFactor = signal<{ userId: string } | null>(null);
+  
+  /** Режим 2FA (soft/strict) витягнутий з токену */
+  readonly twoFactorMode = signal<'soft' | 'strict'>('strict');
 
   /** Чи авторизований користувач повністю */
   readonly isAuthenticated = computed(() => this.user() !== null && !this.requiresTwoFactor());
@@ -43,6 +46,7 @@ export class AuthService {
       const payload = JSON.parse(atob(token.split('.')[1]));
       if (payload.requiresTwoFactor === 'true' || payload.requiresTwoFactor === true) {
         this.pendingTwoFactor.set({ userId: payload.sub });
+        this.twoFactorMode.set(payload.twoFactorMode === 'soft' ? 'soft' : 'strict');
       }
     } catch {
       // Ignore parse errors
