@@ -1,0 +1,1095 @@
+2026-04-02 11:27:57.640 +03:00 [INF] Запуск приложения с аргументами: 
+2026-04-02 11:27:57.701 +03:00 [INF] ✅ Переменные подхватились! Host: localhost
+2026-04-02 11:27:57.728 +03:00 [INF] Попытка подключения к PostgreSQL 1/3...
+2026-04-02 11:27:57.901 +03:00 [INF] ✅ PostgreSQL подключен: S5_DB_local@localhost:5432
+2026-04-02 11:27:58.105 +03:00 [INF] Starting S5Server
+2026-04-02 11:27:58.178 +03:00 [INF] User profile is available. Using '/tmp/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-02 11:27:58.722 +03:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2026-04-02 11:27:59.068 +03:00 [INF] Executed DbCommand (12ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 11:27:59.095 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 11:27:59.221 +03:00 [INF] Executed DbCommand (4ms) [Parameters=[@p18='019cc398-12f6-72d0-90d6-aa7499812a8d', @p0='0', @p1='a0d059b9-4c12-4583-b53e-350cc84188d2', @p19='de0ba624-6065-4a3e-a0b8-4db0bac3dc54', @p2='sergray411@gmail.com', @p3='False', @p4='2026-04-01T18:03:18.4444450+03:00' (Nullable = true) (DbType = DateTimeOffset), @p5='2026-03-07T14:37:04.7567280+02:00' (Nullable = true) (DbType = DateTimeOffset), @p6='True', @p7=NULL (DbType = DateTimeOffset), @p8='SERGRAY411@GMAIL.COM', @p9='HAVROK', @p10='AQAAAAIAAYagAAAAEJClUkzhtV3nvnesFHbMGPFM95ojYmbVLdoeADOaHUankpQ80aAOdIo3A6UJsjYtLg==', @p11=NULL, @p12='False', @p13='2026-03-06T16:40:48.8505670+02:00' (DbType = DateTimeOffset), @p14='False', @p15='V2S2VALROFFFHAG37CTSLDGXDGEPUIVU', @p16='True', @p17='havrok'], CommandType='"Text"', CommandTimeout='600']
+UPDATE identity.users SET access_failed_count = @p0, concurrency_stamp = @p1, email = @p2, email_confirmed = @p3, last_login_date = @p4, last_password_change_date = @p5, lockout_enabled = @p6, lockout_end = @p7, normalized_email = @p8, normalized_user_name = @p9, password_hash = @p10, phone_number = @p11, phone_number_confirmed = @p12, registration_date = @p13, require_password_change = @p14, security_stamp = @p15, two_factor_enabled = @p16, user_name = @p17
+WHERE id = @p18 AND concurrency_stamp = @p19;
+2026-04-02 11:27:59.230 +03:00 [INF] ✅ AUTOMATICALLY UNLOCKED USER 'havrok' IN DEVELOPMENT MODE
+2026-04-02 11:27:59.244 +03:00 [INF] Creating key {740af644-52ce-4fde-b1c2-e36fff5cf7cb} with creation date 2026-04-02 08:27:59Z, activation date 2026-04-02 08:27:59Z, and expiration date 2026-07-01 08:27:59Z.
+2026-04-02 11:27:59.247 +03:00 [WRN] No XML encryptor configured. Key {740af644-52ce-4fde-b1c2-e36fff5cf7cb} may be persisted to storage in unencrypted form.
+2026-04-02 11:27:59.249 +03:00 [INF] Writing data to file '/tmp/.aspnet/DataProtection-Keys/key-740af644-52ce-4fde-b1c2-e36fff5cf7cb.xml'.
+2026-04-02 11:27:59.302 +03:00 [INF] S5Server listening on: http://localhost:5001
+2026-04-02 11:28:19.196 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/ - null null
+2026-04-02 11:28:19.264 +03:00 [INF] Executing endpoint 'Fallback {*path:nonfile}'
+2026-04-02 11:28:19.280 +03:00 [INF] Sending file. Request path: '/index.html'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/index.html'
+2026-04-02 11:28:19.281 +03:00 [INF] Executed endpoint 'Fallback {*path:nonfile}'
+2026-04-02 11:28:19.284 +03:00 [INF] HTTP GET /index.html responded 200 in 81.5890 ms
+2026-04-02 11:28:19.289 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/index.html - 200 null text/html 94.0896ms
+2026-04-02 11:28:19.305 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-RWBUJLBH.js - null null
+2026-04-02 11:28:19.305 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-6M4I25T2.js - null null
+2026-04-02 11:28:19.305 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-2GTJJ3IJ.js - null null
+2026-04-02 11:28:19.305 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/styles.css - null null
+2026-04-02 11:28:19.305 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-575Y4FGD.js - null null
+2026-04-02 11:28:19.305 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-MKDEEZNH.js - null null
+2026-04-02 11:28:19.306 +03:00 [INF] Sending file. Request path: '/chunk-MKDEEZNH.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-MKDEEZNH.js'
+2026-04-02 11:28:19.306 +03:00 [INF] Sending file. Request path: '/chunk-6M4I25T2.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-6M4I25T2.js'
+2026-04-02 11:28:19.306 +03:00 [INF] HTTP GET /chunk-MKDEEZNH.js responded 200 in 0.9104 ms
+2026-04-02 11:28:19.306 +03:00 [INF] Sending file. Request path: '/styles.css'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/styles.css'
+2026-04-02 11:28:19.306 +03:00 [INF] HTTP GET /chunk-6M4I25T2.js responded 200 in 1.0159 ms
+2026-04-02 11:28:19.306 +03:00 [INF] HTTP GET /styles.css responded 200 in 1.0713 ms
+2026-04-02 11:28:19.306 +03:00 [INF] Sending file. Request path: '/chunk-575Y4FGD.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-575Y4FGD.js'
+2026-04-02 11:28:19.306 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-MKDEEZNH.js - 200 5443 text/javascript 1.5102ms
+2026-04-02 11:28:19.306 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/styles.css - 200 9039 text/css 1.5786ms
+2026-04-02 11:28:19.306 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-6M4I25T2.js - 200 21780 text/javascript 1.5648ms
+2026-04-02 11:28:19.306 +03:00 [INF] HTTP GET /chunk-575Y4FGD.js responded 200 in 1.2156 ms
+2026-04-02 11:28:19.307 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-575Y4FGD.js - 200 3272 text/javascript 2.1183ms
+2026-04-02 11:28:19.307 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-AY2LANKM.js - null null
+2026-04-02 11:28:19.308 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-LVBT7O2R.js - null null
+2026-04-02 11:28:19.308 +03:00 [INF] Sending file. Request path: '/chunk-AY2LANKM.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-AY2LANKM.js'
+2026-04-02 11:28:19.308 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-O3FG6F5X.js - null null
+2026-04-02 11:28:19.308 +03:00 [INF] HTTP GET /chunk-AY2LANKM.js responded 200 in 1.2034 ms
+2026-04-02 11:28:19.309 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-AY2LANKM.js - 200 194063 text/javascript 1.5726ms
+2026-04-02 11:28:19.308 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-XKAE3JBC.js - null null
+2026-04-02 11:28:19.309 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-GFPGE5B5.js - null null
+2026-04-02 11:28:19.309 +03:00 [INF] Sending file. Request path: '/chunk-LVBT7O2R.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-LVBT7O2R.js'
+2026-04-02 11:28:19.309 +03:00 [INF] Sending file. Request path: '/chunk-O3FG6F5X.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-O3FG6F5X.js'
+2026-04-02 11:28:19.309 +03:00 [INF] HTTP GET /chunk-LVBT7O2R.js responded 200 in 0.8387 ms
+2026-04-02 11:28:19.309 +03:00 [INF] Sending file. Request path: '/chunk-XKAE3JBC.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-XKAE3JBC.js'
+2026-04-02 11:28:19.309 +03:00 [INF] HTTP GET /chunk-O3FG6F5X.js responded 200 in 0.8220 ms
+2026-04-02 11:28:19.310 +03:00 [INF] HTTP GET /chunk-XKAE3JBC.js responded 200 in 0.6950 ms
+2026-04-02 11:28:19.310 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-LVBT7O2R.js - 200 32695 text/javascript 1.3653ms
+2026-04-02 11:28:19.310 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-O3FG6F5X.js - 200 59378 text/javascript 1.2267ms
+2026-04-02 11:28:19.310 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-XKAE3JBC.js - 200 36456 text/javascript 1.5005ms
+2026-04-02 11:28:19.310 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-IBDYQGEV.js - null null
+2026-04-02 11:28:19.310 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/polyfills.js - null null
+2026-04-02 11:28:19.311 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/main.js - null null
+2026-04-02 11:28:19.311 +03:00 [INF] Sending file. Request path: '/chunk-2GTJJ3IJ.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-2GTJJ3IJ.js'
+2026-04-02 11:28:19.311 +03:00 [INF] HTTP GET /chunk-2GTJJ3IJ.js responded 200 in 6.3569 ms
+2026-04-02 11:28:19.312 +03:00 [INF] Sending file. Request path: '/chunk-GFPGE5B5.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-GFPGE5B5.js'
+2026-04-02 11:28:19.312 +03:00 [INF] Sending file. Request path: '/main.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/main.js'
+2026-04-02 11:28:19.312 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-2GTJJ3IJ.js - 200 70724 text/javascript 6.9104ms
+2026-04-02 11:28:19.312 +03:00 [INF] HTTP GET /chunk-GFPGE5B5.js responded 200 in 2.6524 ms
+2026-04-02 11:28:19.312 +03:00 [INF] HTTP GET /main.js responded 200 in 0.9662 ms
+2026-04-02 11:28:19.312 +03:00 [INF] Sending file. Request path: '/chunk-RWBUJLBH.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-RWBUJLBH.js'
+2026-04-02 11:28:19.312 +03:00 [INF] Sending file. Request path: '/polyfills.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/polyfills.js'
+2026-04-02 11:28:19.312 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-GFPGE5B5.js - 200 152998 text/javascript 2.8791ms
+2026-04-02 11:28:19.312 +03:00 [INF] HTTP GET /polyfills.js responded 200 in 1.8046 ms
+2026-04-02 11:28:19.312 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/main.js - 200 85130 text/javascript 1.2626ms
+2026-04-02 11:28:19.312 +03:00 [INF] HTTP GET /chunk-RWBUJLBH.js responded 200 in 6.7789 ms
+2026-04-02 11:28:19.312 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/polyfills.js - 200 92380 text/javascript 1.9345ms
+2026-04-02 11:28:19.312 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-RWBUJLBH.js - 200 439363 text/javascript 7.3669ms
+2026-04-02 11:28:19.313 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/_framework/aspnetcore-browser-refresh.js - null null
+2026-04-02 11:28:19.316 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/_framework/aspnetcore-browser-refresh.js - 200 16152 application/javascript; charset=utf-8 2.6165ms
+2026-04-02 11:28:19.319 +03:00 [INF] Sending file. Request path: '/chunk-IBDYQGEV.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-IBDYQGEV.js'
+2026-04-02 11:28:19.319 +03:00 [INF] HTTP GET /chunk-IBDYQGEV.js responded 200 in 9.2401 ms
+2026-04-02 11:28:19.320 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-IBDYQGEV.js - 200 1729672 text/javascript 9.6479ms
+2026-04-02 11:28:19.535 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-2ASTSGWJ.js - null null
+2026-04-02 11:28:19.538 +03:00 [INF] Sending file. Request path: '/chunk-2ASTSGWJ.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-2ASTSGWJ.js'
+2026-04-02 11:28:19.538 +03:00 [INF] HTTP GET /chunk-2ASTSGWJ.js responded 200 in 2.7464 ms
+2026-04-02 11:28:19.538 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-2ASTSGWJ.js - 200 15083 text/javascript 3.0802ms
+2026-04-02 11:28:19.544 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-L7V54S6K.js - null null
+2026-04-02 11:28:19.544 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-IGYH6E5M.js - null null
+2026-04-02 11:28:19.544 +03:00 [INF] Sending file. Request path: '/chunk-IGYH6E5M.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-IGYH6E5M.js'
+2026-04-02 11:28:19.544 +03:00 [INF] Sending file. Request path: '/chunk-L7V54S6K.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-L7V54S6K.js'
+2026-04-02 11:28:19.544 +03:00 [INF] HTTP GET /chunk-L7V54S6K.js responded 200 in 0.4902 ms
+2026-04-02 11:28:19.544 +03:00 [INF] HTTP GET /chunk-IGYH6E5M.js responded 200 in 0.4225 ms
+2026-04-02 11:28:19.544 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-L7V54S6K.js - 200 28896 text/javascript 0.6946ms
+2026-04-02 11:28:19.544 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-VIPTF2QV.js - null null
+2026-04-02 11:28:19.544 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-IGYH6E5M.js - 200 1526 text/javascript 0.7224ms
+2026-04-02 11:28:19.544 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-5BKP6RTL.js - null null
+2026-04-02 11:28:19.545 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-KWLRG6HK.js - null null
+2026-04-02 11:28:19.545 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-2EFRQAL5.js - null null
+2026-04-02 11:28:19.545 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-ROBCPIX2.js - null null
+2026-04-02 11:28:19.546 +03:00 [INF] Sending file. Request path: '/chunk-VIPTF2QV.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-VIPTF2QV.js'
+2026-04-02 11:28:19.546 +03:00 [INF] Sending file. Request path: '/chunk-2EFRQAL5.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-2EFRQAL5.js'
+2026-04-02 11:28:19.546 +03:00 [INF] Sending file. Request path: '/chunk-KWLRG6HK.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-KWLRG6HK.js'
+2026-04-02 11:28:19.546 +03:00 [INF] HTTP GET /chunk-2EFRQAL5.js responded 200 in 0.7375 ms
+2026-04-02 11:28:19.546 +03:00 [INF] HTTP GET /chunk-VIPTF2QV.js responded 200 in 1.5646 ms
+2026-04-02 11:28:19.546 +03:00 [INF] HTTP GET /chunk-KWLRG6HK.js responded 200 in 0.9143 ms
+2026-04-02 11:28:19.546 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-2EFRQAL5.js - 200 24741 text/javascript 1.0242ms
+2026-04-02 11:28:19.547 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-VIPTF2QV.js - 200 6332 text/javascript 2.1351ms
+2026-04-02 11:28:19.547 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-KWLRG6HK.js - 200 6248 text/javascript 1.5256ms
+2026-04-02 11:28:19.547 +03:00 [INF] Sending file. Request path: '/chunk-5BKP6RTL.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-5BKP6RTL.js'
+2026-04-02 11:28:19.547 +03:00 [INF] Sending file. Request path: '/chunk-ROBCPIX2.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-ROBCPIX2.js'
+2026-04-02 11:28:19.547 +03:00 [INF] HTTP GET /chunk-5BKP6RTL.js responded 200 in 1.9309 ms
+2026-04-02 11:28:19.547 +03:00 [INF] HTTP GET /chunk-ROBCPIX2.js responded 200 in 1.5175 ms
+2026-04-02 11:28:19.548 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-5BKP6RTL.js - 200 57232 text/javascript 3.1871ms
+2026-04-02 11:28:19.548 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-ROBCPIX2.js - 200 33514 text/javascript 3.083ms
+2026-04-02 11:28:19.569 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5001/graphql - application/json 97
+2026-04-02 11:28:19.576 +03:00 [INF] CORS policy execution successful.
+2026-04-02 11:28:19.579 +03:00 [INF] Executing endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 11:28:19.815 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/favicon.ico - null null
+2026-04-02 11:28:19.817 +03:00 [INF] Sending file. Request path: '/favicon.ico'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/favicon.ico'
+2026-04-02 11:28:19.817 +03:00 [INF] HTTP GET /favicon.ico responded 200 in 2.0469 ms
+2026-04-02 11:28:19.817 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/favicon.ico - 200 15086 image/x-icon 2.753ms
+2026-04-02 11:28:20.540 +03:00 [INF] Executed endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 11:28:20.540 +03:00 [INF] HTTP POST /graphql responded 200 in 970.9025 ms
+2026-04-02 11:28:20.540 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5001/graphql - 200 null application/graphql-response+json; charset=utf-8 971.4094ms
+2026-04-02 11:35:59.183 +03:00 [INF] Запуск приложения с аргументами: 
+2026-04-02 11:35:59.239 +03:00 [INF] ✅ Переменные подхватились! Host: localhost
+2026-04-02 11:35:59.266 +03:00 [INF] Попытка подключения к PostgreSQL 1/3...
+2026-04-02 11:35:59.434 +03:00 [INF] ✅ PostgreSQL подключен: S5_DB_local@localhost:5432
+2026-04-02 11:35:59.607 +03:00 [INF] Starting S5Server
+2026-04-02 11:35:59.675 +03:00 [INF] User profile is available. Using '/tmp/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-02 11:36:00.140 +03:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2026-04-02 11:36:00.454 +03:00 [INF] Executed DbCommand (11ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 11:36:00.471 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 11:36:00.597 +03:00 [INF] Executed DbCommand (13ms) [Parameters=[@p18='019cc398-12f6-72d0-90d6-aa7499812a8d', @p0='0', @p1='1cb15fad-5658-4d06-960d-aa85778d2d42', @p19='a0d059b9-4c12-4583-b53e-350cc84188d2', @p2='sergray411@gmail.com', @p3='False', @p4='2026-04-01T18:03:18.4444450+03:00' (Nullable = true) (DbType = DateTimeOffset), @p5='2026-03-07T14:37:04.7567280+02:00' (Nullable = true) (DbType = DateTimeOffset), @p6='True', @p7=NULL (DbType = DateTimeOffset), @p8='SERGRAY411@GMAIL.COM', @p9='HAVROK', @p10='AQAAAAIAAYagAAAAEJClUkzhtV3nvnesFHbMGPFM95ojYmbVLdoeADOaHUankpQ80aAOdIo3A6UJsjYtLg==', @p11=NULL, @p12='False', @p13='2026-03-06T16:40:48.8505670+02:00' (DbType = DateTimeOffset), @p14='False', @p15='V2S2VALROFFFHAG37CTSLDGXDGEPUIVU', @p16='True', @p17='havrok'], CommandType='"Text"', CommandTimeout='600']
+UPDATE identity.users SET access_failed_count = @p0, concurrency_stamp = @p1, email = @p2, email_confirmed = @p3, last_login_date = @p4, last_password_change_date = @p5, lockout_enabled = @p6, lockout_end = @p7, normalized_email = @p8, normalized_user_name = @p9, password_hash = @p10, phone_number = @p11, phone_number_confirmed = @p12, registration_date = @p13, require_password_change = @p14, security_stamp = @p15, two_factor_enabled = @p16, user_name = @p17
+WHERE id = @p18 AND concurrency_stamp = @p19;
+2026-04-02 11:36:00.604 +03:00 [INF] ✅ AUTOMATICALLY UNLOCKED USER 'havrok' IN DEVELOPMENT MODE
+2026-04-02 11:36:00.618 +03:00 [INF] Creating key {09d6e028-b12c-4972-8fb2-8f5f53ca1109} with creation date 2026-04-02 08:36:00Z, activation date 2026-04-02 08:36:00Z, and expiration date 2026-07-01 08:36:00Z.
+2026-04-02 11:36:00.621 +03:00 [WRN] No XML encryptor configured. Key {09d6e028-b12c-4972-8fb2-8f5f53ca1109} may be persisted to storage in unencrypted form.
+2026-04-02 11:36:00.623 +03:00 [INF] Writing data to file '/tmp/.aspnet/DataProtection-Keys/key-09d6e028-b12c-4972-8fb2-8f5f53ca1109.xml'.
+2026-04-02 11:36:00.662 +03:00 [INF] S5Server listening on: http://localhost:5001
+2026-04-02 11:36:06.080 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5001/graphql - application/json 391
+2026-04-02 11:36:06.120 +03:00 [INF] Executing endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 11:36:07.008 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 11:36:07.064 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 11:36:07.069 +03:00 [INF] Executed DbCommand (2ms) [Parameters=[@p18='019cc398-12f6-72d0-90d6-aa7499812a8d', @p0='1', @p1='34a0ac07-a882-422e-b7c5-175a286862f9', @p19='1cb15fad-5658-4d06-960d-aa85778d2d42', @p2='sergray411@gmail.com', @p3='False', @p4='2026-04-01T18:03:18.4444450+03:00' (Nullable = true) (DbType = DateTimeOffset), @p5='2026-03-07T14:37:04.7567280+02:00' (Nullable = true) (DbType = DateTimeOffset), @p6='True', @p7=NULL (DbType = DateTimeOffset), @p8='SERGRAY411@GMAIL.COM', @p9='HAVROK', @p10='AQAAAAIAAYagAAAAEJClUkzhtV3nvnesFHbMGPFM95ojYmbVLdoeADOaHUankpQ80aAOdIo3A6UJsjYtLg==', @p11=NULL, @p12='False', @p13='2026-03-06T16:40:48.8505670+02:00' (DbType = DateTimeOffset), @p14='False', @p15='V2S2VALROFFFHAG37CTSLDGXDGEPUIVU', @p16='True', @p17='havrok'], CommandType='"Text"', CommandTimeout='600']
+UPDATE identity.users SET access_failed_count = @p0, concurrency_stamp = @p1, email = @p2, email_confirmed = @p3, last_login_date = @p4, last_password_change_date = @p5, lockout_enabled = @p6, lockout_end = @p7, normalized_email = @p8, normalized_user_name = @p9, password_hash = @p10, phone_number = @p11, phone_number_confirmed = @p12, registration_date = @p13, require_password_change = @p14, security_stamp = @p15, two_factor_enabled = @p16, user_name = @p17
+WHERE id = @p18 AND concurrency_stamp = @p19;
+2026-04-02 11:36:07.093 +03:00 [INF] Executed endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 11:36:07.095 +03:00 [INF] HTTP POST /graphql responded 200 in 1012.1594 ms
+2026-04-02 11:41:30.786 +03:00 [INF] Запуск приложения с аргументами: 
+2026-04-02 11:41:30.844 +03:00 [INF] ✅ Переменные подхватились! Host: localhost
+2026-04-02 11:41:30.872 +03:00 [INF] Попытка подключения к PostgreSQL 1/3...
+2026-04-02 11:41:31.040 +03:00 [INF] ✅ PostgreSQL подключен: S5_DB_local@localhost:5432
+2026-04-02 11:41:31.208 +03:00 [INF] Starting S5Server
+2026-04-02 11:41:31.276 +03:00 [INF] User profile is available. Using '/tmp/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-02 11:41:31.740 +03:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2026-04-02 11:41:32.070 +03:00 [INF] Executed DbCommand (11ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 11:41:32.089 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 11:41:32.217 +03:00 [INF] Executed DbCommand (13ms) [Parameters=[@p18='019cc398-12f6-72d0-90d6-aa7499812a8d', @p0='1', @p1='0f934d0b-ede3-4807-9764-f94eaf222a4f', @p19='34a0ac07-a882-422e-b7c5-175a286862f9', @p2='sergray411@gmail.com', @p3='False', @p4='2026-04-01T18:03:18.4444450+03:00' (Nullable = true) (DbType = DateTimeOffset), @p5='2026-03-07T14:37:04.7567280+02:00' (Nullable = true) (DbType = DateTimeOffset), @p6='True', @p7=NULL (DbType = DateTimeOffset), @p8='SERGRAY411@GMAIL.COM', @p9='HAVROK', @p10='AQAAAAIAAYagAAAAEJClUkzhtV3nvnesFHbMGPFM95ojYmbVLdoeADOaHUankpQ80aAOdIo3A6UJsjYtLg==', @p11=NULL, @p12='False', @p13='2026-03-06T16:40:48.8505670+02:00' (DbType = DateTimeOffset), @p14='False', @p15='V2S2VALROFFFHAG37CTSLDGXDGEPUIVU', @p16='True', @p17='havrok'], CommandType='"Text"', CommandTimeout='600']
+UPDATE identity.users SET access_failed_count = @p0, concurrency_stamp = @p1, email = @p2, email_confirmed = @p3, last_login_date = @p4, last_password_change_date = @p5, lockout_enabled = @p6, lockout_end = @p7, normalized_email = @p8, normalized_user_name = @p9, password_hash = @p10, phone_number = @p11, phone_number_confirmed = @p12, registration_date = @p13, require_password_change = @p14, security_stamp = @p15, two_factor_enabled = @p16, user_name = @p17
+WHERE id = @p18 AND concurrency_stamp = @p19;
+2026-04-02 11:41:32.228 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 11:41:32.233 +03:00 [INF] Executed DbCommand (2ms) [Parameters=[@p18='019cc398-12f6-72d0-90d6-aa7499812a8d', @p0='0', @p1='1ed64f49-df47-469d-9eec-511d8308e156', @p19='0f934d0b-ede3-4807-9764-f94eaf222a4f', @p2='sergray411@gmail.com', @p3='False', @p4='2026-04-01T18:03:18.4444450+03:00' (Nullable = true) (DbType = DateTimeOffset), @p5='2026-03-07T14:37:04.7567280+02:00' (Nullable = true) (DbType = DateTimeOffset), @p6='True', @p7=NULL (DbType = DateTimeOffset), @p8='SERGRAY411@GMAIL.COM', @p9='HAVROK', @p10='AQAAAAIAAYagAAAAEJClUkzhtV3nvnesFHbMGPFM95ojYmbVLdoeADOaHUankpQ80aAOdIo3A6UJsjYtLg==', @p11=NULL, @p12='False', @p13='2026-03-06T16:40:48.8505670+02:00' (DbType = DateTimeOffset), @p14='False', @p15='V2S2VALROFFFHAG37CTSLDGXDGEPUIVU', @p16='True', @p17='havrok'], CommandType='"Text"', CommandTimeout='600']
+UPDATE identity.users SET access_failed_count = @p0, concurrency_stamp = @p1, email = @p2, email_confirmed = @p3, last_login_date = @p4, last_password_change_date = @p5, lockout_enabled = @p6, lockout_end = @p7, normalized_email = @p8, normalized_user_name = @p9, password_hash = @p10, phone_number = @p11, phone_number_confirmed = @p12, registration_date = @p13, require_password_change = @p14, security_stamp = @p15, two_factor_enabled = @p16, user_name = @p17
+WHERE id = @p18 AND concurrency_stamp = @p19;
+2026-04-02 11:41:32.234 +03:00 [INF] ✅ AUTOMATICALLY UNLOCKED USER 'havrok' IN DEVELOPMENT MODE
+2026-04-02 11:41:32.246 +03:00 [INF] Creating key {f2b54bd5-b839-47f3-a908-ffdc585a007e} with creation date 2026-04-02 08:41:32Z, activation date 2026-04-02 08:41:32Z, and expiration date 2026-07-01 08:41:32Z.
+2026-04-02 11:41:32.249 +03:00 [WRN] No XML encryptor configured. Key {f2b54bd5-b839-47f3-a908-ffdc585a007e} may be persisted to storage in unencrypted form.
+2026-04-02 11:41:32.251 +03:00 [INF] Writing data to file '/tmp/.aspnet/DataProtection-Keys/key-f2b54bd5-b839-47f3-a908-ffdc585a007e.xml'.
+2026-04-02 11:41:32.291 +03:00 [INF] S5Server listening on: http://localhost:5001
+2026-04-02 11:41:37.717 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/graphql?sdl - null null
+2026-04-02 11:41:37.760 +03:00 [INF] Executing endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 11:50:46.079 +03:00 [INF] Запуск приложения с аргументами: 
+2026-04-02 11:50:46.139 +03:00 [INF] ✅ Переменные подхватились! Host: localhost
+2026-04-02 11:50:46.167 +03:00 [INF] Попытка подключения к PostgreSQL 1/3...
+2026-04-02 11:50:46.334 +03:00 [INF] ✅ PostgreSQL подключен: S5_DB_local@localhost:5432
+2026-04-02 11:50:46.511 +03:00 [INF] Starting S5Server
+2026-04-02 11:50:46.579 +03:00 [INF] User profile is available. Using '/tmp/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-02 11:50:47.060 +03:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2026-04-02 11:50:47.395 +03:00 [INF] Executed DbCommand (11ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 11:50:47.414 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 11:50:47.540 +03:00 [INF] Executed DbCommand (4ms) [Parameters=[@p18='019cc398-12f6-72d0-90d6-aa7499812a8d', @p0='0', @p1='0a158db0-f505-4cbb-b14b-1b654d9e3436', @p19='1ed64f49-df47-469d-9eec-511d8308e156', @p2='sergray411@gmail.com', @p3='False', @p4='2026-04-01T18:03:18.4444450+03:00' (Nullable = true) (DbType = DateTimeOffset), @p5='2026-03-07T14:37:04.7567280+02:00' (Nullable = true) (DbType = DateTimeOffset), @p6='True', @p7=NULL (DbType = DateTimeOffset), @p8='SERGRAY411@GMAIL.COM', @p9='HAVROK', @p10='AQAAAAIAAYagAAAAEJClUkzhtV3nvnesFHbMGPFM95ojYmbVLdoeADOaHUankpQ80aAOdIo3A6UJsjYtLg==', @p11=NULL, @p12='False', @p13='2026-03-06T16:40:48.8505670+02:00' (DbType = DateTimeOffset), @p14='False', @p15='V2S2VALROFFFHAG37CTSLDGXDGEPUIVU', @p16='True', @p17='havrok'], CommandType='"Text"', CommandTimeout='600']
+UPDATE identity.users SET access_failed_count = @p0, concurrency_stamp = @p1, email = @p2, email_confirmed = @p3, last_login_date = @p4, last_password_change_date = @p5, lockout_enabled = @p6, lockout_end = @p7, normalized_email = @p8, normalized_user_name = @p9, password_hash = @p10, phone_number = @p11, phone_number_confirmed = @p12, registration_date = @p13, require_password_change = @p14, security_stamp = @p15, two_factor_enabled = @p16, user_name = @p17
+WHERE id = @p18 AND concurrency_stamp = @p19;
+2026-04-02 11:50:47.550 +03:00 [INF] ✅ AUTOMATICALLY UNLOCKED USER 'havrok' IN DEVELOPMENT MODE
+2026-04-02 11:50:47.565 +03:00 [INF] Creating key {2db6a0f0-0a37-47c6-968d-d262081647bd} with creation date 2026-04-02 08:50:47Z, activation date 2026-04-02 08:50:47Z, and expiration date 2026-07-01 08:50:47Z.
+2026-04-02 11:50:47.569 +03:00 [WRN] No XML encryptor configured. Key {2db6a0f0-0a37-47c6-968d-d262081647bd} may be persisted to storage in unencrypted form.
+2026-04-02 11:50:47.571 +03:00 [INF] Writing data to file '/tmp/.aspnet/DataProtection-Keys/key-2db6a0f0-0a37-47c6-968d-d262081647bd.xml'.
+2026-04-02 11:50:47.612 +03:00 [INF] S5Server listening on: http://localhost:5001
+2026-04-02 11:50:59.977 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/ - null null
+2026-04-02 11:51:00.016 +03:00 [INF] Executing endpoint 'Fallback {*path:nonfile}'
+2026-04-02 11:51:11.575 +03:00 [INF] Запуск приложения с аргументами: 
+2026-04-02 11:51:11.633 +03:00 [INF] ✅ Переменные подхватились! Host: localhost
+2026-04-02 11:51:11.660 +03:00 [INF] Попытка подключения к PostgreSQL 1/3...
+2026-04-02 11:51:11.829 +03:00 [INF] ✅ PostgreSQL подключен: S5_DB_local@localhost:5432
+2026-04-02 11:51:11.998 +03:00 [INF] Starting S5Server
+2026-04-02 11:51:12.065 +03:00 [INF] User profile is available. Using '/tmp/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-02 11:51:12.530 +03:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2026-04-02 11:51:12.853 +03:00 [INF] Executed DbCommand (11ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 11:51:12.873 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 11:51:13.002 +03:00 [INF] Executed DbCommand (13ms) [Parameters=[@p18='019cc398-12f6-72d0-90d6-aa7499812a8d', @p0='0', @p1='61db053d-a527-40ff-82b3-0c0f153b8d94', @p19='0a158db0-f505-4cbb-b14b-1b654d9e3436', @p2='sergray411@gmail.com', @p3='False', @p4='2026-04-01T18:03:18.4444450+03:00' (Nullable = true) (DbType = DateTimeOffset), @p5='2026-03-07T14:37:04.7567280+02:00' (Nullable = true) (DbType = DateTimeOffset), @p6='True', @p7=NULL (DbType = DateTimeOffset), @p8='SERGRAY411@GMAIL.COM', @p9='HAVROK', @p10='AQAAAAIAAYagAAAAEJClUkzhtV3nvnesFHbMGPFM95ojYmbVLdoeADOaHUankpQ80aAOdIo3A6UJsjYtLg==', @p11=NULL, @p12='False', @p13='2026-03-06T16:40:48.8505670+02:00' (DbType = DateTimeOffset), @p14='False', @p15='V2S2VALROFFFHAG37CTSLDGXDGEPUIVU', @p16='True', @p17='havrok'], CommandType='"Text"', CommandTimeout='600']
+UPDATE identity.users SET access_failed_count = @p0, concurrency_stamp = @p1, email = @p2, email_confirmed = @p3, last_login_date = @p4, last_password_change_date = @p5, lockout_enabled = @p6, lockout_end = @p7, normalized_email = @p8, normalized_user_name = @p9, password_hash = @p10, phone_number = @p11, phone_number_confirmed = @p12, registration_date = @p13, require_password_change = @p14, security_stamp = @p15, two_factor_enabled = @p16, user_name = @p17
+WHERE id = @p18 AND concurrency_stamp = @p19;
+2026-04-02 11:51:13.009 +03:00 [INF] ✅ AUTOMATICALLY UNLOCKED USER 'havrok' IN DEVELOPMENT MODE
+2026-04-02 11:51:13.025 +03:00 [INF] Creating key {e02e05b0-5188-4501-afff-96c750612c36} with creation date 2026-04-02 08:51:13Z, activation date 2026-04-02 08:51:13Z, and expiration date 2026-07-01 08:51:13Z.
+2026-04-02 11:51:13.028 +03:00 [WRN] No XML encryptor configured. Key {e02e05b0-5188-4501-afff-96c750612c36} may be persisted to storage in unencrypted form.
+2026-04-02 11:51:13.030 +03:00 [INF] Writing data to file '/tmp/.aspnet/DataProtection-Keys/key-e02e05b0-5188-4501-afff-96c750612c36.xml'.
+2026-04-02 11:51:13.069 +03:00 [INF] S5Server listening on: http://localhost:5001
+2026-04-02 11:51:33.475 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/login - null null
+2026-04-02 11:51:33.525 +03:00 [INF] Identity.Application was not authenticated. Failure message: Unprotect ticket failed
+2026-04-02 11:51:33.527 +03:00 [INF] Executing endpoint 'Fallback {*path:nonfile}'
+2026-04-02 11:51:33.535 +03:00 [INF] Sending file. Request path: '/index.html'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/index.html'
+2026-04-02 11:51:33.536 +03:00 [INF] Executed endpoint 'Fallback {*path:nonfile}'
+2026-04-02 11:51:33.538 +03:00 [INF] HTTP GET /index.html responded 200 in 60.1876 ms
+2026-04-02 11:51:33.540 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/index.html - 200 1140 text/html 66.6287ms
+2026-04-02 11:51:33.555 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-MKDEEZNH.js - null null
+2026-04-02 11:51:33.555 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/styles.css - null null
+2026-04-02 11:51:33.556 +03:00 [INF] Sending file. Request path: '/styles.css'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/styles.css'
+2026-04-02 11:51:33.556 +03:00 [INF] HTTP GET /styles.css responded 200 in 1.0532 ms
+2026-04-02 11:51:33.556 +03:00 [INF] Sending file. Request path: '/chunk-MKDEEZNH.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-MKDEEZNH.js'
+2026-04-02 11:51:33.557 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/styles.css - 200 9039 text/css 1.4965ms
+2026-04-02 11:51:33.557 +03:00 [INF] HTTP GET /chunk-MKDEEZNH.js responded 200 in 1.5832 ms
+2026-04-02 11:51:33.557 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-MKDEEZNH.js - 200 5443 text/javascript 2.376ms
+2026-04-02 11:51:33.560 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-2GTJJ3IJ.js - null null
+2026-04-02 11:51:33.560 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-RWBUJLBH.js - null null
+2026-04-02 11:51:33.561 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-575Y4FGD.js - null null
+2026-04-02 11:51:33.561 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-6M4I25T2.js - null null
+2026-04-02 11:51:33.561 +03:00 [INF] Sending file. Request path: '/chunk-575Y4FGD.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-575Y4FGD.js'
+2026-04-02 11:51:33.561 +03:00 [INF] Sending file. Request path: '/chunk-6M4I25T2.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-6M4I25T2.js'
+2026-04-02 11:51:33.561 +03:00 [INF] HTTP GET /chunk-575Y4FGD.js responded 200 in 0.3083 ms
+2026-04-02 11:51:33.562 +03:00 [INF] HTTP GET /chunk-6M4I25T2.js responded 200 in 0.3098 ms
+2026-04-02 11:51:33.562 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-575Y4FGD.js - 200 3272 text/javascript 1.1199ms
+2026-04-02 11:51:33.562 +03:00 [INF] Sending file. Request path: '/chunk-2GTJJ3IJ.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-2GTJJ3IJ.js'
+2026-04-02 11:51:33.562 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-6M4I25T2.js - 200 21780 text/javascript 1.0241ms
+2026-04-02 11:51:33.562 +03:00 [INF] HTTP GET /chunk-2GTJJ3IJ.js responded 200 in 1.3221 ms
+2026-04-02 11:51:33.562 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-2GTJJ3IJ.js - 200 70724 text/javascript 1.8354ms
+2026-04-02 11:51:33.566 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-AY2LANKM.js - null null
+2026-04-02 11:51:33.566 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-XKAE3JBC.js - null null
+2026-04-02 11:51:33.566 +03:00 [INF] Sending file. Request path: '/chunk-XKAE3JBC.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-XKAE3JBC.js'
+2026-04-02 11:51:33.566 +03:00 [INF] HTTP GET /chunk-XKAE3JBC.js responded 200 in 0.3032 ms
+2026-04-02 11:51:33.567 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-XKAE3JBC.js - 200 36456 text/javascript 0.9428ms
+2026-04-02 11:51:33.567 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-LVBT7O2R.js - null null
+2026-04-02 11:51:33.567 +03:00 [INF] Sending file. Request path: '/chunk-LVBT7O2R.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-LVBT7O2R.js'
+2026-04-02 11:51:33.568 +03:00 [INF] Sending file. Request path: '/chunk-AY2LANKM.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-AY2LANKM.js'
+2026-04-02 11:51:33.568 +03:00 [INF] HTTP GET /chunk-LVBT7O2R.js responded 200 in 0.4331 ms
+2026-04-02 11:51:33.568 +03:00 [INF] Sending file. Request path: '/chunk-RWBUJLBH.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-RWBUJLBH.js'
+2026-04-02 11:51:33.568 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-LVBT7O2R.js - 200 32695 text/javascript 0.9221ms
+2026-04-02 11:51:33.568 +03:00 [INF] HTTP GET /chunk-AY2LANKM.js responded 200 in 1.9385 ms
+2026-04-02 11:51:33.568 +03:00 [INF] HTTP GET /chunk-RWBUJLBH.js responded 200 in 6.9794 ms
+2026-04-02 11:51:33.568 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-AY2LANKM.js - 200 194063 text/javascript 2.7879ms
+2026-04-02 11:51:33.568 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-RWBUJLBH.js - 200 439363 text/javascript 7.9391ms
+2026-04-02 11:51:33.572 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-O3FG6F5X.js - null null
+2026-04-02 11:51:33.573 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-GFPGE5B5.js - null null
+2026-04-02 11:51:33.573 +03:00 [INF] Sending file. Request path: '/chunk-O3FG6F5X.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-O3FG6F5X.js'
+2026-04-02 11:51:33.573 +03:00 [INF] HTTP GET /chunk-O3FG6F5X.js responded 200 in 0.8170 ms
+2026-04-02 11:51:33.573 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-O3FG6F5X.js - 200 59378 text/javascript 1.4419ms
+2026-04-02 11:51:33.574 +03:00 [INF] Sending file. Request path: '/chunk-GFPGE5B5.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-GFPGE5B5.js'
+2026-04-02 11:51:33.574 +03:00 [INF] HTTP GET /chunk-GFPGE5B5.js responded 200 in 0.7620 ms
+2026-04-02 11:51:33.574 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-GFPGE5B5.js - 200 152998 text/javascript 1.4395ms
+2026-04-02 11:51:33.576 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/polyfills.js - null null
+2026-04-02 11:51:33.576 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/main.js - null null
+2026-04-02 11:51:33.577 +03:00 [INF] Sending file. Request path: '/polyfills.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/polyfills.js'
+2026-04-02 11:51:33.577 +03:00 [INF] HTTP GET /polyfills.js responded 200 in 0.4976 ms
+2026-04-02 11:51:33.577 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/polyfills.js - 200 92380 text/javascript 0.8876ms
+2026-04-02 11:51:33.577 +03:00 [INF] Sending file. Request path: '/main.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/main.js'
+2026-04-02 11:51:33.577 +03:00 [INF] HTTP GET /main.js responded 200 in 0.6097 ms
+2026-04-02 11:51:33.577 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/main.js - 200 85130 text/javascript 1.1541ms
+2026-04-02 11:51:33.639 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-IBDYQGEV.js - null null
+2026-04-02 11:51:33.642 +03:00 [INF] Sending file. Request path: '/chunk-IBDYQGEV.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-IBDYQGEV.js'
+2026-04-02 11:51:33.642 +03:00 [INF] HTTP GET /chunk-IBDYQGEV.js responded 200 in 2.6131 ms
+2026-04-02 11:51:33.642 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-IBDYQGEV.js - 200 1729672 text/javascript 3.2067ms
+2026-04-02 11:51:33.726 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-2ASTSGWJ.js - null null
+2026-04-02 11:51:33.727 +03:00 [INF] Sending file. Request path: '/chunk-2ASTSGWJ.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-2ASTSGWJ.js'
+2026-04-02 11:51:33.727 +03:00 [INF] HTTP GET /chunk-2ASTSGWJ.js responded 200 in 0.7108 ms
+2026-04-02 11:51:33.727 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-2ASTSGWJ.js - 200 15083 text/javascript 1.4914ms
+2026-04-02 11:51:33.739 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-IGYH6E5M.js - null null
+2026-04-02 11:51:33.739 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-L7V54S6K.js - null null
+2026-04-02 11:51:33.739 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-VIPTF2QV.js - null null
+2026-04-02 11:51:33.739 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-KWLRG6HK.js - null null
+2026-04-02 11:51:33.739 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-ROBCPIX2.js - null null
+2026-04-02 11:51:33.739 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-5BKP6RTL.js - null null
+2026-04-02 11:51:33.739 +03:00 [INF] Sending file. Request path: '/chunk-IGYH6E5M.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-IGYH6E5M.js'
+2026-04-02 11:51:33.740 +03:00 [INF] Sending file. Request path: '/chunk-ROBCPIX2.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-ROBCPIX2.js'
+2026-04-02 11:51:33.740 +03:00 [INF] Sending file. Request path: '/chunk-VIPTF2QV.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-VIPTF2QV.js'
+2026-04-02 11:51:33.740 +03:00 [INF] Sending file. Request path: '/chunk-KWLRG6HK.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-KWLRG6HK.js'
+2026-04-02 11:51:33.739 +03:00 [INF] Sending file. Request path: '/chunk-L7V54S6K.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-L7V54S6K.js'
+2026-04-02 11:51:33.740 +03:00 [INF] HTTP GET /chunk-IGYH6E5M.js responded 200 in 1.1846 ms
+2026-04-02 11:51:33.740 +03:00 [INF] HTTP GET /chunk-ROBCPIX2.js responded 200 in 0.4297 ms
+2026-04-02 11:51:33.740 +03:00 [INF] HTTP GET /chunk-VIPTF2QV.js responded 200 in 0.9344 ms
+2026-04-02 11:51:33.740 +03:00 [INF] Sending file. Request path: '/chunk-5BKP6RTL.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-5BKP6RTL.js'
+2026-04-02 11:51:33.741 +03:00 [INF] HTTP GET /chunk-KWLRG6HK.js responded 200 in 0.9517 ms
+2026-04-02 11:51:33.741 +03:00 [INF] HTTP GET /chunk-L7V54S6K.js responded 200 in 1.5007 ms
+2026-04-02 11:51:33.741 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-IGYH6E5M.js - 200 1526 text/javascript 2.1392ms
+2026-04-02 11:51:33.741 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-ROBCPIX2.js - 200 33514 text/javascript 2.0621ms
+2026-04-02 11:51:33.741 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-VIPTF2QV.js - 200 6332 text/javascript 2.2639ms
+2026-04-02 11:51:33.741 +03:00 [INF] HTTP GET /chunk-5BKP6RTL.js responded 200 in 1.0512 ms
+2026-04-02 11:51:33.741 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-KWLRG6HK.js - 200 6248 text/javascript 2.484ms
+2026-04-02 11:51:33.742 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-L7V54S6K.js - 200 28896 text/javascript 2.9094ms
+2026-04-02 11:51:33.742 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-5BKP6RTL.js - 200 57232 text/javascript 3.456ms
+2026-04-02 11:51:33.744 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-2EFRQAL5.js - null null
+2026-04-02 11:51:33.745 +03:00 [INF] Sending file. Request path: '/chunk-2EFRQAL5.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-2EFRQAL5.js'
+2026-04-02 11:51:33.745 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/favicon.ico - null null
+2026-04-02 11:51:33.745 +03:00 [INF] HTTP GET /chunk-2EFRQAL5.js responded 200 in 0.4894 ms
+2026-04-02 11:51:33.748 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-2EFRQAL5.js - 200 24741 text/javascript 4.6565ms
+2026-04-02 11:51:33.749 +03:00 [INF] Sending file. Request path: '/favicon.ico'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/favicon.ico'
+2026-04-02 11:51:33.749 +03:00 [INF] HTTP GET /favicon.ico responded 200 in 0.5899 ms
+2026-04-02 11:51:33.749 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/favicon.ico - 200 15086 image/x-icon 4.456ms
+2026-04-02 11:51:33.773 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5001/graphql - application/json 97
+2026-04-02 11:51:33.777 +03:00 [INF] CORS policy execution successful.
+2026-04-02 11:51:33.780 +03:00 [INF] Identity.Application was not authenticated. Failure message: Unprotect ticket failed
+2026-04-02 11:51:33.781 +03:00 [INF] Executing endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 11:51:34.737 +03:00 [INF] Executed endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 11:51:34.737 +03:00 [INF] HTTP POST /graphql responded 200 in 964.3478 ms
+2026-04-02 11:51:34.738 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5001/graphql - 200 null application/graphql-response+json; charset=utf-8 964.9188ms
+2026-04-02 11:52:04.102 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5001/graphql - application/json 528
+2026-04-02 11:52:04.105 +03:00 [INF] CORS policy execution successful.
+2026-04-02 11:52:04.109 +03:00 [INF] Identity.Application was not authenticated. Failure message: Unprotect ticket failed
+2026-04-02 11:52:04.109 +03:00 [INF] Executing endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 11:52:04.128 +03:00 [INF] Executed endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 11:52:04.129 +03:00 [INF] HTTP POST /graphql responded 400 in 26.3017 ms
+2026-04-02 11:52:04.129 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5001/graphql - 400 null application/graphql-response+json; charset=utf-8 27.4492ms
+2026-04-02 11:52:34.324 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5001/graphql - application/json 97
+2026-04-02 11:52:34.325 +03:00 [INF] CORS policy execution successful.
+2026-04-02 11:52:34.326 +03:00 [INF] Identity.Application was not authenticated. Failure message: Unprotect ticket failed
+2026-04-02 11:52:34.326 +03:00 [INF] Executing endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 11:52:34.331 +03:00 [INF] Executed endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 11:52:34.331 +03:00 [INF] HTTP POST /graphql responded 200 in 6.7760 ms
+2026-04-02 11:52:34.331 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5001/graphql - 200 null application/graphql-response+json; charset=utf-8 7.2397ms
+2026-04-02 11:52:42.212 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5001/graphql - application/json 526
+2026-04-02 11:52:42.213 +03:00 [INF] CORS policy execution successful.
+2026-04-02 11:52:42.214 +03:00 [INF] Identity.Application was not authenticated. Failure message: Unprotect ticket failed
+2026-04-02 11:52:42.215 +03:00 [INF] Executing endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 11:52:42.216 +03:00 [INF] Executed endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 11:52:42.216 +03:00 [INF] HTTP POST /graphql responded 400 in 3.6827 ms
+2026-04-02 11:52:42.216 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5001/graphql - 400 null application/graphql-response+json; charset=utf-8 4.2359ms
+2026-04-02 12:07:55.568 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5001/graphql - application/json 412
+2026-04-02 12:07:55.570 +03:00 [INF] Executing endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 12:07:55.571 +03:00 [INF] Executed endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 12:07:55.571 +03:00 [INF] HTTP POST /graphql responded 400 in 2.4708 ms
+2026-04-02 12:07:55.572 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5001/graphql - 400 null application/graphql-response+json; charset=utf-8 3.0842ms
+2026-04-02 12:08:32.029 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5001/graphql - application/json 97
+2026-04-02 12:08:32.030 +03:00 [INF] CORS policy execution successful.
+2026-04-02 12:08:32.030 +03:00 [INF] Identity.Application was not authenticated. Failure message: Unprotect ticket failed
+2026-04-02 12:08:32.031 +03:00 [INF] Executing endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 12:08:32.034 +03:00 [INF] Executed endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 12:08:32.034 +03:00 [INF] HTTP POST /graphql responded 200 in 4.8027 ms
+2026-04-02 12:08:32.035 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5001/graphql - 200 null application/graphql-response+json; charset=utf-8 5.3078ms
+2026-04-02 12:08:50.506 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5001/graphql - application/json 528
+2026-04-02 12:08:50.507 +03:00 [INF] CORS policy execution successful.
+2026-04-02 12:08:50.507 +03:00 [INF] Identity.Application was not authenticated. Failure message: Unprotect ticket failed
+2026-04-02 12:08:50.508 +03:00 [INF] Executing endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 12:08:50.509 +03:00 [INF] Executed endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 12:08:50.509 +03:00 [INF] HTTP POST /graphql responded 400 in 2.0358 ms
+2026-04-02 12:08:50.509 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5001/graphql - 400 null application/graphql-response+json; charset=utf-8 2.4743ms
+2026-04-02 12:09:45.910 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5001/graphql - application/json 412
+2026-04-02 12:09:45.910 +03:00 [INF] Executing endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 12:09:45.912 +03:00 [INF] Executed endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 12:09:45.912 +03:00 [INF] HTTP POST /graphql responded 400 in 1.5545 ms
+2026-04-02 12:09:45.912 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5001/graphql - 400 null application/graphql-response+json; charset=utf-8 1.9719ms
+2026-04-02 12:10:10.800 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5001/graphql - application/json 412
+2026-04-02 12:10:10.800 +03:00 [INF] Executing endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 12:10:10.801 +03:00 [INF] Executed endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 12:10:10.801 +03:00 [INF] HTTP POST /graphql responded 400 in 0.8351 ms
+2026-04-02 12:10:10.801 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5001/graphql - 400 null application/graphql-response+json; charset=utf-8 1.044ms
+2026-04-02 12:10:13.119 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5001/graphql - application/json 412
+2026-04-02 12:10:13.119 +03:00 [INF] Executing endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 12:10:13.120 +03:00 [INF] Executed endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 12:10:13.120 +03:00 [INF] HTTP POST /graphql responded 400 in 1.3106 ms
+2026-04-02 12:10:13.120 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5001/graphql - 400 null application/graphql-response+json; charset=utf-8 1.7003ms
+
+2026-04-02 11:54:39.577 +03:00 [WRN] No XML encryptor configured. Key {74d59ac4-ac75-4343-8b89-875eba122353} may be persisted to storage in unencrypted form.
+2026-04-02 11:54:39.578 +03:00 [INF] Writing data to file '/tmp/.aspnet/DataProtection-Keys/key-74d59ac4-ac75-4343-8b89-875eba122353.xml'.
+2026-04-02 11:54:39.624 +03:00 [ERR] Hosting failed to start
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5001: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Address already in use
+ ---> System.Net.Sockets.SocketException (98): Address already in use
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+2026-04-02 11:54:39.644 +03:00 [FTL] Application terminated unexpectedly
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5001: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Address already in use
+ ---> System.Net.Sockets.SocketException (98): Address already in use
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.Run(IHost host)
+   at Program.<Main>$(String[] args) in /home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Program.cs:line 478
+2026-04-02 11:54:51.875 +03:00 [INF] Запуск приложения с аргументами: 
+2026-04-02 11:54:51.928 +03:00 [INF] ✅ Переменные подхватились! Host: localhost
+2026-04-02 11:54:51.954 +03:00 [INF] Попытка подключения к PostgreSQL 1/3...
+2026-04-02 11:54:52.121 +03:00 [INF] ✅ PostgreSQL подключен: S5_DB_local@localhost:5432
+2026-04-02 11:54:52.291 +03:00 [INF] Starting S5Server
+2026-04-02 11:54:52.357 +03:00 [INF] User profile is available. Using '/tmp/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-02 11:54:52.817 +03:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2026-04-02 11:54:53.134 +03:00 [INF] Executed DbCommand (10ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 11:54:53.151 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 11:54:53.276 +03:00 [INF] Executed DbCommand (14ms) [Parameters=[@p18='019cc398-12f6-72d0-90d6-aa7499812a8d', @p0='0', @p1='2b2c629d-e796-4d53-b4b1-7a5dce3790b8', @p19='c4a1bbcc-7368-437b-90b1-5823abceac99', @p2='sergray411@gmail.com', @p3='False', @p4='2026-04-01T18:03:18.4444450+03:00' (Nullable = true) (DbType = DateTimeOffset), @p5='2026-03-07T14:37:04.7567280+02:00' (Nullable = true) (DbType = DateTimeOffset), @p6='True', @p7=NULL (DbType = DateTimeOffset), @p8='SERGRAY411@GMAIL.COM', @p9='HAVROK', @p10='AQAAAAIAAYagAAAAEJClUkzhtV3nvnesFHbMGPFM95ojYmbVLdoeADOaHUankpQ80aAOdIo3A6UJsjYtLg==', @p11=NULL, @p12='False', @p13='2026-03-06T16:40:48.8505670+02:00' (DbType = DateTimeOffset), @p14='False', @p15='V2S2VALROFFFHAG37CTSLDGXDGEPUIVU', @p16='True', @p17='havrok'], CommandType='"Text"', CommandTimeout='600']
+UPDATE identity.users SET access_failed_count = @p0, concurrency_stamp = @p1, email = @p2, email_confirmed = @p3, last_login_date = @p4, last_password_change_date = @p5, lockout_enabled = @p6, lockout_end = @p7, normalized_email = @p8, normalized_user_name = @p9, password_hash = @p10, phone_number = @p11, phone_number_confirmed = @p12, registration_date = @p13, require_password_change = @p14, security_stamp = @p15, two_factor_enabled = @p16, user_name = @p17
+WHERE id = @p18 AND concurrency_stamp = @p19;
+2026-04-02 11:54:53.283 +03:00 [INF] ✅ AUTOMATICALLY UNLOCKED USER 'havrok' IN DEVELOPMENT MODE
+2026-04-02 11:54:53.299 +03:00 [INF] Creating key {374975ae-09d5-4c1a-bc31-defddfae6672} with creation date 2026-04-02 08:54:53Z, activation date 2026-04-02 08:54:53Z, and expiration date 2026-07-01 08:54:53Z.
+2026-04-02 11:54:53.301 +03:00 [WRN] No XML encryptor configured. Key {374975ae-09d5-4c1a-bc31-defddfae6672} may be persisted to storage in unencrypted form.
+2026-04-02 11:54:53.303 +03:00 [INF] Writing data to file '/tmp/.aspnet/DataProtection-Keys/key-374975ae-09d5-4c1a-bc31-defddfae6672.xml'.
+2026-04-02 11:54:53.346 +03:00 [ERR] Hosting failed to start
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5001: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Address already in use
+ ---> System.Net.Sockets.SocketException (98): Address already in use
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+2026-04-02 11:54:53.360 +03:00 [FTL] Application terminated unexpectedly
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5001: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Address already in use
+ ---> System.Net.Sockets.SocketException (98): Address already in use
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.Run(IHost host)
+   at Program.<Main>$(String[] args) in /home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Program.cs:line 478
+2026-04-02 11:55:04.756 +03:00 [INF] Запуск приложения с аргументами: 
+2026-04-02 11:55:04.810 +03:00 [INF] ✅ Переменные подхватились! Host: localhost
+2026-04-02 11:55:04.836 +03:00 [INF] Попытка подключения к PostgreSQL 1/3...
+2026-04-02 11:55:05.005 +03:00 [INF] ✅ PostgreSQL подключен: S5_DB_local@localhost:5432
+2026-04-02 11:55:05.171 +03:00 [INF] Starting S5Server
+2026-04-02 11:55:05.237 +03:00 [INF] User profile is available. Using '/tmp/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-02 11:55:05.706 +03:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2026-04-02 11:55:06.023 +03:00 [INF] Executed DbCommand (11ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 11:55:06.041 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 11:55:06.163 +03:00 [INF] Executed DbCommand (14ms) [Parameters=[@p18='019cc398-12f6-72d0-90d6-aa7499812a8d', @p0='0', @p1='d825fc2c-2144-4808-a3c1-055585a78ed7', @p19='2b2c629d-e796-4d53-b4b1-7a5dce3790b8', @p2='sergray411@gmail.com', @p3='False', @p4='2026-04-01T18:03:18.4444450+03:00' (Nullable = true) (DbType = DateTimeOffset), @p5='2026-03-07T14:37:04.7567280+02:00' (Nullable = true) (DbType = DateTimeOffset), @p6='True', @p7=NULL (DbType = DateTimeOffset), @p8='SERGRAY411@GMAIL.COM', @p9='HAVROK', @p10='AQAAAAIAAYagAAAAEJClUkzhtV3nvnesFHbMGPFM95ojYmbVLdoeADOaHUankpQ80aAOdIo3A6UJsjYtLg==', @p11=NULL, @p12='False', @p13='2026-03-06T16:40:48.8505670+02:00' (DbType = DateTimeOffset), @p14='False', @p15='V2S2VALROFFFHAG37CTSLDGXDGEPUIVU', @p16='True', @p17='havrok'], CommandType='"Text"', CommandTimeout='600']
+UPDATE identity.users SET access_failed_count = @p0, concurrency_stamp = @p1, email = @p2, email_confirmed = @p3, last_login_date = @p4, last_password_change_date = @p5, lockout_enabled = @p6, lockout_end = @p7, normalized_email = @p8, normalized_user_name = @p9, password_hash = @p10, phone_number = @p11, phone_number_confirmed = @p12, registration_date = @p13, require_password_change = @p14, security_stamp = @p15, two_factor_enabled = @p16, user_name = @p17
+WHERE id = @p18 AND concurrency_stamp = @p19;
+2026-04-02 11:55:06.171 +03:00 [INF] ✅ AUTOMATICALLY UNLOCKED USER 'havrok' IN DEVELOPMENT MODE
+2026-04-02 11:55:06.185 +03:00 [INF] Creating key {0f1aba28-4b67-4e26-8e61-1a4c5774e0b8} with creation date 2026-04-02 08:55:06Z, activation date 2026-04-02 08:55:06Z, and expiration date 2026-07-01 08:55:06Z.
+2026-04-02 11:55:06.188 +03:00 [WRN] No XML encryptor configured. Key {0f1aba28-4b67-4e26-8e61-1a4c5774e0b8} may be persisted to storage in unencrypted form.
+2026-04-02 11:55:06.190 +03:00 [INF] Writing data to file '/tmp/.aspnet/DataProtection-Keys/key-0f1aba28-4b67-4e26-8e61-1a4c5774e0b8.xml'.
+2026-04-02 11:55:06.235 +03:00 [ERR] Hosting failed to start
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5001: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Address already in use
+ ---> System.Net.Sockets.SocketException (98): Address already in use
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+2026-04-02 11:55:06.249 +03:00 [FTL] Application terminated unexpectedly
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5001: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Address already in use
+ ---> System.Net.Sockets.SocketException (98): Address already in use
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.Run(IHost host)
+   at Program.<Main>$(String[] args) in /home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Program.cs:line 478
+2026-04-02 11:55:22.059 +03:00 [INF] Запуск приложения с аргументами: 
+2026-04-02 11:55:22.113 +03:00 [INF] ✅ Переменные подхватились! Host: localhost
+2026-04-02 11:55:22.140 +03:00 [INF] Попытка подключения к PostgreSQL 1/3...
+2026-04-02 11:55:22.323 +03:00 [INF] ✅ PostgreSQL подключен: S5_DB_local@localhost:5432
+2026-04-02 11:55:22.490 +03:00 [INF] Starting S5Server
+2026-04-02 11:55:22.556 +03:00 [INF] User profile is available. Using '/tmp/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-02 11:55:23.028 +03:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2026-04-02 11:55:23.350 +03:00 [INF] Executed DbCommand (11ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 11:55:23.368 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 11:55:23.492 +03:00 [INF] Executed DbCommand (13ms) [Parameters=[@p18='019cc398-12f6-72d0-90d6-aa7499812a8d', @p0='0', @p1='57be3a5a-7920-4d7b-b8b8-e85e8cefd135', @p19='d825fc2c-2144-4808-a3c1-055585a78ed7', @p2='sergray411@gmail.com', @p3='False', @p4='2026-04-01T18:03:18.4444450+03:00' (Nullable = true) (DbType = DateTimeOffset), @p5='2026-03-07T14:37:04.7567280+02:00' (Nullable = true) (DbType = DateTimeOffset), @p6='True', @p7=NULL (DbType = DateTimeOffset), @p8='SERGRAY411@GMAIL.COM', @p9='HAVROK', @p10='AQAAAAIAAYagAAAAEJClUkzhtV3nvnesFHbMGPFM95ojYmbVLdoeADOaHUankpQ80aAOdIo3A6UJsjYtLg==', @p11=NULL, @p12='False', @p13='2026-03-06T16:40:48.8505670+02:00' (DbType = DateTimeOffset), @p14='False', @p15='V2S2VALROFFFHAG37CTSLDGXDGEPUIVU', @p16='True', @p17='havrok'], CommandType='"Text"', CommandTimeout='600']
+UPDATE identity.users SET access_failed_count = @p0, concurrency_stamp = @p1, email = @p2, email_confirmed = @p3, last_login_date = @p4, last_password_change_date = @p5, lockout_enabled = @p6, lockout_end = @p7, normalized_email = @p8, normalized_user_name = @p9, password_hash = @p10, phone_number = @p11, phone_number_confirmed = @p12, registration_date = @p13, require_password_change = @p14, security_stamp = @p15, two_factor_enabled = @p16, user_name = @p17
+WHERE id = @p18 AND concurrency_stamp = @p19;
+2026-04-02 11:55:23.499 +03:00 [INF] ✅ AUTOMATICALLY UNLOCKED USER 'havrok' IN DEVELOPMENT MODE
+2026-04-02 11:55:23.515 +03:00 [INF] Creating key {c51d14cb-c4d7-4da5-bf4b-dc42118d9f4c} with creation date 2026-04-02 08:55:23Z, activation date 2026-04-02 08:55:23Z, and expiration date 2026-07-01 08:55:23Z.
+2026-04-02 11:55:23.519 +03:00 [WRN] No XML encryptor configured. Key {c51d14cb-c4d7-4da5-bf4b-dc42118d9f4c} may be persisted to storage in unencrypted form.
+2026-04-02 11:55:23.522 +03:00 [INF] Writing data to file '/tmp/.aspnet/DataProtection-Keys/key-c51d14cb-c4d7-4da5-bf4b-dc42118d9f4c.xml'.
+2026-04-02 11:55:23.566 +03:00 [ERR] Hosting failed to start
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5001: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Address already in use
+ ---> System.Net.Sockets.SocketException (98): Address already in use
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+2026-04-02 11:55:23.579 +03:00 [FTL] Application terminated unexpectedly
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5001: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Address already in use
+ ---> System.Net.Sockets.SocketException (98): Address already in use
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.Run(IHost host)
+   at Program.<Main>$(String[] args) in /home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Program.cs:line 478
+2026-04-02 12:07:46.745 +03:00 [INF] Запуск приложения с аргументами: 
+2026-04-02 12:07:46.800 +03:00 [INF] ✅ Переменные подхватились! Host: localhost
+2026-04-02 12:07:46.828 +03:00 [INF] Попытка подключения к PostgreSQL 1/3...
+2026-04-02 12:07:46.996 +03:00 [INF] ✅ PostgreSQL подключен: S5_DB_local@localhost:5432
+2026-04-02 12:07:47.168 +03:00 [INF] Starting S5Server
+2026-04-02 12:07:47.233 +03:00 [INF] User profile is available. Using '/tmp/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-02 12:07:47.701 +03:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2026-04-02 12:07:48.021 +03:00 [INF] Executed DbCommand (11ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 12:07:48.040 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 12:07:48.163 +03:00 [INF] Executed DbCommand (13ms) [Parameters=[@p18='019cc398-12f6-72d0-90d6-aa7499812a8d', @p0='0', @p1='09b93639-7fa2-4ece-abbd-e070e4566fb0', @p19='57be3a5a-7920-4d7b-b8b8-e85e8cefd135', @p2='sergray411@gmail.com', @p3='False', @p4='2026-04-01T18:03:18.4444450+03:00' (Nullable = true) (DbType = DateTimeOffset), @p5='2026-03-07T14:37:04.7567280+02:00' (Nullable = true) (DbType = DateTimeOffset), @p6='True', @p7=NULL (DbType = DateTimeOffset), @p8='SERGRAY411@GMAIL.COM', @p9='HAVROK', @p10='AQAAAAIAAYagAAAAEJClUkzhtV3nvnesFHbMGPFM95ojYmbVLdoeADOaHUankpQ80aAOdIo3A6UJsjYtLg==', @p11=NULL, @p12='False', @p13='2026-03-06T16:40:48.8505670+02:00' (DbType = DateTimeOffset), @p14='False', @p15='V2S2VALROFFFHAG37CTSLDGXDGEPUIVU', @p16='True', @p17='havrok'], CommandType='"Text"', CommandTimeout='600']
+UPDATE identity.users SET access_failed_count = @p0, concurrency_stamp = @p1, email = @p2, email_confirmed = @p3, last_login_date = @p4, last_password_change_date = @p5, lockout_enabled = @p6, lockout_end = @p7, normalized_email = @p8, normalized_user_name = @p9, password_hash = @p10, phone_number = @p11, phone_number_confirmed = @p12, registration_date = @p13, require_password_change = @p14, security_stamp = @p15, two_factor_enabled = @p16, user_name = @p17
+WHERE id = @p18 AND concurrency_stamp = @p19;
+2026-04-02 12:07:48.170 +03:00 [INF] ✅ AUTOMATICALLY UNLOCKED USER 'havrok' IN DEVELOPMENT MODE
+2026-04-02 12:07:48.184 +03:00 [INF] Creating key {2d65c496-02af-44f7-ae9a-aa8312b45b38} with creation date 2026-04-02 09:07:48Z, activation date 2026-04-02 09:07:48Z, and expiration date 2026-07-01 09:07:48Z.
+2026-04-02 12:07:48.187 +03:00 [WRN] No XML encryptor configured. Key {2d65c496-02af-44f7-ae9a-aa8312b45b38} may be persisted to storage in unencrypted form.
+2026-04-02 12:07:48.189 +03:00 [INF] Writing data to file '/tmp/.aspnet/DataProtection-Keys/key-2d65c496-02af-44f7-ae9a-aa8312b45b38.xml'.
+2026-04-02 12:07:48.233 +03:00 [ERR] Hosting failed to start
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5001: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Address already in use
+ ---> System.Net.Sockets.SocketException (98): Address already in use
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+2026-04-02 12:07:48.248 +03:00 [FTL] Application terminated unexpectedly
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5001: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Address already in use
+ ---> System.Net.Sockets.SocketException (98): Address already in use
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.Run(IHost host)
+   at Program.<Main>$(String[] args) in /home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Program.cs:line 478
+2026-04-02 12:09:36.983 +03:00 [INF] Запуск приложения с аргументами: 
+2026-04-02 12:09:37.040 +03:00 [INF] ✅ Переменные подхватились! Host: localhost
+2026-04-02 12:09:37.067 +03:00 [INF] Попытка подключения к PostgreSQL 1/3...
+2026-04-02 12:09:37.270 +03:00 [INF] ✅ PostgreSQL подключен: S5_DB_local@localhost:5432
+2026-04-02 12:09:37.442 +03:00 [INF] Starting S5Server
+2026-04-02 12:09:37.507 +03:00 [INF] User profile is available. Using '/tmp/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-02 12:09:38.044 +03:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2026-04-02 12:09:38.373 +03:00 [INF] Executed DbCommand (11ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 12:09:38.391 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 12:09:38.517 +03:00 [INF] Executed DbCommand (13ms) [Parameters=[@p18='019cc398-12f6-72d0-90d6-aa7499812a8d', @p0='0', @p1='71c5af27-1532-47ae-addc-cee929b70183', @p19='09b93639-7fa2-4ece-abbd-e070e4566fb0', @p2='sergray411@gmail.com', @p3='False', @p4='2026-04-01T18:03:18.4444450+03:00' (Nullable = true) (DbType = DateTimeOffset), @p5='2026-03-07T14:37:04.7567280+02:00' (Nullable = true) (DbType = DateTimeOffset), @p6='True', @p7=NULL (DbType = DateTimeOffset), @p8='SERGRAY411@GMAIL.COM', @p9='HAVROK', @p10='AQAAAAIAAYagAAAAEJClUkzhtV3nvnesFHbMGPFM95ojYmbVLdoeADOaHUankpQ80aAOdIo3A6UJsjYtLg==', @p11=NULL, @p12='False', @p13='2026-03-06T16:40:48.8505670+02:00' (DbType = DateTimeOffset), @p14='False', @p15='V2S2VALROFFFHAG37CTSLDGXDGEPUIVU', @p16='True', @p17='havrok'], CommandType='"Text"', CommandTimeout='600']
+UPDATE identity.users SET access_failed_count = @p0, concurrency_stamp = @p1, email = @p2, email_confirmed = @p3, last_login_date = @p4, last_password_change_date = @p5, lockout_enabled = @p6, lockout_end = @p7, normalized_email = @p8, normalized_user_name = @p9, password_hash = @p10, phone_number = @p11, phone_number_confirmed = @p12, registration_date = @p13, require_password_change = @p14, security_stamp = @p15, two_factor_enabled = @p16, user_name = @p17
+WHERE id = @p18 AND concurrency_stamp = @p19;
+2026-04-02 12:09:38.523 +03:00 [INF] ✅ AUTOMATICALLY UNLOCKED USER 'havrok' IN DEVELOPMENT MODE
+2026-04-02 12:09:38.538 +03:00 [INF] Creating key {75f7b1a6-7aa6-4b35-be28-fce8afce15ca} with creation date 2026-04-02 09:09:38Z, activation date 2026-04-02 09:09:38Z, and expiration date 2026-07-01 09:09:38Z.
+2026-04-02 12:09:38.541 +03:00 [WRN] No XML encryptor configured. Key {75f7b1a6-7aa6-4b35-be28-fce8afce15ca} may be persisted to storage in unencrypted form.
+2026-04-02 12:09:38.542 +03:00 [INF] Writing data to file '/tmp/.aspnet/DataProtection-Keys/key-75f7b1a6-7aa6-4b35-be28-fce8afce15ca.xml'.
+2026-04-02 12:09:38.586 +03:00 [ERR] Hosting failed to start
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5001: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Address already in use
+ ---> System.Net.Sockets.SocketException (98): Address already in use
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+2026-04-02 12:09:38.599 +03:00 [FTL] Application terminated unexpectedly
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5001: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Address already in use
+ ---> System.Net.Sockets.SocketException (98): Address already in use
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.Run(IHost host)
+   at Program.<Main>$(String[] args) in /home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Program.cs:line 478
+2026-04-02 12:09:56.849 +03:00 [INF] Запуск приложения с аргументами: 
+2026-04-02 12:09:56.906 +03:00 [INF] ✅ Переменные подхватились! Host: localhost
+2026-04-02 12:09:56.933 +03:00 [INF] Попытка подключения к PostgreSQL 1/3...
+2026-04-02 12:09:57.100 +03:00 [INF] ✅ PostgreSQL подключен: S5_DB_local@localhost:5432
+2026-04-02 12:09:57.268 +03:00 [INF] Starting S5Server
+2026-04-02 12:09:57.335 +03:00 [INF] User profile is available. Using '/tmp/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-02 12:09:57.797 +03:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2026-04-02 12:09:58.146 +03:00 [INF] Executed DbCommand (11ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 12:09:58.164 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 12:09:58.288 +03:00 [INF] Executed DbCommand (13ms) [Parameters=[@p18='019cc398-12f6-72d0-90d6-aa7499812a8d', @p0='0', @p1='faef49c7-2004-4313-9027-99a2c8a4992e', @p19='71c5af27-1532-47ae-addc-cee929b70183', @p2='sergray411@gmail.com', @p3='False', @p4='2026-04-01T18:03:18.4444450+03:00' (Nullable = true) (DbType = DateTimeOffset), @p5='2026-03-07T14:37:04.7567280+02:00' (Nullable = true) (DbType = DateTimeOffset), @p6='True', @p7=NULL (DbType = DateTimeOffset), @p8='SERGRAY411@GMAIL.COM', @p9='HAVROK', @p10='AQAAAAIAAYagAAAAEJClUkzhtV3nvnesFHbMGPFM95ojYmbVLdoeADOaHUankpQ80aAOdIo3A6UJsjYtLg==', @p11=NULL, @p12='False', @p13='2026-03-06T16:40:48.8505670+02:00' (DbType = DateTimeOffset), @p14='False', @p15='V2S2VALROFFFHAG37CTSLDGXDGEPUIVU', @p16='True', @p17='havrok'], CommandType='"Text"', CommandTimeout='600']
+UPDATE identity.users SET access_failed_count = @p0, concurrency_stamp = @p1, email = @p2, email_confirmed = @p3, last_login_date = @p4, last_password_change_date = @p5, lockout_enabled = @p6, lockout_end = @p7, normalized_email = @p8, normalized_user_name = @p9, password_hash = @p10, phone_number = @p11, phone_number_confirmed = @p12, registration_date = @p13, require_password_change = @p14, security_stamp = @p15, two_factor_enabled = @p16, user_name = @p17
+WHERE id = @p18 AND concurrency_stamp = @p19;
+2026-04-02 12:09:58.295 +03:00 [INF] ✅ AUTOMATICALLY UNLOCKED USER 'havrok' IN DEVELOPMENT MODE
+2026-04-02 12:09:58.310 +03:00 [INF] Creating key {d5cc4f97-b0e8-4067-8985-3901865024a0} with creation date 2026-04-02 09:09:58Z, activation date 2026-04-02 09:09:58Z, and expiration date 2026-07-01 09:09:58Z.
+2026-04-02 12:09:58.312 +03:00 [WRN] No XML encryptor configured. Key {d5cc4f97-b0e8-4067-8985-3901865024a0} may be persisted to storage in unencrypted form.
+2026-04-02 12:09:58.314 +03:00 [INF] Writing data to file '/tmp/.aspnet/DataProtection-Keys/key-d5cc4f97-b0e8-4067-8985-3901865024a0.xml'.
+2026-04-02 12:09:58.360 +03:00 [ERR] Hosting failed to start
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5001: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Address already in use
+ ---> System.Net.Sockets.SocketException (98): Address already in use
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+2026-04-02 12:09:58.374 +03:00 [FTL] Application terminated unexpectedly
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5001: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Address already in use
+ ---> System.Net.Sockets.SocketException (98): Address already in use
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.Run(IHost host)
+   at Program.<Main>$(String[] args) in /home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Program.cs:line 478
+2026-04-02 12:10:30.227 +03:00 [INF] Запуск приложения с аргументами: 
+2026-04-02 12:10:30.286 +03:00 [INF] ✅ Переменные подхватились! Host: localhost
+2026-04-02 12:10:30.314 +03:00 [INF] Попытка подключения к PostgreSQL 1/3...
+2026-04-02 12:10:30.486 +03:00 [INF] ✅ PostgreSQL подключен: S5_DB_local@localhost:5432
+2026-04-02 12:10:30.686 +03:00 [INF] Starting S5Server
+2026-04-02 12:10:30.756 +03:00 [INF] User profile is available. Using '/tmp/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-02 12:10:31.257 +03:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2026-04-02 12:10:31.586 +03:00 [INF] Executed DbCommand (11ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 12:10:31.605 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 12:10:31.733 +03:00 [INF] Executed DbCommand (13ms) [Parameters=[@p18='019cc398-12f6-72d0-90d6-aa7499812a8d', @p0='0', @p1='7b53e5d4-71c8-4ad5-97f5-afa5efe46934', @p19='faef49c7-2004-4313-9027-99a2c8a4992e', @p2='sergray411@gmail.com', @p3='False', @p4='2026-04-01T18:03:18.4444450+03:00' (Nullable = true) (DbType = DateTimeOffset), @p5='2026-03-07T14:37:04.7567280+02:00' (Nullable = true) (DbType = DateTimeOffset), @p6='True', @p7=NULL (DbType = DateTimeOffset), @p8='SERGRAY411@GMAIL.COM', @p9='HAVROK', @p10='AQAAAAIAAYagAAAAEJClUkzhtV3nvnesFHbMGPFM95ojYmbVLdoeADOaHUankpQ80aAOdIo3A6UJsjYtLg==', @p11=NULL, @p12='False', @p13='2026-03-06T16:40:48.8505670+02:00' (DbType = DateTimeOffset), @p14='False', @p15='V2S2VALROFFFHAG37CTSLDGXDGEPUIVU', @p16='True', @p17='havrok'], CommandType='"Text"', CommandTimeout='600']
+UPDATE identity.users SET access_failed_count = @p0, concurrency_stamp = @p1, email = @p2, email_confirmed = @p3, last_login_date = @p4, last_password_change_date = @p5, lockout_enabled = @p6, lockout_end = @p7, normalized_email = @p8, normalized_user_name = @p9, password_hash = @p10, phone_number = @p11, phone_number_confirmed = @p12, registration_date = @p13, require_password_change = @p14, security_stamp = @p15, two_factor_enabled = @p16, user_name = @p17
+WHERE id = @p18 AND concurrency_stamp = @p19;
+2026-04-02 12:10:31.741 +03:00 [INF] ✅ AUTOMATICALLY UNLOCKED USER 'havrok' IN DEVELOPMENT MODE
+2026-04-02 12:10:31.755 +03:00 [INF] Creating key {11bc7b6e-272f-4d7e-9da0-211c4821d883} with creation date 2026-04-02 09:10:31Z, activation date 2026-04-02 09:10:31Z, and expiration date 2026-07-01 09:10:31Z.
+2026-04-02 12:10:31.758 +03:00 [WRN] No XML encryptor configured. Key {11bc7b6e-272f-4d7e-9da0-211c4821d883} may be persisted to storage in unencrypted form.
+2026-04-02 12:10:31.761 +03:00 [INF] Writing data to file '/tmp/.aspnet/DataProtection-Keys/key-11bc7b6e-272f-4d7e-9da0-211c4821d883.xml'.
+2026-04-02 12:10:31.808 +03:00 [ERR] Hosting failed to start
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5001: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Address already in use
+ ---> System.Net.Sockets.SocketException (98): Address already in use
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+2026-04-02 12:10:31.821 +03:00 [FTL] Application terminated unexpectedly
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5001: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Address already in use
+ ---> System.Net.Sockets.SocketException (98): Address already in use
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.Run(IHost host)
+   at Program.<Main>$(String[] args) in /home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Program.cs:line 478
+2026-04-02 12:18:32.515 +03:00 [INF] Запуск приложения с аргументами: 
+2026-04-02 12:18:32.572 +03:00 [INF] ✅ Переменные подхватились! Host: localhost
+2026-04-02 12:18:32.599 +03:00 [INF] Попытка подключения к PostgreSQL 1/3...
+2026-04-02 12:18:32.782 +03:00 [INF] ✅ PostgreSQL подключен: S5_DB_local@localhost:5432
+2026-04-02 12:18:32.950 +03:00 [INF] Starting S5Server
+2026-04-02 12:18:33.027 +03:00 [INF] User profile is available. Using '/home/havrok/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-02 12:18:33.497 +03:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2026-04-02 12:18:33.810 +03:00 [INF] Executed DbCommand (11ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 12:18:33.828 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 12:18:33.951 +03:00 [INF] Executed DbCommand (13ms) [Parameters=[@p18='019cc398-12f6-72d0-90d6-aa7499812a8d', @p0='0', @p1='3ed097c6-59a2-4965-8412-9823fde62283', @p19='7b53e5d4-71c8-4ad5-97f5-afa5efe46934', @p2='sergray411@gmail.com', @p3='False', @p4='2026-04-01T18:03:18.4444450+03:00' (Nullable = true) (DbType = DateTimeOffset), @p5='2026-03-07T14:37:04.7567280+02:00' (Nullable = true) (DbType = DateTimeOffset), @p6='True', @p7=NULL (DbType = DateTimeOffset), @p8='SERGRAY411@GMAIL.COM', @p9='HAVROK', @p10='AQAAAAIAAYagAAAAEJClUkzhtV3nvnesFHbMGPFM95ojYmbVLdoeADOaHUankpQ80aAOdIo3A6UJsjYtLg==', @p11=NULL, @p12='False', @p13='2026-03-06T16:40:48.8505670+02:00' (DbType = DateTimeOffset), @p14='False', @p15='V2S2VALROFFFHAG37CTSLDGXDGEPUIVU', @p16='True', @p17='havrok'], CommandType='"Text"', CommandTimeout='600']
+UPDATE identity.users SET access_failed_count = @p0, concurrency_stamp = @p1, email = @p2, email_confirmed = @p3, last_login_date = @p4, last_password_change_date = @p5, lockout_enabled = @p6, lockout_end = @p7, normalized_email = @p8, normalized_user_name = @p9, password_hash = @p10, phone_number = @p11, phone_number_confirmed = @p12, registration_date = @p13, require_password_change = @p14, security_stamp = @p15, two_factor_enabled = @p16, user_name = @p17
+WHERE id = @p18 AND concurrency_stamp = @p19;
+2026-04-02 12:18:33.959 +03:00 [INF] ✅ AUTOMATICALLY UNLOCKED USER 'havrok' IN DEVELOPMENT MODE
+2026-04-02 12:18:34.014 +03:00 [INF] S5Server listening on: http://localhost:5001
+2026-04-02 12:18:41.651 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/login - null null
+2026-04-02 12:18:41.692 +03:00 [INF] Executing endpoint 'Fallback {*path:nonfile}'
+2026-04-02 12:18:41.705 +03:00 [INF] Sending file. Request path: '/index.html'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/index.html'
+2026-04-02 12:18:41.705 +03:00 [INF] Executed endpoint 'Fallback {*path:nonfile}'
+2026-04-02 12:18:41.708 +03:00 [INF] HTTP GET /index.html responded 200 in 53.6334 ms
+2026-04-02 12:18:41.710 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/index.html - 200 1140 text/html 59.5218ms
+2026-04-02 12:18:41.877 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5001/graphql - application/json 97
+2026-04-02 12:18:41.882 +03:00 [INF] CORS policy execution successful.
+2026-04-02 12:18:41.885 +03:00 [INF] Executing endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 12:18:42.982 +03:00 [INF] Executed endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 12:18:42.982 +03:00 [INF] HTTP POST /graphql responded 200 in 1104.6003 ms
+2026-04-02 12:18:42.982 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5001/graphql - 200 null application/graphql-response+json; charset=utf-8 1105.2417ms
+2026-04-02 12:18:50.232 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5001/graphql - application/json 526
+2026-04-02 12:18:50.234 +03:00 [INF] CORS policy execution successful.
+2026-04-02 12:18:50.235 +03:00 [INF] Executing endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 12:18:50.258 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-02 12:18:50.346 +03:00 [INF] Executed DbCommand (5ms) [Parameters=[@userId='019cc398-12f6-72d0-90d6-aa7499812a8d'], CommandType='"Text"', CommandTimeout='600']
+SELECT r.name
+FROM identity.user_roles AS u
+INNER JOIN identity.roles AS r ON u.role_id = r.id
+WHERE u.user_id = @userId
+2026-04-02 12:18:50.371 +03:00 [INF] Executed DbCommand (3ms) [Parameters=[@p='019cc398-12f6-72d0-90d6-aa7499812a8d' (Nullable = true)], CommandType='"Text"', CommandTimeout='600']
+SELECT s.id, s.arrived_at, s.assigned_unit_id, s.birth_date, s.changed_by, s.comment, s.departed_at, s.extern_id, s.first_name, s.involved_unit_id, s.last_name, s.midle_name, s.nick_name, s.position_id, s.rank_id, s.state_id, s.unit_id, s.valid_from
+FROM core.soldiers AS s
+WHERE s.id = @p
+LIMIT 1
+2026-04-02 12:18:50.399 +03:00 [INF] Executed endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-02 12:18:50.399 +03:00 [INF] HTTP POST /graphql responded 200 in 166.7496 ms
+2026-04-02 12:18:50.402 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5001/graphql - 200 null application/graphql-response+json; charset=utf-8 169.5572ms
+2026-04-02 12:18:50.408 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-ZGUS7QMO.js - null null
+2026-04-02 12:18:50.410 +03:00 [INF] Sending file. Request path: '/chunk-ZGUS7QMO.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-ZGUS7QMO.js'
+2026-04-02 12:18:50.410 +03:00 [INF] HTTP GET /chunk-ZGUS7QMO.js responded 200 in 1.8823 ms
+2026-04-02 12:18:50.410 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-ZGUS7QMO.js - 200 17208 text/javascript 2.2992ms
+2026-04-02 12:18:50.416 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5001/chunk-WOSA5N46.js - null null
+2026-04-02 12:18:50.416 +03:00 [INF] Sending file. Request path: '/chunk-WOSA5N46.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-WOSA5N46.js'
+2026-04-02 12:18:50.416 +03:00 [INF] HTTP GET /chunk-WOSA5N46.js responded 200 in 0.5893 ms
+2026-04-02 12:18:50.417 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5001/chunk-WOSA5N46.js - 200 25309 text/javascript 0.8984ms

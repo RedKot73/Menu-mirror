@@ -79,6 +79,10 @@ public class Mutation
         var roles = await userManager.GetRolesAsync(user);
 
         await context.Entry(user).Reference(u => u.Soldier).LoadAsync();
+        if (user.Soldier != null)
+        {
+            await context.Entry(user.Soldier).Reference(s => s.Rank).LoadAsync();
+        }
         Console.WriteLine($"[DEBUG] Soldier loaded: {user.Soldier != null}");
 
         if (user.TwoFactorEnabled)
@@ -163,6 +167,10 @@ public class Mutation
         var roles = await userManager.GetRolesAsync(user);
         
         await context.Entry(user).Reference(u => u.Soldier).LoadAsync();
+        if (user.Soldier != null)
+        {
+            await context.Entry(user.Soldier).Reference(s => s.Rank).LoadAsync();
+        }
         Console.WriteLine($"[DEBUG] Soldier loaded in Verify: {user.Soldier != null}");
 
         var token = GenerateJwtToken(user, roles, config);

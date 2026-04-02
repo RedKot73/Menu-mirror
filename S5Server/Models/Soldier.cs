@@ -162,6 +162,12 @@ public class Soldier
     public DateOnly? BirthDate { get; set; }
 
     /// <summary>
+    /// Коротке звання (для GraphQL)
+    /// </summary>
+    [NotMapped]
+    public string RankShortValue => Rank?.ShortValue ?? Rank?.Value ?? string.Empty;
+
+    /// <summary>
     /// Позивний
     /// </summary>
     [StringLength(50), Display(Name = "Позивний")]
