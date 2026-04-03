@@ -303,7 +303,7 @@ export class UsersPage implements OnInit {
     const user = this.selectedUser();
     if (!user) return;
     const dialogRef = this.dialog.open(TotpSetupDialogComponent, {
-      width: '460px',
+      width: '580px',
       maxWidth: '96vw',
       disableClose: false,
     });

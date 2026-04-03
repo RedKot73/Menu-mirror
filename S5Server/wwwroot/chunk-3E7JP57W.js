@@ -4026,7 +4026,6 @@ var TotpService = class _TotpService {
         throw new Error(res.errors[0]?.message ?? "GraphQL error");
       }
       const data = res?.data?.twoFactorSetup;
-      console.log("[DEBUG] 2FA Setup response: qrUri present =", !!data?.qrUri, "| serverTime =", data?.serverTimeIso);
       return {
         sharedKey: data.manualEntryKey,
         authenticatorUri: data.qrUri,
@@ -4035,8 +4034,6 @@ var TotpService = class _TotpService {
     }), catchError((err) => {
       console.error("[ERROR] 2FA getSetup failed:", err?.message ?? err);
       if (err.error) {
-        console.error("[DEBUG] GQL 400 Error Body:");
-        console.dir(err.error);
       }
       return throwError(() => err);
     }));
@@ -4057,7 +4054,6 @@ var TotpService = class _TotpService {
         throw new Error(res.errors[0]?.message ?? "GraphQL error");
       }
       const success = res?.data?.enableTwoFactor === true;
-      console.log("[DEBUG] 2FA Enable response: success =", success);
       return {
         success,
         message: success ? "2FA \u0443\u0441\u043F\u0456\u0448\u043D\u043E \u0443\u0432\u0456\u043C\u043A\u043D\u0435\u043D\u043E" : "\u041D\u0435\u0432\u0456\u0440\u043D\u0438\u0439 \u043A\u043E\u0434 \u043F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0436\u0435\u043D\u043D\u044F"
@@ -4079,7 +4075,6 @@ var TotpService = class _TotpService {
     `;
     return this.http.post(this.gql, { query, variables: { password } }).pipe(map((res) => {
       const success = res?.data?.disableTwoFactor === true;
-      console.log("[DEBUG] 2FA Disable response: success =", success);
       return {
         success,
         message: success ? "2FA \u0432\u0438\u043C\u043A\u043D\u0435\u043D\u043E" : "\u041D\u0435\u0432\u0456\u0440\u043D\u0438\u0439 \u043F\u0430\u0440\u043E\u043B\u044C \u0430\u0431\u043E \u043F\u043E\u043C\u0438\u043B\u043A\u0430"
@@ -4104,13 +4099,10 @@ var TotpService = class _TotpService {
         throw new Error(res.errors[0]?.message ?? "GraphQL error");
       }
       const enabled = res?.data?.twoFactorStatus === true;
-      console.log("[DEBUG] 2FA Status response: isTwoFactorEnabled =", enabled);
       return { isTwoFactorEnabled: enabled };
     }), catchError((err) => {
       console.error("[ERROR] 2FA getStatus failed:", err);
       if (err.error) {
-        console.error("[DEBUG] GQL getStatus 400 Error Body:");
-        console.dir(err.error);
       }
       return throwError(() => err);
     }));
@@ -4203,7 +4195,7 @@ function TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Cond
 }
 function TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_2_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 23)(1, "mat-icon");
+    \u0275\u0275elementStart(0, "div", 23)(1, "mat-icon", 36);
     \u0275\u0275text(2, "qr_code_2");
     \u0275\u0275elementEnd()();
   }
@@ -4307,7 +4299,7 @@ function TotpSetupDialogComponent_Conditional_6_Conditional_2_Template(rf, ctx) 
 function TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_8_Template(rf, ctx) {
   if (rf & 1) {
     const _r4 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "button", 40);
+    \u0275\u0275elementStart(0, "button", 41);
     \u0275\u0275listener("click", function TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_8_Template_button_click_0_listener() {
       \u0275\u0275restoreView(_r4);
       const ctx_r0 = \u0275\u0275nextContext(3);
@@ -4322,29 +4314,29 @@ function TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_8_Temp
 }
 function TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_9_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "mat-spinner", 47);
+    \u0275\u0275element(0, "mat-spinner", 48);
   }
 }
 function TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_9_Template(rf, ctx) {
   if (rf & 1) {
     const _r5 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 39)(1, "p", 41)(2, "mat-icon", 42);
+    \u0275\u0275elementStart(0, "div", 40)(1, "p", 42)(2, "mat-icon", 43);
     \u0275\u0275text(3, "warning");
     \u0275\u0275elementEnd();
     \u0275\u0275text(4, " \u0412\u0432\u0435\u0434\u0456\u0442\u044C \u043F\u043E\u0442\u043E\u0447\u043D\u0438\u0439 \u043F\u0430\u0440\u043E\u043B\u044C \u0434\u043B\u044F \u043F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0436\u0435\u043D\u043D\u044F \u0432\u0438\u043C\u043A\u043D\u0435\u043D\u043D\u044F 2FA: ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "mat-form-field", 43)(6, "mat-label");
+    \u0275\u0275elementStart(5, "mat-form-field", 44)(6, "mat-label");
     \u0275\u0275text(7, "\u041F\u0430\u0440\u043E\u043B\u044C");
     \u0275\u0275elementEnd();
-    \u0275\u0275element(8, "input", 44);
+    \u0275\u0275element(8, "input", 45);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "div", 45)(10, "button", 46);
+    \u0275\u0275elementStart(9, "div", 46)(10, "button", 47);
     \u0275\u0275listener("click", function TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_9_Template_button_click_10_listener() {
       \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.disableTotp());
     });
-    \u0275\u0275conditionalCreate(11, TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_9_Conditional_11_Template, 1, 0, "mat-spinner", 47);
+    \u0275\u0275conditionalCreate(11, TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_9_Conditional_11_Template, 1, 0, "mat-spinner", 48);
     \u0275\u0275text(12, " \u041F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u0438 \u0432\u0438\u043C\u043A\u043D\u0435\u043D\u043D\u044F ");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(13, "button", 35);
@@ -4368,17 +4360,17 @@ function TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_9_Temp
 }
 function TotpSetupDialogComponent_Conditional_6_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 11)(1, "mat-icon", 36);
+    \u0275\u0275elementStart(0, "div", 11)(1, "mat-icon", 37);
     \u0275\u0275text(2, "verified_user");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "span", 37);
+    \u0275\u0275elementStart(3, "span", 38);
     \u0275\u0275text(4, "\u0414\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u0430 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u044F ");
     \u0275\u0275elementStart(5, "strong");
     \u0275\u0275text(6, "\u0443\u0432\u0456\u043C\u043A\u043D\u0435\u043D\u0430");
     \u0275\u0275elementEnd();
     \u0275\u0275text(7, ".");
     \u0275\u0275elementEnd()();
-    \u0275\u0275conditionalCreate(8, TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_8_Template, 4, 0, "button", 38)(9, TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_9_Template, 15, 3, "div", 39);
+    \u0275\u0275conditionalCreate(8, TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_8_Template, 4, 0, "button", 39)(9, TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_9_Template, 15, 3, "div", 40);
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext(2);
@@ -4428,7 +4420,6 @@ var TotpSetupDialogComponent = class _TotpSetupDialogComponent {
   passwordControl = new FormControl("", Validators.required);
   // ──────────────────────────────────────────────────────────
   ngOnInit() {
-    console.log("[DEBUG] TotpSetupDialog opened \u2014 loading status + time-sync setup.");
     this.isLoading.set(true);
     this.errorMessage.set("");
     forkJoin({
@@ -4448,7 +4439,6 @@ var TotpSetupDialogComponent = class _TotpSetupDialogComponent {
         const clientTime = (/* @__PURE__ */ new Date()).getTime();
         const drift = Math.abs(serverTime - clientTime);
         this.timeDrift.set(drift);
-        console.log(`[DEBUG] Time sync audit: Server=${setup.serverTimeIso}, Client=${(/* @__PURE__ */ new Date()).toISOString()}, Drift=${drift}ms`);
         this.generateQrCode(setup.authenticatorUri);
       }
       this.isLoading.set(false);
@@ -4459,11 +4449,10 @@ var TotpSetupDialogComponent = class _TotpSetupDialogComponent {
       try {
         const dataUrl = yield QRCode.toDataURL(uri, {
           margin: 2,
-          width: 148,
+          width: 200,
           color: { dark: "#000000", light: "#ffffff" }
         });
         this.qrDataUrl.set(dataUrl);
-        console.log("[DEBUG] Local QR Code generated successfully.");
       } catch (err) {
         console.error("[ERROR] Failed to generate local QR code:", err);
       }
@@ -4482,7 +4471,6 @@ var TotpSetupDialogComponent = class _TotpSetupDialogComponent {
     this.errorMessage.set("");
     this.totpService.enable(code).subscribe({
       next: (res) => {
-        console.log("[DEBUG] enableTwoFactor response received. Success:", res.success);
         this.isVerifying.set(false);
         if (res.success) {
           this.snackBar.open("\u2705 \u0414\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u0443 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u044E \u0443\u0432\u0456\u043C\u043A\u043D\u0435\u043D\u043E", "OK", { duration: 4e3 });
@@ -4512,7 +4500,6 @@ var TotpSetupDialogComponent = class _TotpSetupDialogComponent {
     this.errorMessage.set("");
     this.totpService.disable(this.passwordControl.value).subscribe({
       next: (res) => {
-        console.log("[DEBUG] disableTwoFactor response received. Success:", res.success);
         this.isVerifying.set(false);
         if (res.success) {
           this.snackBar.open("2FA \u0432\u0438\u043C\u043A\u043D\u0435\u043D\u043E", "OK", { duration: 3e3 });
@@ -4533,7 +4520,7 @@ var TotpSetupDialogComponent = class _TotpSetupDialogComponent {
   static \u0275fac = function TotpSetupDialogComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _TotpSetupDialogComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _TotpSetupDialogComponent, selectors: [["app-totp-setup-dialog"]], decls: 10, vars: 1, consts: [["mat-dialog-title", ""], [2, "vertical-align", "middle", "margin-right", "8px"], [2, "min-width", "380px", "max-width", "500px"], [2, "display", "flex", "justify-content", "center", "padding", "24px"], ["align", "end"], ["mat-button", "", "mat-dialog-close", ""], ["diameter", "40"], [2, "color", "#c62828", "margin-bottom", "14px", "padding", "10px 14px", "background", "#ffebee", "border-radius", "6px", "font-size", "14px", "display", "flex", "align-items", "center", "gap", "8px"], [2, "color", "#e65100", "margin-bottom", "14px", "padding", "10px 14px", "background", "#fff3e0", "border", "1px solid #ffe0b2", "border-radius", "6px", "font-size", "13px", "display", "flex", "align-items", "center", "gap", "8px"], [2, "font-size", "18px"], [2, "font-size", "20px"], [2, "display", "flex", "align-items", "center", "gap", "10px", "margin-bottom", "10px"], [2, "color", "#757575", "font-size", "22px"], [2, "font-size", "14px"], ["mat-raised-button", "", "color", "primary"], [2, "border", "1px solid #e0e0e0", "border-radius", "8px", "padding", "12px"], ["mat-raised-button", "", "color", "primary", 3, "click"], [2, "display", "flex", "align-items", "center", "gap", "10px", "min-height", "56px"], [2, "display", "flex", "flex-direction", "row", "gap", "14px", "align-items", "flex-start"], ["diameter", "24", 2, "flex-shrink", "0"], [2, "font-size", "13px", "opacity", "0.7"], [2, "flex-shrink", "0"], ["alt", "QR Code", "width", "120", "height", "120", 2, "border", "1px solid #e0e0e0", "border-radius", "8px", "padding", "3px", "display", "block", 3, "src"], [2, "width", "120px", "height", "120px", "display", "flex", "align-items", "center", "justify-content", "center", "background", "#f5f5f5", "border-radius", "8px", "color", "#ef5350"], [2, "flex", "1", "display", "flex", "flex-direction", "column", "gap", "6px"], [2, "font-weight", "600", "margin", "0", "font-size", "12px", "line-height", "1.4"], [2, "font-size", "11px", "opacity", "0.65", "margin", "0"], [2, "font-family", "monospace", "font-size", "11px", "padding", "6px 8px", "background", "#f5f5f5", "border", "1px dashed #bdbdbd", "border-radius", "6px", "letter-spacing", "2px", "user-select", "all", "word-break", "break-all", "line-height", "1.5"], [2, "margin", "2px 0"], [2, "font-weight", "600", "margin", "0", "font-size", "12px"], ["appearance", "outline", "subscriptSizing", "dynamic", 2, "width", "100%"], ["matInput", "", "maxlength", "6", "inputmode", "numeric", "autocomplete", "one-time-code", "placeholder", "000000", 3, "formControl"], [2, "display", "flex", "gap", "8px", "flex-wrap", "wrap"], ["mat-raised-button", "", "color", "primary", 3, "click", "disabled"], ["diameter", "16", 2, "display", "inline-block", "margin-right", "4px"], ["mat-button", "", 3, "click"], [2, "color", "#2e7d32", "font-size", "22px"], [2, "font-size", "14px", "color", "#2e7d32"], ["mat-stroked-button", "", "color", "warn"], [2, "padding", "16px", "background", "#fff3e0", "border-radius", "8px", "border", "1px solid #ffe0b2"], ["mat-stroked-button", "", "color", "warn", 3, "click"], [2, "margin", "0 0 12px", "font-size", "14px"], [2, "font-size", "16px", "vertical-align", "middle", "color", "#e65100", "margin-right", "4px"], ["appearance", "outline", 2, "width", "100%"], ["matInput", "", "type", "password", 3, "formControl"], [2, "display", "flex", "gap", "8px", "margin-top", "4px"], ["mat-raised-button", "", "color", "warn", 3, "click", "disabled"], ["diameter", "18", 2, "display", "inline-block", "margin-right", "6px"]], template: function TotpSetupDialogComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _TotpSetupDialogComponent, selectors: [["app-totp-setup-dialog"]], decls: 10, vars: 1, consts: [["mat-dialog-title", ""], [2, "vertical-align", "middle", "margin-right", "8px"], [2, "min-width", "480px", "max-width", "560px"], [2, "display", "flex", "justify-content", "center", "padding", "24px"], ["align", "end"], ["mat-button", "", "mat-dialog-close", ""], ["diameter", "40"], [2, "color", "#c62828", "margin-bottom", "14px", "padding", "10px 14px", "background", "#ffebee", "border-radius", "6px", "font-size", "14px", "display", "flex", "align-items", "center", "gap", "8px"], [2, "color", "#e65100", "margin-bottom", "14px", "padding", "10px 14px", "background", "#fff3e0", "border", "1px solid #ffe0b2", "border-radius", "6px", "font-size", "13px", "display", "flex", "align-items", "center", "gap", "8px"], [2, "font-size", "18px"], [2, "font-size", "20px"], [2, "display", "flex", "align-items", "center", "gap", "10px", "margin-bottom", "10px"], [2, "color", "#757575", "font-size", "22px"], [2, "font-size", "14px"], ["mat-raised-button", "", "color", "primary"], [2, "border", "1px solid #e0e0e0", "border-radius", "8px", "padding", "12px"], ["mat-raised-button", "", "color", "primary", 3, "click"], [2, "display", "flex", "align-items", "center", "gap", "10px", "min-height", "56px"], [2, "display", "flex", "flex-direction", "row", "gap", "14px", "align-items", "flex-start"], ["diameter", "24", 2, "flex-shrink", "0"], [2, "font-size", "13px", "opacity", "0.7"], [2, "flex-shrink", "0"], ["alt", "QR Code", "width", "200", "height", "200", 2, "border", "1px solid #e0e0e0", "border-radius", "8px", "padding", "3px", "display", "block", 3, "src"], [2, "width", "200px", "height", "200px", "display", "flex", "align-items", "center", "justify-content", "center", "background", "#f5f5f5", "border-radius", "8px", "color", "#ef5350"], [2, "flex", "1", "display", "flex", "flex-direction", "column", "gap", "6px"], [2, "font-weight", "600", "margin", "0", "font-size", "12px", "line-height", "1.4"], [2, "font-size", "11px", "opacity", "0.65", "margin", "0"], [2, "font-family", "monospace", "font-size", "11px", "padding", "6px 8px", "background", "#f5f5f5", "border", "1px dashed #bdbdbd", "border-radius", "6px", "letter-spacing", "2px", "user-select", "all", "word-break", "break-all", "line-height", "1.5"], [2, "margin", "2px 0"], [2, "font-weight", "600", "margin", "0", "font-size", "12px"], ["appearance", "outline", "subscriptSizing", "dynamic", 2, "width", "100%"], ["matInput", "", "maxlength", "6", "inputmode", "numeric", "autocomplete", "one-time-code", "placeholder", "000000", 3, "formControl"], [2, "display", "flex", "gap", "8px", "flex-wrap", "wrap"], ["mat-raised-button", "", "color", "primary", 3, "click", "disabled"], ["diameter", "16", 2, "display", "inline-block", "margin-right", "4px"], ["mat-button", "", 3, "click"], [2, "font-size", "32px", "width", "32px", "height", "32px"], [2, "color", "#2e7d32", "font-size", "22px"], [2, "font-size", "14px", "color", "#2e7d32"], ["mat-stroked-button", "", "color", "warn"], [2, "padding", "16px", "background", "#fff3e0", "border-radius", "8px", "border", "1px solid #ffe0b2"], ["mat-stroked-button", "", "color", "warn", 3, "click"], [2, "margin", "0 0 12px", "font-size", "14px"], [2, "font-size", "16px", "vertical-align", "middle", "color", "#e65100", "margin-right", "4px"], ["appearance", "outline", 2, "width", "100%"], ["matInput", "", "type", "password", 3, "formControl"], [2, "display", "flex", "gap", "8px", "margin-top", "4px"], ["mat-raised-button", "", "color", "warn", 3, "click", "disabled"], ["diameter", "18", 2, "display", "inline-block", "margin-right", "6px"]], template: function TotpSetupDialogComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "h2", 0)(1, "mat-icon", 1);
       \u0275\u0275text(2, "security");
@@ -4601,7 +4588,7 @@ var TotpSetupDialogComponent = class _TotpSetupDialogComponent {
       \u0414\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u0430 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u044F
     </h2>
 
-    <mat-dialog-content style="min-width: 380px; max-width: 500px;">
+    <mat-dialog-content style="min-width: 480px; max-width: 560px;">
 
       <!-- \u2500\u2500 LOADING \u2500\u2500 -->
       @if (isLoading()) {
@@ -4662,19 +4649,18 @@ var TotpSetupDialogComponent = class _TotpSetupDialogComponent {
                 <!-- 2-column layout: QR left, controls right -->
                 <div style="display:flex; flex-direction:row; gap:14px; align-items:flex-start;">
 
-                  <!-- LEFT: QR image -->
                   <div style="flex-shrink:0;">
                     @if (qrDataUrl()) {
                       <img
                         [src]="qrDataUrl()"
                         alt="QR Code"
-                        width="120"
-                        height="120"
+                        width="200"
+                        height="200"
                         style="border:1px solid #e0e0e0; border-radius:8px; padding:3px; display:block;"
                       />
                     } @else {
-                      <div style="width:120px; height:120px; display:flex; align-items:center; justify-content:center; background:#f5f5f5; border-radius:8px; color:#ef5350;">
-                        <mat-icon>qr_code_2</mat-icon>
+                      <div style="width:200px; height:200px; display:flex; align-items:center; justify-content:center; background:#f5f5f5; border-radius:8px; color:#ef5350;">
+                        <mat-icon style="font-size:32px; width:32px; height:32px;">qr_code_2</mat-icon>
                       </div>
                     }
                   </div>
@@ -4789,7 +4775,7 @@ var TotpSetupDialogComponent = class _TotpSetupDialogComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TotpSetupDialogComponent, { className: "TotpSetupDialogComponent", filePath: "app/auth/TotpSetupDialog.component.ts", lineNumber: 225 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TotpSetupDialogComponent, { className: "TotpSetupDialogComponent", filePath: "app/auth/TotpSetupDialog.component.ts", lineNumber: 224 });
 })();
 
 // src/Login/Users.page.ts
@@ -5197,7 +5183,6 @@ var UsersPage = class _UsersPage {
     this.loadRoles();
   }
   loadUsers() {
-    console.log("[DEBUG] Users list requested. Soldier included: true");
     this.usersService.getAll(this.showInactive()).subscribe({
       next: (list) => this.users.set(list),
       error: () => this.notify("\u041F\u043E\u043C\u0438\u043B\u043A\u0430 \u0437\u0430\u0432\u0430\u043D\u0442\u0430\u0436\u0435\u043D\u043D\u044F \u043A\u043E\u0440\u0438\u0441\u0442\u0443\u0432\u0430\u0447\u0456\u0432")
@@ -5411,9 +5396,8 @@ var UsersPage = class _UsersPage {
     const user = this.selectedUser();
     if (!user)
       return;
-    console.log("[DEBUG] Opening 2FA management dialog for user:", user.userName);
     const dialogRef = this.dialog.open(TotpSetupDialogComponent, {
-      width: "460px",
+      width: "580px",
       maxWidth: "96vw",
       disableClose: false
     });
@@ -5781,4 +5765,4 @@ var UsersPage = class _UsersPage {
 export {
   UsersPage
 };
-//# sourceMappingURL=chunk-7EJG5JSI.js.map
+//# sourceMappingURL=chunk-3E7JP57W.js.map

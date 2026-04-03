@@ -80,10 +80,6 @@ var AuthService = class _AuthService {
         }
       }
     `.trim();
-    console.log("[DEBUG] AuthService.login sending request", {
-      url: this.gql,
-      variables: { userName: dto.userName }
-    });
     return this.http.post(this.gql, {
       query,
       variables: { userName: dto.userName, password: dto.password }
@@ -181,7 +177,6 @@ var AuthService = class _AuthService {
     try {
       const jwtPayload = JSON.parse(atob(token.split(".")[1]));
       if (jwtPayload["requiresTwoFactor"] === "true" || jwtPayload["requiresTwoFactor"] === true) {
-        console.log("[DEBUG] checkSession: interim token detected via JWT claim \u2014 skipping /me call.");
         return of(null);
       }
     } catch {
@@ -214,4 +209,4 @@ var AuthService = class _AuthService {
 export {
   AuthService
 };
-//# sourceMappingURL=chunk-BQ4QHUOF.js.map
+//# sourceMappingURL=chunk-QAPGSYTZ.js.map

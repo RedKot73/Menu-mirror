@@ -14,6 +14,7 @@ namespace S5Server.Models;
 /// <param name="EmailConfirmed">A value indicating whether the user's email address has been confirmed. If null, the confirmation status is
 /// unspecified.</param>
 /// <param name="Roles">An array of roles to assign to the user. May be null if no roles are specified.</param>
+/// <param name="SoldierId">The internal identifier of the soldier associated with this user, if applicable.</param>
 public record CreateUserDto(
     [Required, MinLength(3), MaxLength(256)]
     string UserName,

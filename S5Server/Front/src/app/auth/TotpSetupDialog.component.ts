@@ -37,7 +37,7 @@ import * as QRCode from 'qrcode';
       Двофакторна аутентифікація
     </h2>
 
-    <mat-dialog-content style="min-width: 380px; max-width: 500px;">
+    <mat-dialog-content style="min-width: 480px; max-width: 560px;">
 
       <!-- ── LOADING ── -->
       @if (isLoading()) {
@@ -98,19 +98,18 @@ import * as QRCode from 'qrcode';
                 <!-- 2-column layout: QR left, controls right -->
                 <div style="display:flex; flex-direction:row; gap:14px; align-items:flex-start;">
 
-                  <!-- LEFT: QR image -->
                   <div style="flex-shrink:0;">
                     @if (qrDataUrl()) {
                       <img
                         [src]="qrDataUrl()"
                         alt="QR Code"
-                        width="120"
-                        height="120"
+                        width="200"
+                        height="200"
                         style="border:1px solid #e0e0e0; border-radius:8px; padding:3px; display:block;"
                       />
                     } @else {
-                      <div style="width:120px; height:120px; display:flex; align-items:center; justify-content:center; background:#f5f5f5; border-radius:8px; color:#ef5350;">
-                        <mat-icon>qr_code_2</mat-icon>
+                      <div style="width:200px; height:200px; display:flex; align-items:center; justify-content:center; background:#f5f5f5; border-radius:8px; color:#ef5350;">
+                        <mat-icon style="font-size:32px; width:32px; height:32px;">qr_code_2</mat-icon>
                       </div>
                     }
                   </div>
@@ -282,7 +281,7 @@ export class TotpSetupDialogComponent implements OnInit {
     try {
       const dataUrl = await QRCode.toDataURL(uri, {
         margin: 2,
-        width: 148,
+        width: 200,
         color: { dark: '#000000', light: '#ffffff' }
       });
       this.qrDataUrl.set(dataUrl);

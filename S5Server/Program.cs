@@ -48,6 +48,30 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration.AddEnvironmentVariables();
 }
 
+// ✅ JWT Secret Validation & Fail-Safe Mechanism
+const string DEV_JWT_SECRET = "S5_DEV_SECRET_2026_DO_NOT_USE_IN_PROD_999";
+var jwtSecret = builder.Configuration["JwtSettings:Secret"];
+
+if (string.IsNullOrEmpty(jwtSecret))
+{
+    if (builder.Environment.IsDevelopment())
+    {
+        Log.Warning("⚠️ JWT Secret missing. Using development fallback: {Secret}", DEV_JWT_SECRET);
+        jwtSecret = DEV_JWT_SECRET;
+        builder.Configuration["JwtSettings:Secret"] = DEV_JWT_SECRET;
+    }
+    else
+    {
+        Log.Fatal("❌ CRITICAL: JwtSettings__Secret is missing in Production environment! Terminating.");
+        return;
+    }
+}
+else if (builder.Environment.IsProduction() && jwtSecret == DEV_JWT_SECRET)
+{
+    Log.Fatal("❌ CRITICAL: Production environment is using the Development fallback JWT secret! Terminating.");
+    return;
+}
+
 var pgConnConfig = new DBConfig();
 builder.Configuration.GetSection(DBConfig.ConfigKey).Bind(pgConnConfig);
 var connBuilder = new NpgsqlConnectionStringBuilder

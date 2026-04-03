@@ -223,7 +223,13 @@ public class AuthMutation
         if (string.IsNullOrEmpty(unformattedKey))
             throw new GraphQLException("Failed to generate authenticator key");
 
-        var issuer = config["TOTP__Issuer"] ?? config["JwtSettings:Issuer"] ?? "S5Server";
+        var issuer = config["TOTP__Issuer"];
+        if (string.IsNullOrEmpty(issuer))
+        {
+             // Fallback to JwtSettings:Issuer or hardcoded default
+             issuer = config["JwtSettings:Issuer"] ?? "S5Server";
+        }
+        
         var email = user.Email ?? user.UserName ?? "User";
         var qrUri = $"otpauth://totp/{Uri.EscapeDataString(issuer)}:{Uri.EscapeDataString(email)}?secret={unformattedKey}&issuer={Uri.EscapeDataString(issuer)}";
 
@@ -267,6 +273,13 @@ public class AuthMutation
         return isValid;
     }
 
+    /// <summary>
+    /// Disables two-factor authentication for the current user after validating their password.
+    /// </summary>
+    /// <param name="password">The current user's password to confirm the identity.</param>
+    /// <param name="principal">The security principal representing the current authenticated user.</param>
+    /// <param name="userManager">Identity UserManager service for updating user settings.</param>
+    /// <returns>True if 2FA was successfully disabled; otherwise, false if the password was incorrect.</returns>
     [Authorize]
     public async Task<bool> DisableTwoFactor(
         string password,
@@ -299,4 +312,10 @@ public class AuthMutation
     }
 }
 
+/// <summary>
+/// Represents the data required for a user to set up two-factor authentication.
+/// </summary>
+/// <param name="QrUri">The otpauth URI for generating the QR code (e.g. for Google Authenticator).</param>
+/// <param name="ManualEntryKey">The unformatted secret key for manual entry if QR scanning is not available.</param>
+/// <param name="ServerTimeIso">The current server time in ISO-8601 format to help users verify time synchronization.</param>
 public record TwoFactorSetupPayload(string QrUri, string ManualEntryKey, string ServerTimeIso);

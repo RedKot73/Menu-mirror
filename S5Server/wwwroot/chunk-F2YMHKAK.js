@@ -17,7 +17,7 @@ import {
 import "./chunk-LFLZCNEV.js";
 import {
   AuthService
-} from "./chunk-BQ4QHUOF.js";
+} from "./chunk-QAPGSYTZ.js";
 import "./chunk-6HY5KKDU.js";
 import "./chunk-5OFTEHZD.js";
 import {
@@ -137,27 +137,22 @@ var LoginPage = class _LoginPage {
     this.isLoading.set(true);
     this.errorMessage.set("");
     const { login, password, rememberMe } = this.loginForm.value;
-    console.log("[DEBUG] LoginPage onSubmit started");
     this.auth.login({
       userName: login,
       password,
       rememberMe: rememberMe ?? false
     }).subscribe({
       next: (payload) => {
-        console.log("[DEBUG] Login successful", payload);
         this.isLoading.set(false);
         if (payload.requiresTwoFactor) {
-          console.log("[DEBUG] 2FA required. Navigating to /welcome via SPA router.");
           this.router.navigate(["/welcome"]);
         } else if (payload.token) {
-          console.log("[DEBUG] Login complete. Navigating to /DocumentDataSet via SPA router.");
           this.router.navigate(["/DocumentDataSet"]);
         } else {
           this.errorMessage.set("\u041D\u0435\u043F\u0440\u0430\u0432\u0438\u043B\u044C\u043D\u0438\u0439 \u043B\u043E\u0433\u0456\u043D \u0430\u0431\u043E \u043F\u0430\u0440\u043E\u043B\u044C");
         }
       },
       error: (err) => {
-        console.error("[DEBUG] Login error", err);
         this.isLoading.set(false);
         if (err.status === 403 && err.error?.requirePasswordChange) {
           this.openForceChangePassword(err.error.userId, login);
@@ -358,4 +353,4 @@ var LoginPage = class _LoginPage {
 export {
   LoginPage
 };
-//# sourceMappingURL=chunk-JURUBY7A.js.map
+//# sourceMappingURL=chunk-F2YMHKAK.js.map

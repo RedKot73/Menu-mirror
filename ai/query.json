@@ -2,6 +2,6 @@
   "query": "mutation Login($u: String!, $p: String!) { login(userName: $u, password: $p) { token requiresTwoFactor userId user { userName email } } }",
   "variables": {
     "u": "havrok",
-    "p": "A4247A4247!"
+    "p": "QWERTY654321"
   }
 }

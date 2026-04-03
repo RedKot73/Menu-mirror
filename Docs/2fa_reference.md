@@ -64,6 +64,21 @@ TWO_FACTOR_MODE=strict
 > [!CAUTION]
 > **The `JwtSettings__Secret` default value `SuperSecretKeyForJWTNormalization2026!` from `appsettings.json` is a known placeholder.** Replace it with a cryptographically random string of at least 32 characters before any production or staging deployment.
 
+### 2.5 Operational Resilience (Fail-Safe Configuration)
+
+To prevent total application failure or insecure deployments due to misconfiguration, the following mechanisms are in place:
+
+1.  **JWT Startup Validation (Fail-Fast)**:
+    - **Development**: If `JwtSettings__Secret` is missing from the environment, the app uses a fallback: `S5_DEV_SECRET_2026_DO_NOT_USE_IN_PROD_999`.
+    - **Production**: The app verifies the secret at startup. If it is **missing** OR matches the **development fallback**, the process terminates with a `Fatal` error log. This prevents starting an insecure system.
+
+2.  **2FA Graceful Degradation (Isolation)**:
+    - If `TOTP__Issuer` is missing, basic authentication (username/password) still works.
+    - If a user requiring 2FA logs in but the server-side configuration is broken:
+        - The `VerifyTwoFactor` mutation will return a user-friendly error instead of a generic 500 crash.
+        - 2FA setup functionality will be disabled with a descriptive error.
+    - This ensures that a 2FA configuration error doesn't take the entire application offline.
+
 ### 2.2 Where Secrets Are Read (Priority Order)
 
 The backend reads configuration using ASP.NET Core's standard layered configuration:
