@@ -68,7 +68,6 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   }
 
   private autoSubmit(): void {
-    console.log('[DEBUG] 2FA Timer expired. Auto-submitting...');
     // If form is valid, use the code. Otherwise send empty/zero to trigger backend soft mode wait.
     const code = this.welcomeForm.value.code || '000000';
     this.submitCode(code);
@@ -96,7 +95,6 @@ export class WelcomeComponent implements OnInit, OnDestroy {
       next: (payload) => {
         if (payload.token && !payload.requiresTwoFactor) {
           // Success: fully authenticated.
-          console.log('[DEBUG] 2FA Success. Navigating to /DocumentDataSet via SPA router.');
           // Token is already persisted in AuthService.verifyTwoFactor() via setToken()
           this.router.navigate(['/DocumentDataSet']);
         } else {

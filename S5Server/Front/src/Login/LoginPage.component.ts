@@ -154,7 +154,6 @@ export class LoginPage {
 
     const { login, password, rememberMe } = this.loginForm.value;
 
-    console.log('[DEBUG] LoginPage onSubmit started');
     this.auth
       .login({
         userName: login!,
@@ -163,22 +162,18 @@ export class LoginPage {
       })
       .subscribe({
         next: (payload) => {
-          console.log('[DEBUG] Login successful', payload);
           this.isLoading.set(false);
           // requiresTwoFactor is checked FIRST — the interim token is also present
           // in this case, so order is critical to avoid the wrong branch executing.
           if (payload.requiresTwoFactor) {
-            console.log('[DEBUG] 2FA required. Navigating to /welcome via SPA router.');
             this.router.navigate(['/welcome']);
           } else if (payload.token) {
-            console.log('[DEBUG] Login complete. Navigating to /DocumentDataSet via SPA router.');
             this.router.navigate(['/DocumentDataSet']);
           } else {
             this.errorMessage.set('Неправильний логін або пароль');
           }
         },
         error: (err) => {
-          console.error('[DEBUG] Login error', err);
           this.isLoading.set(false);
           // GraphQL errors might come as 200 with errors array, but if they come as HTTP errors:
           if (err.status === 403 && err.error?.requirePasswordChange) {

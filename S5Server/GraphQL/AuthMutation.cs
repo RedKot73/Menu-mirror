@@ -70,23 +70,19 @@ public class AuthMutation
         [Service] IConfiguration config,
         [Service] MainDbContext context)
     {
-        Console.WriteLine($"[DEBUG] Login attempt for user: {userName}");
         var user = await userManager.FindByNameAsync(userName);
         if (user == null || await userManager.IsLockedOutAsync(user))
         {
-            Console.WriteLine($"[DEBUG] User {userName} not found or locked out");
             return new AuthPayload();
         }
 
         var result = await userManager.CheckPasswordAsync(user, password);
         if (!result)
         {
-            Console.WriteLine($"[DEBUG] Invalid password for user {userName}");
             await userManager.AccessFailedAsync(user);
             throw new GraphQLException("Invalid password");
         }
 
-        Console.WriteLine($"[DEBUG] Password check successful for user {userName}");
         await userManager.ResetAccessFailedCountAsync(user);
         var roles = await userManager.GetRolesAsync(user);
 
@@ -96,11 +92,9 @@ public class AuthMutation
         {
             await context.Entry(user.Soldier).Reference(s => s.Rank).LoadAsync();
         }
-        Console.WriteLine($"[DEBUG] Soldier loaded: {user.Soldier != null}");
 
         if (user.TwoFactorEnabled)
         {
-            Console.WriteLine($"[DEBUG] 2FA enabled for user {userName}. Generating interim token.");
             var interimToken = GenerateJwtToken(user, roles, config, isInterim: true);
             return new AuthPayload(
                 Token: interimToken,
@@ -109,7 +103,6 @@ public class AuthMutation
             );
         }
 
-        Console.WriteLine($"[DEBUG] 2FA NOT enabled for user {userName}. Generating full token.");
         var token = GenerateJwtToken(user, roles, config);
         return new AuthPayload(
             Token: token,
@@ -157,7 +150,6 @@ public class AuthMutation
                 var keyBytes = Base32Encoding.ToBytes(authenticatorKey);
                 var totp = new Totp(keyBytes);
                 isValid = totp.VerifyTotp(code, out _, new VerificationWindow(1, 1));
-                Console.WriteLine($"[DEBUG] TOTP Verification. User: {user.UserName}. ServerTime: {DateTime.UtcNow:O}. Result: {(isValid ? "Success" : "Fail")}.");
             }
             catch (Exception ex)
             {
@@ -169,9 +161,7 @@ public class AuthMutation
         {
             if (isSoftMode)
             {
-                Console.WriteLine($"[DEBUG] 2FA Check Failed for user {user.UserName}. Soft Mode active: Waiting 10s...");
                 await Task.Delay(10000);
-                Console.WriteLine($"[DEBUG] Soft Mode: Delay 10s finished. Issuing final token for {user.UserName}");
             }
             else
             {
@@ -187,10 +177,8 @@ public class AuthMutation
         {
             await context.Entry(user.Soldier).Reference(s => s.Rank).LoadAsync();
         }
-        Console.WriteLine($"[DEBUG] Soldier loaded in Verify: {user.Soldier != null}");
 
         var token = GenerateJwtToken(user, roles, config);
-        Console.WriteLine($"[DEBUG] 2FA SUCCESS for user {user.UserName}. Token length: {token?.Length}");
 
         return new AuthPayload(
             Token: token,
@@ -227,11 +215,9 @@ public class AuthMutation
         {
             await userManager.ResetAuthenticatorKeyAsync(user);
             unformattedKey = await userManager.GetAuthenticatorKeyAsync(user);
-            Console.WriteLine($"[DEBUG] 2FA Setup initiated for User {user.Id}. New secret generated. ServerTime: {DateTime.UtcNow:O}. Issuer: {config["TOTP__Issuer"] ?? config["JwtSettings:Issuer"] ?? "S5Server"}.");
         }
         else
         {
-            Console.WriteLine($"[DEBUG] 2FA Setup initiated for User {user.Id}. Returning EXISTING secret. ServerTime: {DateTime.UtcNow:O}. Issuer: {config["TOTP__Issuer"] ?? config["JwtSettings:Issuer"] ?? "S5Server"}.");
         }
 
         if (string.IsNullOrEmpty(unformattedKey))
@@ -272,12 +258,10 @@ public class AuthMutation
         // Window (1,1) = allows ±30s clock drift — standardized for all verification steps
         var isValid = totp.VerifyTotp(code, out long matchedStep, new VerificationWindow(1, 1));
 
-        Console.WriteLine($"[DEBUG] TOTP Verification (Setup). User: {user.UserName}. ServerTime: {DateTime.UtcNow:O}. Result: {(isValid ? "Success" : "Fail")}.");
 
         if (isValid)
         {
             await userManager.SetTwoFactorEnabledAsync(user, true);
-            Console.WriteLine($"[DEBUG] 2FA enabled for user {user.UserName}.");
         }
 
         return isValid;
@@ -302,14 +286,12 @@ public class AuthMutation
         var passwordValid = await userManager.CheckPasswordAsync(user, password);
         if (!passwordValid)
         {
-            Console.WriteLine($"[DEBUG] 2FA Disable FAILED for user {user.UserName}. Invalid password.");
             return false;
         }
 
         var result = await userManager.SetTwoFactorEnabledAsync(user, false);
         if (result.Succeeded)
         {
-            Console.WriteLine($"[DEBUG] 2FA Toggle changed for user {user.UserName}. Status: Disabled.");
             return true;
         }
 

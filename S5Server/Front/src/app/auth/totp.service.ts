@@ -45,7 +45,6 @@ export class TotpService {
           throw new Error(res.errors[0]?.message ?? 'GraphQL error');
         }
         const data = res?.data?.twoFactorSetup;
-        console.log('[DEBUG] 2FA Setup response: qrUri present =', !!data?.qrUri, '| serverTime =', data?.serverTimeIso);
         return {
           sharedKey: data.manualEntryKey,
           authenticatorUri: data.qrUri,
@@ -55,8 +54,6 @@ export class TotpService {
       catchError(err => {
         console.error('[ERROR] 2FA getSetup failed:', err?.message ?? err);
         if (err.error) {
-            console.error('[DEBUG] GQL 400 Error Body:');
-            console.dir(err.error);
         }
         return throwError(() => err);
       })
@@ -81,7 +78,6 @@ export class TotpService {
           throw new Error(res.errors[0]?.message ?? 'GraphQL error');
         }
         const success = res?.data?.enableTwoFactor === true;
-        console.log('[DEBUG] 2FA Enable response: success =', success);
         return {
           success,
           message: success ? '2FA успішно увімкнено' : 'Невірний код підтвердження',
@@ -107,7 +103,6 @@ export class TotpService {
     return this.http.post<any>(this.gql, { query, variables: { password } }).pipe(
       map(res => {
         const success = res?.data?.disableTwoFactor === true;
-        console.log('[DEBUG] 2FA Disable response: success =', success);
         return {
           success,
           message: success ? '2FA вимкнено' : 'Невірний пароль або помилка',
@@ -136,14 +131,11 @@ export class TotpService {
           throw new Error(res.errors[0]?.message ?? 'GraphQL error');
         }
         const enabled = res?.data?.twoFactorStatus === true;
-        console.log('[DEBUG] 2FA Status response: isTwoFactorEnabled =', enabled);
         return { isTwoFactorEnabled: enabled };
       }),
       catchError(err => {
         console.error('[ERROR] 2FA getStatus failed:', err);
         if (err.error) {
-            console.error('[DEBUG] GQL getStatus 400 Error Body:');
-            console.dir(err.error);
         }
         return throwError(() => err);
       })

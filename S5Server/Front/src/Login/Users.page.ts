@@ -72,7 +72,6 @@ export class UsersPage implements OnInit {
   }
 
   loadUsers(): void {
-    console.log('[DEBUG] Users list requested. Soldier included: true');
     this.usersService.getAll(this.showInactive()).subscribe({
       next: (list) => this.users.set(list),
       error: () => this.notify('Помилка завантаження користувачів'),
@@ -303,7 +302,6 @@ export class UsersPage implements OnInit {
   onManage2FA(): void {
     const user = this.selectedUser();
     if (!user) return;
-    console.log('[DEBUG] Opening 2FA management dialog for user:', user.userName);
     const dialogRef = this.dialog.open(TotpSetupDialogComponent, {
       width: '460px',
       maxWidth: '96vw',

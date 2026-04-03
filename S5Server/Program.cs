@@ -40,39 +40,13 @@ if (builder.Environment.IsProduction())
     builder.Services.AddApplicationInsightsTelemetry();
 }
 
-// --- ВРЕМЕННАЯ ПРОВЕРКА ДЛЯ ОТЛАДКИ ---
-// Читаем локальный .env файл (в продакшене K8s его не будет, и метод просто ничего не сделает)
-// Загружаем .env только если мы работаем локально (Development)
+// --- Environment Initialization ---
+// Load .env only if we are working locally (Development)
 if (builder.Environment.IsDevelopment())
 {
-    Console.WriteLine("--- DEBUG: Development Mode Detected ---");
-    Console.WriteLine($"Current Environment: {builder.Environment.EnvironmentName}");
-    
-    // Загружаем только из .env и выводим их
-    // Метод TraversePath() будет искать файл .env в текущей директории и выше по дереву папок
-    var loadedVars = DotNetEnv.Env.TraversePath().Load();
-    Console.WriteLine($"--- Прочитаны следующие переменные из .env ---");
-    foreach (var kvp in loadedVars)
-    {
-        Console.WriteLine($"{kvp.Key} = {kvp.Value}");
-    }
-    Console.WriteLine("-----------------------------------------");
-    
-    // Важно: нужно заставить конфигурацию (IConfiguration) перечитать переменные окружения,
-    // так как .env только что их обновил в системе (Environment)
+    DotNetEnv.Env.TraversePath().Load();
     builder.Configuration.AddEnvironmentVariables();
 }
-
-var testHost = builder.Configuration["PrimaryConnection:DB_Host"];
-if (string.IsNullOrEmpty(testHost))
-{
-    Log.Error("⚠️ ВНИМАНИЕ: Файл .env не загрузился или переменные названы неверно!");
-}
-else
-{
-    Log.Information($"✅ Переменные подхватились! Host: {testHost}");
-}
-// --------------------------------------
 
 var pgConnConfig = new DBConfig();
 builder.Configuration.GetSection(DBConfig.ConfigKey).Bind(pgConnConfig);
@@ -341,7 +315,6 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // === БЛОК АВТОМАТИЧЕСКИХ МИГРАЦИЙ ===
-// Делаем проверку регистронезависимой и ищем вхождение строки
 if (args.Any(arg => arg.Trim().Contains("--migrate", StringComparison.OrdinalIgnoreCase)))
 {
     Log.Information("=== Запуск режима миграций (обнаружен флаг --migrate) ===");
@@ -354,13 +327,53 @@ if (args.Any(arg => arg.Trim().Contains("--migrate", StringComparison.OrdinalIgn
         await dbContext.Database.MigrateAsync();
         Log.Information("=== Миграции успешно применены! ===");
         
-        // КРИТИЧЕСКИ ВАЖНО: Принудительный выход с кодом 0, чтобы Init-контейнер завершился
         Environment.Exit(0); 
     }
     catch (Exception ex)
     {
         Log.Fatal(ex, "Ошибка при применении миграций");
-        Environment.Exit(1); // Сообщаем K8s об ошибке
+        Environment.Exit(1); 
+    }
+}
+
+// === БЛОК НАСТРОЙКИ СЛУЖЕБНОГО ПОЛЬЗОВАТЕЛЯ ===
+if (args.Any(arg => arg.Trim().Contains("--setup-user", StringComparison.OrdinalIgnoreCase)))
+{
+    Log.Information("=== Запуск режима настройки служебного пользователя (обнаружен флаг --setup-user) ===");
+
+    using var scope = app.Services.CreateScope();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<TVezhaUser>>();
+    try
+    {
+        const string userName = "havrok";
+        const string password = "QWERTY654321";
+        
+        var user = await userManager.FindByNameAsync(userName);
+        if (user == null)
+        {
+            Log.Information("Создание пользователя '{User}'...", userName);
+            user = new TVezhaUser { UserName = userName, Email = $"{userName}@unit.mil" };
+            var result = await userManager.CreateAsync(user, password);
+            if (!result.Succeeded) throw new Exception(string.Join(", ", result.Errors.Select(e => e.Description)));
+        }
+        else
+        {
+            Log.Information("Сброс пароля для '{User}'...", userName);
+            user.PasswordHash = userManager.PasswordHasher.HashPassword(user, password);
+            await userManager.UpdateAsync(user);
+        }
+
+        // Разблокировка
+        await userManager.SetLockoutEndDateAsync(user, null);
+        await userManager.ResetAccessFailedCountAsync(user);
+        
+        Log.Information("=== Пользователь '{User}' успешно настроен! ===", userName);
+        Environment.Exit(0);
+    }
+    catch (Exception ex)
+    {
+        Log.Fatal(ex, "Ошибка при настройке служебного пользователя");
+        Environment.Exit(1);
     }
 }
 
@@ -462,23 +475,6 @@ try
         }
     });
 
-    if (app.Environment.IsDevelopment())
-    {
-        using var scope = app.Services.CreateScope();
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<TVezhaUser>>();
-        var havrokUser = userManager.FindByNameAsync("havrok").GetAwaiter().GetResult();
-        if (havrokUser != null)
-        {
-            userManager.SetLockoutEndDateAsync(havrokUser, null).GetAwaiter().GetResult();
-            userManager.ResetAccessFailedCountAsync(havrokUser).GetAwaiter().GetResult();
-            
-            // Temporary password reset as requested by user
-            havrokUser.PasswordHash = userManager.PasswordHasher.HashPassword(havrokUser, "A4742A4742!");
-            userManager.UpdateAsync(havrokUser).GetAwaiter().GetResult();
-            
-            Log.Information("✅ AUTOMATICALLY UNLOCKED & RESET PASSWORD FOR USER 'havrok' TO 'A4742A4742!' IN DEVELOPMENT MODE");
-        }
-    }
 
     app.Run();
 }

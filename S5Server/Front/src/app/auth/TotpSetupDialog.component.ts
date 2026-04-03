@@ -249,7 +249,6 @@ export class TotpSetupDialogComponent implements OnInit {
 
   // ──────────────────────────────────────────────────────────
   ngOnInit(): void {
-    console.log('[DEBUG] TotpSetupDialog opened — loading status + time-sync setup.');
     this.isLoading.set(true);
     this.errorMessage.set('');
 
@@ -272,7 +271,6 @@ export class TotpSetupDialogComponent implements OnInit {
         const clientTime = new Date().getTime();
         const drift = Math.abs(serverTime - clientTime);
         this.timeDrift.set(drift);
-        console.log(`[DEBUG] Time sync audit: Server=${setup.serverTimeIso}, Client=${new Date().toISOString()}, Drift=${drift}ms`);
         
         this.generateQrCode(setup.authenticatorUri);
       }
@@ -288,7 +286,6 @@ export class TotpSetupDialogComponent implements OnInit {
         color: { dark: '#000000', light: '#ffffff' }
       });
       this.qrDataUrl.set(dataUrl);
-      console.log('[DEBUG] Local QR Code generated successfully.');
     } catch (err) {
       console.error('[ERROR] Failed to generate local QR code:', err);
     }
@@ -308,7 +305,6 @@ export class TotpSetupDialogComponent implements OnInit {
     this.errorMessage.set('');
     this.totpService.enable(code).subscribe({
       next: (res) => {
-        console.log('[DEBUG] enableTwoFactor response received. Success:', res.success);
         this.isVerifying.set(false);
         if (res.success) {
           this.snackBar.open('✅ Двофакторну аутентифікацію увімкнено', 'OK', { duration: 4000 });
@@ -340,7 +336,6 @@ export class TotpSetupDialogComponent implements OnInit {
     this.errorMessage.set('');
     this.totpService.disable(this.passwordControl.value!).subscribe({
       next: (res) => {
-        console.log('[DEBUG] disableTwoFactor response received. Success:', res.success);
         this.isVerifying.set(false);
         if (res.success) {
           this.snackBar.open('2FA вимкнено', 'OK', { duration: 3000 });

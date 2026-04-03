@@ -82,11 +82,6 @@ export class AuthService {
       }
     `.trim();
 
-    console.log('[DEBUG] AuthService.login sending request', { 
-      url: this.gql, 
-      variables: { userName: dto.userName } 
-    });
-
     return this.http
       .post<GqlResponse<{ login: AuthPayload }>>(this.gql, {
         query,
@@ -208,7 +203,6 @@ export class AuthService {
     try {
       const jwtPayload = JSON.parse(atob(token.split('.')[1]));
       if (jwtPayload['requiresTwoFactor'] === 'true' || jwtPayload['requiresTwoFactor'] === true) {
-        console.log('[DEBUG] checkSession: interim token detected via JWT claim — skipping /me call.');
         return of(null);
       }
     } catch {
