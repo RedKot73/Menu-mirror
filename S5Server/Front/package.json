@@ -45,6 +45,7 @@
     "handlebars": "^4.7.8",
     "js-beautify": "^1.15.4",
     "ngx-editor": "^19.0.0-beta.1",
+    "qrcode": "^1.5.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "^0.16.0"
@@ -55,6 +56,7 @@
     "@angular/compiler-cli": "^21.0.5",
     "@types/file-saver": "^2.0.7",
     "@types/js-beautify": "^1.14.3",
+    "@types/qrcode": "^1.5.5",
     "eslint": "^9.37.0",
     "typescript": "~5.9.2",
     "vite": "^7.1.11"

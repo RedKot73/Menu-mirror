@@ -157,6 +157,7 @@ public class AuthMutation
                 var keyBytes = Base32Encoding.ToBytes(authenticatorKey);
                 var totp = new Totp(keyBytes);
                 isValid = totp.VerifyTotp(code, out _, new VerificationWindow(1, 1));
+                Console.WriteLine($"[DEBUG] TOTP Verification. User: {user.UserName}. ServerTime: {DateTime.UtcNow:O}. Result: {(isValid ? "Success" : "Fail")}.");
             }
             catch (Exception ex)
             {
@@ -199,7 +200,9 @@ public class AuthMutation
     }
 
     /// <summary>
-    /// Generates a new 2FA setup specifically formatted for Google Authenticator.
+    /// Returns the current 2FA setup payload (QR URI + manual key).
+    /// Generates a NEW secret only if none exists yet — does NOT regenerate if one is already set.
+    /// Call this to display setup QR code for the current user.
     /// </summary>
     [Authorize]
     public async Task<TwoFactorSetupPayload> GetTwoFactorSetup(
@@ -217,19 +220,28 @@ public class AuthMutation
         if (user == null)
             throw new GraphQLException("User not found");
 
-        await userManager.ResetAuthenticatorKeyAsync(user);
+        // Only generate a new key if one does not exist yet.
+        // Regenerating would break any authenticator apps already configured.
         var unformattedKey = await userManager.GetAuthenticatorKeyAsync(user);
         if (string.IsNullOrEmpty(unformattedKey))
-            throw new GraphQLException("Failed to generate key");
+        {
+            await userManager.ResetAuthenticatorKeyAsync(user);
+            unformattedKey = await userManager.GetAuthenticatorKeyAsync(user);
+            Console.WriteLine($"[DEBUG] 2FA Setup initiated for User {user.Id}. New secret generated. ServerTime: {DateTime.UtcNow:O}. Issuer: {config["TOTP__Issuer"] ?? config["JwtSettings:Issuer"] ?? "S5Server"}.");
+        }
+        else
+        {
+            Console.WriteLine($"[DEBUG] 2FA Setup initiated for User {user.Id}. Returning EXISTING secret. ServerTime: {DateTime.UtcNow:O}. Issuer: {config["TOTP__Issuer"] ?? config["JwtSettings:Issuer"] ?? "S5Server"}.");
+        }
 
-        var issuer = config["JwtSettings:Issuer"] ?? "S5Server";
-        string email = user.Email ?? user.UserName ?? "User";
-        
+        if (string.IsNullOrEmpty(unformattedKey))
+            throw new GraphQLException("Failed to generate authenticator key");
+
+        var issuer = config["TOTP__Issuer"] ?? config["JwtSettings:Issuer"] ?? "S5Server";
+        var email = user.Email ?? user.UserName ?? "User";
         var qrUri = $"otpauth://totp/{Uri.EscapeDataString(issuer)}:{Uri.EscapeDataString(email)}?secret={unformattedKey}&issuer={Uri.EscapeDataString(issuer)}";
 
-        Console.WriteLine($"[DEBUG] Generated 2FA Setup for User {user.Id}. URI: {qrUri}");
-
-        return new TwoFactorSetupPayload(qrUri, unformattedKey);
+        return new TwoFactorSetupPayload(qrUri, unformattedKey, DateTime.UtcNow.ToString("O"));
     }
 
     /// <summary>
@@ -257,14 +269,15 @@ public class AuthMutation
 
         var keyBytes = Base32Encoding.ToBytes(authenticatorKey);
         var totp = new Totp(keyBytes);
-        var isValid = totp.VerifyTotp(code, out _, new VerificationWindow(1, 1));
+        // Window (1,1) = allows ±30s clock drift — standardized for all verification steps
+        var isValid = totp.VerifyTotp(code, out long matchedStep, new VerificationWindow(1, 1));
 
-        Console.WriteLine($"[DEBUG] Attempting to enable 2FA for User {user.Id}. Code valid: {isValid}");
+        Console.WriteLine($"[DEBUG] TOTP Verification (Setup). User: {user.UserName}. ServerTime: {DateTime.UtcNow:O}. Result: {(isValid ? "Success" : "Fail")}.");
 
         if (isValid)
         {
             await userManager.SetTwoFactorEnabledAsync(user, true);
-            Console.WriteLine($"[DEBUG] 2FA Toggle changed for user {user.UserName}. Status: Enabled.");
+            Console.WriteLine($"[DEBUG] 2FA enabled for user {user.UserName}.");
         }
 
         return isValid;
@@ -304,4 +317,4 @@ public class AuthMutation
     }
 }
 
-public record TwoFactorSetupPayload(string QrUri, string ManualEntryKey);
+public record TwoFactorSetupPayload(string QrUri, string ManualEntryKey, string ServerTimeIso);

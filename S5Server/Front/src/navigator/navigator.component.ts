@@ -3,9 +3,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../app/auth/auth.service';
-import { TotpSetupDialogComponent } from '../app/auth/TotpSetupDialog.component';
 
 @Component({
   selector: 'app-navigator',
@@ -31,7 +29,6 @@ import { TotpSetupDialogComponent } from '../app/auth/TotpSetupDialog.component'
 
         <span class="spacer"></span>
         <span class="user-info">{{ auth.displayName() }}</span>
-        <button matButton (click)="openTotpSetup()">Налаштування 2FA</button>
         <button matButton (click)="onLogout()">Вийти</button>
       } @else {
         <span class="spacer"></span>
@@ -139,14 +136,6 @@ import { TotpSetupDialogComponent } from '../app/auth/TotpSetupDialog.component'
 })
 export class NavigatorComponent {
   readonly auth = inject(AuthService);
-  private dialog = inject(MatDialog);
-
-  openTotpSetup(): void {
-    this.dialog.open(TotpSetupDialogComponent, {
-      width: '500px',
-      disableClose: true
-    });
-  }
 
   onLogout(): void {
     this.auth.logout().subscribe();

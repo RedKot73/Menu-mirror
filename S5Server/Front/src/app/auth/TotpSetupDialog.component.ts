@@ -4,10 +4,19 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { TotpService } from './totp.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import * as QRCode from 'qrcode';
 
+/**
+ * Dialog for managing Two-Factor Authentication (TOTP) for the current logged-in user.
+ * Redesigned for local QR generation and time synchronization.
+ */
 @Component({
   selector: 'app-totp-setup-dialog',
   standalone: true,
@@ -17,160 +26,295 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     MatInputModule,
     MatFormFieldModule,
     MatProgressSpinnerModule,
-    ReactiveFormsModule
+    MatIconModule,
+    MatDividerModule,
+    MatSnackBarModule,
+    ReactiveFormsModule,
   ],
   template: `
-    <h2 mat-dialog-title>Налаштування двофакторної аутентифікації</h2>
-    <mat-dialog-content>
+    <h2 mat-dialog-title>
+      <mat-icon style="vertical-align: middle; margin-right: 8px;">security</mat-icon>
+      Двофакторна аутентифікація
+    </h2>
+
+    <mat-dialog-content style="min-width: 380px; max-width: 500px;">
+
+      <!-- ── LOADING ── -->
       @if (isLoading()) {
-        <div style="display: flex; justify-content: center; padding: 20px;">
-          <mat-spinner diameter="40"></mat-spinner>
+        <div style="display:flex; justify-content:center; padding:40px;">
+          <mat-spinner diameter="44"></mat-spinner>
         </div>
       } @else {
-        
+
+        <!-- ── ERROR BANNER ── -->
         @if (errorMessage()) {
-          <div style="color: red; margin-bottom: 12px; padding: 8px; background: #ffebee; border-radius: 4px;">
+          <div style="color:#c62828; margin-bottom:14px; padding:10px 14px; background:#ffebee; border-radius:6px; font-size:14px; display:flex; align-items:center; gap:8px;">
+            <mat-icon style="font-size:18px;">error_outline</mat-icon>
             {{ errorMessage() }}
           </div>
         }
 
+        <!-- ── TIME DRIFT WARNING ── -->
+        @if (timeDrift() > 30000) {
+          <div style="color:#e65100; margin-bottom:14px; padding:10px 14px; background:#fff3e0; border:1px solid #ffe0b2; border-radius:6px; font-size:13px; display:flex; align-items:center; gap:8px;">
+            <mat-icon style="font-size:20px;">history</mat-icon>
+            <div>
+              <strong>Увага!</strong> Час на вашому пристрої розбігається з сервером (дрейф: {{ (timeDrift()/1000).toFixed(1) }}с).
+              Це може заважати активації 2FA. Будь ласка, перевірте налаштування часу.
+            </div>
+          </div>
+        }
+
+        <!-- ───────────────────────────────────────────
+             STATE: 2FA DISABLED
+        ─────────────────────────────────────────────── -->
         @if (!isTwoFactorEnabled()) {
-          <div style="margin-bottom: 16px;">
-            <p>Двофакторна аутентифікація зараз <strong>вимкнена</strong>.</p>
-            <p style="font-size: 14px; opacity: 0.8;">
-              Захистіть свій акаунт, увімкнувши додатковий крок перевірки при вході (наприклад, через Google Authenticator).
-            </p>
+
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <mat-icon style="color:#757575; font-size:26px;">no_encryption</mat-icon>
+            <span style="font-size:15px;">Двофакторна аутентифікація <strong>вимкнена</strong>.</span>
           </div>
 
-          @if (!setupData()) {
-            <button mat-raised-button color="primary" (click)="startSetup()">Налаштувати 2FA</button>
-          } @else {
-            <div style="margin-top: 16px; padding: 16px; background: #f5f5f5; border-radius: 4px;">
-              <p style="font-weight: 500;">1. Додайте ключ в додаток-аутентифікатор:</p>
-              <div style="font-family: monospace; font-size: 18px; padding: 12px; background: #fff; border: 1px dashed #ccc; text-align: center; letter-spacing: 2px;">
-                {{ setupData()?.sharedKey }}
-              </div>
-              
-              <p style="font-weight: 500; margin-top: 16px;">2. Введіть згенерований 6-значний код для підтвердження:</p>
-              
-              <mat-form-field appearance="outline" style="width: 100%;">
-                <mat-label>Код підтвердження</mat-label>
-                <input matInput [formControl]="verificationCodeControl" maxlength="6" autocomplete="off" />
-              </mat-form-field>
+          <!-- Collapsed: show [Увімкнути 2FA] button -->
+          @if (!showEnableForm()) {
+            <button mat-raised-button color="primary" (click)="showEnableForm.set(true)">
+              <mat-icon>lock</mat-icon>
+              Увімкнути 2FA
+            </button>
+          }
 
-              <button mat-raised-button color="primary" [disabled]="verificationCodeControl.invalid" (click)="enableTotp()">
-                Увімкнути
-              </button>
-              <button mat-button (click)="cancelSetup()" style="margin-left: 8px;">Скасувати</button>
+          <!-- Expanded: show QR + code input -->
+          @if (showEnableForm()) {
+            <div style="border:1px solid #e0e0e0; border-radius:8px; padding:20px;">
+
+              @if (!setupData()) {
+                <!-- Loading setup data -->
+                <div style="display:flex; align-items:center; gap:10px; min-height:80px;">
+                  <mat-spinner diameter="28" style="flex-shrink:0;"></mat-spinner>
+                  <span style="font-size:14px; opacity:0.7;">Завантаження QR-коду...</span>
+                </div>
+              } @else {
+                <!-- Step 1: QR code or manual key -->
+                <p style="font-weight:600; margin:0 0 12px; font-size:14px;">
+                  1. Відскануйте QR-код в додатку-аутентифікаторі (Google Authenticator, Authy):
+                </p>
+
+                <div style="display:flex; justify-content:center; margin:12px 0;">
+                  @if (qrDataUrl()) {
+                    <img
+                      [src]="qrDataUrl()"
+                      alt="QR Code"
+                      width="190"
+                      height="190"
+                      style="border:1px solid #e0e0e0; border-radius:8px; padding:4px;"
+                    />
+                  } @else {
+                    <div style="width:190px; height:190px; display:flex; align-items:center; justify-content:center; background:#f5f5f5; border-radius:8px; color:#ef5350;">
+                        <mat-icon>qr_code_2</mat-icon>
+                    </div>
+                  }
+                </div>
+
+                <p style="font-size:12px; opacity:0.65; margin:4px 0 4px; text-align:center;">
+                  Або введіть ключ вручну:
+                </p>
+                <div style="font-family:monospace; font-size:14px; padding:10px; background:#f5f5f5; border:1px dashed #bdbdbd; border-radius:6px; text-align:center; letter-spacing:3px; user-select:all; word-break:break-all;">
+                  {{ setupData()!.sharedKey }}
+                </div>
+
+                <mat-divider style="margin:16px 0;"></mat-divider>
+
+                <!-- Step 2: Verify code -->
+                <p style="font-weight:600; margin:0 0 10px; font-size:14px;">
+                  2. Введіть 6-значний код з додатку для підтвердження:
+                </p>
+
+                <mat-form-field appearance="outline" style="width:100%;">
+                  <mat-label>Код підтвердження</mat-label>
+                  <input
+                    matInput
+                    [formControl]="verificationCodeControl"
+                    maxlength="6"
+                    inputmode="numeric"
+                    autocomplete="one-time-code"
+                    placeholder="000000"
+                  />
+                  <mat-hint>6 цифр з аутентифікатора</mat-hint>
+                </mat-form-field>
+
+                <div style="display:flex; gap:8px; margin-top:10px;">
+                  <button
+                    mat-raised-button
+                    color="primary"
+                    [disabled]="verificationCodeControl.invalid || isVerifying()"
+                    (click)="enableTotp()"
+                  >
+                    @if (isVerifying()) {
+                      <mat-spinner diameter="18" style="display:inline-block; margin-right:6px;"></mat-spinner>
+                    }
+                    Підтвердити та увімкнути
+                  </button>
+                  <button mat-button (click)="cancelEnable()">Скасувати</button>
+                </div>
+              }
             </div>
           }
-        } @else {
-          <!-- Two Factor is Enabled -->
-          <div style="margin-bottom: 16px;">
-            <p style="color: green;">
-              Двофакторна аутентифікація <strong>увімкнена</strong>.
-            </p>
+
+        }
+
+        <!-- ───────────────────────────────────────────
+             STATE: 2FA ENABLED
+        ─────────────────────────────────────────────── -->
+        @if (isTwoFactorEnabled()) {
+
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <mat-icon style="color:#2e7d32; font-size:26px;">verified_user</mat-icon>
+            <span style="font-size:15px; color:#2e7d32;">Двофакторна аутентифікація <strong>увімкнена</strong>.</span>
           </div>
 
           @if (!showDisableForm()) {
-            <button mat-raised-button color="warn" (click)="showDisableForm.set(true)">Вимкнути 2FA</button>
+            <button mat-stroked-button color="warn" (click)="showDisableForm.set(true)">
+              <mat-icon>no_encryption</mat-icon>
+              Вимкнути 2FA
+            </button>
           } @else {
-            <div style="margin-top: 16px; padding: 16px; background: #fff3e0; border-radius: 4px;">
-              <p>Для вимкнення введіть ваш поточний пароль від акаунту:</p>
-              
-              <mat-form-field appearance="outline" style="width: 100%;">
+            <div style="padding:16px; background:#fff3e0; border-radius:8px; border:1px solid #ffe0b2;">
+              <p style="margin:0 0 12px; font-size:14px;">
+                <mat-icon style="font-size:16px; vertical-align:middle; color:#e65100; margin-right:4px;">warning</mat-icon>
+                Введіть поточний пароль для підтвердження вимкнення 2FA:
+              </p>
+              <mat-form-field appearance="outline" style="width:100%;">
                 <mat-label>Пароль</mat-label>
                 <input matInput [formControl]="passwordControl" type="password" />
               </mat-form-field>
-
-              <button mat-raised-button color="warn" [disabled]="passwordControl.invalid" (click)="disableTotp()">
-                Підтвердити вимкнення
-              </button>
-              <button mat-button (click)="cancelDisable()" style="margin-left: 8px;">Скасувати</button>
+              <div style="display:flex; gap:8px; margin-top:4px;">
+                <button
+                  mat-raised-button
+                  color="warn"
+                  [disabled]="passwordControl.invalid || isVerifying()"
+                  (click)="disableTotp()"
+                >
+                  @if (isVerifying()) {
+                    <mat-spinner diameter="18" style="display:inline-block; margin-right:6px;"></mat-spinner>
+                  }
+                  Підтвердити вимкнення
+                </button>
+                <button mat-button (click)="cancelDisable()">Скасувати</button>
+              </div>
             </div>
           }
         }
       }
+
     </mat-dialog-content>
+
     <mat-dialog-actions align="end">
       <button mat-button mat-dialog-close>Закрити</button>
     </mat-dialog-actions>
-  `
+  `,
 })
 export class TotpSetupDialogComponent implements OnInit {
   private totpService = inject(TotpService);
   private snackBar = inject(MatSnackBar);
   public dialogRef = inject(MatDialogRef<TotpSetupDialogComponent>);
 
-  readonly isLoading = signal(true);
+  // ── state signals ──────────────────────────────────────────
+  readonly isLoading   = signal(true);
+  readonly isVerifying = signal(false);
   readonly errorMessage = signal('');
   readonly isTwoFactorEnabled = signal(false);
-  readonly setupData = signal<{ sharedKey: string; authenticatorUri: string } | null>(null);
+  readonly setupData   = signal<{ sharedKey: string; authenticatorUri: string; serverTimeIso: string } | null>(null);
+  readonly showEnableForm  = signal(false);
   readonly showDisableForm = signal(false);
+  readonly qrDataUrl       = signal<string | null>(null);
+  readonly timeDrift       = signal<number>(0);
 
-  readonly verificationCodeControl = new FormControl('', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]);
+  // ── form controls ──────────────────────────────────────────
+  readonly verificationCodeControl = new FormControl('', [
+    Validators.required,
+    Validators.minLength(6),
+    Validators.maxLength(6),
+    Validators.pattern(/^\d{6}$/),
+  ]);
   readonly passwordControl = new FormControl('', Validators.required);
 
+  // ──────────────────────────────────────────────────────────
   ngOnInit(): void {
-    this.refreshStatus();
-  }
-
-  refreshStatus(): void {
-    this.isLoading.set(true);
-    this.totpService.getStatus().subscribe({
-      next: (res) => {
-        this.isTwoFactorEnabled.set(res.isTwoFactorEnabled);
-        this.isLoading.set(false);
-      },
-      error: () => {
-        this.errorMessage.set('Не вдалося отримати статус 2FA');
-        this.isLoading.set(false);
-      }
-    });
-  }
-
-  startSetup(): void {
+    console.log('[DEBUG] TotpSetupDialog opened — loading status + time-sync setup.');
     this.isLoading.set(true);
     this.errorMessage.set('');
-    this.totpService.getSetup().subscribe({
-      next: (res) => {
-        this.setupData.set(res);
-        this.isLoading.set(false);
-      },
-      error: () => {
-        this.errorMessage.set('Не вдалося розпочати налаштування 2FA');
-        this.isLoading.set(false);
+
+    forkJoin({
+      status: this.totpService.getStatus().pipe(catchError((err) => {
+          this.errorMessage.set(`Помилка статусу: ${err.message || '400 (Check Schema)'}`);
+          return of({ isTwoFactorEnabled: false });
+      })),
+      setup:  this.totpService.getSetup().pipe(catchError((err) => {
+          this.errorMessage.set(`Помилка завантаження QR: ${err.message || '400 (Check Schema)'}`);
+          return of(null);
+      })),
+    }).subscribe(({ status, setup }) => {
+      this.isTwoFactorEnabled.set(status.isTwoFactorEnabled);
+      if (setup) {
+        this.setupData.set(setup);
+        
+        // Time Drift Calculation
+        const serverTime = new Date(setup.serverTimeIso).getTime();
+        const clientTime = new Date().getTime();
+        const drift = Math.abs(serverTime - clientTime);
+        this.timeDrift.set(drift);
+        console.log(`[DEBUG] Time sync audit: Server=${setup.serverTimeIso}, Client=${new Date().toISOString()}, Drift=${drift}ms`);
+        
+        this.generateQrCode(setup.authenticatorUri);
       }
+      this.isLoading.set(false);
     });
   }
 
-  cancelSetup(): void {
-    this.setupData.set(null);
+  private async generateQrCode(uri: string): Promise<void> {
+    try {
+      const dataUrl = await QRCode.toDataURL(uri, {
+        margin: 2,
+        width: 250,
+        color: { dark: '#000000', light: '#ffffff' }
+      });
+      this.qrDataUrl.set(dataUrl);
+      console.log('[DEBUG] Local QR Code generated successfully.');
+    } catch (err) {
+      console.error('[ERROR] Failed to generate local QR code:', err);
+    }
+  }
+
+  cancelEnable(): void {
+    this.showEnableForm.set(false);
     this.verificationCodeControl.reset();
     this.errorMessage.set('');
   }
 
   enableTotp(): void {
     if (this.verificationCodeControl.invalid) return;
+    const code = this.verificationCodeControl.value!;
     
-    this.isLoading.set(true);
-    this.totpService.enable(this.verificationCodeControl.value!).subscribe({
+    this.isVerifying.set(true);
+    this.errorMessage.set('');
+    this.totpService.enable(code).subscribe({
       next: (res) => {
-        this.snackBar.open('Двофакторну аутентифікацію увімкнено успішно', 'OK', { duration: 3000 });
-        this.isTwoFactorEnabled.set(true);
-        this.setupData.set(null);
-        this.verificationCodeControl.reset();
-        
-        // Show recovery codes to user ? They are returned in res.recoveryCodes
-        // For simplicity, we can alert or log them, but usually they should be shown in a dialog.
-        alert('Резервні коди: ' + res.recoveryCodes.join(', ') + '. Збережіть їх!');
-        
-        this.isLoading.set(false);
+        console.log('[DEBUG] enableTwoFactor response received. Success:', res.success);
+        this.isVerifying.set(false);
+        if (res.success) {
+          this.snackBar.open('✅ Двофакторну аутентифікацію увімкнено', 'OK', { duration: 4000 });
+          this.isTwoFactorEnabled.set(true);
+          this.showEnableForm.set(false);
+          this.verificationCodeControl.reset();
+        } else {
+          this.errorMessage.set('Невірний код. Перевірте синхронізацію часу в додатку і спробуйте знову.');
+        }
       },
       error: (err) => {
-        this.errorMessage.set(err.error?.message || 'Неправильний код або помилка сервера');
-        this.isLoading.set(false);
-      }
+        console.error('[ERROR] enableTwoFactor failed:', err?.message ?? err);
+        this.isVerifying.set(false);
+        this.errorMessage.set('Помилка сервера при активації 2FA: ' + (err?.message ?? 'невідома помилка'));
+      },
     });
   }
 
@@ -182,20 +326,27 @@ export class TotpSetupDialogComponent implements OnInit {
 
   disableTotp(): void {
     if (this.passwordControl.invalid) return;
-
-    this.isLoading.set(true);
+    
+    this.isVerifying.set(true);
+    this.errorMessage.set('');
     this.totpService.disable(this.passwordControl.value!).subscribe({
-      next: () => {
-        this.snackBar.open('Двофакторну аутентифікацію вимкнено', 'OK', { duration: 3000 });
-        this.isTwoFactorEnabled.set(false);
-        this.showDisableForm.set(false);
-        this.passwordControl.reset();
-        this.isLoading.set(false);
+      next: (res) => {
+        console.log('[DEBUG] disableTwoFactor response received. Success:', res.success);
+        this.isVerifying.set(false);
+        if (res.success) {
+          this.snackBar.open('2FA вимкнено', 'OK', { duration: 3000 });
+          this.isTwoFactorEnabled.set(false);
+          this.showDisableForm.set(false);
+          this.passwordControl.reset();
+        } else {
+          this.errorMessage.set('Невірний пароль. Спробуйте ще раз.');
+        }
       },
       error: (err) => {
-        this.errorMessage.set(err.error?.message || 'Помилка при вимкненні (можливо, невірний пароль)');
-        this.isLoading.set(false);
-      }
+        console.error('[ERROR] disableTwoFactor failed:', err?.message ?? err);
+        this.isVerifying.set(false);
+        this.errorMessage.set('Помилка при вимкненні 2FA: ' + (err?.message ?? 'невідома помилка'));
+      },
     });
   }
 }

@@ -155,6 +155,35 @@
           </mat-card-content>
         </mat-card>
 
+        <!-- Двофакторна аутентифікація -->
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon style="vertical-align: middle; margin-right: 6px;">security</mat-icon>
+              Двофакторна аутентифікація
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+              @if (user.twoFactorEnabled) {
+                <mat-chip color="primary" highlighted>
+                  <mat-icon matChipAvatar>verified_user</mat-icon>
+                  Увімкнена
+                </mat-chip>
+              } @else {
+                <mat-chip>
+                  <mat-icon matChipAvatar>no_encryption</mat-icon>
+                  Вимкнена
+                </mat-chip>
+              }
+              <button mat-stroked-button [color]="user.twoFactorEnabled ? 'warn' : 'primary'" (click)="onManage2FA()">
+                <mat-icon>{{ user.twoFactorEnabled ? 'lock_open' : 'qr_code_2' }}</mat-icon>
+                {{ user.twoFactorEnabled ? 'Керувати 2FA' : 'Налаштувати 2FA' }}
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
         <!-- Ролі -->
         <mat-card>
           <mat-card-header>

@@ -22,6 +22,7 @@ import {
   ChangeLoginDialogData,
 } from './dialogs/ChangeLoginDialog.component';
 import { ConfirmDialogComponent } from '../app/dialogs/ConfirmDialog.component';
+import { TotpSetupDialogComponent } from '../app/auth/TotpSetupDialog.component';
 import { LookupDto } from '../app/shared/models/lookup.models';
 
 @Component({
@@ -41,6 +42,7 @@ import { LookupDto } from '../app/shared/models/lookup.models';
     MatDialogModule,
     MatSnackBarModule,
     MasterDetailLayoutComponent,
+    TotpSetupDialogComponent,
   ],
   templateUrl: './Users.page.html',
   styleUrls: ['./Users.page.scss'],
@@ -294,6 +296,21 @@ export class UsersPage implements OnInit {
           error: () => this.notify('Помилка видалення'),
         });
       }
+    });
+  }
+
+  /** Налаштування / керування 2FA для вибраного користувача */
+  onManage2FA(): void {
+    const user = this.selectedUser();
+    if (!user) return;
+    console.log('[DEBUG] Opening 2FA management dialog for user:', user.userName);
+    const dialogRef = this.dialog.open(TotpSetupDialogComponent, {
+      width: '500px',
+      disableClose: false,
+    });
+    dialogRef.afterClosed().subscribe(() => {
+      // Refresh the user list to update 2FA status badge
+      this.loadUsers();
     });
   }
 

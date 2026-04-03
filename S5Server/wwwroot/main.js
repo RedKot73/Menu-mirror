@@ -1,12 +1,12 @@
 import {
   AuthService
-} from "./chunk-UA4BGHXS.js";
+} from "./chunk-DDSI6JQ4.js";
 import {
   ApolloLink,
   InMemoryCache,
   print,
   provideApollo
-} from "./chunk-WUTFOUQH.js";
+} from "./chunk-6HY5KKDU.js";
 import {
   MAT_DATE_FORMATS,
   MatMenu,
@@ -14,45 +14,26 @@ import {
   MatMenuModule,
   MatMenuTrigger,
   provideNativeDateAdapter
-} from "./chunk-WUWQAPPC.js";
-import "./chunk-WAACRMV7.js";
-import {
-  MatProgressSpinner,
-  MatProgressSpinnerModule
-} from "./chunk-QPOXXU4H.js";
+} from "./chunk-UIYIUELW.js";
+import "./chunk-5OFTEHZD.js";
 import {
   Router,
   RouterLink,
   RouterLinkActive,
   RouterOutlet,
   provideRouter
-} from "./chunk-G7RKRMVR.js";
-import "./chunk-6L6S6KYZ.js";
-import {
-  MatSnackBar
-} from "./chunk-4WDEZQCM.js";
-import {
-  MatDialog,
-  MatDialogActions,
-  MatDialogClose,
-  MatDialogContent,
-  MatDialogModule,
-  MatDialogRef,
-  MatDialogTitle
-} from "./chunk-PALKAU2I.js";
-import "./chunk-KRVND5CP.js";
+} from "./chunk-3EEZP2Q7.js";
+import "./chunk-2P3X7Y6Y.js";
+import "./chunk-GOHAIDCM.js";
 import {
   BidiModule,
   ChangeDetectionStrategy,
   Component,
   ContentChildren,
   DOCUMENT,
-  DefaultValueAccessor,
   Directive,
   EMPTY,
   ElementRef,
-  FormControl,
-  FormControlDirective,
   HttpClient,
   HttpContext,
   HttpHeaders,
@@ -61,18 +42,9 @@ import {
   LOCALE_ID,
   MatButton,
   MatButtonModule,
-  MatFormField,
-  MatFormFieldModule,
-  MatInput,
-  MatInputModule,
-  MatLabel,
-  MaxLengthValidator,
-  NgControlStatus,
   NgModule,
   Observable,
   Platform,
-  ReactiveFormsModule,
-  Validators,
   ViewEncapsulation,
   __spreadProps,
   __spreadValues,
@@ -80,7 +52,6 @@ import {
   catchError,
   firstValueFrom,
   inject,
-  map,
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
   provideHttpClient,
@@ -118,9 +89,8 @@ import {
   ɵɵresetView,
   ɵɵrestoreView,
   ɵɵtext,
-  ɵɵtextInterpolate,
-  ɵɵtextInterpolate1
-} from "./chunk-WAYE7YII.js";
+  ɵɵtextInterpolate
+} from "./chunk-IKDNLDBK.js";
 
 // node_modules/@angular/common/locales/uk.js
 var u = void 0;
@@ -355,13 +325,13 @@ var fetch = (req, httpClient, extractFiles) => {
   if (shouldUseMultipart && shouldUseBody) {
     const form = new FormData();
     form.append("operations", JSON.stringify(bodyOrParams.body));
-    const map2 = {};
+    const map = {};
     const files = multipartInfo.files;
     let i = 0;
     files.forEach((paths) => {
-      map2[++i] = paths;
+      map[++i] = paths;
     });
-    form.append("map", JSON.stringify(map2));
+    form.append("map", JSON.stringify(map));
     i = 0;
     files.forEach((_, file) => {
       form.append(++i + "", file, file.name);
@@ -692,127 +662,127 @@ var twoFactorGuard = () => {
 var routes = [
   {
     path: "dictDroneTypes",
-    loadComponent: () => import("./chunk-QIYT2UVN.js").then((m) => m.DictDroneTypeComponent),
+    loadComponent: () => import("./chunk-PHBLAT2Q.js").then((m) => m.DictDroneTypeComponent),
     title: "\u0422\u0438\u043F\u0438 \u0411\u041F\u041B\u0410",
     canActivate: [authGuard]
   },
   {
     path: "dictDroneModels",
-    loadComponent: () => import("./chunk-7B5TZRKN.js").then((m) => m.DictDroneModelComponent),
+    loadComponent: () => import("./chunk-HYXOM57T.js").then((m) => m.DictDroneModelComponent),
     title: "\u041C\u043E\u0434\u0435\u043B\u0456 \u0411\u041F\u041B\u0410",
     canActivate: [authGuard]
   },
   {
     path: "dictForcesTypes",
-    loadComponent: () => import("./chunk-DDLE64JQ.js").then((m) => m.DictForcesTypeComponent),
+    loadComponent: () => import("./chunk-JXROFMMP.js").then((m) => m.DictForcesTypeComponent),
     title: "\u0412\u0438\u0434\u0438 \u0437\u0431\u0440\u043E\u0439\u043D\u0438\u0445 \u0441\u0438\u043B",
     canActivate: [authGuard]
   },
   {
     path: "dictPosition",
-    loadComponent: () => import("./chunk-P64VGLPQ.js").then((m) => m.DictPositionComponent),
+    loadComponent: () => import("./chunk-QSVPML35.js").then((m) => m.DictPositionComponent),
     title: "\u041F\u043E\u0441\u0430\u0434\u0438",
     canActivate: [authGuard]
   },
   {
     path: "dictRanks",
-    loadComponent: () => import("./chunk-3HMDXJA7.js").then((m) => m.DictRanksComponent),
+    loadComponent: () => import("./chunk-7EWQWMI2.js").then((m) => m.DictRanksComponent),
     title: "\u0412\u0456\u0439\u0441\u044C\u043A\u043E\u0432\u0456 \u0437\u0432\u0430\u043D\u043D\u044F",
     canActivate: [authGuard]
   },
   {
     path: "dictSoldierStates",
-    loadComponent: () => import("./chunk-XV23FNVW.js").then((m) => m.DictSoldierStatesComponent),
+    loadComponent: () => import("./chunk-NGWQHL2A.js").then((m) => m.DictSoldierStatesComponent),
     title: "\u0421\u0442\u0430\u0442\u0443\u0441\u0438 \u043E\u0441\u043E\u0431\u043E\u0432\u043E\u0433\u043E \u0441\u043A\u043B\u0430\u0434\u0443",
     canActivate: [authGuard]
   },
   {
     path: "dictUnitTypes",
-    loadComponent: () => import("./chunk-XZCMJVYW.js").then((m) => m.DictUnitTypesComponent),
+    loadComponent: () => import("./chunk-DWED4PNG.js").then((m) => m.DictUnitTypesComponent),
     title: "\u0422\u0438\u043F\u0438 \u043F\u0456\u0434\u0440\u043E\u0437\u0434\u0456\u043B\u0456\u0432",
     canActivate: [authGuard]
   },
   {
     path: "dictAreaTypes",
-    loadComponent: () => import("./chunk-7VBN6ZLU.js").then((m) => m.DictAreaTypeComponent),
+    loadComponent: () => import("./chunk-TM6H2UPU.js").then((m) => m.DictAreaTypeComponent),
     title: "\u0422\u0438\u043F\u0438 \u041D\u0430\u043F\u0440\u044F\u043C\u043A\u0443 \u041B\u0411\u0417",
     canActivate: [authGuard]
   },
   {
     path: "dictCityCategories",
-    loadComponent: () => import("./chunk-4JKVPKHI.js").then((m) => m.DictCityCategoryComponent),
+    loadComponent: () => import("./chunk-M77P746P.js").then((m) => m.DictCityCategoryComponent),
     title: "\u041A\u0430\u0442\u0435\u0433\u043E\u0440\u0456\u0457 \u043E\u0431'\u0454\u043A\u0442\u0456\u0432 \u0430\u0434\u043C\u0456\u043D\u0456\u0441\u0442\u0440\u0430\u0442\u0438\u0432\u043D\u043E-\u0442\u0435\u0440\u0438\u0442\u043E\u0440\u0456\u0430\u043B\u044C\u043D\u0438\u0445 \u043E\u0434\u0438\u043D\u0438\u0446\u044C",
     canActivate: [authGuard]
   },
   {
     path: "dictCityCodes",
-    loadComponent: () => import("./chunk-6UCAJVC2.js").then((m) => m.CityCodePageComponent),
+    loadComponent: () => import("./chunk-KTB2HVW4.js").then((m) => m.CityCodePageComponent),
     title: "\u041A\u043E\u0434\u0438\u0444\u0456\u043A\u0430\u0442\u043E\u0440 \u0430\u0434\u043C\u0456\u043D\u0456\u0441\u0442\u0440\u0430\u0442\u0438\u0432\u043D\u043E-\u0442\u0435\u0440\u0438\u0442\u043E\u0440\u0456\u0430\u043B\u044C\u043D\u0438\u0445 \u043E\u0434\u0438\u043D\u0438\u0446\u044C",
     canActivate: [authGuard]
   },
   {
     path: "dictArea",
-    loadComponent: () => import("./chunk-A7GRE3HS.js").then((m) => m.DictAreaPage),
+    loadComponent: () => import("./chunk-GUQSBQWQ.js").then((m) => m.DictAreaPage),
     title: "\u041D\u0430\u043F\u0440\u044F\u043C\u043E\u043A \u041B\u0411\u0417",
     canActivate: [authGuard]
   },
   {
     path: "dictTemplateCategories",
-    loadComponent: () => import("./chunk-TCSVQ6D6.js").then((m) => m.DictTemplateCategoriesComponent),
+    loadComponent: () => import("./chunk-KGXYUZEN.js").then((m) => m.DictTemplateCategoriesComponent),
     title: "\u041A\u0430\u0442\u0435\u0433\u043E\u0440\u0456\u0457 \u0448\u0430\u0431\u043B\u043E\u043D\u0456\u0432 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0456\u0432",
     canActivate: [authGuard]
   },
   {
     path: "dictUnitTasks",
-    loadComponent: () => import("./chunk-7EUM6QCE.js").then((m) => m.DictUnitTaskPage),
+    loadComponent: () => import("./chunk-H4D7LDWF.js").then((m) => m.DictUnitTaskPage),
     title: "\u0417\u0430\u0432\u0434\u0430\u043D\u043D\u044F \u043F\u0456\u0434\u0440\u043E\u0437\u0434\u0456\u043B\u0456\u0432",
     canActivate: [authGuard]
   },
   {
     path: "units",
     title: "\u041F\u0456\u0434\u0440\u043E\u0437\u0434\u0456\u043B\u0438",
-    loadComponent: () => import("./chunk-MM5UOKWQ.js").then((m) => m.UnitsComponent),
+    loadComponent: () => import("./chunk-HYSDAMCF.js").then((m) => m.UnitsComponent),
     canActivate: [authGuard]
   },
   {
     path: "unit/import",
     title: "\u0406\u043C\u043F\u043E\u0440\u0442 \u043E\u0441\u043E\u0431\u043E\u0432\u043E\u0433\u043E \u0441\u043A\u043B\u0430\u0434\u0443",
-    loadComponent: () => import("./chunk-5HGK4VP5.js").then((m) => m.ImportProgressPage),
+    loadComponent: () => import("./chunk-GWTCZVW2.js").then((m) => m.ImportProgressPage),
     canActivate: [authGuard]
   },
   {
     path: "personnel",
     title: "\u041E\u0441\u043E\u0431\u043E\u0432\u0438\u0439 \u0441\u043A\u043B\u0430\u0434",
-    loadComponent: () => import("./chunk-BJA75PDW.js").then((m) => m.PersonnelPage),
+    loadComponent: () => import("./chunk-TRE5VSP6.js").then((m) => m.PersonnelPage),
     canActivate: [authGuard]
   },
   {
     path: "DocumentDataSet",
-    loadComponent: () => import("./chunk-ZPPZNXDH.js").then((m) => m.DocumentDataSetComponent),
+    loadComponent: () => import("./chunk-7643MB43.js").then((m) => m.DocumentDataSetComponent),
     title: "\u0414\u0430\u043D\u0456 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0456\u0432",
     canActivate: [authGuard]
   },
   {
     path: "templates",
     title: "\u0428\u0430\u0431\u043B\u043E\u043D\u0438 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0456\u0432",
-    loadComponent: () => import("./chunk-BFAPUPDV.js").then((m) => m.DocTemplatesTree),
+    loadComponent: () => import("./chunk-42WHN3FM.js").then((m) => m.DocTemplatesTree),
     canActivate: [authGuard]
   },
   {
     path: "users",
     title: "\u041A\u043E\u0440\u0438\u0441\u0442\u0443\u0432\u0430\u0447\u0456",
-    loadComponent: () => import("./chunk-4EDNGXGO.js").then((m) => m.UsersPage),
+    loadComponent: () => import("./chunk-T46NNXTQ.js").then((m) => m.UsersPage),
     canActivate: [authGuard]
   },
   {
     path: "login",
     title: "\u0412\u0445\u0456\u0434 \u0432 \u0441\u0438\u0441\u0442\u0435\u043C\u0443",
-    loadComponent: () => import("./chunk-D3P5LPAW.js").then((m) => m.LoginPage)
+    loadComponent: () => import("./chunk-5C5LCJVZ.js").then((m) => m.LoginPage)
   },
   {
     path: "welcome",
     title: "\u0414\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u0430 \u0430\u0432\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u044F",
-    loadComponent: () => import("./chunk-IDOLRSYP.js").then((m) => m.WelcomeComponent),
+    loadComponent: () => import("./chunk-KBTJI5AP.js").then((m) => m.WelcomeComponent),
     canActivate: [twoFactorGuard]
   },
   { path: "", pathMatch: "full", redirectTo: "login" },
@@ -1003,472 +973,6 @@ var MatToolbarModule = class _MatToolbarModule {
   }], null, null);
 })();
 
-// src/app/auth/totp.service.ts
-var TotpService = class _TotpService {
-  gql = "/graphql";
-  http = inject(HttpClient);
-  getSetup() {
-    const query = `
-      mutation GetSetup {
-        twoFactorSetup {
-          qrUri
-          manualEntryKey
-        }
-      }
-    `;
-    return this.http.post(this.gql, { query }).pipe(map((res) => ({
-      sharedKey: res.data.twoFactorSetup.manualEntryKey,
-      authenticatorUri: res.data.twoFactorSetup.qrUri
-    })));
-  }
-  enable(code) {
-    const query = `
-      mutation Enable($code: String!) {
-        enableTwoFactor(code: $code)
-      }
-    `;
-    return this.http.post(this.gql, { query, variables: { code } }).pipe(map((res) => ({
-      success: res.data.enableTwoFactor,
-      message: res.data.enableTwoFactor ? "2FA enabled" : "Invalid code",
-      recoveryCodes: []
-      // Backend doesn't return codes yet in this version of mutation
-    })));
-  }
-  disable(password) {
-    const query = `
-      mutation Disable($password: String!) {
-        disableTwoFactor(password: $password)
-      }
-    `;
-    return this.http.post(this.gql, { query, variables: { password } }).pipe(map((res) => ({
-      message: res.data.disableTwoFactor ? "2FA disabled" : "Failed to disable"
-    })));
-  }
-  getStatus() {
-    const query = `
-      query GetStatus {
-        twoFactorStatus
-      }
-    `;
-    return this.http.post(this.gql, { query }).pipe(map((res) => ({
-      isTwoFactorEnabled: res.data.twoFactorStatus
-    })));
-  }
-  static \u0275fac = function TotpService_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _TotpService)();
-  };
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _TotpService, factory: _TotpService.\u0275fac, providedIn: "root" });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(TotpService, [{
-    type: Injectable,
-    args: [{ providedIn: "root" }]
-  }], null, null);
-})();
-
-// src/app/auth/TotpSetupDialog.component.ts
-function TotpSetupDialogComponent_Conditional_3_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 1);
-    \u0275\u0275element(1, "mat-spinner", 4);
-    \u0275\u0275elementEnd();
-  }
-}
-function TotpSetupDialogComponent_Conditional_4_Conditional_0_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 5);
-    \u0275\u0275text(1);
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const ctx_r0 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", ctx_r0.errorMessage(), " ");
-  }
-}
-function TotpSetupDialogComponent_Conditional_4_Conditional_1_Conditional_8_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r2 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "button", 10);
-    \u0275\u0275listener("click", function TotpSetupDialogComponent_Conditional_4_Conditional_1_Conditional_8_Template_button_click_0_listener() {
-      \u0275\u0275restoreView(_r2);
-      const ctx_r0 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r0.startSetup());
-    });
-    \u0275\u0275text(1, "\u041D\u0430\u043B\u0430\u0448\u0442\u0443\u0432\u0430\u0442\u0438 2FA");
-    \u0275\u0275elementEnd();
-  }
-}
-function TotpSetupDialogComponent_Conditional_4_Conditional_1_Conditional_9_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r3 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 9)(1, "p", 11);
-    \u0275\u0275text(2, "1. \u0414\u043E\u0434\u0430\u0439\u0442\u0435 \u043A\u043B\u044E\u0447 \u0432 \u0434\u043E\u0434\u0430\u0442\u043E\u043A-\u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0442\u043E\u0440:");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "div", 12);
-    \u0275\u0275text(4);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "p", 13);
-    \u0275\u0275text(6, "2. \u0412\u0432\u0435\u0434\u0456\u0442\u044C \u0437\u0433\u0435\u043D\u0435\u0440\u043E\u0432\u0430\u043D\u0438\u0439 6-\u0437\u043D\u0430\u0447\u043D\u0438\u0439 \u043A\u043E\u0434 \u0434\u043B\u044F \u043F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0436\u0435\u043D\u043D\u044F:");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "mat-form-field", 14)(8, "mat-label");
-    \u0275\u0275text(9, "\u041A\u043E\u0434 \u043F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0436\u0435\u043D\u043D\u044F");
-    \u0275\u0275elementEnd();
-    \u0275\u0275element(10, "input", 15);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(11, "button", 16);
-    \u0275\u0275listener("click", function TotpSetupDialogComponent_Conditional_4_Conditional_1_Conditional_9_Template_button_click_11_listener() {
-      \u0275\u0275restoreView(_r3);
-      const ctx_r0 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r0.enableTotp());
-    });
-    \u0275\u0275text(12, " \u0423\u0432\u0456\u043C\u043A\u043D\u0443\u0442\u0438 ");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(13, "button", 17);
-    \u0275\u0275listener("click", function TotpSetupDialogComponent_Conditional_4_Conditional_1_Conditional_9_Template_button_click_13_listener() {
-      \u0275\u0275restoreView(_r3);
-      const ctx_r0 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r0.cancelSetup());
-    });
-    \u0275\u0275text(14, "\u0421\u043A\u0430\u0441\u0443\u0432\u0430\u0442\u0438");
-    \u0275\u0275elementEnd()();
-  }
-  if (rf & 2) {
-    let tmp_3_0;
-    const ctx_r0 = \u0275\u0275nextContext(3);
-    \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate1(" ", (tmp_3_0 = ctx_r0.setupData()) == null ? null : tmp_3_0.sharedKey, " ");
-    \u0275\u0275advance(6);
-    \u0275\u0275property("formControl", ctx_r0.verificationCodeControl);
-    \u0275\u0275advance();
-    \u0275\u0275property("disabled", ctx_r0.verificationCodeControl.invalid);
-  }
-}
-function TotpSetupDialogComponent_Conditional_4_Conditional_1_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 6)(1, "p");
-    \u0275\u0275text(2, "\u0414\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u0430 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u044F \u0437\u0430\u0440\u0430\u0437 ");
-    \u0275\u0275elementStart(3, "strong");
-    \u0275\u0275text(4, "\u0432\u0438\u043C\u043A\u043D\u0435\u043D\u0430");
-    \u0275\u0275elementEnd();
-    \u0275\u0275text(5, ".");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(6, "p", 7);
-    \u0275\u0275text(7, " \u0417\u0430\u0445\u0438\u0441\u0442\u0456\u0442\u044C \u0441\u0432\u0456\u0439 \u0430\u043A\u0430\u0443\u043D\u0442, \u0443\u0432\u0456\u043C\u043A\u043D\u0443\u0432\u0448\u0438 \u0434\u043E\u0434\u0430\u0442\u043A\u043E\u0432\u0438\u0439 \u043A\u0440\u043E\u043A \u043F\u0435\u0440\u0435\u0432\u0456\u0440\u043A\u0438 \u043F\u0440\u0438 \u0432\u0445\u043E\u0434\u0456 (\u043D\u0430\u043F\u0440\u0438\u043A\u043B\u0430\u0434, \u0447\u0435\u0440\u0435\u0437 Google Authenticator). ");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275conditionalCreate(8, TotpSetupDialogComponent_Conditional_4_Conditional_1_Conditional_8_Template, 2, 0, "button", 8)(9, TotpSetupDialogComponent_Conditional_4_Conditional_1_Conditional_9_Template, 15, 3, "div", 9);
-  }
-  if (rf & 2) {
-    const ctx_r0 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance(8);
-    \u0275\u0275conditional(!ctx_r0.setupData() ? 8 : 9);
-  }
-}
-function TotpSetupDialogComponent_Conditional_4_Conditional_2_Conditional_6_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r4 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "button", 21);
-    \u0275\u0275listener("click", function TotpSetupDialogComponent_Conditional_4_Conditional_2_Conditional_6_Template_button_click_0_listener() {
-      \u0275\u0275restoreView(_r4);
-      const ctx_r0 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r0.showDisableForm.set(true));
-    });
-    \u0275\u0275text(1, "\u0412\u0438\u043C\u043A\u043D\u0443\u0442\u0438 2FA");
-    \u0275\u0275elementEnd();
-  }
-}
-function TotpSetupDialogComponent_Conditional_4_Conditional_2_Conditional_7_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r5 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 20)(1, "p");
-    \u0275\u0275text(2, "\u0414\u043B\u044F \u0432\u0438\u043C\u043A\u043D\u0435\u043D\u043D\u044F \u0432\u0432\u0435\u0434\u0456\u0442\u044C \u0432\u0430\u0448 \u043F\u043E\u0442\u043E\u0447\u043D\u0438\u0439 \u043F\u0430\u0440\u043E\u043B\u044C \u0432\u0456\u0434 \u0430\u043A\u0430\u0443\u043D\u0442\u0443:");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "mat-form-field", 14)(4, "mat-label");
-    \u0275\u0275text(5, "\u041F\u0430\u0440\u043E\u043B\u044C");
-    \u0275\u0275elementEnd();
-    \u0275\u0275element(6, "input", 22);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "button", 23);
-    \u0275\u0275listener("click", function TotpSetupDialogComponent_Conditional_4_Conditional_2_Conditional_7_Template_button_click_7_listener() {
-      \u0275\u0275restoreView(_r5);
-      const ctx_r0 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r0.disableTotp());
-    });
-    \u0275\u0275text(8, " \u041F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u0438 \u0432\u0438\u043C\u043A\u043D\u0435\u043D\u043D\u044F ");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "button", 17);
-    \u0275\u0275listener("click", function TotpSetupDialogComponent_Conditional_4_Conditional_2_Conditional_7_Template_button_click_9_listener() {
-      \u0275\u0275restoreView(_r5);
-      const ctx_r0 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r0.cancelDisable());
-    });
-    \u0275\u0275text(10, "\u0421\u043A\u0430\u0441\u0443\u0432\u0430\u0442\u0438");
-    \u0275\u0275elementEnd()();
-  }
-  if (rf & 2) {
-    const ctx_r0 = \u0275\u0275nextContext(3);
-    \u0275\u0275advance(6);
-    \u0275\u0275property("formControl", ctx_r0.passwordControl);
-    \u0275\u0275advance();
-    \u0275\u0275property("disabled", ctx_r0.passwordControl.invalid);
-  }
-}
-function TotpSetupDialogComponent_Conditional_4_Conditional_2_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 6)(1, "p", 18);
-    \u0275\u0275text(2, " \u0414\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u0430 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u044F ");
-    \u0275\u0275elementStart(3, "strong");
-    \u0275\u0275text(4, "\u0443\u0432\u0456\u043C\u043A\u043D\u0435\u043D\u0430");
-    \u0275\u0275elementEnd();
-    \u0275\u0275text(5, ". ");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275conditionalCreate(6, TotpSetupDialogComponent_Conditional_4_Conditional_2_Conditional_6_Template, 2, 0, "button", 19)(7, TotpSetupDialogComponent_Conditional_4_Conditional_2_Conditional_7_Template, 11, 2, "div", 20);
-  }
-  if (rf & 2) {
-    const ctx_r0 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance(6);
-    \u0275\u0275conditional(!ctx_r0.showDisableForm() ? 6 : 7);
-  }
-}
-function TotpSetupDialogComponent_Conditional_4_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275conditionalCreate(0, TotpSetupDialogComponent_Conditional_4_Conditional_0_Template, 2, 1, "div", 5);
-    \u0275\u0275conditionalCreate(1, TotpSetupDialogComponent_Conditional_4_Conditional_1_Template, 10, 1)(2, TotpSetupDialogComponent_Conditional_4_Conditional_2_Template, 8, 1);
-  }
-  if (rf & 2) {
-    const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275conditional(ctx_r0.errorMessage() ? 0 : -1);
-    \u0275\u0275advance();
-    \u0275\u0275conditional(!ctx_r0.isTwoFactorEnabled() ? 1 : 2);
-  }
-}
-var TotpSetupDialogComponent = class _TotpSetupDialogComponent {
-  totpService = inject(TotpService);
-  snackBar = inject(MatSnackBar);
-  dialogRef = inject(MatDialogRef);
-  isLoading = signal(true, ...ngDevMode ? [{ debugName: "isLoading" }] : []);
-  errorMessage = signal("", ...ngDevMode ? [{ debugName: "errorMessage" }] : []);
-  isTwoFactorEnabled = signal(false, ...ngDevMode ? [{ debugName: "isTwoFactorEnabled" }] : []);
-  setupData = signal(null, ...ngDevMode ? [{ debugName: "setupData" }] : []);
-  showDisableForm = signal(false, ...ngDevMode ? [{ debugName: "showDisableForm" }] : []);
-  verificationCodeControl = new FormControl("", [Validators.required, Validators.minLength(6), Validators.maxLength(6)]);
-  passwordControl = new FormControl("", Validators.required);
-  ngOnInit() {
-    this.refreshStatus();
-  }
-  refreshStatus() {
-    this.isLoading.set(true);
-    this.totpService.getStatus().subscribe({
-      next: (res) => {
-        this.isTwoFactorEnabled.set(res.isTwoFactorEnabled);
-        this.isLoading.set(false);
-      },
-      error: () => {
-        this.errorMessage.set("\u041D\u0435 \u0432\u0434\u0430\u043B\u043E\u0441\u044F \u043E\u0442\u0440\u0438\u043C\u0430\u0442\u0438 \u0441\u0442\u0430\u0442\u0443\u0441 2FA");
-        this.isLoading.set(false);
-      }
-    });
-  }
-  startSetup() {
-    this.isLoading.set(true);
-    this.errorMessage.set("");
-    this.totpService.getSetup().subscribe({
-      next: (res) => {
-        this.setupData.set(res);
-        this.isLoading.set(false);
-      },
-      error: () => {
-        this.errorMessage.set("\u041D\u0435 \u0432\u0434\u0430\u043B\u043E\u0441\u044F \u0440\u043E\u0437\u043F\u043E\u0447\u0430\u0442\u0438 \u043D\u0430\u043B\u0430\u0448\u0442\u0443\u0432\u0430\u043D\u043D\u044F 2FA");
-        this.isLoading.set(false);
-      }
-    });
-  }
-  cancelSetup() {
-    this.setupData.set(null);
-    this.verificationCodeControl.reset();
-    this.errorMessage.set("");
-  }
-  enableTotp() {
-    if (this.verificationCodeControl.invalid)
-      return;
-    this.isLoading.set(true);
-    this.totpService.enable(this.verificationCodeControl.value).subscribe({
-      next: (res) => {
-        this.snackBar.open("\u0414\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u0443 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u044E \u0443\u0432\u0456\u043C\u043A\u043D\u0435\u043D\u043E \u0443\u0441\u043F\u0456\u0448\u043D\u043E", "OK", { duration: 3e3 });
-        this.isTwoFactorEnabled.set(true);
-        this.setupData.set(null);
-        this.verificationCodeControl.reset();
-        alert("\u0420\u0435\u0437\u0435\u0440\u0432\u043D\u0456 \u043A\u043E\u0434\u0438: " + res.recoveryCodes.join(", ") + ". \u0417\u0431\u0435\u0440\u0435\u0436\u0456\u0442\u044C \u0457\u0445!");
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.errorMessage.set(err.error?.message || "\u041D\u0435\u043F\u0440\u0430\u0432\u0438\u043B\u044C\u043D\u0438\u0439 \u043A\u043E\u0434 \u0430\u0431\u043E \u043F\u043E\u043C\u0438\u043B\u043A\u0430 \u0441\u0435\u0440\u0432\u0435\u0440\u0430");
-        this.isLoading.set(false);
-      }
-    });
-  }
-  cancelDisable() {
-    this.showDisableForm.set(false);
-    this.passwordControl.reset();
-    this.errorMessage.set("");
-  }
-  disableTotp() {
-    if (this.passwordControl.invalid)
-      return;
-    this.isLoading.set(true);
-    this.totpService.disable(this.passwordControl.value).subscribe({
-      next: () => {
-        this.snackBar.open("\u0414\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u0443 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u044E \u0432\u0438\u043C\u043A\u043D\u0435\u043D\u043E", "OK", { duration: 3e3 });
-        this.isTwoFactorEnabled.set(false);
-        this.showDisableForm.set(false);
-        this.passwordControl.reset();
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.errorMessage.set(err.error?.message || "\u041F\u043E\u043C\u0438\u043B\u043A\u0430 \u043F\u0440\u0438 \u0432\u0438\u043C\u043A\u043D\u0435\u043D\u043D\u0456 (\u043C\u043E\u0436\u043B\u0438\u0432\u043E, \u043D\u0435\u0432\u0456\u0440\u043D\u0438\u0439 \u043F\u0430\u0440\u043E\u043B\u044C)");
-        this.isLoading.set(false);
-      }
-    });
-  }
-  static \u0275fac = function TotpSetupDialogComponent_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _TotpSetupDialogComponent)();
-  };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _TotpSetupDialogComponent, selectors: [["app-totp-setup-dialog"]], decls: 8, vars: 1, consts: [["mat-dialog-title", ""], [2, "display", "flex", "justify-content", "center", "padding", "20px"], ["align", "end"], ["mat-button", "", "mat-dialog-close", ""], ["diameter", "40"], [2, "color", "red", "margin-bottom", "12px", "padding", "8px", "background", "#ffebee", "border-radius", "4px"], [2, "margin-bottom", "16px"], [2, "font-size", "14px", "opacity", "0.8"], ["mat-raised-button", "", "color", "primary"], [2, "margin-top", "16px", "padding", "16px", "background", "#f5f5f5", "border-radius", "4px"], ["mat-raised-button", "", "color", "primary", 3, "click"], [2, "font-weight", "500"], [2, "font-family", "monospace", "font-size", "18px", "padding", "12px", "background", "#fff", "border", "1px dashed #ccc", "text-align", "center", "letter-spacing", "2px"], [2, "font-weight", "500", "margin-top", "16px"], ["appearance", "outline", 2, "width", "100%"], ["matInput", "", "maxlength", "6", "autocomplete", "off", 3, "formControl"], ["mat-raised-button", "", "color", "primary", 3, "click", "disabled"], ["mat-button", "", 2, "margin-left", "8px", 3, "click"], [2, "color", "green"], ["mat-raised-button", "", "color", "warn"], [2, "margin-top", "16px", "padding", "16px", "background", "#fff3e0", "border-radius", "4px"], ["mat-raised-button", "", "color", "warn", 3, "click"], ["matInput", "", "type", "password", 3, "formControl"], ["mat-raised-button", "", "color", "warn", 3, "click", "disabled"]], template: function TotpSetupDialogComponent_Template(rf, ctx) {
-    if (rf & 1) {
-      \u0275\u0275elementStart(0, "h2", 0);
-      \u0275\u0275text(1, "\u041D\u0430\u043B\u0430\u0448\u0442\u0443\u0432\u0430\u043D\u043D\u044F \u0434\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u043E\u0457 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u0457");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(2, "mat-dialog-content");
-      \u0275\u0275conditionalCreate(3, TotpSetupDialogComponent_Conditional_3_Template, 2, 0, "div", 1)(4, TotpSetupDialogComponent_Conditional_4_Template, 3, 2);
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(5, "mat-dialog-actions", 2)(6, "button", 3);
-      \u0275\u0275text(7, "\u0417\u0430\u043A\u0440\u0438\u0442\u0438");
-      \u0275\u0275elementEnd()();
-    }
-    if (rf & 2) {
-      \u0275\u0275advance(3);
-      \u0275\u0275conditional(ctx.isLoading() ? 3 : 4);
-    }
-  }, dependencies: [
-    MatDialogModule,
-    MatDialogClose,
-    MatDialogTitle,
-    MatDialogActions,
-    MatDialogContent,
-    MatButtonModule,
-    MatButton,
-    MatInputModule,
-    MatInput,
-    MatFormField,
-    MatLabel,
-    MatFormFieldModule,
-    MatProgressSpinnerModule,
-    MatProgressSpinner,
-    ReactiveFormsModule,
-    DefaultValueAccessor,
-    NgControlStatus,
-    MaxLengthValidator,
-    FormControlDirective
-  ], encapsulation: 2 });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(TotpSetupDialogComponent, [{
-    type: Component,
-    args: [{
-      selector: "app-totp-setup-dialog",
-      standalone: true,
-      imports: [
-        MatDialogModule,
-        MatButtonModule,
-        MatInputModule,
-        MatFormFieldModule,
-        MatProgressSpinnerModule,
-        ReactiveFormsModule
-      ],
-      template: `
-    <h2 mat-dialog-title>\u041D\u0430\u043B\u0430\u0448\u0442\u0443\u0432\u0430\u043D\u043D\u044F \u0434\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u043E\u0457 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u0457</h2>
-    <mat-dialog-content>
-      @if (isLoading()) {
-        <div style="display: flex; justify-content: center; padding: 20px;">
-          <mat-spinner diameter="40"></mat-spinner>
-        </div>
-      } @else {
-        
-        @if (errorMessage()) {
-          <div style="color: red; margin-bottom: 12px; padding: 8px; background: #ffebee; border-radius: 4px;">
-            {{ errorMessage() }}
-          </div>
-        }
-
-        @if (!isTwoFactorEnabled()) {
-          <div style="margin-bottom: 16px;">
-            <p>\u0414\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u0430 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u044F \u0437\u0430\u0440\u0430\u0437 <strong>\u0432\u0438\u043C\u043A\u043D\u0435\u043D\u0430</strong>.</p>
-            <p style="font-size: 14px; opacity: 0.8;">
-              \u0417\u0430\u0445\u0438\u0441\u0442\u0456\u0442\u044C \u0441\u0432\u0456\u0439 \u0430\u043A\u0430\u0443\u043D\u0442, \u0443\u0432\u0456\u043C\u043A\u043D\u0443\u0432\u0448\u0438 \u0434\u043E\u0434\u0430\u0442\u043A\u043E\u0432\u0438\u0439 \u043A\u0440\u043E\u043A \u043F\u0435\u0440\u0435\u0432\u0456\u0440\u043A\u0438 \u043F\u0440\u0438 \u0432\u0445\u043E\u0434\u0456 (\u043D\u0430\u043F\u0440\u0438\u043A\u043B\u0430\u0434, \u0447\u0435\u0440\u0435\u0437 Google Authenticator).
-            </p>
-          </div>
-
-          @if (!setupData()) {
-            <button mat-raised-button color="primary" (click)="startSetup()">\u041D\u0430\u043B\u0430\u0448\u0442\u0443\u0432\u0430\u0442\u0438 2FA</button>
-          } @else {
-            <div style="margin-top: 16px; padding: 16px; background: #f5f5f5; border-radius: 4px;">
-              <p style="font-weight: 500;">1. \u0414\u043E\u0434\u0430\u0439\u0442\u0435 \u043A\u043B\u044E\u0447 \u0432 \u0434\u043E\u0434\u0430\u0442\u043E\u043A-\u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0442\u043E\u0440:</p>
-              <div style="font-family: monospace; font-size: 18px; padding: 12px; background: #fff; border: 1px dashed #ccc; text-align: center; letter-spacing: 2px;">
-                {{ setupData()?.sharedKey }}
-              </div>
-              
-              <p style="font-weight: 500; margin-top: 16px;">2. \u0412\u0432\u0435\u0434\u0456\u0442\u044C \u0437\u0433\u0435\u043D\u0435\u0440\u043E\u0432\u0430\u043D\u0438\u0439 6-\u0437\u043D\u0430\u0447\u043D\u0438\u0439 \u043A\u043E\u0434 \u0434\u043B\u044F \u043F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0436\u0435\u043D\u043D\u044F:</p>
-              
-              <mat-form-field appearance="outline" style="width: 100%;">
-                <mat-label>\u041A\u043E\u0434 \u043F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0436\u0435\u043D\u043D\u044F</mat-label>
-                <input matInput [formControl]="verificationCodeControl" maxlength="6" autocomplete="off" />
-              </mat-form-field>
-
-              <button mat-raised-button color="primary" [disabled]="verificationCodeControl.invalid" (click)="enableTotp()">
-                \u0423\u0432\u0456\u043C\u043A\u043D\u0443\u0442\u0438
-              </button>
-              <button mat-button (click)="cancelSetup()" style="margin-left: 8px;">\u0421\u043A\u0430\u0441\u0443\u0432\u0430\u0442\u0438</button>
-            </div>
-          }
-        } @else {
-          <!-- Two Factor is Enabled -->
-          <div style="margin-bottom: 16px;">
-            <p style="color: green;">
-              \u0414\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u0430 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u044F <strong>\u0443\u0432\u0456\u043C\u043A\u043D\u0435\u043D\u0430</strong>.
-            </p>
-          </div>
-
-          @if (!showDisableForm()) {
-            <button mat-raised-button color="warn" (click)="showDisableForm.set(true)">\u0412\u0438\u043C\u043A\u043D\u0443\u0442\u0438 2FA</button>
-          } @else {
-            <div style="margin-top: 16px; padding: 16px; background: #fff3e0; border-radius: 4px;">
-              <p>\u0414\u043B\u044F \u0432\u0438\u043C\u043A\u043D\u0435\u043D\u043D\u044F \u0432\u0432\u0435\u0434\u0456\u0442\u044C \u0432\u0430\u0448 \u043F\u043E\u0442\u043E\u0447\u043D\u0438\u0439 \u043F\u0430\u0440\u043E\u043B\u044C \u0432\u0456\u0434 \u0430\u043A\u0430\u0443\u043D\u0442\u0443:</p>
-              
-              <mat-form-field appearance="outline" style="width: 100%;">
-                <mat-label>\u041F\u0430\u0440\u043E\u043B\u044C</mat-label>
-                <input matInput [formControl]="passwordControl" type="password" />
-              </mat-form-field>
-
-              <button mat-raised-button color="warn" [disabled]="passwordControl.invalid" (click)="disableTotp()">
-                \u041F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u0438 \u0432\u0438\u043C\u043A\u043D\u0435\u043D\u043D\u044F
-              </button>
-              <button mat-button (click)="cancelDisable()" style="margin-left: 8px;">\u0421\u043A\u0430\u0441\u0443\u0432\u0430\u0442\u0438</button>
-            </div>
-          }
-        }
-      }
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>\u0417\u0430\u043A\u0440\u0438\u0442\u0438</button>
-    </mat-dialog-actions>
-  `
-    }]
-  }], null, null);
-})();
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TotpSetupDialogComponent, { className: "TotpSetupDialogComponent", filePath: "app/auth/TotpSetupDialog.component.ts", lineNumber: 100 });
-})();
-
 // src/navigator/navigator.component.ts
 function NavigatorComponent_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
@@ -1505,17 +1009,9 @@ function NavigatorComponent_Conditional_1_Template(rf, ctx) {
     \u0275\u0275listener("click", function NavigatorComponent_Conditional_1_Template_button_click_19_listener() {
       \u0275\u0275restoreView(_r1);
       const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.openTotpSetup());
-    });
-    \u0275\u0275text(20, "\u041D\u0430\u043B\u0430\u0448\u0442\u0443\u0432\u0430\u043D\u043D\u044F 2FA");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(21, "button", 27);
-    \u0275\u0275listener("click", function NavigatorComponent_Conditional_1_Template_button_click_21_listener() {
-      \u0275\u0275restoreView(_r1);
-      const ctx_r1 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r1.onLogout());
     });
-    \u0275\u0275text(22, "\u0412\u0438\u0439\u0442\u0438");
+    \u0275\u0275text(20, "\u0412\u0438\u0439\u0442\u0438");
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -1536,13 +1032,6 @@ function NavigatorComponent_Conditional_2_Template(rf, ctx) {
 }
 var NavigatorComponent = class _NavigatorComponent {
   auth = inject(AuthService);
-  dialog = inject(MatDialog);
-  openTotpSetup() {
-    this.dialog.open(TotpSetupDialogComponent, {
-      width: "500px",
-      disableClose: true
-    });
-  }
   onLogout() {
     this.auth.logout().subscribe();
   }
@@ -1552,7 +1041,7 @@ var NavigatorComponent = class _NavigatorComponent {
   static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _NavigatorComponent, selectors: [["app-navigator"]], decls: 39, vars: 3, consts: [["dictionaries", "matMenu"], ["dictDroneForces", "matMenu"], ["dictGeneralInfo", "matMenu"], ["mat-menu-item", "", 3, "matMenuTriggerFor"], ["mat-menu-item", "", "routerLink", "/dictDroneTypes", "routerLinkActive", "active-menu-item"], ["mat-menu-item", "", "routerLink", "/dictDroneModels", "routerLinkActive", "active-menu-item"], ["mat-menu-item", "", "routerLink", "/dictTemplateCategories", "routerLinkActive", "active-menu-item"], ["mat-menu-item", "", "routerLink", "/dictUnitTasks", "routerLinkActive", "active-menu-item"], ["mat-menu-item", "", "routerLink", "/dictForcesTypes", "routerLinkActive", "active-menu-item"], ["mat-menu-item", "", "routerLink", "/dictPosition", "routerLinkActive", "active-menu-item"], ["mat-menu-item", "", "routerLink", "/dictSoldierStates", "routerLinkActive", "active-menu-item"], ["mat-menu-item", "", "routerLink", "/dictUnitTypes", "routerLinkActive", "active-menu-item"], ["mat-menu-item", "", "routerLink", "/dictRanks", "routerLinkActive", "active-menu-item"], ["mat-menu-item", "", "routerLink", "/dictCityCategories", "routerLinkActive", "active-menu-item"], ["mat-menu-item", "", "routerLink", "/dictCityCodes", "routerLinkActive", "active-menu-item"], ["mat-menu-item", "", "routerLink", "/dictAreaTypes", "routerLinkActive", "active-menu-item"], ["mat-menu-item", "", "routerLink", "/dictArea", "routerLinkActive", "active-menu-item"], ["matButton", "", 3, "matMenuTriggerFor"], ["matButton", "", "routerLink", "/DocumentDataSet", "routerLinkActive", "active-link"], ["matButton", "", "routerLink", "/templates", "routerLinkActive", "active-link"], ["matButton", "", "routerLink", "/units", "routerLinkActive", "active-link"], ["matButton", "", "routerLink", "/personnel", "routerLinkActive", "active-link"], ["matButton", "", "routerLink", "/orders", "routerLinkActive", "active-link"], ["matButton", "", "routerLink", "/reports", "routerLinkActive", "active-link"], ["matButton", "", "routerLink", "/users", "routerLinkActive", "active-link"], [1, "spacer"], [1, "user-info"], ["matButton", "", 3, "click"], ["matButton", "", "routerLink", "/login", "routerLinkActive", "active-link"]], template: function NavigatorComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "mat-toolbar");
-      \u0275\u0275conditionalCreate(1, NavigatorComponent_Conditional_1_Template, 23, 2)(2, NavigatorComponent_Conditional_2_Template, 3, 0);
+      \u0275\u0275conditionalCreate(1, NavigatorComponent_Conditional_1_Template, 21, 2)(2, NavigatorComponent_Conditional_2_Template, 3, 0);
       \u0275\u0275elementStart(3, "mat-menu", null, 0)(5, "button", 3);
       \u0275\u0275text(6, "\u0421\u0438\u043B\u0438 \u0431\u0435\u0437\u043F\u0456\u043B\u043E\u0442\u043D\u0438\u0445 \u0441\u0438\u0441\u0442\u0435\u043C");
       \u0275\u0275elementEnd();
@@ -1636,7 +1125,6 @@ var NavigatorComponent = class _NavigatorComponent {
 
         <span class="spacer"></span>
         <span class="user-info">{{ auth.displayName() }}</span>
-        <button matButton (click)="openTotpSetup()">\u041D\u0430\u043B\u0430\u0448\u0442\u0443\u0432\u0430\u043D\u043D\u044F 2FA</button>
         <button matButton (click)="onLogout()">\u0412\u0438\u0439\u0442\u0438</button>
       } @else {
         <span class="spacer"></span>
@@ -1701,7 +1189,7 @@ var NavigatorComponent = class _NavigatorComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(NavigatorComponent, { className: "NavigatorComponent", filePath: "navigator/navigator.component.ts", lineNumber: 140 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(NavigatorComponent, { className: "NavigatorComponent", filePath: "navigator/navigator.component.ts", lineNumber: 137 });
 })();
 
 // src/app/app.ts
