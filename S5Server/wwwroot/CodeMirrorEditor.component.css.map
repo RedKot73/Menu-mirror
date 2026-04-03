@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["angular:styles/component:css;d0bcf4287b874b1936cd5254552ee8e877e1c15f6667d90ec6949abeb5be175a;/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Front/src/app/DocumentTemplates/components/CodeMirrorEditor.component.ts"],
+  "sourcesContent": ["\n    .codemirror-wrapper {\n      height: 100%;\n      width: 100%;\n    }\n    \n    :host {\n      display: block;\n      height: 100%;\n      width: 100%;\n    }\n  "],
+  "mappings": ";AACI,CAAC;AACC,UAAQ;AACR,SAAO;AACT;AAEA;AACE,WAAS;AACT,UAAQ;AACR,SAAO;AACT;",
+  "names": []
+}

@@ -22,6 +22,7 @@ import {
   ChangeLoginDialogData,
 } from './dialogs/ChangeLoginDialog.component';
 import { ConfirmDialogComponent } from '../app/dialogs/ConfirmDialog.component';
+import { TotpSetupDialogComponent } from '../app/auth/TotpSetupDialog.component';
 import { LookupDto } from '../app/shared/models/lookup.models';
 
 @Component({
@@ -41,6 +42,7 @@ import { LookupDto } from '../app/shared/models/lookup.models';
     MatDialogModule,
     MatSnackBarModule,
     MasterDetailLayoutComponent,
+    TotpSetupDialogComponent,
   ],
   templateUrl: './Users.page.html',
   styleUrls: ['./Users.page.scss'],
@@ -212,7 +214,7 @@ export class UsersPage implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         if (adminChange) {
-          this.usersService.adminChangeUsername(user.id, result.newUserName).subscribe({
+          this.usersService.adminChangeUsername(user.id, { newUserName: result.newUserName }).subscribe({
             next: () => {
               this.notify('Логін змінено');
               this.loadUsers();
@@ -296,7 +298,40 @@ export class UsersPage implements OnInit {
     });
   }
 
+  /** Налаштування / керування 2FA для вибраного користувача */
+  onManage2FA(): void {
+    const user = this.selectedUser();
+    if (!user) return;
+    const dialogRef = this.dialog.open(TotpSetupDialogComponent, {
+      width: '580px',
+      maxWidth: '96vw',
+      disableClose: false,
+    });
+    dialogRef.afterClosed().subscribe(() => {
+      // Refresh the user list to update 2FA status badge
+      this.loadUsers();
+    });
+  }
+
   private notify(msg: string): void {
     this.snackBar.open(msg, 'OK', { duration: 3000 });
+  }
+
+  getSoldierDisplayName(user: UserListItem): string {
+    if (!user.soldier) {
+      return "Системний (без прив'язки)";
+    }
+    const s = user.soldier;
+    const rank = s.rankShortValue ? s.rankShortValue + ' ' : '';
+    const midle = s.midleName ? ' ' + s.midleName : '';
+    return `${rank}${s.lastName} ${s.firstName}${midle}`;
+  }
+
+  getSoldierUnit(user: UserListItem): string {
+    return user.soldier?.unitShortName || '—';
+  }
+
+  getSoldierPosition(user: UserListItem): string {
+    return user.soldier?.positionValue || '—';
   }
 }

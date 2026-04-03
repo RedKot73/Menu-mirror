@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["angular:styles/component:css;99d1b4e1fbf0edda2f0e937fe33e4b59473169a23bc0fc9692ef8f91c7e4de8c;/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Front/src/dictionaries/dictAreaPage.component.ts"],
+  "sourcesContent": ["\n      .coords-column {\n        max-width: 150px;\n        white-space: pre-wrap;\n        word-break: break-word;\n        line-height: 1.4;\n      }\n    "],
+  "mappings": ";AACM,CAAC;AACC,aAAW;AACX,eAAa;AACb,cAAY;AACZ,eAAa;AACf;",
+  "names": []
+}

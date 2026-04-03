@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -21,8 +21,8 @@ public class AccountController : ControllerBase
     private readonly RoleManager<IdentityRole<Guid>> _roleManager;
     private readonly MainDbContext _db;
     private readonly DbSet<TVezhaUser> _users;
-    private readonly DbSet<Soldier> _soldiers;
     private readonly ILogger<AccountController> _logger;
+    private readonly IConfiguration _configuration;
 
     /// <summary>
     /// API для управління користувачами системи
@@ -32,31 +32,21 @@ public class AccountController : ControllerBase
         SignInManager<TVezhaUser> signInManager,
         RoleManager<IdentityRole<Guid>> roleManager,
         MainDbContext db,
-        ILogger<AccountController> logger)
+        ILogger<AccountController> logger,
+        IConfiguration configuration)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _roleManager = roleManager;
         _db = db;
         _users = _db.Set<TVezhaUser>();
-        _soldiers = _db.Soldiers;
         _logger = logger;
+        _configuration = configuration;
     }
 
     private IQueryable<TVezhaUser> UsersQuery() => _users
-        .AsNoTracking()
         .Include(u => u.Soldier)
-            .ThenInclude(s => s.Rank)
-        .Include(u => u.Soldier)
-            .ThenInclude(s => s.Position)
-        .Include(u => u.Soldier)
-            .ThenInclude(s => s.Unit)
-        .Include(u => u.Soldier)
-            .ThenInclude(s => s.State)
-        .Include(u => u.Soldier)
-            .ThenInclude(s => s.AssignedUnit)
-        .Include(u => u.Soldier)
-            .ThenInclude(s => s.InvolvedUnit);
+        .AsNoTracking();
 
     /// <summary>
     /// Отримати всіх користувачів
@@ -78,11 +68,12 @@ public class AccountController : ControllerBase
             }
 
             var users = await query
-                .OrderBy(u => u.Soldier.LastName)
-                .ThenBy(u => u.Soldier.FirstName)
+                .OrderBy(u => u.UserName)
                 .Select(u => u.ToDto())
                 .ToListAsync(ct);
             
+            _logger.LogInformation("[DEBUG] Fetching users list. Soldier data included: {IsIncluded}", true);
+
             return Ok(users);
         }
         catch (OperationCanceledException)
@@ -138,46 +129,6 @@ public class AccountController : ControllerBase
     }
 
     /// <summary>
-    /// Отримати користувача за Soldier ID
-    /// </summary>
-    [HttpGet("by-soldier/{soldierId}")]
-    [Authorize]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetBySoldier(Guid soldierId, CancellationToken ct = default)
-    {
-        if (soldierId == Guid.Empty)
-            return BadRequest("SoldierId обов'язковий");
-
-        try
-        {
-            var user = await UsersQuery()
-                .FirstOrDefaultAsync(u => u.SoldierId == soldierId, ct);
-
-            if (user == null)
-                return Problem(
-                    statusCode: 404,
-                    title: "Не знайдено",
-                    detail: $"Користувача для військовослужбовця '{soldierId}' не знайдено");
-
-            var roles = await _userManager.GetRolesAsync(user);
-            var result = user.ToDto(roles);
-
-            return Ok(result);
-        }
-        catch (OperationCanceledException)
-        {
-            return Problem(statusCode: 499, title: "Скасовано кліентом");
-        }
-        catch (Exception ex)
-        {
-            if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Помилка отримання користувача по SoldierId={SoldierId}", soldierId);
-            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
-        }
-    }
-
-    /// <summary>
     /// Створити нового користувача
     /// </summary>
     [HttpPost]
@@ -193,48 +144,9 @@ public class AccountController : ControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        if (dto.SoldierId == Guid.Empty)
-            return BadRequest("SoldierId обов'язковий");
-
         try
         {
-            // 1. Перевірка чи Soldier існує
-            var soldier = await _soldiers
-                .AsTracking()//иначе EF думает что это новая сущность и пытается ее вставить в БД
-                .FirstOrDefaultAsync(s => s.Id == dto.SoldierId, ct);
-
-            if (soldier == null)
-                return Problem(
-                    statusCode: 404,
-                    title: "Не знайдено",
-                    detail: $"Військовослужбовець з ID '{dto.SoldierId}' не знайдено");
-
-            // 2. Перевірка чи у Soldier вже є користувач
-            var existingUser = await _users
-                .FirstOrDefaultAsync(u => u.SoldierId == dto.SoldierId, ct);
-
-            ct.ThrowIfCancellationRequested();
-
-            if (existingUser != null)
-            {
-                if (_logger.IsEnabled(LogLevel.Warning))
-                    _logger.LogWarning(
-                        "Спроба створити дублікат користувача SoldierId={SoldierId}, ExistingUserId={UserId}",
-                        dto.SoldierId, existingUser.Id);
-
-                return Problem(
-                    statusCode: 409,
-                    title: "Конфлікт",
-                    detail: $"Військовослужбовець '{soldier.FirstName} {soldier.LastName}' вже має обліковий запис",
-                    extensions: new Dictionary<string, object?>
-                    {
-                        ["soldierId"] = dto.SoldierId,
-                        ["existingUserId"] = existingUser.Id,
-                        ["existingUserName"] = existingUser.UserName
-                    });
-            }
-
-            // 3. Перевірка чи Email вже використовується
+            // 1. Перевірка чи Email вже використовується
             var email = dto.Email?.Trim();
             var emailExists = string.IsNullOrEmpty(email) ? null : await _userManager.FindByEmailAsync(email);
 
@@ -248,13 +160,12 @@ public class AccountController : ControllerBase
                     detail: $"Email '{email}' вже використовується");
             }
 
-            // 4. Створення нового користувача
+            // 2. Створення нового користувача
             var user = new TVezhaUser
             {
+                Id = dto.SoldierId ?? Guid.NewGuid(),
                 UserName = dto.UserName,
                 Email = dto.Email,
-                SoldierId = dto.SoldierId,
-                Soldier = soldier,
                 RegistrationDate = DateTime.UtcNow,
                 EmailConfirmed = dto.EmailConfirmed ?? false,
                 RequirePasswordChange = true // Змінити пароль при першому вході
@@ -267,8 +178,8 @@ public class AccountController : ControllerBase
             {
                 if (_logger.IsEnabled(LogLevel.Warning))
                     _logger.LogWarning(
-                        "Помилка створення користувача SoldierId={SoldierId}: {Errors}",
-                        dto.SoldierId,
+                        "Помилка створення користувача UserName={UserName}: {Errors}",
+                        dto.UserName,
                         string.Join(", ", result.Errors.Select(e => e.Description)));
 
                 return Problem(
@@ -278,11 +189,14 @@ public class AccountController : ControllerBase
             }
 
             if (_logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation(
-                    "Створено користувача UserId={UserId}, UserName={UserName}, SoldierId={SoldierId}",
-                    user.Id, user.UserName, user.SoldierId);
+                    "Створено користувача UserId={UserId}, UserName={UserName}",
+                    user.Id, user.UserName);
+                _logger.LogInformation("[DEBUG] Creating user. Status: Success, UserID: {Id}", user.Id);
+            }
 
-            // 5. Додати до ролей (якщо вказані)
+            // 3. Додати до ролей (якщо вказані)
             if (dto.Roles?.Length > 0)
             {
                 await _userManager.AddToRolesAsync(user, dto.Roles);
@@ -301,8 +215,8 @@ public class AccountController : ControllerBase
         {
             if (_logger.IsEnabled(LogLevel.Error))
                 _logger.LogError(ex,
-                    "Помилка створення користувача UserName={UserName}, SoldierId={SoldierId}",
-                    dto.UserName, dto.SoldierId);
+                    "Помилка створення користувача UserName={UserName}",
+                    dto.UserName);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -322,34 +236,6 @@ public class AccountController : ControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        /*Принудительное создание первого пользователя когда в системе нет никого
-        // 4. Створення нового користувача
-        var sldrId = Guid.Parse("06501ce2-3c5a-4732-9a1b-b7b780269682");
-        var usr = new TVezhaUser
-        {
-            UserName = dto.UserName,
-            Email = string.Empty,
-            SoldierId = sldrId,
-            RegistrationDate = DateTime.UtcNow,
-            EmailConfirmed = true
-        };
-
-        var result = await _userManager.CreateAsync(usr, dto.Password);
-
-        if (!result.Succeeded)
-        {
-            if (_logger.IsEnabled(LogLevel.Warning))
-                _logger.LogWarning(
-                    "Помилка створення користувача SoldierId={SoldierId}: {Errors}",
-                    sldrId,
-                    string.Join(", ", result.Errors.Select(e => e.Description)));
-
-            return Problem(
-                statusCode: 400,
-                title: "Помилка створення користувача",
-                detail: string.Join("; ", result.Errors.Select(e => e.Description)));
-        }
-        */
         try
         {
             ct.ThrowIfCancellationRequested();
@@ -405,7 +291,21 @@ public class AccountController : ControllerBase
             user.LastLoginDate = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
 
-            // ✅ Спочатку авторизуємо користувача
+            // ✅ Спочатку перевіряємо чи увімкнена 2FA
+            if (user.TwoFactorEnabled)
+            {
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation("Потрібна 2FA для UserId={UserId}", user.Id);
+
+                return Ok(new
+                {
+                    requiresTwoFactor = true,
+                    userId = user.Id,
+                    rememberMe = dto.RememberMe
+                });
+            }
+
+            // ✅ Авторизуємо користувача, якщо 2FA вимкнено
             await _signInManager.SignInAsync(user, dto.RememberMe);
 
             if (_logger.IsEnabled(LogLevel.Information))
@@ -433,7 +333,7 @@ public class AccountController : ControllerBase
             }
 
             var roles = await _userManager.GetRolesAsync(user);
-            var result = user.ToInfoDto(roles, includeSoldier: false);
+            var result = user.ToInfoDto(roles);
 
             return Ok(result);
         }
@@ -445,6 +345,102 @@ public class AccountController : ControllerBase
         {
             if (_logger.IsEnabled(LogLevel.Error))
                 _logger.LogError(ex, "Помилка входу UserName={UserName}", dto.UserName);
+            return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
+        }
+    }
+
+    /// <summary>
+    /// Вхід в систему (Крок 2: Перевірка TOTP)
+    /// </summary>
+    [HttpPost("login-2fa")]
+    [EnableRateLimiting("login")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> LoginTwoFactor(
+        [FromBody] LoginTwoFactorDto dto,
+        CancellationToken ct = default)
+    {
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        try
+        {
+            ct.ThrowIfCancellationRequested();
+
+            var user = await _userManager.FindByIdAsync(dto.UserId.ToString());
+            if (user == null || !user.TwoFactorEnabled)
+            {
+                return Problem(
+                    statusCode: 401,
+                    title: "Неправильний код або користувач не знайдений");
+            }
+
+            if (await _userManager.IsLockedOutAsync(user))
+            {
+                return Problem(
+                    statusCode: 423,
+                    title: "Обліковий запис заблокований",
+                    detail: $"Обліковий запис заблокований до {user.LockoutEnd?.LocalDateTime:dd.MM.yyyy HH:mm}");
+            }
+
+            var isValid = await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, dto.Code);
+            
+            var isSoftMode = _configuration["TWO_FACTOR_MODE"]?.ToLower() == "soft";
+
+            if (!isValid)
+            {
+                if (isSoftMode)
+                {
+                    _logger.LogWarning("[DEBUG] 2FA Check Failed for user {Email}, but access granted due to Debug Mode.", user.Email ?? user.UserName);
+                }
+                else
+                {
+                    await _userManager.AccessFailedAsync(user);
+                    return Problem(
+                        statusCode: 401,
+                        title: "Неправильний код");
+                }
+            }
+            else
+            {
+                await _userManager.ResetAccessFailedCountAsync(user);
+            }
+
+            user.LastLoginDate = DateTime.UtcNow;
+            await _userManager.UpdateAsync(user);
+
+            await _signInManager.SignInAsync(user, dto.RememberMe);
+
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Успішний вхід (2FA) UserId={UserId}", user.Id);
+
+            if (user.RequirePasswordChange)
+            {
+                return Problem(
+                    statusCode: 403,
+                    title: "Потрібна зміна пароля",
+                    detail: "Для продовження роботи необхідно змінити пароль",
+                    extensions: new Dictionary<string, object?> { ["requirePasswordChange"] = true, ["userId"] = user.Id });
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var result = user.ToInfoDto(roles);
+            
+            if (!isValid && isSoftMode) 
+            {
+                result = result with { DebugMessage = "2FA check skipped" };
+            }
+
+            return Ok(result);
+        }
+        catch (OperationCanceledException)
+        {
+            return Problem(statusCode: 499, title: "Скасовано кліентом");
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Помилка входу (2FA) для UserId={UserId}", dto.UserId);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
     }
@@ -527,7 +523,10 @@ public class AccountController : ControllerBase
             await _userManager.UpdateAsync(user);
 
             if (_logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation("Змінено пароль UserId={UserId}", id);
+                _logger.LogInformation("[DEBUG] Updating user {Id}. Payload: ChangePassword", id);
+            }
 
             return NoContent();
         }
@@ -635,9 +634,12 @@ public class AccountController : ControllerBase
             }
 
             if (_logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation(
                     "Змінено ім'я користувача UserId={UserId}: '{OldUserName}' -> '{NewUserName}'",
                     id, oldUserName, newUserName);
+                _logger.LogInformation("[DEBUG] Updating user {Id}. Payload: ChangeUsername (Old: {Old}, New: {New})", id, oldUserName, newUserName);
+            }
 
             return NoContent();
         }
@@ -694,9 +696,12 @@ public class AccountController : ControllerBase
             }
 
             if (_logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation(
                     "Змінено статус блокування UserId={UserId}, Locked={Locked}, LockoutEnd={LockoutEnd}",
                     id, dto.Lock, lockoutEnd);
+                _logger.LogInformation("[DEBUG] Updating user {Id}. Payload: SetLockout (Locked: {Locked})", id, dto.Lock);
+            }
 
             return NoContent();
         }
@@ -746,9 +751,12 @@ public class AccountController : ControllerBase
             }
 
             if (_logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation(
-                    "Видалено користувача UserId={UserId}, UserName={UserName}, SoldierId={SoldierId}",
-                    id, user.UserName, user.SoldierId);
+                    "Видалено користувача UserId={UserId}, UserName={UserName}",
+                    id, user.UserName);
+                _logger.LogInformation("[DEBUG] Deleting user. Status: Success, UserID: {Id}", id);
+            }
 
             return NoContent();
         }
@@ -932,9 +940,12 @@ public class AccountController : ControllerBase
             }
 
             if (_logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation(
                     "Призначено роль UserId={UserId}, RoleName={RoleName}",
                     userId, roleName);
+                _logger.LogInformation("[DEBUG] Updating user {Id}. Payload: AddRole ({Role})", userId, roleName);
+            }
 
             return NoContent();
         }
@@ -990,9 +1001,12 @@ public class AccountController : ControllerBase
             }
 
             if (_logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation(
                     "Видалено роль UserId={UserId}, RoleName={RoleName}",
                     userId, roleName);
+                _logger.LogInformation("[DEBUG] Updating user {Id}. Payload: RemoveRole ({Role})", userId, roleName);
+            }
 
             return NoContent();
         }
@@ -1032,7 +1046,7 @@ public class AccountController : ControllerBase
                 return Unauthorized();
 
             var roles = await _userManager.GetRolesAsync(user);
-            var result = user.ToInfoDto(roles, includeSoldier: true);
+            var result = user.ToInfoDto(roles);
 
             return Ok(result);
         }
@@ -1317,9 +1331,12 @@ public class AccountController : ControllerBase
             await _userManager.UpdateAsync(user);
 
             if (_logger.IsEnabled(LogLevel.Warning))
+            {
                 _logger.LogWarning(
                     "Адміністративне скидання пароля: UserId={UserId}, UserName={UserName}, Admin={AdminName}, RequireChange={RequireChange}",
                     id, user.UserName, adminName, dto.RequirePasswordChange);
+                _logger.LogInformation("[DEBUG] Updating user {Id}. Payload: AdminResetPassword", id);
+            }
 
             return NoContent();
         }
@@ -1415,9 +1432,12 @@ public class AccountController : ControllerBase
 
             var admin = User.Identity?.Name ?? "Unknown Admin";
             if (_logger.IsEnabled(LogLevel.Warning))
+            {
                 _logger.LogWarning(
                     "Адміністративна зміна імені: UserId={UserId}, '{OldUserName}' -> '{NewUserName}', Admin={AdminName}",
                     id, oldUserName, newUserName, admin);
+                _logger.LogInformation("[DEBUG] Updating user {Id}. Payload: AdminChangeUsername (New: {New})", id, newUserName);
+            }
 
             return NoContent();
         }

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/Unit/unit.constants.ts"],
+  "sourcesContent": ["/**\n * Общие константы для работы с Unit (подразделениями)\n * Соответствуют константам из C# ControllerFunctions\n */\n\n// ID для записи БД представляющую отсутствующее значение\n// Соответствует C# ControllerFunctions.NullGuid\nexport const NULL_GUID = '00000000-0000-0000-0000-000000000001';\n// ID для записи БД представляющую \"Екіпаж\"\n// Соответствует C# ControllerFunctions.CrewGuid\nexport const Crew_GUID = '00000000-0000-0000-0000-000000000002';\n// ID типу \"ППД\" (Пункт постійної дислокації) у довіднику типів РВЗ\nexport const PPD_AREA_TYPE_GUID = '00000000-0000-0000-0000-000000000001';\n"],
+  "mappings": ";AAOO,IAAM,YAAY;AAGlB,IAAM,YAAY;AAElB,IAAM,qBAAqB;",
+  "names": []
+}

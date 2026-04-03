@@ -22,6 +22,13 @@ const GET_DATA_SETS = gql`
   }
 `;
 
+/** Поточний час сервера */
+const GET_SERVER_TIME = gql`
+  query GetServerTime {
+    serverTime
+  }
+`;
+
 const GET_COMPLETE_DATA_SET = gql`
   query GetCompleteDataSet($dataSetId: UUID!, $templateCategoryId: UUID!) {
     templateDataSetForDoc(dataSetId: $dataSetId, templateCategoryId: $templateCategoryId) {
@@ -226,6 +233,18 @@ export interface GqlDocumentTemplate {
 @Injectable({ providedIn: 'root' })
 export class GraphqlDataService {
   private apollo = inject(Apollo);
+
+  /**
+   * Отримати поточний час сервера (UTC)
+   */
+  getServerTime(): Observable<string> {
+    return this.apollo
+      .query<{ serverTime: string }>({
+        query: GET_SERVER_TIME,
+        fetchPolicy: 'network-only',
+      })
+      .pipe(map((result) => result.data!.serverTime));
+  }
 
   /**
    * Отримати список наборів даних

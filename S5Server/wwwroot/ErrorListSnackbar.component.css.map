@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["angular:styles/component:css;003ee1e8cbc8f457ab7d1545f7316e4f7e51d9f5e71f6fa24b804b5fc03270d8;/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Front/src/app/dialogs/ErrorListSnackbar.component.ts"],
+  "sourcesContent": ["\n      .error-snackbar-container {\n        color: white;\n      }\n      .error-header {\n        display: flex;\n        align-items: center;\n        gap: 8px;\n        margin-bottom: 8px;\n        font-weight: bold;\n      }\n      .error-list {\n        margin: 0;\n        padding-left: 24px;\n        max-height: 200px;\n        overflow-y: auto;\n        font-size: 13px;\n      }\n      .error-list li {\n        margin-bottom: 4px;\n      }\n      .error-actions {\n        display: flex;\n        justify-content: flex-end;\n        margin-top: 8px;\n      }\n      .error-title {\n        color: #ffab40;\n      }\n    "],
+  "mappings": ";AACM,CAAC;AACC,SAAO;AACT;AACA,CAAC;AACC,WAAS;AACT,eAAa;AACb,OAAK;AACL,iBAAe;AACf,eAAa;AACf;AACA,CAAC;AACC,UAAQ;AACR,gBAAc;AACd,cAAY;AACZ,cAAY;AACZ,aAAW;AACb;AACA,CAPC,WAOW;AACV,iBAAe;AACjB;AACA,CAAC;AACC,WAAS;AACT,mBAAiB;AACjB,cAAY;AACd;AACA,CAAC;AACC,SAAO;AACT;",
+  "names": []
+}

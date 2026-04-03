@@ -119,6 +119,8 @@ export class ChangeLoginDialogComponent implements OnInit, OnDestroy {
           },
           error: () => {
             this.checkingUserName = false;
+            // Assume available on network error; backend will reject if taken
+            this.userNameAvailable = true;
             this.userNameError = '';
           },
         });
@@ -137,6 +139,7 @@ export class ChangeLoginDialogComponent implements OnInit, OnDestroy {
   }
 
   get canSave(): boolean {
+    if (this.checkingUserName) return false; // Block while async check is in-flight
     const passwordOk = this.data.adminChange || !!this.model.currentPassword;
     return (
       !!this.model.newUserName &&

@@ -1455,16 +1455,11 @@ namespace S5Server.Migrations
                     b.Property<bool>("RequirePasswordChange")
                         .HasColumnType("boolean")
                         .HasColumnName("require_password_change")
-                        .HasComment("При наступному вході вимагати зміну пароля (наприклад, після адміністративного скидання)");
+                        .HasComment("При наступному вході вимагати зміну пароля (наприклад, после адміністративного скидання)");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text")
                         .HasColumnName("security_stamp");
-
-                    b.Property<Guid>("SoldierId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("soldier_id")
-                        .HasComment("Посилання на відповідного бійця");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean")
@@ -1484,10 +1479,6 @@ namespace S5Server.Migrations
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
-
-                    b.HasIndex("SoldierId")
-                        .IsUnique()
-                        .HasDatabaseName("aspnetusers_un_soldier_id");
 
                     b.ToTable("users", "identity", t =>
                         {
@@ -2431,18 +2422,6 @@ namespace S5Server.Migrations
                     b.Navigation("UnitTask");
                 });
 
-            modelBuilder.Entity("S5Server.Models.TVezhaUser", b =>
-                {
-                    b.HasOne("S5Server.Models.Soldier", "Soldier")
-                        .WithOne("VezhaUser")
-                        .HasForeignKey("S5Server.Models.TVezhaUser", "SoldierId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .IsRequired()
-                        .HasConstraintName("aspnetusers_soldiers_fk");
-
-                    b.Navigation("Soldier");
-                });
-
             modelBuilder.Entity("S5Server.Models.Unit", b =>
                 {
                     b.HasOne("S5Server.Models.Unit", "AssignedUnit")
@@ -2587,11 +2566,6 @@ namespace S5Server.Migrations
             modelBuilder.Entity("S5Server.Models.DictUnitTask", b =>
                 {
                     b.Navigation("UnitTaskItems");
-                });
-
-            modelBuilder.Entity("S5Server.Models.Soldier", b =>
-                {
-                    b.Navigation("VezhaUser");
                 });
 
             modelBuilder.Entity("S5Server.Models.TemplateDataSet", b =>

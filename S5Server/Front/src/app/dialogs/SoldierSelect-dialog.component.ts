@@ -279,7 +279,7 @@ export class SoldierSelectDialogComponent {
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
     }
-    this.searchTimeout = setTimeout(() => {
+    this.searchTimeout = window.setTimeout(() => {
       this.reload();
     }, 500);
   }

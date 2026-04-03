@@ -25,12 +25,12 @@ export interface UserListItem {
   twoFactorEnabled: boolean;
   requirePasswordChange: boolean;
   lastPasswordChangeDate: string | null;
-  soldier: SoldierDto;
+  soldier: SoldierDto | null;
   roles?: string[];
 }
 
 export interface CreateUserDto {
-  soldierId: string;
+  soldierId?: string;   // Optional: account may exist without a linked soldier (e.g. system admin)
   userName: string;
   password: string;
   email?: string;

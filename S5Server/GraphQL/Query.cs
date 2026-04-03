@@ -1,11 +1,14 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
-
+using HotChocolate;            // Добавлено для [Service]
+using HotChocolate.Data;       // Добавлено для [UseProjection], [UseFiltering], [UseSorting]
 using HotChocolate.Authorization;
-
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 using S5Server.Data;
 using S5Server.Models;
+
+
 
 namespace S5Server.GraphQL;
 
@@ -14,6 +17,12 @@ namespace S5Server.GraphQL;
 /// </summary>
 public class Query
 {
+    /// <summary>
+    /// Отримати поточний час сервера (UTC)
+    /// </summary>
+    [AllowAnonymous]
+    public DateTime GetServerTime() => DateTime.UtcNow;
+
     /// <summary>
     /// Отримати всі набори даних для шаблонів
     /// </summary>
@@ -241,5 +250,22 @@ var allSoldiers = await unitSoldiers.Union(assSoldiers).Union(invSoldiers)
         [Service] MainDbContext db)
         => db.SoldierHistories
            .Where(t => t.SoldierId == id);
+
+    /// <summary>
+    /// Отримати статус 2FA для поточного користувача
+    /// </summary>
+    [Authorize]
+    public async Task<bool> GetTwoFactorStatus(
+        System.Security.Claims.ClaimsPrincipal principal,
+        [Service] UserManager<TVezhaUser> userManager)
+    {
+        var userId = principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                     ?? principal.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+
+        if (string.IsNullOrEmpty(userId)) return false;
+
+        var user = await userManager.FindByIdAsync(userId);
+        return user?.TwoFactorEnabled ?? false;
+    }
 }
 

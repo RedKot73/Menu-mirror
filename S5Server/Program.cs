@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
@@ -10,27 +10,21 @@ using S5Server.Models;
 using Serilog;
 using System.Globalization;
 using System.Text;
+using Microsoft.IdentityModel.Tokens;
 
-//Исправление кодировки консоли для отображения кириллицы в ошибках PostgreSQL
+//Исправление кодировки консоли для відображення кириллицы в ошибках PostgreSQL
 Console.OutputEncoding = Encoding.UTF8;
 Console.InputEncoding = Encoding.UTF8;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
-// ✅ Serilog - єдине джерело логування
+// ✅ Serilog - єдине джерело логування (Налаштування в appsettings.json)
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
     .Enrich.WithProperty("Application", "S5Server")
     .Enrich.WithProperty("Environment", builder.Environment.EnvironmentName)
-    .WriteTo.Console(
-        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
-    .WriteTo.File(
-        path: "Logs/s5server-.txt",
-        rollingInterval: RollingInterval.Day,
-        retainedFileCountLimit: 7,
-        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
 
 
@@ -46,23 +40,37 @@ if (builder.Environment.IsProduction())
     builder.Services.AddApplicationInsightsTelemetry();
 }
 
-// --- ВРЕМЕННАЯ ПРОВЕРКА ДЛЯ ОТЛАДКИ ---
-// Читаем локальный .env файл (в продакшене K8s его не будет, и метод просто ничего не сделает)
-// Загружаем .env только если мы работаем локально (Development)
+// --- Environment Initialization ---
+// Load .env only if we are working locally (Development)
 if (builder.Environment.IsDevelopment())
 {
-    DotNetEnv.Env.Load();
+    DotNetEnv.Env.TraversePath().Load();
+    builder.Configuration.AddEnvironmentVariables();
 }
-var testHost = builder.Configuration["PrimaryConnection:DB_Host"];
-if (string.IsNullOrEmpty(testHost))
+
+// ✅ JWT Secret Validation & Fail-Safe Mechanism
+const string DEV_JWT_SECRET = "S5_DEV_SECRET_2026_DO_NOT_USE_IN_PROD_999";
+var jwtSecret = builder.Configuration["JwtSettings:Secret"];
+
+if (string.IsNullOrEmpty(jwtSecret))
 {
-    Log.Error("⚠️ ВНИМАНИЕ: Файл .env не загрузился или переменные названы неверно!");
+    if (builder.Environment.IsDevelopment())
+    {
+        Log.Warning("⚠️ JWT Secret missing. Using development fallback: {Secret}", DEV_JWT_SECRET);
+        jwtSecret = DEV_JWT_SECRET;
+        builder.Configuration["JwtSettings:Secret"] = DEV_JWT_SECRET;
+    }
+    else
+    {
+        Log.Fatal("❌ CRITICAL: JwtSettings__Secret is missing in Production environment! Terminating.");
+        return;
+    }
 }
-else
+else if (builder.Environment.IsProduction() && jwtSecret == DEV_JWT_SECRET)
 {
-    Log.Information($"✅ Переменные подхватились! Host: {testHost}");
+    Log.Fatal("❌ CRITICAL: Production environment is using the Development fallback JWT secret! Terminating.");
+    return;
 }
-// --------------------------------------
 
 var pgConnConfig = new DBConfig();
 builder.Configuration.GetSection(DBConfig.ConfigKey).Bind(pgConnConfig);
@@ -76,9 +84,6 @@ var connBuilder = new NpgsqlConnectionStringBuilder
     Timeout = pgConnConfig.Timeout,
     Port = pgConnConfig.Port,
     SearchPath = pgConnConfig.SearchPath,
-
-// Вот эта строка решит проблему доверия к сертификату:
-    TrustServerCertificate = true,
 
     SslMode = builder.Environment.IsDevelopment()
         ? SslMode.Prefer      // Dev: опціонально
@@ -176,13 +181,60 @@ builder.Services.AddIdentity<TVezhaUser, IdentityRole<Guid>>(options =>
     options.Password.RequireLowercase = false;
     options.Password.RequiredUniqueChars = 1;
     options.SignIn.RequireConfirmedAccount = false;
-    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(60);
-    options.Lockout.MaxFailedAccessAttempts = 3;
+    
+    if (builder.Environment.IsDevelopment())
+    {
+        options.Lockout.AllowedForNewUsers = false;
+        options.Lockout.MaxFailedAccessAttempts = int.MaxValue;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.Zero;
+    }
+    else
+    {
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(60);
+        options.Lockout.MaxFailedAccessAttempts = 3;
+        options.Lockout.AllowedForNewUsers = true;
+    }
 })
 .AddEntityFrameworkStores<MainDbContext>()
 .AddUserManager<UserManager<TVezhaUser>>()
 .AddRoles<IdentityRole<Guid>>()
 .AddDefaultTokenProviders();
+
+// ✅ JWT Bearer Authentication
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secret = jwtSettings["Secret"] ?? throw new InvalidOperationException("JWT Secret not found");
+
+builder.Services.AddAuthentication(options =>
+{
+    // Default to Cookies for general UI, but allow JWT for SPA/API/GQL
+    options.DefaultAuthenticateScheme = "DefaultAuth";
+    options.DefaultChallengeScheme = "DefaultAuth";
+})
+.AddPolicyScheme("DefaultAuth", "Cookie or JWT", options =>
+{
+    options.ForwardDefaultSelector = context =>
+    {
+        string authorization = context.Request.Headers.Authorization.ToString();
+        if (!string.IsNullOrEmpty(authorization) && authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            return Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+
+        return IdentityConstants.ApplicationScheme;
+    };
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
+        ClockSkew = TimeSpan.Zero
+    };
+});
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
@@ -233,6 +285,8 @@ builder.Services.AddRateLimiter(options =>
 builder.Services
     .AddGraphQLServer()
     .AddQueryType<S5Server.GraphQL.Query>()
+    .AddMutationType<S5Server.GraphQL.AuthMutation>()
+    .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = builder.Environment.IsDevelopment()) // ✅ Детальні помилки в Dev
     .AddAuthorization()                     // ✅ Підтримка [Authorize]
     .AddProjections()                       // ✅ Оптимізація Include/Select
     .AddFiltering()                         // ✅ Фільтрація (where)
@@ -251,8 +305,12 @@ builder.Services.AddCors(options =>
 
         if (builder.Environment.IsDevelopment())
         {
-            // ✅ Development: дозволити Angular dev server
-            policy.WithOrigins("http://localhost:4200")
+            // ✅ Development: дозволити будь-який порт на localhost/127.0.0.1
+            policy.SetIsOriginAllowed(origin => 
+                  {
+                      var host = new Uri(origin).Host;
+                      return host == "localhost" || host == "127.0.0.1";
+                  })
                   .AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials();
@@ -281,7 +339,6 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // === БЛОК АВТОМАТИЧЕСКИХ МИГРАЦИЙ ===
-// Делаем проверку регистронезависимой и ищем вхождение строки
 if (args.Any(arg => arg.Trim().Contains("--migrate", StringComparison.OrdinalIgnoreCase)))
 {
     Log.Information("=== Запуск режима миграций (обнаружен флаг --migrate) ===");
@@ -294,13 +351,53 @@ if (args.Any(arg => arg.Trim().Contains("--migrate", StringComparison.OrdinalIgn
         await dbContext.Database.MigrateAsync();
         Log.Information("=== Миграции успешно применены! ===");
         
-        // КРИТИЧЕСКИ ВАЖНО: Принудительный выход с кодом 0, чтобы Init-контейнер завершился
         Environment.Exit(0); 
     }
     catch (Exception ex)
     {
         Log.Fatal(ex, "Ошибка при применении миграций");
-        Environment.Exit(1); // Сообщаем K8s об ошибке
+        Environment.Exit(1); 
+    }
+}
+
+// === БЛОК НАСТРОЙКИ СЛУЖЕБНОГО ПОЛЬЗОВАТЕЛЯ ===
+if (args.Any(arg => arg.Trim().Contains("--setup-user", StringComparison.OrdinalIgnoreCase)))
+{
+    Log.Information("=== Запуск режима настройки служебного пользователя (обнаружен флаг --setup-user) ===");
+
+    using var scope = app.Services.CreateScope();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<TVezhaUser>>();
+    try
+    {
+        const string userName = "havrok";
+        var password = builder.Configuration["SERVICE_USER_PASSWORD"] ?? "QWERTY654321";
+        
+        var user = await userManager.FindByNameAsync(userName);
+        if (user == null)
+        {
+            Log.Information("Создание пользователя '{User}'...", userName);
+            user = new TVezhaUser { UserName = userName, Email = $"{userName}@unit.mil" };
+            var result = await userManager.CreateAsync(user, password);
+            if (!result.Succeeded) throw new Exception(string.Join(", ", result.Errors.Select(e => e.Description)));
+        }
+        else
+        {
+            Log.Information("Сброс пароля для '{User}'...", userName);
+            user.PasswordHash = userManager.PasswordHasher.HashPassword(user, password);
+            await userManager.UpdateAsync(user);
+        }
+
+        // Разблокировка
+        await userManager.SetLockoutEndDateAsync(user, null);
+        await userManager.ResetAccessFailedCountAsync(user);
+        
+        Log.Information("=== Пользователь '{User}' успешно настроен! ===", userName);
+        Environment.Exit(0);
+    }
+    catch (Exception ex)
+    {
+        Log.Fatal(ex, "Ошибка при настройке служебного пользователя");
+        Environment.Exit(1);
     }
 }
 
@@ -401,6 +498,7 @@ try
             Log.Information("S5Server started (addresses not available)");
         }
     });
+
 
     app.Run();
 }

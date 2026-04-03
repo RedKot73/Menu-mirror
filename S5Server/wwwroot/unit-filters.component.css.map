@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/Unit/unit-filters.component.scss"],
+  "sourcesContent": [".filters {\n    display: flex;\n    gap: 16px;\n    align-items: center;\n    margin-bottom: 16px;\n    flex-wrap: wrap;\n}\n\n.filters mat-form-field {\n    min-width: 200px;\n}"],
+  "mappings": ";AAAA,CAAA;AACI,WAAA;AACA,OAAA;AACA,eAAA;AACA,iBAAA;AACA,aAAA;;AAGJ,CARA,QAQA;AACI,aAAA;;",
+  "names": []
+}

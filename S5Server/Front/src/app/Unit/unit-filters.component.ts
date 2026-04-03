@@ -72,7 +72,7 @@ export class UnitFiltersComponent {
     }
 
     // Устанавливаем задержку 2 секунды для поиска
-    this.searchTimeout = setTimeout(() => {
+    this.searchTimeout = window.setTimeout(() => {
       this.searchChanged.emit(this.searchText);
     }, 2000);
   }

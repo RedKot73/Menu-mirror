@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["angular:styles/component:css;9c0836411d6be20f941a8e6dee0e2873f2f675258de85bb542b5cb0633c5cd6b;/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Front/src/app/dialogs/JsonKeyValue-dialog.component.ts"],
+  "sourcesContent": ["\n      .pairs-container {\n        display: flex;\n        flex-direction: column;\n        gap: 16px;\n        margin-bottom: 16px;\n        max-height: 750px;\n        overflow-y: auto;\n        overflow-x: hidden;\n        padding-top: 10px;\n      }\n\n      .pair-row {\n        display: flex;\n        gap: 12px;\n        align-items: flex-start;\n      }\n\n      .key-field {\n        flex: 0 0 200px;\n      }\n\n      .value-field {\n        flex: 1;\n      }\n\n      mat-dialog-content {\n        min-width: 900px;\n        max-width: 1200px;\n      }\n    "],
+  "mappings": ";AACM,CAAC;AACC,WAAS;AACT,kBAAgB;AAChB,OAAK;AACL,iBAAe;AACf,cAAY;AACZ,cAAY;AACZ,cAAY;AACZ,eAAa;AACf;AAEA,CAAC;AACC,WAAS;AACT,OAAK;AACL,eAAa;AACf;AAEA,CAAC;AACC,QAAM,EAAE,EAAE;AACZ;AAEA,CAAC;AACC,QAAM;AACR;AAEA;AACE,aAAW;AACX,aAAW;AACb;",
+  "names": []
+}

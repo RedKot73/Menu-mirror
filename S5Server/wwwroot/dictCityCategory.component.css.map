@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["angular:styles/component:css;877dc9c95ddf51705d08e26fbb65d135e901be34bcd1bb5337745cdc4bec5640;/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Front/src/dictionaries/dictCityCategory.component.ts"],
+  "sourcesContent": ["\n      :host {\n        display: block;\n        height: 100%;\n      }\n\n      table {\n        width: 100%;\n      }\n    "],
+  "mappings": ";AACM;AACE,WAAS;AACT,UAAQ;AACV;AAEA;AACE,SAAO;AACT;",
+  "names": []
+}
