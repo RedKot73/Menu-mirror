@@ -72,9 +72,6 @@ var connBuilder = new NpgsqlConnectionStringBuilder
     Port = pgConnConfig.Port,
     SearchPath = pgConnConfig.SearchPath,
 
-// Вот эта строка решит проблему доверия к сертификату:
-    TrustServerCertificate = true,
-
     SslMode = builder.Environment.IsDevelopment()
         ? SslMode.Prefer      // Dev: опціонально
         : SslMode.Require,    // Prod: обов'язково
@@ -97,11 +94,6 @@ dataSourceBuilder.ConnectionStringBuilder.Options = "-c DateStyle=ISO";
 
 // Совместимость со старым поведением DateTime (важно для миграций)
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
-/* ПРИМЕЧАНИЕ: Блок с 'if (builder.Environment.IsProduction())' и Callback 
-   больше не нужен, так как мы добавили 'TrustServerCertificate = true' 
-   прямо в connBuilder. Это работает во всех средах одинаково надежно.
-*/
 
 // Создаем итоговый DataSource
 var dataSource = dataSourceBuilder.Build();
