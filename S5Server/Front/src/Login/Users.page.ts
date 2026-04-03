@@ -305,7 +305,8 @@ export class UsersPage implements OnInit {
     if (!user) return;
     console.log('[DEBUG] Opening 2FA management dialog for user:', user.userName);
     const dialogRef = this.dialog.open(TotpSetupDialogComponent, {
-      width: '500px',
+      width: '460px',
+      maxWidth: '96vw',
       disableClose: false,
     });
     dialogRef.afterClosed().subscribe(() => {

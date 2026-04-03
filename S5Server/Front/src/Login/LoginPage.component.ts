@@ -165,12 +165,14 @@ export class LoginPage {
         next: (payload) => {
           console.log('[DEBUG] Login successful', payload);
           this.isLoading.set(false);
+          // requiresTwoFactor is checked FIRST — the interim token is also present
+          // in this case, so order is critical to avoid the wrong branch executing.
           if (payload.requiresTwoFactor) {
-            console.log('[DEBUG] Navigating to /welcome');
+            console.log('[DEBUG] 2FA required. Navigating to /welcome via SPA router.');
             this.router.navigate(['/welcome']);
           } else if (payload.token) {
-            // Per consistency requirement: redirect to /DocumentDataSet with hard reload.
-            window.location.href = '/DocumentDataSet';
+            console.log('[DEBUG] Login complete. Navigating to /DocumentDataSet via SPA router.');
+            this.router.navigate(['/DocumentDataSet']);
           } else {
             this.errorMessage.set('Неправильний логін або пароль');
           }

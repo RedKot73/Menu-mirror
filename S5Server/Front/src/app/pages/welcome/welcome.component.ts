@@ -96,13 +96,9 @@ export class WelcomeComponent implements OnInit, OnDestroy {
       next: (payload) => {
         if (payload.token && !payload.requiresTwoFactor) {
           // Success: fully authenticated.
-          console.log('[DEBUG] 2FA Success. Token payload:', JSON.parse(atob(payload.token.split('.')[1])));
-          
-          // Double verify token is in localStorage before reload
-          localStorage.setItem('auth_token', payload.token);
-          
-          console.log('[DEBUG] Hard Reload to /DocumentDataSet');
-          window.location.href = '/DocumentDataSet';
+          console.log('[DEBUG] 2FA Success. Navigating to /DocumentDataSet via SPA router.');
+          // Token is already persisted in AuthService.verifyTwoFactor() via setToken()
+          this.router.navigate(['/DocumentDataSet']);
         } else {
           this.error.set('Невірний код підтвердження');
           this.isLoading.set(false);

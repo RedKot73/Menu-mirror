@@ -2,8 +2,8 @@
 
 
 # Читаем значение из файла
-if [ -f ./.app_active_port ]; then
-    SAVED_PORT=$(cat ./.app_active_port)
+if [ -f /tmp/app_active_port ]; then
+    SAVED_PORT=$(cat /tmp/app_active_port)
     echo "Приложение запущено на порту: $SAVED_PORT"
     # Теперь можем что-то сделать, например:
     curl http://localhost:$SAVED_PORT/health

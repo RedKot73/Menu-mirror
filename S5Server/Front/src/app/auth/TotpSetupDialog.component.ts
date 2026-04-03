@@ -41,8 +41,8 @@ import * as QRCode from 'qrcode';
 
       <!-- ── LOADING ── -->
       @if (isLoading()) {
-        <div style="display:flex; justify-content:center; padding:40px;">
-          <mat-spinner diameter="44"></mat-spinner>
+        <div style="display:flex; justify-content:center; padding:24px;">
+          <mat-spinner diameter="40"></mat-spinner>
         </div>
       } @else {
 
@@ -70,9 +70,9 @@ import * as QRCode from 'qrcode';
         ─────────────────────────────────────────────── -->
         @if (!isTwoFactorEnabled()) {
 
-          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
-            <mat-icon style="color:#757575; font-size:26px;">no_encryption</mat-icon>
-            <span style="font-size:15px;">Двофакторна аутентифікація <strong>вимкнена</strong>.</span>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+            <mat-icon style="color:#757575; font-size:22px;">no_encryption</mat-icon>
+            <span style="font-size:14px;">Двофакторна аутентифікація <strong>вимкнена</strong>.</span>
           </div>
 
           <!-- Collapsed: show [Увімкнути 2FA] button -->
@@ -85,76 +85,85 @@ import * as QRCode from 'qrcode';
 
           <!-- Expanded: show QR + code input -->
           @if (showEnableForm()) {
-            <div style="border:1px solid #e0e0e0; border-radius:8px; padding:20px;">
+            <div style="border:1px solid #e0e0e0; border-radius:8px; padding:12px;">
 
               @if (!setupData()) {
                 <!-- Loading setup data -->
-                <div style="display:flex; align-items:center; gap:10px; min-height:80px;">
-                  <mat-spinner diameter="28" style="flex-shrink:0;"></mat-spinner>
-                  <span style="font-size:14px; opacity:0.7;">Завантаження QR-коду...</span>
+                <div style="display:flex; align-items:center; gap:10px; min-height:56px;">
+                  <mat-spinner diameter="24" style="flex-shrink:0;"></mat-spinner>
+                  <span style="font-size:13px; opacity:0.7;">Завантаження QR-коду...</span>
                 </div>
               } @else {
-                <!-- Step 1: QR code or manual key -->
-                <p style="font-weight:600; margin:0 0 12px; font-size:14px;">
-                  1. Відскануйте QR-код в додатку-аутентифікаторі (Google Authenticator, Authy):
-                </p>
 
-                <div style="display:flex; justify-content:center; margin:12px 0;">
-                  @if (qrDataUrl()) {
-                    <img
-                      [src]="qrDataUrl()"
-                      alt="QR Code"
-                      width="190"
-                      height="190"
-                      style="border:1px solid #e0e0e0; border-radius:8px; padding:4px;"
-                    />
-                  } @else {
-                    <div style="width:190px; height:190px; display:flex; align-items:center; justify-content:center; background:#f5f5f5; border-radius:8px; color:#ef5350;">
+                <!-- 2-column layout: QR left, controls right -->
+                <div style="display:flex; flex-direction:row; gap:14px; align-items:flex-start;">
+
+                  <!-- LEFT: QR image -->
+                  <div style="flex-shrink:0;">
+                    @if (qrDataUrl()) {
+                      <img
+                        [src]="qrDataUrl()"
+                        alt="QR Code"
+                        width="120"
+                        height="120"
+                        style="border:1px solid #e0e0e0; border-radius:8px; padding:3px; display:block;"
+                      />
+                    } @else {
+                      <div style="width:120px; height:120px; display:flex; align-items:center; justify-content:center; background:#f5f5f5; border-radius:8px; color:#ef5350;">
                         <mat-icon>qr_code_2</mat-icon>
-                    </div>
-                  }
-                </div>
-
-                <p style="font-size:12px; opacity:0.65; margin:4px 0 4px; text-align:center;">
-                  Або введіть ключ вручну:
-                </p>
-                <div style="font-family:monospace; font-size:14px; padding:10px; background:#f5f5f5; border:1px dashed #bdbdbd; border-radius:6px; text-align:center; letter-spacing:3px; user-select:all; word-break:break-all;">
-                  {{ setupData()!.sharedKey }}
-                </div>
-
-                <mat-divider style="margin:16px 0;"></mat-divider>
-
-                <!-- Step 2: Verify code -->
-                <p style="font-weight:600; margin:0 0 10px; font-size:14px;">
-                  2. Введіть 6-значний код з додатку для підтвердження:
-                </p>
-
-                <mat-form-field appearance="outline" style="width:100%;">
-                  <mat-label>Код підтвердження</mat-label>
-                  <input
-                    matInput
-                    [formControl]="verificationCodeControl"
-                    maxlength="6"
-                    inputmode="numeric"
-                    autocomplete="one-time-code"
-                    placeholder="000000"
-                  />
-                  <mat-hint>6 цифр з аутентифікатора</mat-hint>
-                </mat-form-field>
-
-                <div style="display:flex; gap:8px; margin-top:10px;">
-                  <button
-                    mat-raised-button
-                    color="primary"
-                    [disabled]="verificationCodeControl.invalid || isVerifying()"
-                    (click)="enableTotp()"
-                  >
-                    @if (isVerifying()) {
-                      <mat-spinner diameter="18" style="display:inline-block; margin-right:6px;"></mat-spinner>
+                      </div>
                     }
-                    Підтвердити та увімкнути
-                  </button>
-                  <button mat-button (click)="cancelEnable()">Скасувати</button>
+                  </div>
+
+                  <!-- RIGHT: instructions + form -->
+                  <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+
+                    <!-- Step 1: scan QR -->
+                    <p style="font-weight:600; margin:0; font-size:12px; line-height:1.4;">
+                      1. Відскануйте QR в аутентифікаторі (Google Auth, Authy).
+                    </p>
+
+                    <!-- Manual key -->
+                    <div style="font-size:11px; opacity:0.65; margin:0;">Або ключ вручну:</div>
+                    <div style="font-family:monospace; font-size:11px; padding:6px 8px; background:#f5f5f5; border:1px dashed #bdbdbd; border-radius:6px; letter-spacing:2px; user-select:all; word-break:break-all; line-height:1.5;">
+                      {{ setupData()!.sharedKey }}
+                    </div>
+
+                    <mat-divider style="margin:2px 0;"></mat-divider>
+
+                    <!-- Step 2: verify code -->
+                    <p style="font-weight:600; margin:0; font-size:12px;">
+                      2. Введіть 6-значний код з додатку:
+                    </p>
+
+                    <mat-form-field appearance="outline" style="width:100%;" subscriptSizing="dynamic">
+                      <mat-label>Код підтвердження</mat-label>
+                      <input
+                        matInput
+                        [formControl]="verificationCodeControl"
+                        maxlength="6"
+                        inputmode="numeric"
+                        autocomplete="one-time-code"
+                        placeholder="000000"
+                      />
+                    </mat-form-field>
+
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                      <button
+                        mat-raised-button
+                        color="primary"
+                        [disabled]="verificationCodeControl.invalid || isVerifying()"
+                        (click)="enableTotp()"
+                      >
+                        @if (isVerifying()) {
+                          <mat-spinner diameter="16" style="display:inline-block; margin-right:4px;"></mat-spinner>
+                        }
+                        Підтвердити
+                      </button>
+                      <button mat-button (click)="cancelEnable()">Скасувати</button>
+                    </div>
+
+                  </div>
                 </div>
               }
             </div>
@@ -167,9 +176,9 @@ import * as QRCode from 'qrcode';
         ─────────────────────────────────────────────── -->
         @if (isTwoFactorEnabled()) {
 
-          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
-            <mat-icon style="color:#2e7d32; font-size:26px;">verified_user</mat-icon>
-            <span style="font-size:15px; color:#2e7d32;">Двофакторна аутентифікація <strong>увімкнена</strong>.</span>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+            <mat-icon style="color:#2e7d32; font-size:22px;">verified_user</mat-icon>
+            <span style="font-size:14px; color:#2e7d32;">Двофакторна аутентифікація <strong>увімкнена</strong>.</span>
           </div>
 
           @if (!showDisableForm()) {
@@ -275,7 +284,7 @@ export class TotpSetupDialogComponent implements OnInit {
     try {
       const dataUrl = await QRCode.toDataURL(uri, {
         margin: 2,
-        width: 250,
+        width: 148,
         color: { dark: '#000000', light: '#ffffff' }
       });
       this.qrDataUrl.set(dataUrl);

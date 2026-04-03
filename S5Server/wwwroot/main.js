@@ -1,6 +1,6 @@
 import {
   AuthService
-} from "./chunk-DDSI6JQ4.js";
+} from "./chunk-BQ4QHUOF.js";
 import {
   ApolloLink,
   InMemoryCache,
@@ -771,18 +771,18 @@ var routes = [
   {
     path: "users",
     title: "\u041A\u043E\u0440\u0438\u0441\u0442\u0443\u0432\u0430\u0447\u0456",
-    loadComponent: () => import("./chunk-T46NNXTQ.js").then((m) => m.UsersPage),
+    loadComponent: () => import("./chunk-7EJG5JSI.js").then((m) => m.UsersPage),
     canActivate: [authGuard]
   },
   {
     path: "login",
     title: "\u0412\u0445\u0456\u0434 \u0432 \u0441\u0438\u0441\u0442\u0435\u043C\u0443",
-    loadComponent: () => import("./chunk-5C5LCJVZ.js").then((m) => m.LoginPage)
+    loadComponent: () => import("./chunk-JURUBY7A.js").then((m) => m.LoginPage)
   },
   {
     path: "welcome",
     title: "\u0414\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u0430 \u0430\u0432\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u044F",
-    loadComponent: () => import("./chunk-KBTJI5AP.js").then((m) => m.WelcomeComponent),
+    loadComponent: () => import("./chunk-W4BRWASZ.js").then((m) => m.WelcomeComponent),
     canActivate: [twoFactorGuard]
   },
   { path: "", pathMatch: "full", redirectTo: "login" },

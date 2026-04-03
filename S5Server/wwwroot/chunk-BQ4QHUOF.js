@@ -178,6 +178,14 @@ var AuthService = class _AuthService {
       this.user.set(null);
       return of(null);
     }
+    try {
+      const jwtPayload = JSON.parse(atob(token.split(".")[1]));
+      if (jwtPayload["requiresTwoFactor"] === "true" || jwtPayload["requiresTwoFactor"] === true) {
+        console.log("[DEBUG] checkSession: interim token detected via JWT claim \u2014 skipping /me call.");
+        return of(null);
+      }
+    } catch {
+    }
     if (this.requiresTwoFactor()) {
       return of(null);
     }
@@ -206,4 +214,4 @@ var AuthService = class _AuthService {
 export {
   AuthService
 };
-//# sourceMappingURL=chunk-DDSI6JQ4.js.map
+//# sourceMappingURL=chunk-BQ4QHUOF.js.map

@@ -17,7 +17,7 @@ import {
 import "./chunk-LFLZCNEV.js";
 import {
   AuthService
-} from "./chunk-DDSI6JQ4.js";
+} from "./chunk-BQ4QHUOF.js";
 import "./chunk-6HY5KKDU.js";
 import "./chunk-5OFTEHZD.js";
 import {
@@ -147,10 +147,11 @@ var LoginPage = class _LoginPage {
         console.log("[DEBUG] Login successful", payload);
         this.isLoading.set(false);
         if (payload.requiresTwoFactor) {
-          console.log("[DEBUG] Navigating to /welcome");
+          console.log("[DEBUG] 2FA required. Navigating to /welcome via SPA router.");
           this.router.navigate(["/welcome"]);
         } else if (payload.token) {
-          window.location.href = "/DocumentDataSet";
+          console.log("[DEBUG] Login complete. Navigating to /DocumentDataSet via SPA router.");
+          this.router.navigate(["/DocumentDataSet"]);
         } else {
           this.errorMessage.set("\u041D\u0435\u043F\u0440\u0430\u0432\u0438\u043B\u044C\u043D\u0438\u0439 \u043B\u043E\u0433\u0456\u043D \u0430\u0431\u043E \u043F\u0430\u0440\u043E\u043B\u044C");
         }
@@ -357,4 +358,4 @@ var LoginPage = class _LoginPage {
 export {
   LoginPage
 };
-//# sourceMappingURL=chunk-5C5LCJVZ.js.map
+//# sourceMappingURL=chunk-JURUBY7A.js.map

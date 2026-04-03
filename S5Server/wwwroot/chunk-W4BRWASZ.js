@@ -17,7 +17,7 @@ import {
 } from "./chunk-ZWWMZKX6.js";
 import {
   AuthService
-} from "./chunk-DDSI6JQ4.js";
+} from "./chunk-BQ4QHUOF.js";
 import "./chunk-6HY5KKDU.js";
 import {
   Router
@@ -185,10 +185,8 @@ var WelcomeComponent = class _WelcomeComponent {
     this.auth.verifyTwoFactor(code).subscribe({
       next: (payload) => {
         if (payload.token && !payload.requiresTwoFactor) {
-          console.log("[DEBUG] 2FA Success. Token payload:", JSON.parse(atob(payload.token.split(".")[1])));
-          localStorage.setItem("auth_token", payload.token);
-          console.log("[DEBUG] Hard Reload to /DocumentDataSet");
-          window.location.href = "/DocumentDataSet";
+          console.log("[DEBUG] 2FA Success. Navigating to /DocumentDataSet via SPA router.");
+          this.router.navigate(["/DocumentDataSet"]);
         } else {
           this.error.set("\u041D\u0435\u0432\u0456\u0440\u043D\u0438\u0439 \u043A\u043E\u0434 \u043F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0436\u0435\u043D\u043D\u044F");
           this.isLoading.set(false);
@@ -379,4 +377,4 @@ var WelcomeComponent = class _WelcomeComponent {
 export {
   WelcomeComponent
 };
-//# sourceMappingURL=chunk-KBTJI5AP.js.map
+//# sourceMappingURL=chunk-W4BRWASZ.js.map

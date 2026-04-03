@@ -24,7 +24,7 @@ export NUGET_PACKAGES="$(pwd)/S5Server/packages"
 #!/bin/bash
 export APP_PORT=5000
 # Сохраняем значение в файл, чтобы другие могли его прочитать
-echo $APP_PORT > .app_active_port
+echo $APP_PORT > /tmp/app_active_port
 
 cd S5Server
 export ASPNETCORE_URLS="http://0.0.0.0:$APP_PORT"

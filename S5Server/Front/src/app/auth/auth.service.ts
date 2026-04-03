@@ -200,8 +200,23 @@ export class AuthService {
       return of(null);
     }
 
-    // Якщо ми в стані 2FA (проміжний токен), не робимо запит до /me,
-    // бо він поверне 403/401 через обмеження JWT claim
+    // Primary guard: parse the raw JWT synchronously to detect an interim (2FA pending) token.
+    // This mirrors the logic in trySetPendingFromToken() and is signal-independent,
+    // preventing a race condition where APP_INITIALIZER calls checkSession() before
+    // the pendingTwoFactor signal has propagated, which would cause /me to be called
+    // with an interim token → 401 → unintended logout().
+    try {
+      const jwtPayload = JSON.parse(atob(token.split('.')[1]));
+      if (jwtPayload['requiresTwoFactor'] === 'true' || jwtPayload['requiresTwoFactor'] === true) {
+        console.log('[DEBUG] checkSession: interim token detected via JWT claim — skipping /me call.');
+        return of(null);
+      }
+    } catch {
+      // Malformed token — fall through to signal check
+    }
+
+    // Secondary guard: also check the signal state (covers edge cases where token was
+    // already parsed and pendingTwoFactor signal is in sync).
     if (this.requiresTwoFactor()) {
       return of(null);
     }

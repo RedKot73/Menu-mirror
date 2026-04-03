@@ -4186,13 +4186,13 @@ function TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_8_Temp
 function TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 17);
-    \u0275\u0275element(1, "mat-spinner", 18);
-    \u0275\u0275elementStart(2, "span", 19);
+    \u0275\u0275element(1, "mat-spinner", 19);
+    \u0275\u0275elementStart(2, "span", 20);
     \u0275\u0275text(3, "\u0417\u0430\u0432\u0430\u043D\u0442\u0430\u0436\u0435\u043D\u043D\u044F QR-\u043A\u043E\u0434\u0443...");
     \u0275\u0275elementEnd()();
   }
 }
-function TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_2_Conditional_3_Template(rf, ctx) {
+function TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_2_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "img", 22);
   }
@@ -4201,7 +4201,7 @@ function TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Cond
     \u0275\u0275property("src", ctx_r0.qrDataUrl(), \u0275\u0275sanitizeUrl);
   }
 }
-function TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_2_Conditional_4_Template(rf, ctx) {
+function TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_2_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 23)(1, "mat-icon");
     \u0275\u0275text(2, "qr_code_2");
@@ -4210,62 +4210,60 @@ function TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Cond
 }
 function TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_2_Conditional_20_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "mat-spinner", 32);
+    \u0275\u0275element(0, "mat-spinner", 34);
   }
 }
 function TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
     const _r3 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p", 20);
-    \u0275\u0275text(1, " 1. \u0412\u0456\u0434\u0441\u043A\u0430\u043D\u0443\u0439\u0442\u0435 QR-\u043A\u043E\u0434 \u0432 \u0434\u043E\u0434\u0430\u0442\u043A\u0443-\u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0442\u043E\u0440\u0456 (Google Authenticator, Authy): ");
+    \u0275\u0275elementStart(0, "div", 18)(1, "div", 21);
+    \u0275\u0275conditionalCreate(2, TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_2_Conditional_2_Template, 1, 1, "img", 22)(3, TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_2_Conditional_3_Template, 3, 0, "div", 23);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "div", 21);
-    \u0275\u0275conditionalCreate(3, TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_2_Conditional_3_Template, 1, 1, "img", 22)(4, TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_2_Conditional_4_Template, 3, 0, "div", 23);
+    \u0275\u0275elementStart(4, "div", 24)(5, "p", 25);
+    \u0275\u0275text(6, " 1. \u0412\u0456\u0434\u0441\u043A\u0430\u043D\u0443\u0439\u0442\u0435 QR \u0432 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0442\u043E\u0440\u0456 (Google Auth, Authy). ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "p", 24);
-    \u0275\u0275text(6, " \u0410\u0431\u043E \u0432\u0432\u0435\u0434\u0456\u0442\u044C \u043A\u043B\u044E\u0447 \u0432\u0440\u0443\u0447\u043D\u0443: ");
+    \u0275\u0275elementStart(7, "div", 26);
+    \u0275\u0275text(8, "\u0410\u0431\u043E \u043A\u043B\u044E\u0447 \u0432\u0440\u0443\u0447\u043D\u0443:");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "div", 25);
-    \u0275\u0275text(8);
+    \u0275\u0275elementStart(9, "div", 27);
+    \u0275\u0275text(10);
     \u0275\u0275elementEnd();
-    \u0275\u0275element(9, "mat-divider", 26);
-    \u0275\u0275elementStart(10, "p", 27);
-    \u0275\u0275text(11, " 2. \u0412\u0432\u0435\u0434\u0456\u0442\u044C 6-\u0437\u043D\u0430\u0447\u043D\u0438\u0439 \u043A\u043E\u0434 \u0437 \u0434\u043E\u0434\u0430\u0442\u043A\u0443 \u0434\u043B\u044F \u043F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0436\u0435\u043D\u043D\u044F: ");
+    \u0275\u0275element(11, "mat-divider", 28);
+    \u0275\u0275elementStart(12, "p", 29);
+    \u0275\u0275text(13, " 2. \u0412\u0432\u0435\u0434\u0456\u0442\u044C 6-\u0437\u043D\u0430\u0447\u043D\u0438\u0439 \u043A\u043E\u0434 \u0437 \u0434\u043E\u0434\u0430\u0442\u043A\u0443: ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(12, "mat-form-field", 28)(13, "mat-label");
-    \u0275\u0275text(14, "\u041A\u043E\u0434 \u043F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0436\u0435\u043D\u043D\u044F");
+    \u0275\u0275elementStart(14, "mat-form-field", 30)(15, "mat-label");
+    \u0275\u0275text(16, "\u041A\u043E\u0434 \u043F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0436\u0435\u043D\u043D\u044F");
     \u0275\u0275elementEnd();
-    \u0275\u0275element(15, "input", 29);
-    \u0275\u0275elementStart(16, "mat-hint");
-    \u0275\u0275text(17, "6 \u0446\u0438\u0444\u0440 \u0437 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0442\u043E\u0440\u0430");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(18, "div", 30)(19, "button", 31);
+    \u0275\u0275element(17, "input", 31);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(18, "div", 32)(19, "button", 33);
     \u0275\u0275listener("click", function TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_2_Template_button_click_19_listener() {
       \u0275\u0275restoreView(_r3);
       const ctx_r0 = \u0275\u0275nextContext(4);
       return \u0275\u0275resetView(ctx_r0.enableTotp());
     });
-    \u0275\u0275conditionalCreate(20, TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_2_Conditional_20_Template, 1, 0, "mat-spinner", 32);
-    \u0275\u0275text(21, " \u041F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u0438 \u0442\u0430 \u0443\u0432\u0456\u043C\u043A\u043D\u0443\u0442\u0438 ");
+    \u0275\u0275conditionalCreate(20, TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_2_Conditional_20_Template, 1, 0, "mat-spinner", 34);
+    \u0275\u0275text(21, " \u041F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u0438 ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(22, "button", 33);
+    \u0275\u0275elementStart(22, "button", 35);
     \u0275\u0275listener("click", function TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_2_Template_button_click_22_listener() {
       \u0275\u0275restoreView(_r3);
       const ctx_r0 = \u0275\u0275nextContext(4);
       return \u0275\u0275resetView(ctx_r0.cancelEnable());
     });
     \u0275\u0275text(23, "\u0421\u043A\u0430\u0441\u0443\u0432\u0430\u0442\u0438");
-    \u0275\u0275elementEnd()();
+    \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext(4);
-    \u0275\u0275advance(3);
-    \u0275\u0275conditional(ctx_r0.qrDataUrl() ? 3 : 4);
-    \u0275\u0275advance(5);
+    \u0275\u0275advance(2);
+    \u0275\u0275conditional(ctx_r0.qrDataUrl() ? 2 : 3);
+    \u0275\u0275advance(8);
     \u0275\u0275textInterpolate1(" ", ctx_r0.setupData().sharedKey, " ");
     \u0275\u0275advance(7);
     \u0275\u0275property("formControl", ctx_r0.verificationCodeControl);
-    \u0275\u0275advance(4);
+    \u0275\u0275advance(2);
     \u0275\u0275property("disabled", ctx_r0.verificationCodeControl.invalid || ctx_r0.isVerifying());
     \u0275\u0275advance();
     \u0275\u0275conditional(ctx_r0.isVerifying() ? 20 : -1);
@@ -4274,7 +4272,7 @@ function TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Cond
 function TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 15);
-    \u0275\u0275conditionalCreate(1, TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_1_Template, 4, 0, "div", 17)(2, TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_2_Template, 24, 5);
+    \u0275\u0275conditionalCreate(1, TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_1_Template, 4, 0, "div", 17)(2, TotpSetupDialogComponent_Conditional_6_Conditional_2_Conditional_9_Conditional_2_Template, 24, 5, "div", 18);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -4309,7 +4307,7 @@ function TotpSetupDialogComponent_Conditional_6_Conditional_2_Template(rf, ctx) 
 function TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_8_Template(rf, ctx) {
   if (rf & 1) {
     const _r4 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "button", 38);
+    \u0275\u0275elementStart(0, "button", 40);
     \u0275\u0275listener("click", function TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_8_Template_button_click_0_listener() {
       \u0275\u0275restoreView(_r4);
       const ctx_r0 = \u0275\u0275nextContext(3);
@@ -4324,32 +4322,32 @@ function TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_8_Temp
 }
 function TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_9_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "mat-spinner", 32);
+    \u0275\u0275element(0, "mat-spinner", 47);
   }
 }
 function TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_9_Template(rf, ctx) {
   if (rf & 1) {
     const _r5 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 37)(1, "p", 39)(2, "mat-icon", 40);
+    \u0275\u0275elementStart(0, "div", 39)(1, "p", 41)(2, "mat-icon", 42);
     \u0275\u0275text(3, "warning");
     \u0275\u0275elementEnd();
     \u0275\u0275text(4, " \u0412\u0432\u0435\u0434\u0456\u0442\u044C \u043F\u043E\u0442\u043E\u0447\u043D\u0438\u0439 \u043F\u0430\u0440\u043E\u043B\u044C \u0434\u043B\u044F \u043F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0436\u0435\u043D\u043D\u044F \u0432\u0438\u043C\u043A\u043D\u0435\u043D\u043D\u044F 2FA: ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "mat-form-field", 28)(6, "mat-label");
+    \u0275\u0275elementStart(5, "mat-form-field", 43)(6, "mat-label");
     \u0275\u0275text(7, "\u041F\u0430\u0440\u043E\u043B\u044C");
     \u0275\u0275elementEnd();
-    \u0275\u0275element(8, "input", 41);
+    \u0275\u0275element(8, "input", 44);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "div", 42)(10, "button", 43);
+    \u0275\u0275elementStart(9, "div", 45)(10, "button", 46);
     \u0275\u0275listener("click", function TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_9_Template_button_click_10_listener() {
       \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.disableTotp());
     });
-    \u0275\u0275conditionalCreate(11, TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_9_Conditional_11_Template, 1, 0, "mat-spinner", 32);
+    \u0275\u0275conditionalCreate(11, TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_9_Conditional_11_Template, 1, 0, "mat-spinner", 47);
     \u0275\u0275text(12, " \u041F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u0438 \u0432\u0438\u043C\u043A\u043D\u0435\u043D\u043D\u044F ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(13, "button", 33);
+    \u0275\u0275elementStart(13, "button", 35);
     \u0275\u0275listener("click", function TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_9_Template_button_click_13_listener() {
       \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext(3);
@@ -4370,17 +4368,17 @@ function TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_9_Temp
 }
 function TotpSetupDialogComponent_Conditional_6_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 11)(1, "mat-icon", 34);
+    \u0275\u0275elementStart(0, "div", 11)(1, "mat-icon", 36);
     \u0275\u0275text(2, "verified_user");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "span", 35);
+    \u0275\u0275elementStart(3, "span", 37);
     \u0275\u0275text(4, "\u0414\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u0430 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u044F ");
     \u0275\u0275elementStart(5, "strong");
     \u0275\u0275text(6, "\u0443\u0432\u0456\u043C\u043A\u043D\u0435\u043D\u0430");
     \u0275\u0275elementEnd();
     \u0275\u0275text(7, ".");
     \u0275\u0275elementEnd()();
-    \u0275\u0275conditionalCreate(8, TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_8_Template, 4, 0, "button", 36)(9, TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_9_Template, 15, 3, "div", 37);
+    \u0275\u0275conditionalCreate(8, TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_8_Template, 4, 0, "button", 38)(9, TotpSetupDialogComponent_Conditional_6_Conditional_3_Conditional_9_Template, 15, 3, "div", 39);
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext(2);
@@ -4461,7 +4459,7 @@ var TotpSetupDialogComponent = class _TotpSetupDialogComponent {
       try {
         const dataUrl = yield QRCode.toDataURL(uri, {
           margin: 2,
-          width: 250,
+          width: 148,
           color: { dark: "#000000", light: "#ffffff" }
         });
         this.qrDataUrl.set(dataUrl);
@@ -4535,7 +4533,7 @@ var TotpSetupDialogComponent = class _TotpSetupDialogComponent {
   static \u0275fac = function TotpSetupDialogComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _TotpSetupDialogComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _TotpSetupDialogComponent, selectors: [["app-totp-setup-dialog"]], decls: 10, vars: 1, consts: [["mat-dialog-title", ""], [2, "vertical-align", "middle", "margin-right", "8px"], [2, "min-width", "380px", "max-width", "500px"], [2, "display", "flex", "justify-content", "center", "padding", "40px"], ["align", "end"], ["mat-button", "", "mat-dialog-close", ""], ["diameter", "44"], [2, "color", "#c62828", "margin-bottom", "14px", "padding", "10px 14px", "background", "#ffebee", "border-radius", "6px", "font-size", "14px", "display", "flex", "align-items", "center", "gap", "8px"], [2, "color", "#e65100", "margin-bottom", "14px", "padding", "10px 14px", "background", "#fff3e0", "border", "1px solid #ffe0b2", "border-radius", "6px", "font-size", "13px", "display", "flex", "align-items", "center", "gap", "8px"], [2, "font-size", "18px"], [2, "font-size", "20px"], [2, "display", "flex", "align-items", "center", "gap", "10px", "margin-bottom", "16px"], [2, "color", "#757575", "font-size", "26px"], [2, "font-size", "15px"], ["mat-raised-button", "", "color", "primary"], [2, "border", "1px solid #e0e0e0", "border-radius", "8px", "padding", "20px"], ["mat-raised-button", "", "color", "primary", 3, "click"], [2, "display", "flex", "align-items", "center", "gap", "10px", "min-height", "80px"], ["diameter", "28", 2, "flex-shrink", "0"], [2, "font-size", "14px", "opacity", "0.7"], [2, "font-weight", "600", "margin", "0 0 12px", "font-size", "14px"], [2, "display", "flex", "justify-content", "center", "margin", "12px 0"], ["alt", "QR Code", "width", "190", "height", "190", 2, "border", "1px solid #e0e0e0", "border-radius", "8px", "padding", "4px", 3, "src"], [2, "width", "190px", "height", "190px", "display", "flex", "align-items", "center", "justify-content", "center", "background", "#f5f5f5", "border-radius", "8px", "color", "#ef5350"], [2, "font-size", "12px", "opacity", "0.65", "margin", "4px 0 4px", "text-align", "center"], [2, "font-family", "monospace", "font-size", "14px", "padding", "10px", "background", "#f5f5f5", "border", "1px dashed #bdbdbd", "border-radius", "6px", "text-align", "center", "letter-spacing", "3px", "user-select", "all", "word-break", "break-all"], [2, "margin", "16px 0"], [2, "font-weight", "600", "margin", "0 0 10px", "font-size", "14px"], ["appearance", "outline", 2, "width", "100%"], ["matInput", "", "maxlength", "6", "inputmode", "numeric", "autocomplete", "one-time-code", "placeholder", "000000", 3, "formControl"], [2, "display", "flex", "gap", "8px", "margin-top", "10px"], ["mat-raised-button", "", "color", "primary", 3, "click", "disabled"], ["diameter", "18", 2, "display", "inline-block", "margin-right", "6px"], ["mat-button", "", 3, "click"], [2, "color", "#2e7d32", "font-size", "26px"], [2, "font-size", "15px", "color", "#2e7d32"], ["mat-stroked-button", "", "color", "warn"], [2, "padding", "16px", "background", "#fff3e0", "border-radius", "8px", "border", "1px solid #ffe0b2"], ["mat-stroked-button", "", "color", "warn", 3, "click"], [2, "margin", "0 0 12px", "font-size", "14px"], [2, "font-size", "16px", "vertical-align", "middle", "color", "#e65100", "margin-right", "4px"], ["matInput", "", "type", "password", 3, "formControl"], [2, "display", "flex", "gap", "8px", "margin-top", "4px"], ["mat-raised-button", "", "color", "warn", 3, "click", "disabled"]], template: function TotpSetupDialogComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _TotpSetupDialogComponent, selectors: [["app-totp-setup-dialog"]], decls: 10, vars: 1, consts: [["mat-dialog-title", ""], [2, "vertical-align", "middle", "margin-right", "8px"], [2, "min-width", "380px", "max-width", "500px"], [2, "display", "flex", "justify-content", "center", "padding", "24px"], ["align", "end"], ["mat-button", "", "mat-dialog-close", ""], ["diameter", "40"], [2, "color", "#c62828", "margin-bottom", "14px", "padding", "10px 14px", "background", "#ffebee", "border-radius", "6px", "font-size", "14px", "display", "flex", "align-items", "center", "gap", "8px"], [2, "color", "#e65100", "margin-bottom", "14px", "padding", "10px 14px", "background", "#fff3e0", "border", "1px solid #ffe0b2", "border-radius", "6px", "font-size", "13px", "display", "flex", "align-items", "center", "gap", "8px"], [2, "font-size", "18px"], [2, "font-size", "20px"], [2, "display", "flex", "align-items", "center", "gap", "10px", "margin-bottom", "10px"], [2, "color", "#757575", "font-size", "22px"], [2, "font-size", "14px"], ["mat-raised-button", "", "color", "primary"], [2, "border", "1px solid #e0e0e0", "border-radius", "8px", "padding", "12px"], ["mat-raised-button", "", "color", "primary", 3, "click"], [2, "display", "flex", "align-items", "center", "gap", "10px", "min-height", "56px"], [2, "display", "flex", "flex-direction", "row", "gap", "14px", "align-items", "flex-start"], ["diameter", "24", 2, "flex-shrink", "0"], [2, "font-size", "13px", "opacity", "0.7"], [2, "flex-shrink", "0"], ["alt", "QR Code", "width", "120", "height", "120", 2, "border", "1px solid #e0e0e0", "border-radius", "8px", "padding", "3px", "display", "block", 3, "src"], [2, "width", "120px", "height", "120px", "display", "flex", "align-items", "center", "justify-content", "center", "background", "#f5f5f5", "border-radius", "8px", "color", "#ef5350"], [2, "flex", "1", "display", "flex", "flex-direction", "column", "gap", "6px"], [2, "font-weight", "600", "margin", "0", "font-size", "12px", "line-height", "1.4"], [2, "font-size", "11px", "opacity", "0.65", "margin", "0"], [2, "font-family", "monospace", "font-size", "11px", "padding", "6px 8px", "background", "#f5f5f5", "border", "1px dashed #bdbdbd", "border-radius", "6px", "letter-spacing", "2px", "user-select", "all", "word-break", "break-all", "line-height", "1.5"], [2, "margin", "2px 0"], [2, "font-weight", "600", "margin", "0", "font-size", "12px"], ["appearance", "outline", "subscriptSizing", "dynamic", 2, "width", "100%"], ["matInput", "", "maxlength", "6", "inputmode", "numeric", "autocomplete", "one-time-code", "placeholder", "000000", 3, "formControl"], [2, "display", "flex", "gap", "8px", "flex-wrap", "wrap"], ["mat-raised-button", "", "color", "primary", 3, "click", "disabled"], ["diameter", "16", 2, "display", "inline-block", "margin-right", "4px"], ["mat-button", "", 3, "click"], [2, "color", "#2e7d32", "font-size", "22px"], [2, "font-size", "14px", "color", "#2e7d32"], ["mat-stroked-button", "", "color", "warn"], [2, "padding", "16px", "background", "#fff3e0", "border-radius", "8px", "border", "1px solid #ffe0b2"], ["mat-stroked-button", "", "color", "warn", 3, "click"], [2, "margin", "0 0 12px", "font-size", "14px"], [2, "font-size", "16px", "vertical-align", "middle", "color", "#e65100", "margin-right", "4px"], ["appearance", "outline", 2, "width", "100%"], ["matInput", "", "type", "password", 3, "formControl"], [2, "display", "flex", "gap", "8px", "margin-top", "4px"], ["mat-raised-button", "", "color", "warn", 3, "click", "disabled"], ["diameter", "18", 2, "display", "inline-block", "margin-right", "6px"]], template: function TotpSetupDialogComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "h2", 0)(1, "mat-icon", 1);
       \u0275\u0275text(2, "security");
@@ -4565,7 +4563,6 @@ var TotpSetupDialogComponent = class _TotpSetupDialogComponent {
     MatInput,
     MatFormField,
     MatLabel,
-    MatHint,
     MatFormFieldModule,
     MatProgressSpinnerModule,
     MatProgressSpinner,
@@ -4608,8 +4605,8 @@ var TotpSetupDialogComponent = class _TotpSetupDialogComponent {
 
       <!-- \u2500\u2500 LOADING \u2500\u2500 -->
       @if (isLoading()) {
-        <div style="display:flex; justify-content:center; padding:40px;">
-          <mat-spinner diameter="44"></mat-spinner>
+        <div style="display:flex; justify-content:center; padding:24px;">
+          <mat-spinner diameter="40"></mat-spinner>
         </div>
       } @else {
 
@@ -4637,9 +4634,9 @@ var TotpSetupDialogComponent = class _TotpSetupDialogComponent {
         \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 -->
         @if (!isTwoFactorEnabled()) {
 
-          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
-            <mat-icon style="color:#757575; font-size:26px;">no_encryption</mat-icon>
-            <span style="font-size:15px;">\u0414\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u0430 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u044F <strong>\u0432\u0438\u043C\u043A\u043D\u0435\u043D\u0430</strong>.</span>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+            <mat-icon style="color:#757575; font-size:22px;">no_encryption</mat-icon>
+            <span style="font-size:14px;">\u0414\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u0430 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u044F <strong>\u0432\u0438\u043C\u043A\u043D\u0435\u043D\u0430</strong>.</span>
           </div>
 
           <!-- Collapsed: show [\u0423\u0432\u0456\u043C\u043A\u043D\u0443\u0442\u0438 2FA] button -->
@@ -4652,76 +4649,85 @@ var TotpSetupDialogComponent = class _TotpSetupDialogComponent {
 
           <!-- Expanded: show QR + code input -->
           @if (showEnableForm()) {
-            <div style="border:1px solid #e0e0e0; border-radius:8px; padding:20px;">
+            <div style="border:1px solid #e0e0e0; border-radius:8px; padding:12px;">
 
               @if (!setupData()) {
                 <!-- Loading setup data -->
-                <div style="display:flex; align-items:center; gap:10px; min-height:80px;">
-                  <mat-spinner diameter="28" style="flex-shrink:0;"></mat-spinner>
-                  <span style="font-size:14px; opacity:0.7;">\u0417\u0430\u0432\u0430\u043D\u0442\u0430\u0436\u0435\u043D\u043D\u044F QR-\u043A\u043E\u0434\u0443...</span>
+                <div style="display:flex; align-items:center; gap:10px; min-height:56px;">
+                  <mat-spinner diameter="24" style="flex-shrink:0;"></mat-spinner>
+                  <span style="font-size:13px; opacity:0.7;">\u0417\u0430\u0432\u0430\u043D\u0442\u0430\u0436\u0435\u043D\u043D\u044F QR-\u043A\u043E\u0434\u0443...</span>
                 </div>
               } @else {
-                <!-- Step 1: QR code or manual key -->
-                <p style="font-weight:600; margin:0 0 12px; font-size:14px;">
-                  1. \u0412\u0456\u0434\u0441\u043A\u0430\u043D\u0443\u0439\u0442\u0435 QR-\u043A\u043E\u0434 \u0432 \u0434\u043E\u0434\u0430\u0442\u043A\u0443-\u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0442\u043E\u0440\u0456 (Google Authenticator, Authy):
-                </p>
 
-                <div style="display:flex; justify-content:center; margin:12px 0;">
-                  @if (qrDataUrl()) {
-                    <img
-                      [src]="qrDataUrl()"
-                      alt="QR Code"
-                      width="190"
-                      height="190"
-                      style="border:1px solid #e0e0e0; border-radius:8px; padding:4px;"
-                    />
-                  } @else {
-                    <div style="width:190px; height:190px; display:flex; align-items:center; justify-content:center; background:#f5f5f5; border-radius:8px; color:#ef5350;">
+                <!-- 2-column layout: QR left, controls right -->
+                <div style="display:flex; flex-direction:row; gap:14px; align-items:flex-start;">
+
+                  <!-- LEFT: QR image -->
+                  <div style="flex-shrink:0;">
+                    @if (qrDataUrl()) {
+                      <img
+                        [src]="qrDataUrl()"
+                        alt="QR Code"
+                        width="120"
+                        height="120"
+                        style="border:1px solid #e0e0e0; border-radius:8px; padding:3px; display:block;"
+                      />
+                    } @else {
+                      <div style="width:120px; height:120px; display:flex; align-items:center; justify-content:center; background:#f5f5f5; border-radius:8px; color:#ef5350;">
                         <mat-icon>qr_code_2</mat-icon>
-                    </div>
-                  }
-                </div>
-
-                <p style="font-size:12px; opacity:0.65; margin:4px 0 4px; text-align:center;">
-                  \u0410\u0431\u043E \u0432\u0432\u0435\u0434\u0456\u0442\u044C \u043A\u043B\u044E\u0447 \u0432\u0440\u0443\u0447\u043D\u0443:
-                </p>
-                <div style="font-family:monospace; font-size:14px; padding:10px; background:#f5f5f5; border:1px dashed #bdbdbd; border-radius:6px; text-align:center; letter-spacing:3px; user-select:all; word-break:break-all;">
-                  {{ setupData()!.sharedKey }}
-                </div>
-
-                <mat-divider style="margin:16px 0;"></mat-divider>
-
-                <!-- Step 2: Verify code -->
-                <p style="font-weight:600; margin:0 0 10px; font-size:14px;">
-                  2. \u0412\u0432\u0435\u0434\u0456\u0442\u044C 6-\u0437\u043D\u0430\u0447\u043D\u0438\u0439 \u043A\u043E\u0434 \u0437 \u0434\u043E\u0434\u0430\u0442\u043A\u0443 \u0434\u043B\u044F \u043F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0436\u0435\u043D\u043D\u044F:
-                </p>
-
-                <mat-form-field appearance="outline" style="width:100%;">
-                  <mat-label>\u041A\u043E\u0434 \u043F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0436\u0435\u043D\u043D\u044F</mat-label>
-                  <input
-                    matInput
-                    [formControl]="verificationCodeControl"
-                    maxlength="6"
-                    inputmode="numeric"
-                    autocomplete="one-time-code"
-                    placeholder="000000"
-                  />
-                  <mat-hint>6 \u0446\u0438\u0444\u0440 \u0437 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0442\u043E\u0440\u0430</mat-hint>
-                </mat-form-field>
-
-                <div style="display:flex; gap:8px; margin-top:10px;">
-                  <button
-                    mat-raised-button
-                    color="primary"
-                    [disabled]="verificationCodeControl.invalid || isVerifying()"
-                    (click)="enableTotp()"
-                  >
-                    @if (isVerifying()) {
-                      <mat-spinner diameter="18" style="display:inline-block; margin-right:6px;"></mat-spinner>
+                      </div>
                     }
-                    \u041F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u0438 \u0442\u0430 \u0443\u0432\u0456\u043C\u043A\u043D\u0443\u0442\u0438
-                  </button>
-                  <button mat-button (click)="cancelEnable()">\u0421\u043A\u0430\u0441\u0443\u0432\u0430\u0442\u0438</button>
+                  </div>
+
+                  <!-- RIGHT: instructions + form -->
+                  <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+
+                    <!-- Step 1: scan QR -->
+                    <p style="font-weight:600; margin:0; font-size:12px; line-height:1.4;">
+                      1. \u0412\u0456\u0434\u0441\u043A\u0430\u043D\u0443\u0439\u0442\u0435 QR \u0432 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0442\u043E\u0440\u0456 (Google Auth, Authy).
+                    </p>
+
+                    <!-- Manual key -->
+                    <div style="font-size:11px; opacity:0.65; margin:0;">\u0410\u0431\u043E \u043A\u043B\u044E\u0447 \u0432\u0440\u0443\u0447\u043D\u0443:</div>
+                    <div style="font-family:monospace; font-size:11px; padding:6px 8px; background:#f5f5f5; border:1px dashed #bdbdbd; border-radius:6px; letter-spacing:2px; user-select:all; word-break:break-all; line-height:1.5;">
+                      {{ setupData()!.sharedKey }}
+                    </div>
+
+                    <mat-divider style="margin:2px 0;"></mat-divider>
+
+                    <!-- Step 2: verify code -->
+                    <p style="font-weight:600; margin:0; font-size:12px;">
+                      2. \u0412\u0432\u0435\u0434\u0456\u0442\u044C 6-\u0437\u043D\u0430\u0447\u043D\u0438\u0439 \u043A\u043E\u0434 \u0437 \u0434\u043E\u0434\u0430\u0442\u043A\u0443:
+                    </p>
+
+                    <mat-form-field appearance="outline" style="width:100%;" subscriptSizing="dynamic">
+                      <mat-label>\u041A\u043E\u0434 \u043F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0436\u0435\u043D\u043D\u044F</mat-label>
+                      <input
+                        matInput
+                        [formControl]="verificationCodeControl"
+                        maxlength="6"
+                        inputmode="numeric"
+                        autocomplete="one-time-code"
+                        placeholder="000000"
+                      />
+                    </mat-form-field>
+
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                      <button
+                        mat-raised-button
+                        color="primary"
+                        [disabled]="verificationCodeControl.invalid || isVerifying()"
+                        (click)="enableTotp()"
+                      >
+                        @if (isVerifying()) {
+                          <mat-spinner diameter="16" style="display:inline-block; margin-right:4px;"></mat-spinner>
+                        }
+                        \u041F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u0438
+                      </button>
+                      <button mat-button (click)="cancelEnable()">\u0421\u043A\u0430\u0441\u0443\u0432\u0430\u0442\u0438</button>
+                    </div>
+
+                  </div>
                 </div>
               }
             </div>
@@ -4734,9 +4740,9 @@ var TotpSetupDialogComponent = class _TotpSetupDialogComponent {
         \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 -->
         @if (isTwoFactorEnabled()) {
 
-          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
-            <mat-icon style="color:#2e7d32; font-size:26px;">verified_user</mat-icon>
-            <span style="font-size:15px; color:#2e7d32;">\u0414\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u0430 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u044F <strong>\u0443\u0432\u0456\u043C\u043A\u043D\u0435\u043D\u0430</strong>.</span>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+            <mat-icon style="color:#2e7d32; font-size:22px;">verified_user</mat-icon>
+            <span style="font-size:14px; color:#2e7d32;">\u0414\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u0430 \u0430\u0443\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u044F <strong>\u0443\u0432\u0456\u043C\u043A\u043D\u0435\u043D\u0430</strong>.</span>
           </div>
 
           @if (!showDisableForm()) {
@@ -4783,7 +4789,7 @@ var TotpSetupDialogComponent = class _TotpSetupDialogComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TotpSetupDialogComponent, { className: "TotpSetupDialogComponent", filePath: "app/auth/TotpSetupDialog.component.ts", lineNumber: 216 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TotpSetupDialogComponent, { className: "TotpSetupDialogComponent", filePath: "app/auth/TotpSetupDialog.component.ts", lineNumber: 225 });
 })();
 
 // src/Login/Users.page.ts
@@ -5407,7 +5413,8 @@ var UsersPage = class _UsersPage {
       return;
     console.log("[DEBUG] Opening 2FA management dialog for user:", user.userName);
     const dialogRef = this.dialog.open(TotpSetupDialogComponent, {
-      width: "500px",
+      width: "460px",
+      maxWidth: "96vw",
       disableClose: false
     });
     dialogRef.afterClosed().subscribe(() => {
@@ -5774,4 +5781,4 @@ var UsersPage = class _UsersPage {
 export {
   UsersPage
 };
-//# sourceMappingURL=chunk-T46NNXTQ.js.map
+//# sourceMappingURL=chunk-7EJG5JSI.js.map
