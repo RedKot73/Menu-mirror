@@ -346,7 +346,7 @@ if (args.Any(arg => arg.Trim().Contains("--setup-user", StringComparison.Ordinal
     try
     {
         const string userName = "havrok";
-        const string password = "QWERTY654321";
+        var password = builder.Configuration["SERVICE_USER_PASSWORD"] ?? "QWERTY654321";
         
         var user = await userManager.FindByNameAsync(userName);
         if (user == null)
