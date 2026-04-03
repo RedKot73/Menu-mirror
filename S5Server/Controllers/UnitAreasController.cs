@@ -113,12 +113,17 @@ public class UnitAreasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<UnitAreasDto>>> GetByArea(
         Guid areaId,
+        [FromQuery] Guid? unitId,
         CancellationToken ct = default)
     {
         if (areaId == Guid.Empty)
             return BadRequest("areaId обов'язковий");
 
-        var list = await Query()
+        var query = Query();
+        if (unitId.HasValueGuid())
+            query = query.Where(x => x.UnitId != unitId);
+
+        var list = await query
             .Where(x => x.AreaId == areaId)
             .OrderBy(x => x.Unit.ShortName)
             .Select(x => x.ToDto())
