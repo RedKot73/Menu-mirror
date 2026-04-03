@@ -152,8 +152,7 @@
         <app-one-unit-task-editor
           [unitTask]="unitTask"
           (remove)="removeUnitFromSelection($event)"
-          (unitChange)="onUnitChange($event)"
-          (unsavedChangesChange)="onUnitUnsavedChanges(unitTask.unitId, $event)"
+          (unsavedChangesChange)="onUnitUnsavedChanges(unitTask.id, $event)"
         >
         </app-one-unit-task-editor>
       }

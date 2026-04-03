@@ -1,6 +1,7 @@
 import {
   inject,
   signal,
+  computed,
   DestroyRef,
   HostListener,
   ViewChild,
@@ -102,9 +103,12 @@ export class UnitsTaskEditor {
 
   // --- Save State ---
   protected isSaving = signal<boolean>(false);
-  protected hasUnsavedChanges = signal<boolean>(false);
-  /** Множина UnitTask ID з незбереженими змінами */
-  protected unitsWithUnsavedChanges = signal<Set<string>>(new Set());
+  private unitsWithUnsavedChanges = signal(new Set<string>());
+  private isDocFieldsDirty = signal<boolean>(false);
+  protected hasUnsavedChanges = computed(
+    () => this.unitsWithUnsavedChanges().size > 0 || this.isDocFieldsDirty(),
+  );
+
   /** Контрол для статусу публікації
    * Предотвращает переключение визуального контрола
    * при ошибках в изменении статуса публикации из-за
@@ -116,34 +120,15 @@ export class UnitsTaskEditor {
   dataSetChanged = output<TemplateDataSetDto>();
 
   /**
-   * Обробник зміни підрозділу з дочірнього компонента
-   */
-  onUnitChange(updatedUnit: UnitTaskDto): void {
-    const units = [...this.selectedUnits()];
-    const unitIndex = units.findIndex((u) => u.id === updatedUnit.id);
-    if (unitIndex !== -1) {
-      units[unitIndex] = updatedUnit;
-      this.selectedUnits.set(units);
-      // hasUnsavedChanges НЕ встановлюємо тут — OneUnitTaskEditor сам управляє цим статусом
-      // через hasUnsavedChanges.set() → effect → unsavedChangesChange.emit() → onUnitUnsavedChanges()
-    }
-  }
-
-  /**
    * Обробник зміни стану збереження з дочірнього компонента OneUnitTaskEditor
-   * Відстежує які карточки мають незбережені зміни
    */
-  onUnitUnsavedChanges(unitId: string, hasUnsaved: boolean): void {
-    const unsavedUnits = new Set(this.unitsWithUnsavedChanges());
-
-    if (hasUnsaved) {
-      unsavedUnits.add(unitId);
-      this.hasUnsavedChanges.set(true);
-    } else {
-      unsavedUnits.delete(unitId);
-    }
-
-    this.unitsWithUnsavedChanges.set(unsavedUnits);
+  onUnitUnsavedChanges(unitTaskId: string, hasUnsaved: boolean): void {
+    this.unitsWithUnsavedChanges.update((set) => {
+      const next = new Set(set);
+      if (hasUnsaved) { next.add(unitTaskId); }
+      else { next.delete(unitTaskId); }
+      return next;
+    });
   }
 
   /**
@@ -152,7 +137,7 @@ export class UnitsTaskEditor {
   onParentDocUsedChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.isParentDocUsed.set(input.checked);
-    this.hasUnsavedChanges.set(true);
+    this.isDocFieldsDirty.set(true);
   }
 
   /**
@@ -168,7 +153,7 @@ export class UnitsTaskEditor {
     const finalDate = manualDate || event.value;
 
     this.parentDocumentDate.set(finalDate);
-    this.hasUnsavedChanges.set(true);
+    this.isDocFieldsDirty.set(true);
   }
 
   /**
@@ -177,7 +162,7 @@ export class UnitsTaskEditor {
   onParentDocumentNumberChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.parentDocumentNumber.set(input.value.trim());
-    this.hasUnsavedChanges.set(true);
+    this.isDocFieldsDirty.set(true);
   }
 
   /**
@@ -192,7 +177,7 @@ export class UnitsTaskEditor {
     // Если ручной парсинг удался — берем его, иначе берем то, что определил Material
     const finalDate = manualDate || event.value;
     this.documentDate.set(finalDate);
-    this.hasUnsavedChanges.set(true);
+    this.isDocFieldsDirty.set(true);
   }
 
   /**
@@ -201,7 +186,7 @@ export class UnitsTaskEditor {
   onDocumentNumberChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.documentNumber.set(input.value.trim());
-    this.hasUnsavedChanges.set(true);
+    this.isDocFieldsDirty.set(true);
   }
 
   /**
@@ -320,7 +305,8 @@ export class UnitsTaskEditor {
         next: ({ dataSet, unitTasks }) => {
           this.setDataSet(dataSet);
           this.selectedUnits.set(unitTasks);
-          this.hasUnsavedChanges.set(false);
+          this.unitsWithUnsavedChanges.set(new Set());
+          this.isDocFieldsDirty.set(false);
         },
         error: (error) => {
           console.error('Помилка завантаження набору даних:', error);
@@ -470,8 +456,8 @@ export class UnitsTaskEditor {
       this.isSaving.set(false);
 
       if (errors.length === 0) {
-        this.hasUnsavedChanges.set(false);
-        this.unitsWithUnsavedChanges.set(new Set()); // Очищуємо множину не збережених карточек
+        this.unitsWithUnsavedChanges.set(new Set());
+        this.isDocFieldsDirty.set(false);
         this.snackBar.open(`Дані ${successCount} підрозділів збережено`, 'Закрити', {
           duration: 3000,
         });

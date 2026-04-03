@@ -101,7 +101,6 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   private destroy$ = new Subject<void>();
 
   @Output() remove = new EventEmitter<string>();
-  @Output() unitChange = new EventEmitter<UnitTaskDto>();
   /** Еміт події при зміні стану незбережених змін */
   @Output() unsavedChangesChange = new EventEmitter<boolean>();
 
@@ -153,7 +152,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   // Effect для відстеження змін hasUnsavedChanges і емітування батьківському компоненту
   private unsavedChangesEffect = effect(() => {
     this.unsavedChangesChange.emit(this.hasUnsavedChanges());
-  }, { allowSignalWrites: true });
+  });
   /** Контрол для статусу публікації
    * Предотвращает переключение визуального контрола
    * при ошибках в изменении статуса публикации из-за
@@ -167,7 +166,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   editingMeanValue = signal<number | undefined>(undefined);
 
   @ViewChild(MatSort) sort!: MatSort;
-
+/** Вхідний параметр для компонента — завдання підрозділу */
   @Input({ required: true })
   set unitTask(value: UnitTaskDto) {
     this.unitTaskSignal.set(value);
@@ -362,7 +361,6 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
       this.adjacentUnits.set([]);
       this.adjacentUnitsControl.setValue(null, { emitEvent: false });
       this.unitTaskSignal.set(updatedUnit);
-      this.unitChange.emit(updatedUnit);
       this.hasUnsavedChanges.set(true);
       return;
     }
@@ -386,7 +384,6 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     };
 
     this.unitTaskSignal.set(updatedUnit);
-    this.unitChange.emit(updatedUnit);
     this.hasUnsavedChanges.set(true);
 
     // Завантажуємо РВЗ для обраного завдання (використовуємо areaTypeId з кешованого об'єкта)
@@ -406,7 +403,6 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
       areaValue: area ? area.value : '',
     };
     this.unitTaskSignal.set(updatedUnit);
-    this.unitChange.emit(updatedUnit);
 
     // Зберігаємо автоматично тільки якщо обидва обов'язкові поля заповнені.
     // hasUnsavedChanges НЕ виставляємо тут — saveUnitTask() сам скине в false при успіху
@@ -493,7 +489,6 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
         areaValue: this.unitTask.persistentLocationValue || 'ППД',
       };
       this.unitTaskSignal.set(updatedUnit);
-      this.unitChange.emit(updatedUnit);
     }
   }
 
@@ -580,13 +575,6 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
         this.means.set(updatedMeans);
         this.meansDataSource.data = updatedMeans;
 
-        // Синхронізуємо з батьківським компонентом
-        const updatedUnit = {
-          ...this.unitTask,
-          meansCount: updatedMeans.length,
-          means: updatedMeans,
-        };
-        this.unitChange.emit(updatedUnit);
         this.hasUnsavedChanges.set(true);
       }
     });
@@ -653,13 +641,11 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     this.means.set(updatedMeans);
     this.meansDataSource.data = updatedMeans;
 
-    // Синхронізуємо з батьківським компонентом
     const updatedUnit = {
       ...this.unitTask,
       means: updatedMeans,
     };
     this.unitTaskSignal.set(updatedUnit);
-    this.unitChange.emit(updatedUnit);
     this.hasUnsavedChanges.set(true);
 
     try {
@@ -693,13 +679,6 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     this.means.set(updatedMeans);
     this.meansDataSource.data = updatedMeans;
 
-    // Синхронізуємо з батьківським компонентом
-    const updatedUnit = {
-      ...this.unitTask,
-      meansCount: updatedMeans.length,
-      means: updatedMeans,
-    };
-    this.unitChange.emit(updatedUnit);
     this.hasUnsavedChanges.set(true);
 
     await this.saveAndReloadMeans(this.unitTask.id);
@@ -843,7 +822,6 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
       adjactedShortName: unit?.unitShortName ?? undefined,
     };
     this.unitTaskSignal.set(updatedUnit);
-    this.unitChange.emit(updatedUnit);
 
     const [success, errorMsg] = await this.saveUnitTask();
     if (success) {
