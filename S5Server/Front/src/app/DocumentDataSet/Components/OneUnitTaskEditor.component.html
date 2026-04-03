@@ -92,6 +92,24 @@
               </mat-select>
             </mat-form-field>
           </div>
+
+          <div class="task-item">
+            <strong>В зоні ваідповідальності підрозділу:</strong>
+            <mat-form-field appearance="outline" class="task-select">
+              <mat-select
+                placeholder="Оберіть підрозділ"
+                [formControl]="adjacentUnitsControl"
+                (selectionChange)="onAdjacentUnitChange($event.value)"
+                [disabled]="readOnly"
+              >
+                <mat-option [value]="null">— Не очікується —</mat-option>
+                @for (unit of adjacentUnits(); track unit.id) {
+                  <mat-option [value]="unit">{{ unit.unitShortName }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+          
         </div>
       </mat-card-content>
     </mat-card>
@@ -99,7 +117,7 @@
     <mat-accordion class="sections-accordion">
       <!-- Засоби (Дрони) - показуємо тільки якщо завдання має withMeans = true -->
       @if (taskControl.value?.withMeans) {
-        <mat-expansion-panel class="unit-section-panel" (opened)="loadMeans()">
+        <mat-expansion-panel class="unit-section-panel" (opened)="onMeansPanelOpened()">
           <mat-expansion-panel-header>
             <mat-panel-title>
               <mat-icon color="primary">flight</mat-icon>

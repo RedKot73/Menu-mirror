@@ -7,8 +7,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { DatePipe } from '@angular/common';
 
-import { UnitTaskService } from '../../ServerService/unit-task.service';
-import { UnitTaskDto } from '../DocumentDataSet/models/template-dataset.models';
+import { UnitTaskDto, UnitTaskService } from '../../ServerService/unit-task.service';
 import { S5App_ErrorHandler } from '../shared/models/ErrorHandler';
 
 @Component({

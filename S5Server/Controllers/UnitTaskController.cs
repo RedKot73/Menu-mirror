@@ -49,7 +49,7 @@ public class UnitTaskController : ControllerBase
             .AsQueryable();
 
     /// <summary>
-    /// Отримати всі завдання підрозділів
+    /// Отримати всі завдання підрозділів або підрозділу dataSetId
     /// </summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]

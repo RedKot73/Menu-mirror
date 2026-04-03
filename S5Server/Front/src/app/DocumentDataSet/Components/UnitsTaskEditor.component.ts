@@ -35,11 +35,10 @@ import { UnitSelectDialogComponent } from '../../dialogs/UnitSelect-dialog.compo
 import { ErrorListSnackBarComponent } from '../../dialogs/ErrorListSnackbar.component';
 import {
   TemplateDataSetCreateDto,
-  UnitTaskDto,
   TemplateDataSetDto,
 } from '../models/template-dataset.models';
 import { TemplateDataSetService } from '../../../ServerService/template-dataset.service';
-import { UnitTaskService } from '../../../ServerService/unit-task.service';
+import { UnitTaskDto, UnitTaskService } from '../../../ServerService/unit-task.service';
 import { OneUnitTaskEditor } from './OneUnitTaskEditor.component';
 import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';
 import {
@@ -422,6 +421,8 @@ export class UnitsTaskEditor {
           .updateDataSet(currentDataSet.id, updateDto)
           .pipe(takeUntilDestroyed(this.destroyRef)),
       );
+      //Зберігаємо картки підрозділів тільки після успішного збереження даних набору,
+      // щоб не втратити зміни через асинхронне оновлення після збереження
       const saved = await this.saveUnitTasks();
       if (saved) {
         this.dataSet.set(savedDto);
@@ -503,6 +504,9 @@ export class UnitsTaskEditor {
       return;
     }
 
+    /**
+     * Відкриваємо діалог створення нового набору даних (дата та номер документа)
+     */
     const dialogRef = this.dialog.open(CreateDataSetDialogComponent, {
       width: '480px',
       maxHeight: '90vh',

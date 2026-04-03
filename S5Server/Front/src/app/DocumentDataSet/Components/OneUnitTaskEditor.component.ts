@@ -33,13 +33,19 @@ import { DatePipe } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import {
-  UnitTaskDto,
-  DroneModelTaskDto,
-} from '../models/template-dataset.models';
-import { DictUnitTasksService, DictUnitTask } from '../../../ServerService/dictUnitTasks.service';
+  DictUnitTasksService,
+  DictUnitTask
+} from '../../../ServerService/dictUnitTasks.service';
 import { DictAreasService, DictArea } from '../../../ServerService/dictAreas.service';
-import { DroneModelTaskService } from '../../../ServerService/drone-model-task.service';
-import { UnitTaskService } from '../../../ServerService/unit-task.service';
+import {
+  DroneModelTaskDto,
+  DroneModelTaskService
+} from '../../../ServerService/drone-model-task.service';
+import {
+  UnitTaskDto,
+  UnitTaskService
+} from '../../../ServerService/unit-task.service';
+import { UnitAreasService, UnitAreasDto } from '../../../ServerService/unitAreas.service';
 import {
   DictDroneModelSelectDialogComponent,
   DictDroneModelWithQuantity,
@@ -89,6 +95,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   private droneModelTaskService = inject(DroneModelTaskService);
   private unitTaskService = inject(UnitTaskService);
   private soldierTaskService = inject(SoldierTaskService);
+  private unitAreasService = inject(UnitAreasService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
   private destroy$ = new Subject<void>();
@@ -106,7 +113,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   // Перелік областей (РВЗ)
   protected areas = signal<DictArea[]>([]);
 
-  // Дані особового складу (замінено на SoldierTaskDto)
+  // Дані особового складу
   soldiers = signal<SoldierTaskDto[]>([]);
   soldierDataSource = new MatTableDataSource<SoldierTaskDto>([]);
   soldierDisplayedColumns: string[] = [
@@ -123,8 +130,11 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     'involvedUnitShortName',
     'comment',
   ];
-  //  soldierCount = signal<number>(0);
   isLoadingSoldiers = signal<boolean>(false);
+  /** Суміжні підрозділи */
+  adjacentUnits = signal<UnitAreasDto[]>([]);
+  /** Сигнал для відстеження стану завантаження суміжних підрозділів */
+  isLoadingAdjacentUnits = signal<boolean>(false);
   soldiersPanelOpened = signal(false);
 
   // Дані засобів (Master-Detail)
@@ -170,6 +180,8 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   // Form Controls
   protected taskControl = new FormControl<DictUnitTask | null>(null);
   protected areaControl = new FormControl<DictArea | null>(null);
+  /** Контрол для вибору суміжного підрозділу */
+  protected adjacentUnitsControl = new FormControl<UnitAreasDto | null>(null);
 
   ngOnInit(): void {
     // Завантажуємо повний список завдань (з areaTypeId)
@@ -260,7 +272,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   /**
    * Завантажує засоби (дрони) для завдання підрозділу (Master-Detail)
    */
-  loadMeans(): void {
+  onMeansPanelOpened(): void {
     // Якщо вже завантажено - не перезавантажуємо
     if (this.means().length > 0) {
       return;
@@ -347,6 +359,8 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
       this.meansDataSource.data = [];
       this.areas.set([]);
       this.areaControl.setValue(null, { emitEvent: false });
+      this.adjacentUnits.set([]);
+      this.adjacentUnitsControl.setValue(null, { emitEvent: false });
       this.unitTaskSignal.set(updatedUnit);
       this.unitChange.emit(updatedUnit);
       this.hasUnsavedChanges.set(true);
@@ -408,6 +422,33 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
       // Неможливо зберегти (area = null або taskId не вибрано) — позначаємо як незбережено
       this.hasUnsavedChanges.set(true);
     }
+
+    // При зміні області також завантажуємо суміжні підрозділи для цієї області
+    this.adjacentUnits.set([]);
+    this.adjacentUnitsControl.setValue(null, { emitEvent: false });
+    if (!area) {// Якщо область скинута — не завантажуємо суміжні підрозділи
+      return;
+    }
+
+    this.isLoadingAdjacentUnits.set(true);
+    this.unitAreasService.getByArea(area.id, this.unitTask.unitId)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.isLoadingAdjacentUnits.set(false)),
+      )
+      .subscribe({
+        next: (units) => {
+          this.adjacentUnits.set(units);
+        },
+        error: (error: unknown) => {
+          console.error('Помилка завантаження суміжних підрозділів:', error);
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
+            error,
+            'Помилка завантаження суміжних підрозділів',
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
+      });
   }
 
   /**
@@ -661,11 +702,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     this.unitChange.emit(updatedUnit);
     this.hasUnsavedChanges.set(true);
 
-    try {
-      await this.saveAndReloadMeans(this.unitTask.id);
-    } catch {
-      return;
-    }
+    await this.saveAndReloadMeans(this.unitTask.id);
   }
 
   /**
@@ -799,6 +836,23 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  async onAdjacentUnitChange(unit: UnitAreasDto | null): Promise<void> {
+    const updatedUnit: UnitTaskDto = {
+      ...this.unitTask,
+      adjactedUnitId: unit?.unitId ?? undefined,
+      adjactedShortName: unit?.unitShortName ?? undefined,
+    };
+    this.unitTaskSignal.set(updatedUnit);
+    this.unitChange.emit(updatedUnit);
+
+    const [success, errorMsg] = await this.saveUnitTask();
+    if (success) {
+      this.snackBar.open('Збережено', 'Закрити', { duration: 2000 });
+    } else if (errorMsg) {
+      this.snackBar.open(errorMsg, 'Закрити', { duration: 5000 });
+    }
+  }
+
   /**
    * Отримує читабельну назву статусу публікації
    */
@@ -809,13 +863,16 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   getSoldierFIO(soldier: SoldierTaskDto): string {
     return SoldierUtils.formatFIO(soldier.firstName, soldier.midleName, soldier.lastName);
   }
-
+/** Отримати назву підрозділу відносно
+ * основного підрозділу солдата Приданий/Залучений/Відряджений */
   unitTagTitle(soldier: SoldierTaskDto): string {
     return SoldierUtils.getUnitTagLabel(
       SoldierUtils.getUnitTag(soldier, this.unitTask.unitId || ''),
     );
   }
 
+/** Отримати кольоровий статус підрозділу відносно
+ * основного підрозділу солдата Приданий/Залучений/Відряджений */
   getRowClass(soldier: SoldierTaskDto): string {
     return SoldierUtils.getRowClass(soldier, this.unitTask.unitId || '');
   }

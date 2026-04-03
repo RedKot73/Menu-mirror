@@ -3,12 +3,52 @@ import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http'
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-import {
-  UnitTaskDto,
-  // UnitTaskFullDto,
-  UnitTaskCreateDto,
-} from '../app/DocumentDataSet/models/template-dataset.models';
 import { S5App_ErrorHandler } from '../app/shared/models/ErrorHandler';
+import { DroneModelTaskDto } from './drone-model-task.service';;
+
+// === UnitTask Models (Snap-shot підрозділу з завданням) ===
+
+/**
+ * DTO для створення UnitTask
+ */
+export interface UnitTaskCreateDto {
+  dataSetId: string;
+  unitId: string;
+  taskId: string;
+  areaId: string;
+}
+
+/**
+ * Базовий DTO для UnitTask (без списку бійців)
+ * Відповідає серверному UnitTaskDto
+ */
+export interface UnitTaskDto {
+  id: string;
+  dataSetId?: string;
+  unitId: string;
+  unitShortName: string;
+  parentId?: string;
+  parentShortName?: string;
+  assignedUnitId?: string;
+  assignedShortName?: string;
+  adjactedUnitId?: string;
+  adjactedShortName?: string;
+  unitTypeId?: string;
+  unitTypeName?: string;
+  isInvolved: boolean;
+  persistentLocationId?: string;
+  persistentLocationValue?: string;
+  taskId: string;
+  taskValue: string;
+  taskWithMeans: boolean; // Чи має завдання засоби (для відображення іконки)
+  areaId: string;
+  areaValue?: string; // ✅ Назва району
+  means?: DroneModelTaskDto[]; // ✅ OPTIONAL: завантажується окремо при розгортанні
+  isPublished: boolean;
+  publishedAtUtc?: string;
+  changedBy: string;
+  validFrom: string;
+}
 
 @Injectable({
   providedIn: 'root',
