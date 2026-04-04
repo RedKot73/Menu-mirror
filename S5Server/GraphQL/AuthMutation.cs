@@ -225,7 +225,7 @@ public class AuthMutation
         if (string.IsNullOrEmpty(unformattedKey))
             throw new GraphQLException("Failed to generate authenticator key");
 
-        var issuer = config["TOTP__Issuer"];
+        var issuer = config["TOTP:Issuer"];
         if (string.IsNullOrEmpty(issuer))
         {
              // Fallback to JwtSettings:Issuer or hardcoded default

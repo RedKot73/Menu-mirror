@@ -12,8 +12,4 @@ cd "$(dirname "$0")/.."
 # Полная пересборка с игнорированием всех инкрементальных кэшей
 dotnet build S5Server/S5Server.csproj --no-incremental --force
 
-echo "--- [STEP 3/3] Rebuilding Docker Images without Cache ---"
-# Пересборка образов (app и migration)
-docker-compose -f docker-compose.local.yml build --no-cache app migration
-
 echo "--- TOTAL REBUILD COMPLETE ---"

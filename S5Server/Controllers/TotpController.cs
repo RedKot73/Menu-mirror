@@ -19,6 +19,7 @@ public class TotpController : ControllerBase
     private readonly UserManager<TVezhaUser> _userManager;
     private readonly ILogger<TotpController> _logger;
     private readonly UrlEncoder _urlEncoder;
+    private readonly IConfiguration _config;
 
     private const string AuthenticatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
 
@@ -28,11 +29,13 @@ public class TotpController : ControllerBase
     public TotpController(
         UserManager<TVezhaUser> userManager,
         ILogger<TotpController> logger,
-        UrlEncoder urlEncoder)
+        UrlEncoder urlEncoder,
+        IConfiguration config)
     {
         _userManager = userManager;
         _logger = logger;
         _urlEncoder = urlEncoder;
+        _config = config;
     }
 
     /// <summary>
@@ -178,9 +181,15 @@ public class TotpController : ControllerBase
 
     private string GenerateQrCodeUri(string email, string unformattedKey)
     {
+        var issuer = _config["TOTP:Issuer"];
+        if (string.IsNullOrEmpty(issuer))
+        {
+             issuer = _config["JwtSettings:Issuer"] ?? "S5Server";
+        }
+
         return string.Format(
             AuthenticatorUriFormat,
-            _urlEncoder.Encode("S5Server"),
+            _urlEncoder.Encode(issuer),
             _urlEncoder.Encode(email),
             unformattedKey);
     }
