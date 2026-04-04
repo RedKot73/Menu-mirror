@@ -49,21 +49,24 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration.AddEnvironmentVariables();
 }
 
-// ✅ JWT Secret Validation & Fail-Safe Mechanism
+// ✅ JWT Validation & Fail-Safe Mechanism
 const string DEV_JWT_SECRET = "S5_DEV_SECRET_2026_DO_NOT_USE_IN_PROD_999";
+const string DEV_JWT_S5SERVER = "S5Server";
+
 var jwtSecret = builder.Configuration["JwtSettings:Secret"];
 
+// 1. Secret Protection
 if (string.IsNullOrEmpty(jwtSecret))
 {
     if (builder.Environment.IsDevelopment())
     {
-        Log.Warning("⚠️ JWT Secret missing. Using development fallback: {Secret}", DEV_JWT_SECRET);
+        Log.Warning("⚠️ JWT Secret missing. Using development fallback.");
         jwtSecret = DEV_JWT_SECRET;
         builder.Configuration["JwtSettings:Secret"] = DEV_JWT_SECRET;
     }
     else
     {
-        Log.Fatal("❌ CRITICAL: JwtSettings__Secret is missing in Production environment! Terminating.");
+        Log.Fatal("❌ CRITICAL: JwtSettings:Secret is missing in Production! Terminating.");
         return;
     }
 }
@@ -71,6 +74,36 @@ else if (builder.Environment.IsProduction() && jwtSecret == DEV_JWT_SECRET)
 {
     Log.Fatal("❌ CRITICAL: Production environment is using the Development fallback JWT secret! Terminating.");
     return;
+}
+
+// 2. Issuer Protection
+if (string.IsNullOrEmpty(builder.Configuration["JwtSettings:Issuer"]))
+{
+    if (builder.Environment.IsDevelopment())
+    {
+        Log.Warning("⚠️ JWT Issuer missing. Using development fallback: {Issuer}", DEV_JWT_S5SERVER);
+        builder.Configuration["JwtSettings:Issuer"] = DEV_JWT_S5SERVER;
+    }
+    else
+    {
+        Log.Fatal("❌ CRITICAL: JwtSettings:Issuer is missing in Production! Terminating.");
+        return;
+    }
+}
+
+// 3. Audience Protection
+if (string.IsNullOrEmpty(builder.Configuration["JwtSettings:Audience"]))
+{
+    if (builder.Environment.IsDevelopment())
+    {
+        Log.Warning("⚠️ JWT Audience missing. Using development fallback: {Audience}", DEV_JWT_S5SERVER);
+        builder.Configuration["JwtSettings:Audience"] = DEV_JWT_S5SERVER;
+    }
+    else
+    {
+        Log.Fatal("❌ CRITICAL: JwtSettings:Audience is missing in Production! Terminating.");
+        return;
+    }
 }
 
 var pgConnConfig = new DBConfig();

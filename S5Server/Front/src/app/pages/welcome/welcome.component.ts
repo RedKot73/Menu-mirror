@@ -30,7 +30,7 @@ import { Subscription, interval } from 'rxjs';
 })
 export class WelcomeComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
-  private auth = inject(AuthService);
+  public auth = inject(AuthService);
   private router = inject(Router);
   public timeService = inject(SystemTimeService);
 
@@ -40,37 +40,13 @@ export class WelcomeComponent implements OnInit, OnDestroy {
 
   readonly error = signal<string | null>(null);
   readonly isLoading = signal(false);
-  readonly countdown = signal(10);
   readonly currentTime$ = this.timeService.utcTime$;
-  private timerSub?: Subscription;
 
   ngOnInit(): void {
-    if (this.auth.twoFactorMode() === 'soft') {
-      this.startTimer();
-    } else {
-      this.countdown.set(0); // No timer in strict mode
-    }
+    // Soft mode is now handled without artificial delays
   }
 
   ngOnDestroy(): void {
-    this.timerSub?.unsubscribe();
-  }
-
-  private startTimer(): void {
-    this.timerSub = interval(1000).subscribe(() => {
-      if (this.countdown() > 0) {
-        this.countdown.update(c => c - 1);
-      } else {
-        this.timerSub?.unsubscribe();
-        this.autoSubmit();
-      }
-    });
-  }
-
-  private autoSubmit(): void {
-    // If form is valid, use the code. Otherwise send empty/zero to trigger backend soft mode wait.
-    const code = this.welcomeForm.value.code || '000000';
-    this.submitCode(code);
   }
 
   onSubmit(): void {
@@ -78,12 +54,6 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     const { code } = this.welcomeForm.value;
     if (!code) return;
     
-    if (this.auth.twoFactorMode() !== 'soft') {
-      this.timerSub?.unsubscribe(); // Stop timer if user submits manually only in strict mode
-    } else {
-      // Show simulated error for early invalid attempts without waiting for backend
-      this.error.set('Очікування перевірки...'); // We can't know it's invalid instantly since backend delays 10s
-    }
     this.submitCode(code);
   }
 

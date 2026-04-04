@@ -53,13 +53,13 @@ JwtSettings__ExpiryInMinutes=120
 TOTP__Issuer=S5Server
 
 # ── 2FA Mode (MANDATORY in Production) ───────────────────────────────────
-# soft  → wrong TOTP codes are accepted after a 10-second delay (DEV ONLY, UNSAFE)
+# soft  → any TOTP code is accepted immediately (DEV ONLY, UNSAFE)
 # strict → correct TOTP code required (default for all non-development environments)
 TWO_FACTOR_MODE=strict
 ```
 
 > [!CAUTION]
-> **Never deploy with `TWO_FACTOR_MODE=soft`**. This bypasses all TOTP security and allows any code to authenticate successfully after a 10-second delay. It is designed exclusively for local development and testing.
+> **Never deploy with `TWO_FACTOR_MODE=soft`**. This bypasses all TOTP security and allows any code to authenticate successfully and instantly. It is designed exclusively for local development and testing.
 
 > [!CAUTION]
 > **The `JwtSettings__Secret` default value `SuperSecretKeyForJWTNormalization2026!` from `appsettings.json` is a known placeholder.** Replace it with a cryptographically random string of at least 32 characters before any production or staging deployment.
@@ -338,7 +338,7 @@ new Claim("requiresTwoFactor", isInterim.ToString().ToLower()),
 | `[DEBUG] 2FA enabled for user {UserName}.` | 2FA flag set to `true` in DB |
 | `[DEBUG] 2FA enabled for user {UserName}. Generating interim token.` | Login step 1 — interim JWT issued |
 | `[DEBUG] 2FA SUCCESS for user {UserName}. Token length: {len}` | Final JWT issued after valid TOTP |
-| `[DEBUG] 2FA Check Failed for user {name}. Soft Mode active: Waiting 10s...` | Wrong code, soft mode (DEV only) |
+| `[DEBUG] 2FA Check Failed for user {name}. Soft Mode active: Access granted.` | Wrong code, soft mode bypass (DEV only) |
 | `[DEBUG] 2FA Toggle changed for user {UserName}. Status: Disabled.` | 2FA disabled by user |
 
 ### Browser Console (Angular)
