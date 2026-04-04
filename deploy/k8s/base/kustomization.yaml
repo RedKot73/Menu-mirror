@@ -5,19 +5,26 @@ resources:
   - k8s-service.yaml
   - k8s-db-cluster.yaml
   - db-init-job.yaml
- 
-# Подключаем правила замены имен
-# Теперь они применяются автоматически ко всем, кто использует base
-# Добавляем "заглушку", чтобы replacements видели целевой объект
+
+# Основные генераторы конфигураций и секретов (Base шаблоны)
 configMapGenerator:
-  - name: s5-db-params
+  - name: s5-app-config
     literals:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - DB_HOST=s5-db-cluster-rw
+      - DB_PORT=5432
       - DB_NAME=placeholder
       - DB_USER=placeholder
-      - DB_HOST=s5-db-cluster-rw  # Устанавливаем системное имя здесь
-      
+      - TWO_FACTOR_MODE=strict
+      - TOTP__Issuer=S5
 
-
+secretGenerator:
+  - name: s5-app-secrets
+    literals:
+      - DB_PASSWORD=placeholder
+      - JwtSettings__Secret=placeholder_change_me_in_overlay
+      - KESTREL_CERT_PASSWORD=placeholder
+      - SERVICE_USER_PASSWORD=placeholder
 
 configurations:
   - kustomize-config.yaml

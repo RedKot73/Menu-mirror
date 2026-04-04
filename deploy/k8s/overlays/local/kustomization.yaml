@@ -9,42 +9,34 @@ resources:
 
 namespace: s5-local
 
-# 1. Сначала подтягиваем замены (replacements)
-# Они должны быть ЗДЕСЬ, чтобы видеть финальные значения из .env
+# Подтягиваем замены (replacements) для синхронизации имен БД
 replacements:
   - path: ../../base/db-replacements.yaml
 
-# 1. Генератор Секретов (Для паролей)
+# 1. Единый Генератор Секретов из .env
 secretGenerator:
-  - name: s5-db-credentials
-    envs:
-      - ../../../../.env # Берём переменные из твоего локального .env
-  - name: s5-https-cert # НОВЫЙ СЕКРЕТ ДЛЯ HTTPS (подтягивает KESTREL_CERT_PATH и KESTREL_CERT_PASSWORD из .env)
+  - name: s5-app-secrets
+    behavior: replace
     envs:
       - ../../../../.env
 
-# 2. Генератор ConfigMap (Для имен базы, портов и настроек приложения)
+# 2. Единый Генератор ConfigMap из .env
 configMapGenerator:
-  - name: s5-db-params
-    behavior: merge # ГОВОРИМ: "Возьми тот, что в base, и обнови его"
+  - name: s5-app-config
+    behavior: replace
     envs:
       - ../../../../.env
-  - name: s5-app-config
-    # envs УДАЛЕН отсюда, чтобы не было конфликта ключа DB_HOST с локальным .env
     literals:
-      - DB_HOST=s5-db-cluster-rw # Хост для подключения внутри кластера (приоритет над .env)
-      #- ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_ENVIRONMENT=Development # Фиксируем окружение для K8s
+      # Переопределяем хост БД для работы ВНУТРИ кластера
+      - DB_HOST=s5-db-cluster-rw
+      # Фиксируем окружение для этой сборки
+      - ASPNETCORE_ENVIRONMENT=Development
 
-
-# 3. Подмена образов
-# Имена (name) теперь СТРОГО совпадают с манифестами в base
+# 3. Подмена образов для локального запуска
 images:
   - name: s5-db
     newName: s5-db
-    newTag: 18.3-v1.0.0 # # Тег для локальной сборки "1.0.0" # Тег для локальной сборки
+    newTag: 18.3-v1.0.0
   - name: s5-server
     newName: s5-server
-    newTag: "1.0.1" # Тег для локальной сборки
-
-# Блок replacements удален отсюда, так как он теперь в base/kustomization.yaml
+    newTag: "1.0.1"
