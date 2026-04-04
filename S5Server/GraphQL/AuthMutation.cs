@@ -19,9 +19,9 @@ public class AuthMutation
     private string GenerateJwtToken(TVezhaUser user, IList<string> roles, IConfiguration config, bool isInterim = false)
     {
         var jwtSettings = config.GetSection("JwtSettings");
-        var secret = jwtSettings["Secret"] ?? throw new InvalidOperationException("JWT Secret not found in configuration (JwtSettings:Secret)");
-        var issuer = jwtSettings["Issuer"] ?? "S5Server";
-        var audience = jwtSettings["Audience"] ?? "S5Server";
+        var secret = config["JwtSettings:Secret"] ?? throw new InvalidOperationException("JWT Secret is not initialized");
+        var issuer = config["JwtSettings:Issuer"] ?? throw new InvalidOperationException("JWT Issuer is not initialized");
+        var audience = config["JwtSettings:Audience"] ?? throw new InvalidOperationException("JWT Audience is not initialized");
         var expiryMinutesStr = jwtSettings["ExpiryInMinutes"] ?? "120";
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
@@ -161,7 +161,9 @@ public class AuthMutation
         {
             if (isSoftMode)
             {
-                await Task.Delay(10000);
+                // In soft mode, we allow access immediately even if the code is wrong.
+                // This is intended for development convenience.
+                Console.WriteLine($"[DEBUG] 2FA Check Failed for user {user.UserName}, but access granted due to Soft Mode.");
             }
             else
             {
@@ -227,7 +229,7 @@ public class AuthMutation
         if (string.IsNullOrEmpty(issuer))
         {
              // Fallback to JwtSettings:Issuer or hardcoded default
-             issuer = config["JwtSettings:Issuer"] ?? "S5Server";
+             issuer = config["JwtSettings:Issuer"] ?? throw new InvalidOperationException("JWT Issuer is not initialized");
         }
         
         var email = user.Email ?? user.UserName ?? "User";
@@ -257,7 +259,7 @@ public class AuthMutation
 
         var authenticatorKey = await userManager.GetAuthenticatorKeyAsync(user);
         if (string.IsNullOrEmpty(authenticatorKey))
-             throw new GraphQLException("Mising Authenticator Config");
+             throw new GraphQLException("Missing Authenticator Config");
 
         var keyBytes = Base32Encoding.ToBytes(authenticatorKey);
         var totp = new Totp(keyBytes);

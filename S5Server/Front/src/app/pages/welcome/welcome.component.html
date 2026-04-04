@@ -28,10 +28,10 @@
           </div>
         }
 
-        @if (countdown() > 0 && !isLoading()) {
-          <div class="timer-info">
-            <mat-icon>timer</mat-icon>
-            <span>Автоматичний вхід через {{ countdown() }} сек...</span>
+        @if (auth.twoFactorMode() === 'soft' && !isLoading()) {
+          <div class="debug-info">
+            <mat-icon>bug_report</mat-icon>
+            <span>Soft Mode Active: Access Bypass Enabled</span>
           </div>
         }
 

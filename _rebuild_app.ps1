@@ -1,0 +1,1 @@
+bash ./_rebuild_app.sh $args
