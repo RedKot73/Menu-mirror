@@ -110,6 +110,18 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
             entity.Property(e => e.TwoFactorEnabled)
                 .HasColumnType("boolean")
                 .HasColumnName("two_factor_enabled");
+
+            // ✅ Зв'язок Soldier ↔ TVezhaUser відновлено як опціональний (LEFT JOIN)
+            entity.HasOne(u => u.Soldier)
+                  .WithOne()
+                  .HasForeignKey<TVezhaUser>(u => u.SoldierId)
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.Property(e => e.SoldierId)
+                  .HasColumnType("uuid")
+                  .HasColumnName("soldier_id");
+
             entity.Property(e => e.LockoutEnd)
                 .HasColumnType("timestamp with time zone")
                 .HasColumnName("lockout_end")
@@ -745,12 +757,6 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
             entity.ToTable("soldiers", "core",
                 t => t.HasComment("Особовий склад"));
             entity.HasKey(e => e.Id);
-
-            entity.HasOne<TVezhaUser>()
-                  .WithOne(u => u.Soldier)
-                  .HasForeignKey<Soldier>(s => s.Id)
-                  .IsRequired(false)
-                  .OnDelete(DeleteBehavior.Cascade);
 
             entity.Property(e => e.Id).IsRequired().HasColumnType("uuid");
             entity.Property(e => e.ExternId).HasColumnType("integer")

@@ -42,7 +42,6 @@ import { LookupDto } from '../app/shared/models/lookup.models';
     MatDialogModule,
     MatSnackBarModule,
     MasterDetailLayoutComponent,
-    TotpSetupDialogComponent,
   ],
   templateUrl: './Users.page.html',
   styleUrls: ['./Users.page.scss'],
