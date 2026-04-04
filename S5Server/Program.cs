@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
 using S5Server.Data;
 using S5Server.Models;
@@ -347,15 +348,38 @@ if (args.Any(arg => arg.Trim().Contains("--migrate", StringComparison.OrdinalIgn
     var dbContext = scope.ServiceProvider.GetRequiredService<MainDbContext>();
     try
     {
-        Log.Information("Накатываем миграции...");
-        await dbContext.Database.MigrateAsync();
-        Log.Information("=== Миграции успешно применены! ===");
-        
+        // Логируем уже применённые миграции
+        var applied = (await dbContext.Database.GetAppliedMigrationsAsync()).ToList();
+        Log.Information("✅ Применено миграций: {Count}", applied.Count);
+        foreach (var m in applied)
+            Log.Debug("   [applied] {Migration}", m);
+
+        // Логируем ожидающие миграции
+        var pending = (await dbContext.Database.GetPendingMigrationsAsync()).ToList();
+        Log.Information("⏳ Ожидают применения: {Count}", pending.Count);
+        foreach (var m in pending)
+            Log.Information("   [pending] {Migration}", m);
+
+        if (pending.Count == 0)
+        {
+            Log.Information("Нет новых миграций. База данных актуальна.");
+        }
+        else
+        {
+            Log.Information("Начинаем применение миграций...");
+            await dbContext.Database.MigrateAsync();
+            Log.Information("=== Все миграции успешно применены! ===");
+        }
+
         Environment.Exit(0); 
     }
     catch (Exception ex)
     {
-        Log.Fatal(ex, "Ошибка при применении миграций");
+        // Логируем детальную информацию об ошибке
+        Log.Fatal(ex, "❌ Ошибка при применении миграций");
+        Log.Fatal("Тип ошибки: {ExType}", ex.GetType().FullName);
+        if (ex.InnerException != null)
+            Log.Fatal("Внутренняя ошибка: {Inner}", ex.InnerException.Message);
         Environment.Exit(1); 
     }
 }

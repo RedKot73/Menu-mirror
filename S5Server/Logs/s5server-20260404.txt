@@ -2224,3 +2224,485 @@ LIMIT 1
 2026-04-04 01:05:46.843 +03:00 [INF] Executed endpoint 'Hot Chocolate GraphQL Pipeline'
 2026-04-04 01:05:46.844 +03:00 [INF] HTTP POST /graphql responded 200 in 54.1331 ms
 2026-04-04 01:05:46.844 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5001/graphql - 200 null application/graphql-response+json; charset=utf-8 54.4987ms
+2026-04-04 01:18:09.721 +03:00 [INF] Запуск приложения с аргументами: 
+2026-04-04 01:18:09.814 +03:00 [INF] Попытка подключения к PostgreSQL 1/3...
+2026-04-04 01:18:10.023 +03:00 [INF] ✅ PostgreSQL подключен: S5_DB_local@localhost:5432
+2026-04-04 01:18:10.230 +03:00 [INF] Starting S5Server
+2026-04-04 01:18:10.239 +03:00 [INF] User profile is available. Using '/home/havrok/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-04 01:18:10.303 +03:00 [INF] S5Server listening on: http://localhost:5001
+2026-04-04 01:18:35.150 +03:00 [INF] Запуск приложения с аргументами: 
+2026-04-04 01:18:35.236 +03:00 [INF] Попытка подключения к PostgreSQL 1/3...
+2026-04-04 01:18:35.447 +03:00 [INF] ✅ PostgreSQL подключен: S5_DB_local@localhost:5432
+2026-04-04 01:18:35.688 +03:00 [INF] Starting S5Server
+2026-04-04 01:18:35.696 +03:00 [INF] User profile is available. Using '/tmp/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-04 01:18:35.814 +03:00 [INF] S5Server listening on: http://0.0.0.0:5000
+2026-04-04 12:17:06.285 +03:00 [INF] Запуск приложения с аргументами: 
+2026-04-04 12:17:06.478 +03:00 [INF] Попытка подключения к PostgreSQL 1/3...
+2026-04-04 12:17:06.809 +03:00 [INF] ✅ PostgreSQL подключен: S5_DB_local@localhost:5432
+2026-04-04 12:17:07.182 +03:00 [INF] Starting S5Server
+2026-04-04 12:17:07.190 +03:00 [INF] User profile is available. Using '/tmp/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-04 12:17:07.303 +03:00 [INF] S5Server listening on: http://0.0.0.0:5000
+2026-04-04 12:17:33.157 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/ - null null
+2026-04-04 12:17:33.236 +03:00 [INF] Executing endpoint 'Fallback {*path:nonfile}'
+2026-04-04 12:17:33.264 +03:00 [INF] Sending file. Request path: '/index.html'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/index.html'
+2026-04-04 12:17:33.264 +03:00 [INF] Executed endpoint 'Fallback {*path:nonfile}'
+2026-04-04 12:17:33.270 +03:00 [INF] HTTP GET /index.html responded 200 in 102.2909 ms
+2026-04-04 12:17:33.273 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-QAPGSYTZ.js - null null
+2026-04-04 12:17:33.273 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-6HY5KKDU.js - null null
+2026-04-04 12:17:33.273 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-5OFTEHZD.js - null null
+2026-04-04 12:17:33.273 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-UIYIUELW.js - null null
+2026-04-04 12:17:33.273 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/styles.css - null null
+2026-04-04 12:17:33.275 +03:00 [INF] Sending file. Request path: '/chunk-QAPGSYTZ.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-QAPGSYTZ.js'
+2026-04-04 12:17:33.275 +03:00 [INF] Sending file. Request path: '/styles.css'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/styles.css'
+2026-04-04 12:17:33.275 +03:00 [INF] HTTP GET /chunk-QAPGSYTZ.js responded 200 in 1.4051 ms
+2026-04-04 12:17:33.275 +03:00 [INF] HTTP GET /styles.css responded 200 in 1.4854 ms
+2026-04-04 12:17:33.275 +03:00 [INF] Sending file. Request path: '/chunk-5OFTEHZD.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-5OFTEHZD.js'
+2026-04-04 12:17:33.275 +03:00 [INF] HTTP GET /chunk-5OFTEHZD.js responded 200 in 1.7718 ms
+2026-04-04 12:17:33.276 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-QAPGSYTZ.js - 200 6679 text/javascript 3.0428ms
+2026-04-04 12:17:33.276 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/styles.css - 200 9078 text/css 3.0799ms
+2026-04-04 12:17:33.276 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-5OFTEHZD.js - 200 3315 text/javascript 3.5349ms
+2026-04-04 12:17:33.276 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/index.html - 200 null text/html 120.8195ms
+2026-04-04 12:17:33.278 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-3EEZP2Q7.js - null null
+2026-04-04 12:17:33.278 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-2P3X7Y6Y.js - null null
+2026-04-04 12:17:33.279 +03:00 [INF] Sending file. Request path: '/chunk-2P3X7Y6Y.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-2P3X7Y6Y.js'
+2026-04-04 12:17:33.279 +03:00 [INF] HTTP GET /chunk-2P3X7Y6Y.js responded 200 in 1.0436 ms
+2026-04-04 12:17:33.280 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-2P3X7Y6Y.js - 200 36499 text/javascript 1.4108ms
+2026-04-04 12:17:33.280 +03:00 [INF] Sending file. Request path: '/chunk-3EEZP2Q7.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-3EEZP2Q7.js'
+2026-04-04 12:17:33.280 +03:00 [INF] HTTP GET /chunk-3EEZP2Q7.js responded 200 in 2.1475 ms
+2026-04-04 12:17:33.280 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-3EEZP2Q7.js - 200 194106 text/javascript 2.5278ms
+2026-04-04 12:17:33.282 +03:00 [INF] Sending file. Request path: '/chunk-UIYIUELW.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-UIYIUELW.js'
+2026-04-04 12:17:33.282 +03:00 [INF] HTTP GET /chunk-UIYIUELW.js responded 200 in 8.8420 ms
+2026-04-04 12:17:33.283 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-UIYIUELW.js - 200 70767 text/javascript 10.3006ms
+2026-04-04 12:17:33.283 +03:00 [INF] Sending file. Request path: '/chunk-6HY5KKDU.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-6HY5KKDU.js'
+2026-04-04 12:17:33.283 +03:00 [INF] HTTP GET /chunk-6HY5KKDU.js responded 200 in 9.5167 ms
+2026-04-04 12:17:33.283 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-6HY5KKDU.js - 200 439406 text/javascript 10.883ms
+2026-04-04 12:17:33.285 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-IKDNLDBK.js - null null
+2026-04-04 12:17:33.285 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-GOHAIDCM.js - null null
+2026-04-04 12:17:33.286 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/polyfills.js - null null
+2026-04-04 12:17:33.286 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/main.js - null null
+2026-04-04 12:17:33.287 +03:00 [INF] Sending file. Request path: '/main.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/main.js'
+2026-04-04 12:17:33.287 +03:00 [INF] HTTP GET /main.js responded 200 in 0.7965 ms
+2026-04-04 12:17:33.287 +03:00 [INF] Sending file. Request path: '/polyfills.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/polyfills.js'
+2026-04-04 12:17:33.287 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/main.js - 200 59663 text/javascript 1.0281ms
+2026-04-04 12:17:33.287 +03:00 [INF] HTTP GET /polyfills.js responded 200 in 1.1046 ms
+2026-04-04 12:17:33.287 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/polyfills.js - 200 92418 text/javascript 1.4268ms
+2026-04-04 12:17:33.288 +03:00 [INF] Sending file. Request path: '/chunk-GOHAIDCM.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-GOHAIDCM.js'
+2026-04-04 12:17:33.288 +03:00 [INF] HTTP GET /chunk-GOHAIDCM.js responded 200 in 2.2439 ms
+2026-04-04 12:17:33.288 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-GOHAIDCM.js - 200 153041 text/javascript 2.6416ms
+2026-04-04 12:17:33.290 +03:00 [INF] Sending file. Request path: '/chunk-IKDNLDBK.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-IKDNLDBK.js'
+2026-04-04 12:17:33.290 +03:00 [INF] HTTP GET /chunk-IKDNLDBK.js responded 200 in 4.9521 ms
+2026-04-04 12:17:33.290 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-IKDNLDBK.js - 200 1423174 text/javascript 5.2539ms
+2026-04-04 12:17:33.292 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/aspnetcore-browser-refresh.js - null null
+2026-04-04 12:17:33.295 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/aspnetcore-browser-refresh.js - 200 16152 application/javascript; charset=utf-8 2.8386ms
+2026-04-04 12:17:33.804 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-F2YMHKAK.js - null null
+2026-04-04 12:17:33.810 +03:00 [INF] Sending file. Request path: '/chunk-F2YMHKAK.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-F2YMHKAK.js'
+2026-04-04 12:17:33.810 +03:00 [INF] HTTP GET /chunk-F2YMHKAK.js responded 200 in 5.1928 ms
+2026-04-04 12:17:33.811 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-F2YMHKAK.js - 200 15465 text/javascript 6.2426ms
+2026-04-04 12:17:33.818 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-3C2KJSQ4.js - null null
+2026-04-04 12:17:33.819 +03:00 [INF] Sending file. Request path: '/chunk-3C2KJSQ4.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-3C2KJSQ4.js'
+2026-04-04 12:17:33.820 +03:00 [INF] HTTP GET /chunk-3C2KJSQ4.js responded 200 in 1.2070 ms
+2026-04-04 12:17:33.820 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-3C2KJSQ4.js - 200 29121 text/javascript 1.7088ms
+2026-04-04 12:17:33.820 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-6TTLTCX5.js - null null
+2026-04-04 12:17:33.821 +03:00 [INF] Sending file. Request path: '/chunk-6TTLTCX5.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-6TTLTCX5.js'
+2026-04-04 12:17:33.821 +03:00 [INF] HTTP GET /chunk-6TTLTCX5.js responded 200 in 0.5519 ms
+2026-04-04 12:17:33.821 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-6TTLTCX5.js - 200 1569 text/javascript 0.9983ms
+2026-04-04 12:17:33.823 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-A2W3N2LY.js - null null
+2026-04-04 12:17:33.823 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-HFCL4LX6.js - null null
+2026-04-04 12:17:33.823 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-WFFZVYSA.js - null null
+2026-04-04 12:17:33.823 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-LFLZCNEV.js - null null
+2026-04-04 12:17:33.824 +03:00 [INF] Sending file. Request path: '/chunk-A2W3N2LY.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-A2W3N2LY.js'
+2026-04-04 12:17:33.824 +03:00 [INF] HTTP GET /chunk-A2W3N2LY.js responded 200 in 0.9880 ms
+2026-04-04 12:17:33.824 +03:00 [INF] Sending file. Request path: '/chunk-WFFZVYSA.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-WFFZVYSA.js'
+2026-04-04 12:17:33.824 +03:00 [INF] Sending file. Request path: '/chunk-HFCL4LX6.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-HFCL4LX6.js'
+2026-04-04 12:17:33.824 +03:00 [INF] Sending file. Request path: '/chunk-LFLZCNEV.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-LFLZCNEV.js'
+2026-04-04 12:17:33.824 +03:00 [INF] HTTP GET /chunk-WFFZVYSA.js responded 200 in 1.1032 ms
+2026-04-04 12:17:33.824 +03:00 [INF] HTTP GET /chunk-HFCL4LX6.js responded 200 in 1.2357 ms
+2026-04-04 12:17:33.824 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-A2W3N2LY.js - 200 6375 text/javascript 1.3539ms
+2026-04-04 12:17:33.824 +03:00 [INF] HTTP GET /chunk-LFLZCNEV.js responded 200 in 1.1350 ms
+2026-04-04 12:17:33.825 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-WFFZVYSA.js - 200 57313 text/javascript 1.5407ms
+2026-04-04 12:17:33.825 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-HFCL4LX6.js - 200 21823 text/javascript 1.5116ms
+2026-04-04 12:17:33.825 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-LFLZCNEV.js - 200 33557 text/javascript 1.6097ms
+2026-04-04 12:17:33.825 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-BOCU6YDT.js - null null
+2026-04-04 12:17:33.826 +03:00 [INF] Sending file. Request path: '/chunk-BOCU6YDT.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-BOCU6YDT.js'
+2026-04-04 12:17:33.826 +03:00 [INF] HTTP GET /chunk-BOCU6YDT.js responded 200 in 0.9098 ms
+2026-04-04 12:17:33.826 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-BOCU6YDT.js - 200 38936 text/javascript 1.2316ms
+2026-04-04 12:17:33.827 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-EMY5UD7C.js - null null
+2026-04-04 12:17:33.827 +03:00 [INF] Sending file. Request path: '/chunk-EMY5UD7C.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-EMY5UD7C.js'
+2026-04-04 12:17:33.827 +03:00 [INF] HTTP GET /chunk-EMY5UD7C.js responded 200 in 0.6672 ms
+2026-04-04 12:17:33.828 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-EMY5UD7C.js - 200 59421 text/javascript 0.8825ms
+2026-04-04 12:17:33.832 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-IC3HW47I.js - null null
+2026-04-04 12:17:33.833 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/favicon.ico - null null
+2026-04-04 12:17:33.834 +03:00 [INF] Sending file. Request path: '/favicon.ico'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/favicon.ico'
+2026-04-04 12:17:33.835 +03:00 [INF] Sending file. Request path: '/chunk-IC3HW47I.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-IC3HW47I.js'
+2026-04-04 12:17:33.835 +03:00 [INF] HTTP GET /favicon.ico responded 200 in 1.0801 ms
+2026-04-04 12:17:33.835 +03:00 [INF] HTTP GET /chunk-IC3HW47I.js responded 200 in 2.3944 ms
+2026-04-04 12:17:33.835 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/favicon.ico - 200 15086 image/x-icon 1.5084ms
+2026-04-04 12:17:33.835 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-IC3HW47I.js - 200 333319 text/javascript 2.789ms
+2026-04-04 12:17:33.917 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5000/graphql - application/json 97
+2026-04-04 12:17:33.928 +03:00 [INF] CORS policy execution successful.
+2026-04-04 12:17:33.933 +03:00 [INF] Executing endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-04 12:17:35.235 +03:00 [INF] Executed endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-04 12:17:35.235 +03:00 [INF] HTTP POST /graphql responded 200 in 1318.3449 ms
+2026-04-04 12:17:35.235 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5000/graphql - 200 null application/graphql-response+json; charset=utf-8 1318.9318ms
+2026-04-04 12:17:46.768 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5000/graphql - application/json 649
+2026-04-04 12:17:46.770 +03:00 [INF] CORS policy execution successful.
+2026-04-04 12:17:46.773 +03:00 [INF] Executing endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-04 12:17:47.710 +03:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2026-04-04 12:17:48.183 +03:00 [INF] Executed DbCommand (23ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.soldier_id, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-04 12:17:48.330 +03:00 [INF] Executed DbCommand (16ms) [Parameters=[@userId='019cc398-12f6-72d0-90d6-aa7499812a8d'], CommandType='"Text"', CommandTimeout='600']
+SELECT r.name
+FROM identity.user_roles AS u
+INNER JOIN identity.roles AS r ON u.role_id = r.id
+WHERE u.user_id = @userId
+2026-04-04 12:17:48.388 +03:00 [INF] Executed endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-04 12:17:48.388 +03:00 [INF] HTTP POST /graphql responded 200 in 1620.2956 ms
+2026-04-04 12:17:48.395 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5000/graphql - 200 null application/graphql-response+json; charset=utf-8 1626.7289ms
+2026-04-04 12:17:48.399 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-7643MB43.js - null null
+2026-04-04 12:17:48.401 +03:00 [INF] Sending file. Request path: '/chunk-7643MB43.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-7643MB43.js'
+2026-04-04 12:17:48.401 +03:00 [INF] HTTP GET /chunk-7643MB43.js responded 200 in 2.2643 ms
+2026-04-04 12:17:48.401 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-7643MB43.js - 200 245245 text/javascript 2.5157ms
+2026-04-04 12:17:48.412 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-AH7KPVPV.js - null null
+2026-04-04 12:17:48.413 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-RH4EZEOA.js - null null
+2026-04-04 12:17:48.413 +03:00 [INF] Sending file. Request path: '/chunk-AH7KPVPV.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-AH7KPVPV.js'
+2026-04-04 12:17:48.413 +03:00 [INF] HTTP GET /chunk-AH7KPVPV.js responded 200 in 1.6282 ms
+2026-04-04 12:17:48.413 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-AH7KPVPV.js - 200 189604 text/javascript 1.8819ms
+2026-04-04 12:17:48.414 +03:00 [INF] Sending file. Request path: '/chunk-RH4EZEOA.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-RH4EZEOA.js'
+2026-04-04 12:17:48.414 +03:00 [INF] HTTP GET /chunk-RH4EZEOA.js responded 200 in 0.8973 ms
+2026-04-04 12:17:48.414 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-RH4EZEOA.js - 200 1700 text/javascript 1.1203ms
+2026-04-04 12:17:48.415 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-OMLV6Q2Y.js - null null
+2026-04-04 12:17:48.415 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-RGE4EEWU.js - null null
+2026-04-04 12:17:48.415 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-DW2ITXUJ.js - null null
+2026-04-04 12:17:48.415 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-MTWXCH6O.js - null null
+2026-04-04 12:17:48.415 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-3ZAQBUCH.js - null null
+2026-04-04 12:17:48.416 +03:00 [INF] Sending file. Request path: '/chunk-3ZAQBUCH.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-3ZAQBUCH.js'
+2026-04-04 12:17:48.416 +03:00 [INF] Sending file. Request path: '/chunk-MTWXCH6O.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-MTWXCH6O.js'
+2026-04-04 12:17:48.416 +03:00 [INF] HTTP GET /chunk-3ZAQBUCH.js responded 200 in 0.3142 ms
+2026-04-04 12:17:48.416 +03:00 [INF] HTTP GET /chunk-MTWXCH6O.js responded 200 in 0.3913 ms
+2026-04-04 12:17:48.416 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-3ZAQBUCH.js - 200 314 text/javascript 0.6268ms
+2026-04-04 12:17:48.416 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-MTWXCH6O.js - 200 4044 text/javascript 0.6805ms
+2026-04-04 12:17:48.416 +03:00 [INF] Sending file. Request path: '/chunk-RGE4EEWU.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-RGE4EEWU.js'
+2026-04-04 12:17:48.416 +03:00 [INF] HTTP GET /chunk-RGE4EEWU.js responded 200 in 0.7070 ms
+2026-04-04 12:17:48.416 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-RGE4EEWU.js - 200 15916 text/javascript 0.8785ms
+2026-04-04 12:17:48.417 +03:00 [INF] Sending file. Request path: '/chunk-OMLV6Q2Y.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-OMLV6Q2Y.js'
+2026-04-04 12:17:48.417 +03:00 [INF] Sending file. Request path: '/chunk-DW2ITXUJ.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-DW2ITXUJ.js'
+2026-04-04 12:17:48.417 +03:00 [INF] HTTP GET /chunk-OMLV6Q2Y.js responded 200 in 1.8355 ms
+2026-04-04 12:17:48.417 +03:00 [INF] HTTP GET /chunk-DW2ITXUJ.js responded 200 in 1.8166 ms
+2026-04-04 12:17:48.417 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-OMLV6Q2Y.js - 200 275895 text/javascript 1.9902ms
+2026-04-04 12:17:48.417 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-DW2ITXUJ.js - 200 192387 text/javascript 1.9641ms
+2026-04-04 12:17:48.423 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-3MFPYL36.js - null null
+2026-04-04 12:17:48.423 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-U3E6ZCOL.js - null null
+2026-04-04 12:17:48.423 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-7GRXXPXN.js - null null
+2026-04-04 12:17:48.424 +03:00 [INF] Sending file. Request path: '/chunk-3MFPYL36.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-3MFPYL36.js'
+2026-04-04 12:17:48.424 +03:00 [INF] Sending file. Request path: '/chunk-U3E6ZCOL.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-U3E6ZCOL.js'
+2026-04-04 12:17:48.424 +03:00 [INF] HTTP GET /chunk-U3E6ZCOL.js responded 200 in 0.4622 ms
+2026-04-04 12:17:48.424 +03:00 [INF] HTTP GET /chunk-3MFPYL36.js responded 200 in 0.4763 ms
+2026-04-04 12:17:48.424 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-U3E6ZCOL.js - 200 4054 text/javascript 0.7039ms
+2026-04-04 12:17:48.424 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-3MFPYL36.js - 200 3134 text/javascript 0.7275ms
+2026-04-04 12:17:48.424 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-VT2WVTG5.js - null null
+2026-04-04 12:17:48.424 +03:00 [INF] Sending file. Request path: '/chunk-7GRXXPXN.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-7GRXXPXN.js'
+2026-04-04 12:17:48.424 +03:00 [INF] HTTP GET /chunk-7GRXXPXN.js responded 200 in 0.7312 ms
+2026-04-04 12:17:48.424 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-7GRXXPXN.js - 200 47459 text/javascript 0.8527ms
+2026-04-04 12:17:48.425 +03:00 [INF] Sending file. Request path: '/chunk-VT2WVTG5.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-VT2WVTG5.js'
+2026-04-04 12:17:48.425 +03:00 [INF] HTTP GET /chunk-VT2WVTG5.js responded 200 in 0.5102 ms
+2026-04-04 12:17:48.425 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-VT2WVTG5.js - 200 11316 text/javascript 0.6132ms
+2026-04-04 12:17:48.430 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-Q5XZMGKH.js - null null
+2026-04-04 12:17:48.430 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-A2TDGZNL.js - null null
+2026-04-04 12:17:48.430 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-KM64JSWM.js - null null
+2026-04-04 12:17:48.431 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-ZWWMZKX6.js - null null
+2026-04-04 12:17:48.431 +03:00 [INF] Sending file. Request path: '/chunk-Q5XZMGKH.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-Q5XZMGKH.js'
+2026-04-04 12:17:48.431 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-V4YFIILU.js - null null
+2026-04-04 12:17:48.431 +03:00 [INF] HTTP GET /chunk-Q5XZMGKH.js responded 200 in 0.8153 ms
+2026-04-04 12:17:48.431 +03:00 [INF] Sending file. Request path: '/chunk-KM64JSWM.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-KM64JSWM.js'
+2026-04-04 12:17:48.431 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-Q5XZMGKH.js - 200 47625 text/javascript 1.1718ms
+2026-04-04 12:17:48.431 +03:00 [INF] HTTP GET /chunk-KM64JSWM.js responded 200 in 0.4995 ms
+2026-04-04 12:17:48.431 +03:00 [INF] Sending file. Request path: '/chunk-V4YFIILU.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-V4YFIILU.js'
+2026-04-04 12:17:48.431 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-4P4RSBWD.js - null null
+2026-04-04 12:17:48.431 +03:00 [INF] Sending file. Request path: '/chunk-A2TDGZNL.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-A2TDGZNL.js'
+2026-04-04 12:17:48.431 +03:00 [INF] Sending file. Request path: '/chunk-ZWWMZKX6.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-ZWWMZKX6.js'
+2026-04-04 12:17:48.431 +03:00 [INF] HTTP GET /chunk-V4YFIILU.js responded 200 in 0.4890 ms
+2026-04-04 12:17:48.431 +03:00 [INF] HTTP GET /chunk-A2TDGZNL.js responded 200 in 1.3790 ms
+2026-04-04 12:17:48.431 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-KM64JSWM.js - 200 6086 text/javascript 0.8311ms
+2026-04-04 12:17:48.431 +03:00 [INF] HTTP GET /chunk-ZWWMZKX6.js responded 200 in 0.7944 ms
+2026-04-04 12:17:48.431 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-V4YFIILU.js - 200 1791 text/javascript 0.7023ms
+2026-04-04 12:17:48.431 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-A2TDGZNL.js - 200 40526 text/javascript 1.5629ms
+2026-04-04 12:17:48.432 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-ZWWMZKX6.js - 200 25352 text/javascript 0.9928ms
+2026-04-04 12:17:48.432 +03:00 [INF] Sending file. Request path: '/chunk-4P4RSBWD.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-4P4RSBWD.js'
+2026-04-04 12:17:48.432 +03:00 [INF] HTTP GET /chunk-4P4RSBWD.js responded 200 in 0.6822 ms
+2026-04-04 12:17:48.432 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-4P4RSBWD.js - 200 55000 text/javascript 1.0276ms
+2026-04-04 12:17:48.437 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-TXKUHQZM.js - null null
+2026-04-04 12:17:48.438 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-5DKE6E4J.js - null null
+2026-04-04 12:17:48.438 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-NPUDLI5V.js - null null
+2026-04-04 12:17:48.438 +03:00 [INF] Sending file. Request path: '/chunk-5DKE6E4J.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-5DKE6E4J.js'
+2026-04-04 12:17:48.438 +03:00 [INF] Sending file. Request path: '/chunk-TXKUHQZM.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-TXKUHQZM.js'
+2026-04-04 12:17:48.438 +03:00 [INF] HTTP GET /chunk-5DKE6E4J.js responded 200 in 0.5247 ms
+2026-04-04 12:17:48.438 +03:00 [INF] HTTP GET /chunk-TXKUHQZM.js responded 200 in 0.8615 ms
+2026-04-04 12:17:48.438 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-TXKUHQZM.js - 200 6165 text/javascript 1.0405ms
+2026-04-04 12:17:48.438 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-5DKE6E4J.js - 200 22154 text/javascript 0.6588ms
+2026-04-04 12:17:48.439 +03:00 [INF] Sending file. Request path: '/chunk-NPUDLI5V.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-NPUDLI5V.js'
+2026-04-04 12:17:48.439 +03:00 [INF] HTTP GET /chunk-NPUDLI5V.js responded 200 in 0.9478 ms
+2026-04-04 12:17:48.439 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-NPUDLI5V.js - 200 120841 text/javascript 1.0731ms
+2026-04-04 12:17:48.489 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/templ_data/data-sets - null null
+2026-04-04 12:17:48.573 +03:00 [INF] Executing endpoint 'S5Server.Controllers.TemplateDataSetController.GetAll (S5Server)'
+2026-04-04 12:17:48.592 +03:00 [INF] Route matched with {action = "GetAll", controller = "TemplateDataSet"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll(System.Nullable`1[System.Boolean], System.Threading.CancellationToken) on controller S5Server.Controllers.TemplateDataSetController (S5Server).
+2026-04-04 12:17:48.642 +03:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='600']
+SELECT t.id, t.changed_by, t.created_at_utc, t.doc_date, t.doc_number, t.is_parent_doc_used, t.is_published, t.name, t.parent_doc_date, t.parent_doc_number, t.published_at_utc, t.published_by, t.valid_from
+FROM docs.template_data_sets AS t
+ORDER BY t.doc_date DESC, t.created_at_utc DESC
+2026-04-04 12:17:48.652 +03:00 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[S5Server.Models.TemplateDataSetDto, S5Server, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-04-04 12:17:48.722 +03:00 [INF] Executed action S5Server.Controllers.TemplateDataSetController.GetAll (S5Server) in 126.2114ms
+2026-04-04 12:17:48.723 +03:00 [INF] Executed endpoint 'S5Server.Controllers.TemplateDataSetController.GetAll (S5Server)'
+2026-04-04 12:17:48.723 +03:00 [INF] HTTP GET /api/templ_data/data-sets responded 200 in 233.5147 ms
+2026-04-04 12:17:48.723 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/templ_data/data-sets - 200 null application/json; charset=utf-8 234.0464ms
+2026-04-04 12:17:57.324 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-3E7JP57W.js - null null
+2026-04-04 12:17:57.336 +03:00 [INF] Sending file. Request path: '/chunk-3E7JP57W.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-3E7JP57W.js'
+2026-04-04 12:17:57.336 +03:00 [INF] HTTP GET /chunk-3E7JP57W.js responded 200 in 12.2757 ms
+2026-04-04 12:17:57.336 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-3E7JP57W.js - 200 274446 text/javascript 12.5388ms
+2026-04-04 12:17:57.346 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/chunk-TAPS6EZF.js - null null
+2026-04-04 12:17:57.347 +03:00 [INF] Sending file. Request path: '/chunk-TAPS6EZF.js'. Physical path: '/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/wwwroot/chunk-TAPS6EZF.js'
+2026-04-04 12:17:57.347 +03:00 [INF] HTTP GET /chunk-TAPS6EZF.js responded 200 in 0.6184 ms
+2026-04-04 12:17:57.347 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/chunk-TAPS6EZF.js - 200 9955 text/javascript 0.7753ms
+2026-04-04 12:17:57.367 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/account/roles - null null
+2026-04-04 12:17:57.367 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/account - null null
+2026-04-04 12:17:57.376 +03:00 [INF] Executing endpoint 'S5Server.Controllers.AccountController.GetAll (S5Server)'
+2026-04-04 12:17:57.376 +03:00 [INF] Executing endpoint 'S5Server.Controllers.AccountController.GetAllRoles (S5Server)'
+2026-04-04 12:17:57.386 +03:00 [INF] Route matched with {action = "GetAllRoles", controller = "Account"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAllRoles(System.Threading.CancellationToken) on controller S5Server.Controllers.AccountController (S5Server).
+2026-04-04 12:17:57.386 +03:00 [INF] Route matched with {action = "GetAll", controller = "Account"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll(System.Nullable`1[System.Boolean], System.Threading.CancellationToken) on controller S5Server.Controllers.AccountController (S5Server).
+2026-04-04 12:17:57.428 +03:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='600']
+SELECT r.id, COALESCE(r.name, '')
+FROM identity.roles AS r
+ORDER BY r.name
+2026-04-04 12:17:57.429 +03:00 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[S5Server.Models.LookupDto, S5Server, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-04-04 12:17:57.434 +03:00 [INF] Executed action S5Server.Controllers.AccountController.GetAllRoles (S5Server) in 47.8002ms
+2026-04-04 12:17:57.434 +03:00 [INF] Executed endpoint 'S5Server.Controllers.AccountController.GetAllRoles (S5Server)'
+2026-04-04 12:17:57.434 +03:00 [INF] HTTP GET /api/account/roles responded 200 in 66.8684 ms
+2026-04-04 12:17:57.434 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/account/roles - 200 null application/json; charset=utf-8 67.23ms
+2026-04-04 12:17:57.536 +03:00 [INF] Executed DbCommand (18ms) [Parameters=[], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.soldier_id, u.two_factor_enabled, u.user_name, s.id, s.arrived_at, s.assigned_unit_id, s.birth_date, s.changed_by, s.comment, s.departed_at, s.extern_id, s.first_name, s.involved_unit_id, s.last_name, s.midle_name, s.nick_name, s.position_id, s.rank_id, s.state_id, s.unit_id, s.valid_from
+FROM identity.users AS u
+LEFT JOIN core.soldiers AS s ON u.soldier_id = s.id
+WHERE u.lockout_end IS NULL OR u.lockout_end <= now() AT TIME ZONE 'UTC'
+ORDER BY u.user_name
+2026-04-04 12:17:57.543 +03:00 [INF] [DEBUG] Fetching users list. Soldier data included: true
+2026-04-04 12:17:57.544 +03:00 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[S5Server.Models.UserDto, S5Server, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-04-04 12:17:57.588 +03:00 [INF] Executed action S5Server.Controllers.AccountController.GetAll (S5Server) in 201.658ms
+2026-04-04 12:17:57.588 +03:00 [INF] Executed endpoint 'S5Server.Controllers.AccountController.GetAll (S5Server)'
+2026-04-04 12:17:57.588 +03:00 [INF] HTTP GET /api/account responded 200 in 220.8241 ms
+2026-04-04 12:17:57.589 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/account - 200 null application/json; charset=utf-8 221.4394ms
+2026-04-04 12:18:00.011 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/account/019cc398-12f6-72d0-90d6-aa7499812a8d - null null
+2026-04-04 12:18:00.018 +03:00 [INF] Executing endpoint 'S5Server.Controllers.AccountController.Get (S5Server)'
+2026-04-04 12:18:00.027 +03:00 [INF] Route matched with {action = "Get", controller = "Account"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Get(System.Guid, System.Threading.CancellationToken) on controller S5Server.Controllers.AccountController (S5Server).
+2026-04-04 12:18:00.073 +03:00 [INF] Executed DbCommand (2ms) [Parameters=[@id='019cc398-12f6-72d0-90d6-aa7499812a8d'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.soldier_id, u.two_factor_enabled, u.user_name, s.id, s.arrived_at, s.assigned_unit_id, s.birth_date, s.changed_by, s.comment, s.departed_at, s.extern_id, s.first_name, s.involved_unit_id, s.last_name, s.midle_name, s.nick_name, s.position_id, s.rank_id, s.state_id, s.unit_id, s.valid_from
+FROM identity.users AS u
+LEFT JOIN core.soldiers AS s ON u.soldier_id = s.id
+WHERE u.id = @id
+LIMIT 1
+2026-04-04 12:18:00.081 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@userId='019cc398-12f6-72d0-90d6-aa7499812a8d'], CommandType='"Text"', CommandTimeout='600']
+SELECT r.name
+FROM identity.user_roles AS u
+INNER JOIN identity.roles AS r ON u.role_id = r.id
+WHERE u.user_id = @userId
+2026-04-04 12:18:00.081 +03:00 [INF] Executing OkObjectResult, writing value of type 'S5Server.Models.UserDto'.
+2026-04-04 12:18:00.081 +03:00 [INF] Executed action S5Server.Controllers.AccountController.Get (S5Server) in 54.2837ms
+2026-04-04 12:18:00.082 +03:00 [INF] Executed endpoint 'S5Server.Controllers.AccountController.Get (S5Server)'
+2026-04-04 12:18:00.082 +03:00 [INF] HTTP GET /api/account/019cc398-12f6-72d0-90d6-aa7499812a8d responded 200 in 70.4898 ms
+2026-04-04 12:18:00.082 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/account/019cc398-12f6-72d0-90d6-aa7499812a8d - 200 null application/json; charset=utf-8 70.733ms
+2026-04-04 12:18:02.778 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/account/password-requirements - null null
+2026-04-04 12:18:02.779 +03:00 [INF] Executing endpoint 'S5Server.Controllers.AccountController.GetPasswordRequirements (S5Server)'
+2026-04-04 12:18:02.781 +03:00 [INF] Route matched with {action = "GetPasswordRequirements", controller = "Account"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult GetPasswordRequirements() on controller S5Server.Controllers.AccountController (S5Server).
+2026-04-04 12:18:02.782 +03:00 [INF] Executing OkObjectResult, writing value of type 'S5Server.Models.PasswordRequirementsDto'.
+2026-04-04 12:18:02.784 +03:00 [INF] Executed action S5Server.Controllers.AccountController.GetPasswordRequirements (S5Server) in 2.8115ms
+2026-04-04 12:18:02.784 +03:00 [INF] Executed endpoint 'S5Server.Controllers.AccountController.GetPasswordRequirements (S5Server)'
+2026-04-04 12:18:02.784 +03:00 [INF] HTTP GET /api/account/password-requirements responded 200 in 6.0832 ms
+2026-04-04 12:18:02.784 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/account/password-requirements - 200 null application/json; charset=utf-8 6.3234ms
+2026-04-04 12:18:05.855 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/Soldier - null null
+2026-04-04 12:18:05.856 +03:00 [INF] Executing endpoint 'S5Server.Controllers.SoldierController.GetAll (S5Server)'
+2026-04-04 12:18:05.865 +03:00 [INF] Route matched with {action = "GetAll", controller = "Soldier"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[System.Collections.Generic.IEnumerable`1[S5Server.Models.SoldierDto]]] GetAll(System.String, System.Nullable`1[System.Guid], System.Nullable`1[System.Int32], System.Threading.CancellationToken) on controller S5Server.Controllers.SoldierController (S5Server).
+2026-04-04 12:18:05.963 +03:00 [INF] Executed DbCommand (27ms) [Parameters=[], CommandType='"Text"', CommandTimeout='600']
+SELECT s.id, s.arrived_at, s.assigned_unit_id, s.birth_date, s.changed_by, s.comment, s.departed_at, s.extern_id, s.first_name, s.involved_unit_id, s.last_name, s.midle_name, s.nick_name, s.position_id, s.rank_id, s.state_id, s.unit_id, s.valid_from, u.id, u.assigned_unit_id, u.changed_by, u.comment, u.force_type_id, u.is_involved, u.military_number, u.name, u.order_val, u.parent_id, u.persistent_location_id, u.short_name, u.unit_type_id, u.valid_from, u0.id, u0.assigned_unit_id, u0.changed_by, u0.comment, u0.force_type_id, u0.is_involved, u0.military_number, u0.name, u0.order_val, u0.parent_id, u0.persistent_location_id, u0.short_name, u0.unit_type_id, u0.valid_from, u1.id, u1.assigned_unit_id, u1.changed_by, u1.comment, u1.force_type_id, u1.is_involved, u1.military_number, u1.name, u1.order_val, u1.parent_id, u1.persistent_location_id, u1.short_name, u1.unit_type_id, u1.valid_from, d.id, d.category, d.comment, d.nato_code, d.order_val, d.short_value, d.sub_category, d.value, d0.id, d0.comment, d0.value, d1.id, d1.comment, d1.value
+FROM core.soldiers AS s
+INNER JOIN core.units AS u ON s.unit_id = u.id
+LEFT JOIN core.units AS u0 ON s.assigned_unit_id = u0.id
+LEFT JOIN core.units AS u1 ON s.involved_unit_id = u1.id
+INNER JOIN dict.dict_rank AS d ON s.rank_id = d.id
+INNER JOIN dict.dict_position AS d0 ON s.position_id = d0.id
+INNER JOIN dict.dict_soldier_state AS d1 ON s.state_id = d1.id
+ORDER BY s.first_name, s.midle_name, s.last_name
+2026-04-04 12:18:05.975 +03:00 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[S5Server.Models.SoldierDto, S5Server, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-04-04 12:18:05.985 +03:00 [INF] Executed action S5Server.Controllers.SoldierController.GetAll (S5Server) in 119.2434ms
+2026-04-04 12:18:05.985 +03:00 [INF] Executed endpoint 'S5Server.Controllers.SoldierController.GetAll (S5Server)'
+2026-04-04 12:18:05.985 +03:00 [INF] HTTP GET /api/Soldier responded 200 in 129.4737 ms
+2026-04-04 12:18:05.985 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/Soldier - 200 null application/json; charset=utf-8 129.7399ms
+2026-04-04 12:18:11.979 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5000/api/account/check-username - application/json 18
+2026-04-04 12:18:11.979 +03:00 [INF] CORS policy execution successful.
+2026-04-04 12:18:11.980 +03:00 [INF] Executing endpoint 'S5Server.Controllers.AccountController.CheckUsername (S5Server)'
+2026-04-04 12:18:11.992 +03:00 [INF] Route matched with {action = "CheckUsername", controller = "Account"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] CheckUsername(S5Server.Models.CheckUsernameDto, System.Threading.CancellationToken) on controller S5Server.Controllers.AccountController (S5Server).
+2026-04-04 12:18:12.010 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='XXX'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.soldier_id, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-04 12:18:12.010 +03:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType3`2[[System.Boolean, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-04-04 12:18:12.013 +03:00 [INF] Executed action S5Server.Controllers.AccountController.CheckUsername (S5Server) in 21.7255ms
+2026-04-04 12:18:12.013 +03:00 [INF] Executed endpoint 'S5Server.Controllers.AccountController.CheckUsername (S5Server)'
+2026-04-04 12:18:12.013 +03:00 [INF] HTTP POST /api/account/check-username responded 200 in 34.2971 ms
+2026-04-04 12:18:12.014 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5000/api/account/check-username - 200 null application/json; charset=utf-8 34.6023ms
+2026-04-04 12:18:22.891 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5000/api/account/validate-password - application/json 44
+2026-04-04 12:18:22.892 +03:00 [INF] CORS policy execution successful.
+2026-04-04 12:18:22.893 +03:00 [INF] Executing endpoint 'S5Server.Controllers.AccountController.ValidatePassword (S5Server)'
+2026-04-04 12:18:22.902 +03:00 [INF] Route matched with {action = "ValidatePassword", controller = "Account"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ValidatePassword(S5Server.Models.ValidatePasswordDto) on controller S5Server.Controllers.AccountController (S5Server).
+2026-04-04 12:18:22.910 +03:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType2`2[[System.Boolean, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-04-04 12:18:22.912 +03:00 [INF] Executed action S5Server.Controllers.AccountController.ValidatePassword (S5Server) in 9.4666ms
+2026-04-04 12:18:22.912 +03:00 [INF] Executed endpoint 'S5Server.Controllers.AccountController.ValidatePassword (S5Server)'
+2026-04-04 12:18:22.912 +03:00 [INF] HTTP POST /api/account/validate-password responded 200 in 20.4501 ms
+2026-04-04 12:18:22.912 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5000/api/account/validate-password - 200 null application/json; charset=utf-8 20.7451ms
+2026-04-04 12:18:31.753 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5000/api/account - application/json 141
+2026-04-04 12:18:31.753 +03:00 [INF] CORS policy execution successful.
+2026-04-04 12:18:31.754 +03:00 [INF] Executing endpoint 'S5Server.Controllers.AccountController.CreateUser (S5Server)'
+2026-04-04 12:18:31.766 +03:00 [INF] Route matched with {action = "CreateUser", controller = "Account"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] CreateUser(S5Server.Models.CreateUserDto, System.Threading.CancellationToken) on controller S5Server.Controllers.AccountController (S5Server).
+2026-04-04 12:18:31.808 +03:00 [INF] Executed DbCommand (2ms) [Parameters=[@normalizedEmail='XXX@GMAIL.COM'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.soldier_id, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_email = @normalizedEmail
+LIMIT 2
+2026-04-04 12:18:31.910 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='XXX'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.soldier_id, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-04 12:18:32.130 +03:00 [INF] Executed DbCommand (15ms) [Parameters=[@p0='019ce7e2-ca06-7d2c-9ce5-2675cfe95261', @p1='0', @p2='9f907c70-a70d-410a-801c-68a75ea6b7e5', @p3='xxx@gmail.com', @p4='False', @p5=NULL (DbType = DateTimeOffset), @p6=NULL (DbType = DateTimeOffset), @p7='False', @p8=NULL (DbType = DateTimeOffset), @p9='XXX@GMAIL.COM', @p10='XXX', @p11='AQAAAAIAAYagAAAAEGLxDozgxLBqHTaJ6cj6cgo8cRjObFGjhvSEArvLW1h+IjR5Xh6bdBV0HZfvTAwgyQ==', @p12=NULL, @p13='False', @p14='2026-04-04T09:18:31.8103304Z' (DbType = DateTimeOffset), @p15='True', @p16='LJFQC6BHU2OT7PTDZ7MUKLCIIQZFRXRP', @p17=NULL (DbType = Guid), @p18='False', @p19='xxx'], CommandType='"Text"', CommandTimeout='600']
+INSERT INTO identity.users (id, access_failed_count, concurrency_stamp, email, email_confirmed, last_login_date, last_password_change_date, lockout_enabled, lockout_end, normalized_email, normalized_user_name, password_hash, phone_number, phone_number_confirmed, registration_date, require_password_change, security_stamp, soldier_id, two_factor_enabled, user_name)
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16, @p17, @p18, @p19);
+2026-04-04 12:18:32.142 +03:00 [INF] Створено користувача UserId="019ce7e2-ca06-7d2c-9ce5-2675cfe95261", UserName=xxx
+2026-04-04 12:18:32.142 +03:00 [INF] [DEBUG] Creating user. Status: Success, UserID: "019ce7e2-ca06-7d2c-9ce5-2675cfe95261"
+2026-04-04 12:18:32.154 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedRoleName='COMMANDER'], CommandType='"Text"', CommandTimeout='600']
+SELECT r.id, r.concurrency_stamp, r.name, r.normalized_name
+FROM identity.roles AS r
+WHERE r.normalized_name = @normalizedRoleName
+LIMIT 2
+2026-04-04 12:18:32.172 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@p='019ce7e2-ca06-7d2c-9ce5-2675cfe95261' (Nullable = true), @p1='26aac201-a95c-41fe-833b-c05214db1ef7' (Nullable = true)], CommandType='"Text"', CommandTimeout='600']
+SELECT u.user_id, u.role_id
+FROM identity.user_roles AS u
+WHERE u.user_id = @p AND u.role_id = @p1
+LIMIT 1
+2026-04-04 12:18:32.176 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedRoleName='COMMANDER'], CommandType='"Text"', CommandTimeout='600']
+SELECT r.id, r.concurrency_stamp, r.name, r.normalized_name
+FROM identity.roles AS r
+WHERE r.normalized_name = @normalizedRoleName
+LIMIT 2
+2026-04-04 12:18:32.193 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='XXX'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.soldier_id, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-04 12:18:32.229 +03:00 [INF] Executed DbCommand (4ms) [Parameters=[@p0='26aac201-a95c-41fe-833b-c05214db1ef7', @p1='019ce7e2-ca06-7d2c-9ce5-2675cfe95261', @p21='019ce7e2-ca06-7d2c-9ce5-2675cfe95261', @p2='0', @p3='b870683a-369f-4211-8b7a-ef8345cbb724', @p22='9f907c70-a70d-410a-801c-68a75ea6b7e5', @p4='xxx@gmail.com', @p5='False', @p6=NULL (DbType = DateTimeOffset), @p7=NULL (DbType = DateTimeOffset), @p8='False', @p9=NULL (DbType = DateTimeOffset), @p10='XXX@GMAIL.COM', @p11='XXX', @p12='AQAAAAIAAYagAAAAEGLxDozgxLBqHTaJ6cj6cgo8cRjObFGjhvSEArvLW1h+IjR5Xh6bdBV0HZfvTAwgyQ==', @p13=NULL, @p14='False', @p15='2026-04-04T09:18:31.8103304Z' (DbType = DateTimeOffset), @p16='True', @p17='LJFQC6BHU2OT7PTDZ7MUKLCIIQZFRXRP', @p18=NULL (DbType = Guid), @p19='False', @p20='xxx'], CommandType='"Text"', CommandTimeout='600']
+INSERT INTO identity.user_roles (role_id, user_id)
+VALUES (@p0, @p1);
+UPDATE identity.users SET access_failed_count = @p2, concurrency_stamp = @p3, email = @p4, email_confirmed = @p5, last_login_date = @p6, last_password_change_date = @p7, lockout_enabled = @p8, lockout_end = @p9, normalized_email = @p10, normalized_user_name = @p11, password_hash = @p12, phone_number = @p13, phone_number_confirmed = @p14, registration_date = @p15, require_password_change = @p16, security_stamp = @p17, soldier_id = @p18, two_factor_enabled = @p19, user_name = @p20
+WHERE id = @p21 AND concurrency_stamp = @p22;
+2026-04-04 12:18:32.242 +03:00 [INF] Executing CreatedAtActionResult, writing value of type 'S5Server.Models.UserDto'.
+2026-04-04 12:18:32.257 +03:00 [INF] Executed action S5Server.Controllers.AccountController.CreateUser (S5Server) in 491.7305ms
+2026-04-04 12:18:32.258 +03:00 [INF] Executed endpoint 'S5Server.Controllers.AccountController.CreateUser (S5Server)'
+2026-04-04 12:18:32.258 +03:00 [INF] HTTP POST /api/account responded 201 in 504.8362 ms
+2026-04-04 12:18:32.258 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5000/api/account - 201 null application/json; charset=utf-8 505.6428ms
+2026-04-04 12:18:32.268 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/account - null null
+2026-04-04 12:18:32.269 +03:00 [INF] Executing endpoint 'S5Server.Controllers.AccountController.GetAll (S5Server)'
+2026-04-04 12:18:32.269 +03:00 [INF] Route matched with {action = "GetAll", controller = "Account"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll(System.Nullable`1[System.Boolean], System.Threading.CancellationToken) on controller S5Server.Controllers.AccountController (S5Server).
+2026-04-04 12:18:32.273 +03:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.soldier_id, u.two_factor_enabled, u.user_name, s.id, s.arrived_at, s.assigned_unit_id, s.birth_date, s.changed_by, s.comment, s.departed_at, s.extern_id, s.first_name, s.involved_unit_id, s.last_name, s.midle_name, s.nick_name, s.position_id, s.rank_id, s.state_id, s.unit_id, s.valid_from
+FROM identity.users AS u
+LEFT JOIN core.soldiers AS s ON u.soldier_id = s.id
+WHERE u.lockout_end IS NULL OR u.lockout_end <= now() AT TIME ZONE 'UTC'
+ORDER BY u.user_name
+2026-04-04 12:18:32.273 +03:00 [INF] [DEBUG] Fetching users list. Soldier data included: true
+2026-04-04 12:18:32.273 +03:00 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[S5Server.Models.UserDto, S5Server, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-04-04 12:18:32.273 +03:00 [INF] Executed action S5Server.Controllers.AccountController.GetAll (S5Server) in 3.8991ms
+2026-04-04 12:18:32.273 +03:00 [INF] Executed endpoint 'S5Server.Controllers.AccountController.GetAll (S5Server)'
+2026-04-04 12:18:32.273 +03:00 [INF] HTTP GET /api/account responded 200 in 5.0405 ms
+2026-04-04 12:18:32.274 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/account - 200 null application/json; charset=utf-8 5.2906ms
+2026-04-04 12:18:35.733 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/account/019ce7e2-ca06-7d2c-9ce5-2675cfe95261 - null null
+2026-04-04 12:18:35.734 +03:00 [INF] Executing endpoint 'S5Server.Controllers.AccountController.Get (S5Server)'
+2026-04-04 12:18:35.734 +03:00 [INF] Route matched with {action = "Get", controller = "Account"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Get(System.Guid, System.Threading.CancellationToken) on controller S5Server.Controllers.AccountController (S5Server).
+2026-04-04 12:18:35.738 +03:00 [INF] Executed DbCommand (2ms) [Parameters=[@id='019ce7e2-ca06-7d2c-9ce5-2675cfe95261'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.soldier_id, u.two_factor_enabled, u.user_name, s.id, s.arrived_at, s.assigned_unit_id, s.birth_date, s.changed_by, s.comment, s.departed_at, s.extern_id, s.first_name, s.involved_unit_id, s.last_name, s.midle_name, s.nick_name, s.position_id, s.rank_id, s.state_id, s.unit_id, s.valid_from
+FROM identity.users AS u
+LEFT JOIN core.soldiers AS s ON u.soldier_id = s.id
+WHERE u.id = @id
+LIMIT 1
+2026-04-04 12:18:35.740 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@userId='019ce7e2-ca06-7d2c-9ce5-2675cfe95261'], CommandType='"Text"', CommandTimeout='600']
+SELECT r.name
+FROM identity.user_roles AS u
+INNER JOIN identity.roles AS r ON u.role_id = r.id
+WHERE u.user_id = @userId
+2026-04-04 12:18:35.740 +03:00 [INF] Executing OkObjectResult, writing value of type 'S5Server.Models.UserDto'.
+2026-04-04 12:18:35.741 +03:00 [INF] Executed action S5Server.Controllers.AccountController.Get (S5Server) in 6.4118ms
+2026-04-04 12:18:35.741 +03:00 [INF] Executed endpoint 'S5Server.Controllers.AccountController.Get (S5Server)'
+2026-04-04 12:18:35.741 +03:00 [INF] HTTP GET /api/account/019ce7e2-ca06-7d2c-9ce5-2675cfe95261 responded 200 in 7.9852 ms
+2026-04-04 12:18:35.741 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/account/019ce7e2-ca06-7d2c-9ce5-2675cfe95261 - 200 null application/json; charset=utf-8 8.4764ms
+2026-04-04 12:18:37.022 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5000/graphql - application/json 86
+2026-04-04 12:18:37.022 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5000/graphql - application/json 168
+2026-04-04 12:18:37.022 +03:00 [INF] CORS policy execution successful.
+2026-04-04 12:18:37.022 +03:00 [INF] CORS policy execution successful.
+2026-04-04 12:18:37.023 +03:00 [INF] Executing endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-04 12:18:37.023 +03:00 [INF] Executing endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-04 12:18:37.055 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@p='019cc398-12f6-72d0-90d6-aa7499812a8d' (Nullable = true)], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.soldier_id, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.id = @p
+LIMIT 1
+2026-04-04 12:18:37.059 +03:00 [INF] Executed endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-04 12:18:37.059 +03:00 [INF] HTTP POST /graphql responded 200 in 37.2033 ms
+2026-04-04 12:18:37.059 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5000/graphql - 200 null application/graphql-response+json; charset=utf-8 37.4202ms
+2026-04-04 12:18:37.088 +03:00 [INF] Executed DbCommand (2ms) [Parameters=[@p='019cc398-12f6-72d0-90d6-aa7499812a8d' (Nullable = true)], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.soldier_id, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.id = @p
+LIMIT 1
+2026-04-04 12:18:37.108 +03:00 [INF] Executed DbCommand (3ms) [Parameters=[@p='019cc398-12f6-72d0-90d6-aa7499812a8d' (Nullable = true), @p1='[AspNetUserStore]', @p2='AuthenticatorKey'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.user_id, u.login_provider, u.name, u.value
+FROM identity.user_tokens AS u
+WHERE u.user_id = @p AND u.login_provider = @p1 AND u.name = @p2
+LIMIT 1
+2026-04-04 12:18:37.114 +03:00 [INF] Executed DbCommand (2ms) [Parameters=[@p='019cc398-12f6-72d0-90d6-aa7499812a8d' (Nullable = true), @p1='[AspNetUserStore]', @p2='AuthenticatorKey'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.user_id, u.login_provider, u.name, u.value
+FROM identity.user_tokens AS u
+WHERE u.user_id = @p AND u.login_provider = @p1 AND u.name = @p2
+LIMIT 1
+2026-04-04 12:18:37.129 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@normalizedUserName='HAVROK'], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.soldier_id, u.two_factor_enabled, u.user_name
+FROM identity.users AS u
+WHERE u.normalized_user_name = @normalizedUserName
+LIMIT 1
+2026-04-04 12:18:37.139 +03:00 [INF] Executed DbCommand (3ms) [Parameters=[@p0='[AspNetUserStore]' (Nullable = false), @p1='AuthenticatorKey' (Nullable = false), @p2='019cc398-12f6-72d0-90d6-aa7499812a8d', @p3='FI4NSUETMNVIOHQV4RC2R2IHEUGDC5S3', @p23='019cc398-12f6-72d0-90d6-aa7499812a8d', @p4='0', @p5='5cec67f6-194d-4c6d-9362-0e18cc22fe0f', @p24='d78a5ae6-fb30-4a5c-b14e-94e5c37bcaba', @p6='sergray411@gmail.com', @p7='False', @p8='2026-03-14T08:42:19.9264920+02:00' (Nullable = true) (DbType = DateTimeOffset), @p9='2026-03-07T14:37:04.7567280+02:00' (Nullable = true) (DbType = DateTimeOffset), @p10='True', @p11=NULL (DbType = DateTimeOffset), @p12='SERGRAY411@GMAIL.COM', @p13='HAVROK', @p14='AQAAAAIAAYagAAAAEJClUkzhtV3nvnesFHbMGPFM95ojYmbVLdoeADOaHUankpQ80aAOdIo3A6UJsjYtLg==', @p15=NULL, @p16='False', @p17='2026-03-06T16:40:48.8505670+02:00' (DbType = DateTimeOffset), @p18='False', @p19='AHXHWD2FJ6OQKPTIB54ETYFAIZGLC3NM', @p20=NULL (DbType = Guid), @p21='False', @p22='havrok'], CommandType='"Text"', CommandTimeout='600']
+INSERT INTO identity.user_tokens (login_provider, name, user_id, value)
+VALUES (@p0, @p1, @p2, @p3);
+UPDATE identity.users SET access_failed_count = @p4, concurrency_stamp = @p5, email = @p6, email_confirmed = @p7, last_login_date = @p8, last_password_change_date = @p9, lockout_enabled = @p10, lockout_end = @p11, normalized_email = @p12, normalized_user_name = @p13, password_hash = @p14, phone_number = @p15, phone_number_confirmed = @p16, registration_date = @p17, require_password_change = @p18, security_stamp = @p19, soldier_id = @p20, two_factor_enabled = @p21, user_name = @p22
+WHERE id = @p23 AND concurrency_stamp = @p24;
+2026-04-04 12:18:37.144 +03:00 [INF] Executed endpoint 'Hot Chocolate GraphQL Pipeline'
+2026-04-04 12:18:37.144 +03:00 [INF] HTTP POST /graphql responded 200 in 122.2557 ms
+2026-04-04 12:18:37.144 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5000/graphql - 200 null application/graphql-response+json; charset=utf-8 122.474ms
+2026-04-04 12:18:41.996 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/account - null null
+2026-04-04 12:18:41.997 +03:00 [INF] Executing endpoint 'S5Server.Controllers.AccountController.GetAll (S5Server)'
+2026-04-04 12:18:41.998 +03:00 [INF] Route matched with {action = "GetAll", controller = "Account"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll(System.Nullable`1[System.Boolean], System.Threading.CancellationToken) on controller S5Server.Controllers.AccountController (S5Server).
+2026-04-04 12:18:42.002 +03:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='600']
+SELECT u.id, u.access_failed_count, u.concurrency_stamp, u.email, u.email_confirmed, u.last_login_date, u.last_password_change_date, u.lockout_enabled, u.lockout_end, u.normalized_email, u.normalized_user_name, u.password_hash, u.phone_number, u.phone_number_confirmed, u.registration_date, u.require_password_change, u.security_stamp, u.soldier_id, u.two_factor_enabled, u.user_name, s.id, s.arrived_at, s.assigned_unit_id, s.birth_date, s.changed_by, s.comment, s.departed_at, s.extern_id, s.first_name, s.involved_unit_id, s.last_name, s.midle_name, s.nick_name, s.position_id, s.rank_id, s.state_id, s.unit_id, s.valid_from
+FROM identity.users AS u
+LEFT JOIN core.soldiers AS s ON u.soldier_id = s.id
+WHERE u.lockout_end IS NULL OR u.lockout_end <= now() AT TIME ZONE 'UTC'
+ORDER BY u.user_name
+2026-04-04 12:18:42.002 +03:00 [INF] [DEBUG] Fetching users list. Soldier data included: true
+2026-04-04 12:18:42.003 +03:00 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[S5Server.Models.UserDto, S5Server, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-04-04 12:18:42.003 +03:00 [INF] Executed action S5Server.Controllers.AccountController.GetAll (S5Server) in 5.3546ms
+2026-04-04 12:18:42.003 +03:00 [INF] Executed endpoint 'S5Server.Controllers.AccountController.GetAll (S5Server)'
+2026-04-04 12:18:42.003 +03:00 [INF] HTTP GET /api/account responded 200 in 7.1035 ms
+2026-04-04 12:18:42.003 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/account - 200 null application/json; charset=utf-8 7.6484ms
+2026-04-04 13:28:15.075 +03:00 [INF] Запуск приложения с аргументами: 
+2026-04-04 13:28:15.166 +03:00 [INF] Попытка подключения к PostgreSQL 1/3...
+2026-04-04 13:28:15.343 +03:00 [INF] ✅ PostgreSQL подключен: S5_DB_local@localhost:5432
+2026-04-04 13:28:15.547 +03:00 [INF] Starting S5Server
+2026-04-04 13:28:15.555 +03:00 [INF] User profile is available. Using '/tmp/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-04 13:28:15.610 +03:00 [INF] S5Server listening on: http://0.0.0.0:5000

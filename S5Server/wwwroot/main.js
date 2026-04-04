@@ -771,7 +771,7 @@ var routes = [
   {
     path: "users",
     title: "\u041A\u043E\u0440\u0438\u0441\u0442\u0443\u0432\u0430\u0447\u0456",
-    loadComponent: () => import("./chunk-3E7JP57W.js").then((m) => m.UsersPage),
+    loadComponent: () => import("./chunk-63RGOZMO.js").then((m) => m.UsersPage),
     canActivate: [authGuard]
   },
   {

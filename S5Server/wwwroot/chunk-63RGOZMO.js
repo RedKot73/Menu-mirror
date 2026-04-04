@@ -5520,8 +5520,7 @@ var UsersPage = class _UsersPage {
       MatSlideToggleModule,
       MatDialogModule,
       MatSnackBarModule,
-      MasterDetailLayoutComponent,
-      TotpSetupDialogComponent
+      MasterDetailLayoutComponent
     ], template: `<app-master-detail-layout storageKey="usersPage">
   <!-- Left Panel: \u041F\u0435\u0440\u0435\u043B\u0456\u043A \u043A\u043E\u0440\u0438\u0441\u0442\u0443\u0432\u0430\u0447\u0456\u0432 -->
   <div leftPanel>
@@ -5760,9 +5759,9 @@ var UsersPage = class _UsersPage {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(UsersPage, { className: "UsersPage", filePath: "Login/Users.page.ts", lineNumber: 50 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(UsersPage, { className: "UsersPage", filePath: "Login/Users.page.ts", lineNumber: 49 });
 })();
 export {
   UsersPage
 };
-//# sourceMappingURL=chunk-3E7JP57W.js.map
+//# sourceMappingURL=chunk-63RGOZMO.js.map

@@ -153,7 +153,7 @@ public class Soldier
     /// Gets the full name of the person, formatted as a single string.
     /// </summary>
 
-    [Display(Name = "ПІБ")]
+    [NotMapped, Display(Name = "ПІБ")]
     public string FIO => string.IsNullOrEmpty(MidleName + LastName) ? FirstName : $"{FirstName} {MName}.{LName}.";
     /// <summary>
     /// Gets or sets the date of birth.

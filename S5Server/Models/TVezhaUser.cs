@@ -277,10 +277,14 @@ public record UserInfoDto(
 public class TVezhaUser : IdentityUser<Guid>
 {
     /// <summary>
-    /// Зв'язок із таблицею Soldier
+    /// Зв'язок із таблицею Soldier (Опціонально)
     /// </summary>
-    // Уберу ForeignKey чтобы не сломать текущую БД, просто добавлю свойство
     public virtual Soldier? Soldier { get; set; }
+
+    /// <summary>
+    /// FK на таблицю Soldier (Core)
+    /// </summary>
+    public Guid? SoldierId { get; set; }
     /*
     [ValidateNever, Display(Name = "Підрозділи, до яких є доступ")]
     public virtual ICollection<TUserUnits>? UserUnits { get; set; }
