@@ -42,6 +42,7 @@ stages:
     - FULL_IMAGE_NAME_LATEST="${CI_REGISTRY_IMAGE}:${IMAGE_TAG_LATEST}"
     - echo "Target Image SHA: ${FULL_IMAGE_NAME_SHA}"
     - echo "Target Image Latest: ${FULL_IMAGE_NAME_LATEST}"
+    
     - |
       buildctl \
         --addr "${BUILDKIT_ADDR}" \
