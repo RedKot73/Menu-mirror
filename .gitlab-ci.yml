@@ -44,7 +44,7 @@ stages:
     - echo "Building and pushing to ${FULL_IMAGE_NAME_LATEST}"
     
     # 2. Формируем строку аргумента --output заранее
-    - OUTPUT_CONF="type=image,name=${FULL_IMAGE_NAME_SHA},${FULL_IMAGE_NAME_LATEST},push=true"
+    - OUTPUT_CONF="type=image,name=${FULL_IMAGE_NAME_SHA},push=true"
     
     # 3. Запуск buildctl (убрали кавычки вокруг переменной OUTPUT_CONF внутри блока)
     - |
