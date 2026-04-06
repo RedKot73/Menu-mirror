@@ -48,7 +48,7 @@ stages:
     
     # 3. Запуск buildctl (убрали кавычки вокруг переменной OUTPUT_CONF внутри блока)
     - |
-        docker buildctl \
+        buildctl \
         --addr "${BUILDKIT_ADDR}" \
         --tlscacert "${BUILDKIT_TLS_CA_FILE}" \
         --tlscert "${BUILDKIT_TLS_CERT_FILE}" \
