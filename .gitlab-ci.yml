@@ -18,6 +18,8 @@ stages:
     IMAGE_TAG: nil
     IMAGE_TAG_LATEST: nil
   before_script:
+    # 1. Виправляємо проблему з правами власності (Dubious ownership)
+    - git config --global --add safe.directory "${CI_PROJECT_DIR}"
 
     - git config --global url."https://${CI_SERVER_HOST}/s5-group/s5-config.git".insteadOf "https://github.com/sergray411-cyber/s5-config.git"
     # Принудительное обновление субмодулей перед сборкой
