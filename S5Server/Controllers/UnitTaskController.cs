@@ -71,6 +71,7 @@ public class UnitTaskController : ControllerBase
                 .ThenInclude(u => u.Parent)
             .Include(t => t.Unit)
                 .ThenInclude(u => u.AssignedUnit)
+            .Include(t => t.AdjactedUnit)
             .Include(t => t.Unit)
                 .ThenInclude(u => u.UnitType)
             .Include(t => t.Unit)
@@ -265,7 +266,7 @@ public class UnitTaskController : ControllerBase
 
             var changedBy = User.Identity?.Name ?? "Unknown";
             ds!.UpdateFromDto(dto, changedBy);
-            await _db.SaveChangesAsync(ct);
+            await _db.SaveChangesAsync(ct);//EF Core достаточно умный, что-бы для .AsTracking() определять состав полей в Update
 
             if (_logger.IsEnabled(LogLevel.Information))
             {

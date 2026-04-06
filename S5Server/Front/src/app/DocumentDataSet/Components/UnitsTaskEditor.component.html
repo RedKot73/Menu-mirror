@@ -26,7 +26,6 @@
                 [formControl]="publishStatusControl"
                 (change)="onPublishStatusChange($event.value)"
                 class="status-toggle"
-                [disabled]="isSaving() || selectedUnits().length === 0"
               >
                 @let statusText =
                   currentDataSet.isPublished

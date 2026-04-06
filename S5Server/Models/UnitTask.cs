@@ -352,7 +352,7 @@ public static class UnitTaskExtensions
             useActualData ? task.Unit!.AssignedUnitId : task.AssignedUnitId,
             useActualData ? task.Unit!.AssignedUnit?.ShortName : task.AssignedShortName,
             task.AdjactedUnitId,
-            task.AdjactedShortName,
+            useActualData ? task.AdjactedUnit?.ShortName : task.AdjactedShortName,
             useActualData ? task.Unit!.UnitTypeId : task.UnitTypeId,
             useActualData ? (task.Unit!.UnitType?.ShortValue ?? task.Unit!.UnitType?.Value) : task.UnitTypeName,
             useActualData ? task.Unit!.IsInvolved : task.IsInvolved,
@@ -380,6 +380,7 @@ public static class UnitTaskExtensions
     public static bool IsEqualTo(this UnitTask task, UnitTaskDto dto) =>
         task.TaskId == dto.TaskId &&
         task.AreaId == dto.AreaId &&
+        task.AdjactedUnitId == dto.AdjactedUnitId &&
         task.IsPublished == dto.IsPublished;
     /// <summary>
     /// Updates the properties of a unit task based on the values provided in the data transfer object.
@@ -404,6 +405,7 @@ public static class UnitTaskExtensions
         task.TaskId = dto.TaskId;
         task.TaskValue = dto.TaskValue;
         task.AreaId = dto.AreaId;
+        task.AdjactedUnitId = dto.AdjactedUnitId;
         task.ChangedBy = changedBy;
     }
 

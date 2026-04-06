@@ -2,6 +2,7 @@ import {
   inject,
   signal,
   computed,
+  effect,
   DestroyRef,
   HostListener,
   ViewChild,
@@ -115,6 +116,16 @@ export class UnitsTaskEditor {
    * асинхронного обновления unitTask после сохранения.
    */
   protected publishStatusControl = new FormControl<boolean>(false, { nonNullable: true });
+
+  private publishToggleEffect = effect(() => {
+    const shouldDisable = this.isSaving() || this.selectedUnits().length === 0;
+    const opts = { emitEvent: false };
+    if (shouldDisable) {
+      this.publishStatusControl.disable(opts);
+    } else {
+      this.publishStatusControl.enable(opts);
+    }
+  });
 
   /** Emits the updated TemplateDataSetDto after a successful save or publish */
   dataSetChanged = output<TemplateDataSetDto>();
