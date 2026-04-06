@@ -18,9 +18,16 @@ stages:
     IMAGE_TAG: nil
     IMAGE_TAG_LATEST: nil
   before_script:
-    # 1. Виправляємо проблему з правами власності (Dubious ownership)
+  # 1. Дозволяємо Git працювати в цій директорії
     - git config --global --add safe.directory "${CI_PROJECT_DIR}"
 
+    # 2. ПЕРЕКОНУЄМО GIT ДОВІРЯТИ ВАШОМУ СЕРТИФІКАТУ
+    # Використовуємо шлях до вашого CA, який вже є в образі або передається
+    - git config --global http.sslCAInfo "${SELFSIGNED_CA_PATH}/ca.crt"
+    # АБО, якщо шлях до файлу інший, можна тимчасово вимкнути перевірку (менш безпечно):
+    # - git config --global http.sslVerify false
+
+    # 3. Підміна URL (GitHub -> GitLab)
     - git config --global url."https://${CI_SERVER_HOST}/s5-group/s5-config.git".insteadOf "https://github.com/sergray411-cyber/s5-config.git"
     # Принудительное обновление субмодулей перед сборкой
     - git submodule sync --recursive
