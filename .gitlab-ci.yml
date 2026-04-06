@@ -23,6 +23,7 @@ stages:
     # Аутентификация в GitLab Container Registry через переменные окружения CI
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > ~/.docker/config.json
     - git config --global http.sslCAInfo "${SELFSIGNED_CA_PATH}/ca.crt"
+    - git config --global --add safe.directory ${CI_PROJECT_DIR}
   script:
     - git submodule set-url config https://${CI_SERVER_HOST}/s5-group/s5-config.git
     - git submodule sync
