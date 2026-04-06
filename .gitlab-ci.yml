@@ -36,14 +36,14 @@ stages:
     # Создание директории для конфигурации Docker
     - mkdir -p ~/.docker
     # Аутентификация в GitLab Container Registry через переменные окружения CI
-    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > ~/.docker/config.json
+    - 'echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > ~/.docker/config.json'
     
-    # Инициализация переменных путей к образам (исправлено: добавлены дефисы)
+    # Инициализация переменных путей к образам
     - export FULL_IMAGE_NAME_SHA="${CI_REGISTRY_IMAGE}:${IMAGE_TAG}"
     - export FULL_IMAGE_NAME_LATEST="${CI_REGISTRY_IMAGE}:${IMAGE_TAG_LATEST}"
   script:
-    - echo "Target Image SHA: ${FULL_IMAGE_NAME_SHA}"
-    - echo "Target Image Latest: ${FULL_IMAGE_NAME_LATEST}"
+    - "echo Target Image SHA: ${FULL_IMAGE_NAME_SHA}"
+    - "echo Target Image Latest: ${FULL_IMAGE_NAME_LATEST}"
     - |
       buildctl \
         --addr "${BUILDKIT_ADDR}" \
@@ -124,10 +124,8 @@ build-db-image:
     # Слияние изменений (rebase) для чистой истории коммитов
     - git pull --rebase origin "${REPO_BRANCH}"
     # Обновление тегов образов в YAML файле с помощью регулярного выражения sed
-    - >
-      sed -i "s|image: ${CI_REGISTRY_IMAGE}:app-.*|image: ${CI_REGISTRY_IMAGE}:app-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}|" "${DEPLOYMENT_YAML}"
-    - >
-      sed -i "s|image: ${CI_REGISTRY_IMAGE}:db-.*|image: ${CI_REGISTRY_IMAGE}:db-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}|" "${DEPLOYMENT_YAML}"
+    - 'sed -i "s|image: ${CI_REGISTRY_IMAGE}:app-.*|image: ${CI_REGISTRY_IMAGE}:app-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}|" "${DEPLOYMENT_YAML}"'
+    - 'sed -i "s|image: ${CI_REGISTRY_IMAGE}:db-.*|image: ${CI_REGISTRY_IMAGE}:db-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}|" "${DEPLOYMENT_YAML}"'
     # Индексация измененного файла
     - git add "${DEPLOYMENT_YAML}"
     # Создание коммита с описанием нового тега
