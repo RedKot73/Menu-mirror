@@ -13,21 +13,39 @@ stages:
     # Пути к сертификатам, включая самоподписанные CA
     SSL_CERT_DIR: "/etc/ssl/certs:${SELFSIGNED_CA_PATH}"
     # Образ для хранения кэша сборки в реестре
-    CACHE_IMAGE: $CI_REGISTRY_IMAGE:cache
+    CACHE_IMAGE: "${CI_REGISTRY_IMAGE}:cache"
     DOCKER_FILE: "Dockerfile"
-    IMAGE_TAG: nil
-    IMAGE_TAG_LATEST: nil
-    GIT_SUBMODULE_STRATEGY: recursive
+    IMAGE_TAG: "nil"
+    IMAGE_TAG_LATEST: "nil"
   before_script:
+    # 1. Дозволяємо Git працювати в цій директорії
+    # - git config --global --add safe.directory "${CI_PROJECT_DIR}"
+
+    # # 2. ПЕРЕКОНУЄМО GIT ДОВІРЯТИ ВАШОМУ СЕРТИФІКАТУ
+    # # Використовуємо шлях до вашого CA, який вже є в образі або передається
+    # - git config --global http.sslCAInfo "${SELFSIGNED_CA_PATH}/ca.crt"
+    # # АБО, если путь к файлу другой, можно временно отключить проверку (менее безопасно):
+    # # - git config --global http.sslVerify false
+
+    # # 3. Підміна URL (GitHub -> GitLab)
+    # - git config --global url."https://${CI_SERVER_HOST}/s5-group/s5-config.git".insteadOf "https://github.com/sergray411-cyber/s5-config.git"
+    # # Принудительное обновление субмодулей перед сборкой
+    # - git submodule sync --recursive
+    # - git submodule update --init --recursive
+    
     # Создание директории для конфигурации Docker
     - mkdir -p ~/.docker
     # Аутентификация в GitLab Container Registry через переменные окружения CI
-    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > ~/.docker/config.json
-
-    - git config --global --add safe.directory "${CI_PROJECT_DIR}"
-    - git config http.sslCAInfo "${SELFSIGNED_CA_PATH}/ca.crt"
-    - git config --global url."https://${CI_SERVER_HOST}/s5-group/s5-config.git".insteadOf "https://github.com/sergray411-cyber/s5-config.git"
+    - 'echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > ~/.docker/config.json'
+    
+    # Инициализация переменных путей к образам
+    - export FULL_IMAGE_NAME_SHA="${CI_REGISTRY_IMAGE}:${IMAGE_TAG}"
+    - export FULL_IMAGE_NAME_LATEST="${CI_REGISTRY_IMAGE}:${IMAGE_TAG_LATEST}"
   script:
+    - "echo Target Image SHA: ${FULL_IMAGE_NAME_SHA}"
+    - "echo Target Image Latest: ${FULL_IMAGE_NAME_LATEST}"
+    - export OUTPUT_PARAMS="type=image,push=true,name=${FULL_IMAGE_NAME_SHA},${FULL_IMAGE_NAME_LATEST}"
+    - "echo  OUTPUT_PARAMS= ${OUTPUT_PARAMS}"
     - |
       buildctl \
         --addr "${BUILDKIT_ADDR}" \
@@ -38,18 +56,17 @@ stages:
           --frontend dockerfile.v0 \
           --local context=. \
           --local dockerfile=. \
-          --opt filename=${DOCKER_FILE} \
-          --export-cache type=registry,ref=$CACHE_IMAGE,mode=max \
-          --import-cache type=registry,ref=$CACHE_IMAGE \
-          --output type=image,name=$CI_REGISTRY_IMAGE:$IMAGE_TAG,push=true \
-          --output type=image,name=$CI_REGISTRY_IMAGE:$IMAGE_TAG_LATEST,push=true
+          --opt filename="${DOCKER_FILE}" \
+          --export-cache type=registry,ref="${CACHE_IMAGE}",mode=max \
+          --import-cache type=registry,ref="${CACHE_IMAGE}" \
+          --output ${OUTPUT_PARAMS}
 
 # Сборка основного приложения
 build-app-image:
   extends:
     - .build_image_template
   variables:
-    # Формирование уникального тега (ветка + короткий SHA)
+    # Формирование уникального тега (ветка + короткий SHA) 
     IMAGE_TAG: "app-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}"
     IMAGE_TAG_LATEST: "app-latest"
     DOCKER_FILE: "Dockerfile"
@@ -87,11 +104,11 @@ build-db-image:
     pull_policy: if-not-present
     entrypoint: [""]
   variables:
-    REPO_BRANCH: nil
-    ENVIRONMENT: nil
+    REPO_BRANCH: "nil"
+    ENVIRONMENT: "nil"
     MANIFEST_BASE_PATH: "${CI_PROJECT_DIR}/apps/s5/overlays/${ENVIRONMENT}/patches"
     DEPLOYMENT_YAML: "${MANIFEST_BASE_PATH}/deployment.yaml"
-    PROJECT_URL: s5-group/fluxcd
+    PROJECT_URL: "s5-group/fluxcd"
   before_script:
     # Настройка почты и имени для коммитов от имени CI
     - git config user.email "job-runner@gitlab.com822.dom"
@@ -99,30 +116,33 @@ build-db-image:
     # Настройка SSL для работы с внутренним GitLab через самоподписанный сертификат
     - git config http.sslCAInfo "${SELFSIGNED_CA_PATH}/ca.crt"
     # Переопределение URL репозитория для авторизации через Access Token
-    - git remote set-url origin https://${GROUP_AT_NAME}:${GROUP_AT_TOKEN}@${CI_SERVER_HOST}/${PROJECT_URL}.git
-    - git remote set-url --push origin https://${GROUP_AT_NAME}:${GROUP_AT_TOKEN}@${CI_SERVER_HOST}/${PROJECT_URL}.git
+    - git remote set-url origin "https://${GROUP_AT_NAME}:${GROUP_AT_TOKEN}@${CI_SERVER_HOST}/${PROJECT_URL}.git"
+    - git remote set-url --push origin "https://${GROUP_AT_NAME}:${GROUP_AT_TOKEN}@${CI_SERVER_HOST}/${PROJECT_URL}.git"
   script:
     # Получение актуального состояния веток
-    - git fetch origin ${REPO_BRANCH}
+    - git fetch origin "${REPO_BRANCH}"
     # Переключение на целевую ветку репозитория манифестов
-    - git checkout ${REPO_BRANCH}
+    - git checkout "${REPO_BRANCH}"
     # Слияние изменений (rebase) для чистой истории коммитов
-    - git pull --rebase origin ${REPO_BRANCH}
+    - git pull --rebase origin "${REPO_BRANCH}"
     # Обновление тегов образов в YAML файле с помощью регулярного выражения sed
-    - >
-      sed -i "s|image: $CI_REGISTRY_IMAGE:app-.*|image: $CI_REGISTRY_IMAGE:app-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}|" ${DEPLOYMENT_YAML}
-    - >
-      sed -i "s|image: $CI_REGISTRY_IMAGE:db-.*|image: $CI_REGISTRY_IMAGE:db-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}|" ${DEPLOYMENT_YAML}
+    - 'sed -i "s|image: ${CI_REGISTRY_IMAGE}:app-.*|image: ${CI_REGISTRY_IMAGE}:app-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}|" "${DEPLOYMENT_YAML}"'
+    - 'sed -i "s|image: ${CI_REGISTRY_IMAGE}:db-.*|image: ${CI_REGISTRY_IMAGE}:db-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}|" "${DEPLOYMENT_YAML}"'
     # Индексация измененного файла
-    - git add ${DEPLOYMENT_YAML}
+    - git add "${DEPLOYMENT_YAML}"
     # Создание коммита с описанием нового тега
-    - git commit -m "Update app image tag to ${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}"
-    # Пуш изменений обратно в репозиторий с флагом ci.skip, чтобы не зацикливать пайплайн
-    - git push origin HEAD:${REPO_BRANCH} -o ci.skip
+    - |
+      if git diff --cached --quiet; then
+        echo "No changes to commit"
+      else
+        git commit -m "Update app image tag to ${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}"
+        # Пуш изменений обратно в репозиторий с флагом ci.skip, чтобы не зацикливать пайплайн
+        git push origin "HEAD:${REPO_BRANCH}" -o ci.skip
+      fi
 
 # Задача для обновления манифестов окружения development
 update_manifest-development-job:
-  extends:
+  extends: 
     - .update_manifest_template
   rules:
     - if: $CI_COMMIT_BRANCH == "development"
