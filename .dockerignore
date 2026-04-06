@@ -19,4 +19,3 @@ TESTING_GUIDE.md
 
 # Ignore debug scripts
 ai/
-#docker.db/
