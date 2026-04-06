@@ -37,6 +37,8 @@ stages:
     # Аутентификация в GitLab Container Registry через переменные окружения CI
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > ~/.docker/config.json
   script:
+    - echo "Full image path with SHA tag: $CI_REGISTRY_IMAGE:$IMAGE_TAG"
+    - echo "Full image path with latest tag: $CI_REGISTRY_IMAGE:$IMAGE_TAG_LATEST"
     - |
       buildctl \
         --addr "${BUILDKIT_ADDR}" \
@@ -50,8 +52,9 @@ stages:
           --opt filename=${DOCKER_FILE} \
           --export-cache type=registry,ref=$CACHE_IMAGE,mode=max \
           --import-cache type=registry,ref=$CACHE_IMAGE \
-          --output type=image,name=$CI_REGISTRY_IMAGE:$IMAGE_TAG,push=true \
-          --output type=image,name=$CI_REGISTRY_IMAGE:$IMAGE_TAG_LATEST,push=true
+          --output type=image,"name=$CI_REGISTRY_IMAGE:$IMAGE_TAG,$CI_REGISTRY_IMAGE:$IMAGE_TAG_LATEST",push=true
+#          #--output type=image,name=$CI_REGISTRY_IMAGE:$IMAGE_TAG,push=true \
+#          #--output type=image,name=$CI_REGISTRY_IMAGE:$IMAGE_TAG_LATEST,push=true
 
 # Сборка основного приложения
 build-app-image:
