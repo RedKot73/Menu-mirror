@@ -59,7 +59,8 @@ stages:
           --opt filename="${DOCKER_FILE}" \
           --export-cache type=registry,ref="${CACHE_IMAGE}",mode=max \
           --import-cache type=registry,ref="${CACHE_IMAGE}" \
-          --output ${OUTPUT_PARAMS}
+          --output type=image,push=true,name="${FULL_IMAGE_NAME_SHA}" \
+          --output type=image,push=true,name="${FULL_IMAGE_NAME_LATEST}"
 
 # Сборка основного приложения
 build-app-image:
