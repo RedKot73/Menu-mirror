@@ -18,6 +18,11 @@ stages:
     IMAGE_TAG: nil
     IMAGE_TAG_LATEST: nil
   before_script:
+
+    - git config --global url."https://${CI_SERVER_HOST}/s5-group/s5-config.git".insteadOf "https://github.com/sergray411-cyber/s5-config.git"
+    # Принудительное обновление субмодулей перед сборкой
+    - git submodule sync --recursive
+    - git submodule update --init --recursive
     # Создание директории для конфигурации Docker
     - mkdir -p ~/.docker
     # Аутентификация в GitLab Container Registry через переменные окружения CI

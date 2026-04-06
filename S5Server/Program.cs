@@ -42,12 +42,18 @@ if (builder.Environment.IsProduction())
 }
 
 // --- Environment Initialization ---
-// Load .env only if we are working locally (Development)
+
+
+// 1. Загружаем .env только в Dev-режиме (для локальной работы в VS/Rider)
 if (builder.Environment.IsDevelopment())
 {
-    DotNetEnv.Env.TraversePath().Load();
-    builder.Configuration.AddEnvironmentVariables();
+    // Используем простой Load(), чтобы не искать файлы за пределами контейнера
+    DotNetEnv.Env.Load(); 
 }
+
+// 2. ВАЖНО: Всегда загружаем переменные окружения из системы (Kubernetes)
+// Ставим этот вызов ПОСЛЕ DotNetEnv, чтобы K8s перекрывал значения из .env файла
+builder.Configuration.AddEnvironmentVariables();
 
 // ✅ JWT Validation & Fail-Safe Mechanism
 const string DEV_JWT_SECRET = "S5_DEV_SECRET_2026_DO_NOT_USE_IN_PROD_999";

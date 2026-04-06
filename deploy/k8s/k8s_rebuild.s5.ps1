@@ -8,17 +8,17 @@ $rootDir = (Get-Item $PSScriptRoot).Parent.Parent.FullName
 # Путь к папке с базой (относительно скрипта)
 $dbDir = Join-Path $PSScriptRoot "../database"
 
-
+# Мы явно указываем -f (файл) и контекст сборки (корень)
 Write-Host "Очистка старого образа..." -ForegroundColor Yellow
-docker rmi s5-server:1.0.1 -f
+docker rmi s5-server:1.0.2 -f
 
 
 Write-Host "[0/3] Принудительная пересборка образов..." -ForegroundColor Yellow
 
 
 # 1. Сборка сервера (ищем Dockerfile в корне проекта)
-# Мы явно указываем -f (файл) и контекст сборки (корень)
-$version = "1.0.1" # Просто меняй эту цифру при каждом важном изменении
+
+$version = "1.0.3" # Просто меняй эту цифру при каждом важном изменении
 Write-Host "Собираем s5-server версии $version..." -ForegroundColor Cyan
 # Исправлено: добавлена точка с запятой перед 'if'
 docker build --no-cache -t s5-server:$version -f "$rootDir/Dockerfile" "$rootDir";
