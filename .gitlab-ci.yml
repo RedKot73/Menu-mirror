@@ -37,20 +37,29 @@ stages:
     # Аутентификация в GitLab Container Registry через переменные окружения CI
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > ~/.docker/config.json
   script:
+# 1. Формируем полные пути образов
+    - FULL_IMAGE_NAME_SHA="${CI_REGISTRY_IMAGE}:${IMAGE_TAG}"
+    - FULL_IMAGE_NAME_LATEST="${CI_REGISTRY_IMAGE}:${IMAGE_TAG_LATEST}"   
+    - echo "Building and pushing to ${FULL_IMAGE_NAME_SHA}"
+    - echo "Building and pushing to ${FULL_IMAGE_NAME_LATEST}"
+    
+    # 2. Формируем строку аргумента --output заранее
+    - OUTPUT_CONF="type=image,name=${FULL_IMAGE_NAME_SHA},${FULL_IMAGE_NAME_LATEST},push=true"
+    
+    # 3. Запуск buildctl (убрали кавычки вокруг переменной OUTPUT_CONF внутри блока)
     - |
-      buildctl \
+      buildctl build \
         --addr "${BUILDKIT_ADDR}" \
         --tlscacert "${BUILDKIT_TLS_CA_FILE}" \
         --tlscert "${BUILDKIT_TLS_CERT_FILE}" \
         --tlskey "${BUILDKIT_TLS_KEY_FILE}" \
-        build \
-          --frontend dockerfile.v0 \
-          --local context=. \
-          --local dockerfile=. \
-          --opt filename="${DOCKER_FILE}" \
-          --export-cache type=registry,ref="${CACHE_IMAGE}",mode=max \
-          --import-cache type=registry,ref="${CACHE_IMAGE}" \
-          --output type=image,"name=${FULL_IMAGE_NAME_SHA},${FULL_IMAGE_NAME_LATEST}",push=true
+        --frontend dockerfile.v0 \
+        --local context=. \
+        --local dockerfile=. \
+        --opt filename="${DOCKER_FILE}" \
+        --export-cache type=registry,ref="${CACHE_IMAGE}",mode=max \
+        --import-cache type=registry,ref="${CACHE_IMAGE}" \
+        --output ${OUTPUT_CONF}
 
 
 #--output type=image,"name=${FULL_IMAGE_NAME_SHA},${FULL_IMAGE_NAME_LATEST}",push=true      
