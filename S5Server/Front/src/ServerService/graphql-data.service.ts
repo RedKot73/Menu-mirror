@@ -39,6 +39,7 @@ const GET_COMPLETE_DATA_SET = gql`
         unitShortName
         parentShortName
         assignedShortName
+        adjactedShortName
         unitTypeName
         isInvolved
         persistentLocationValue
