@@ -410,6 +410,10 @@ public class UnitTaskController : ControllerBase
                 .Where(t => t.Id == task.TaskId)
                 .Select(t => t.Amount)
                 .FirstOrDefaultAsync(ct);
+            task.AdjactedShortName = await _db.Units
+                .Where(t => t.Id == task.AdjactedUnitId)
+                .Select(t => t.ShortName)
+                .FirstOrDefaultAsync(ct);
             await task.CreateSoldierSnapshot(_db, changedBy, ct);
         }
         else
