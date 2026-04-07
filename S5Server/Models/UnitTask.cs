@@ -174,6 +174,15 @@ public class UnitTask
     /// </summary>
     [StringLength(100)]
     public string? AdjactedShortName { get; set; }
+    /// <summary>
+    /// Gets or sets the identifier of the adjacent type associated with this entity.
+    /// </summary>
+    public Guid? AdjactedTypeId { get; set; }
+    /// <summary>
+    /// Тип підрозділу Бригада, Полк, Батальйон, Рота
+    /// </summary>
+    [ValidateNever]
+    public DictUnitType? AdjactedType { get; set; }
 
     /// <summary>
     /// Тип підрозділу Бригада, Полк, Батальйон, Рота

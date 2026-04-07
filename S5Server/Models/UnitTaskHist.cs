@@ -63,6 +63,22 @@ public class UnitTaskHist
     public string? AssignedShortName { get; set; }
 
     /// <summary>
+    /// Суміжний підрозділ (ID)
+    /// </summary>
+    public Guid? AdjactedUnitId { get; set; }
+
+    /// <summary>
+    /// Суміжний підрозділ (назва) - денормалізація
+    /// </summary>
+    [StringLength(100)]
+    public string? AdjactedShortName { get; set; }
+
+    /// <summary>
+    /// Тип суміжного підрозділу (ID)
+    /// </summary>
+    public Guid? AdjactedTypeId { get; set; }
+
+    /// <summary>
     /// Тип підрозділу (ID)
     /// </summary>
     public Guid? UnitTypeId { get; set; }

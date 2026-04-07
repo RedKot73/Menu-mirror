@@ -1035,7 +1035,7 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
                 .HasColumnType("citext")
                 .HasComment("Штатний підрозділ");
             entity.Property(e => e.ParentId).HasColumnType("uuid");
-            entity.Property(e => e.ParentShortName).IsRequired()
+            entity.Property(e => e.ParentShortName)
                 .HasMaxLength(100)
                 .HasColumnType("citext");
             entity.Property(e => e.AssignedUnitId)
@@ -1045,6 +1045,16 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
                 .HasMaxLength(100)
                 .HasColumnType("citext")
                 .HasComment("Приданий до підрозділу");
+            entity.Property(e => e.AdjactedUnitId)
+                .HasColumnType("uuid")
+                .HasComment("Суміжний підрозділ (для координації завдань)");
+            entity.Property(e => e.AdjactedShortName)
+                .HasMaxLength(100)
+                .HasColumnType("citext")
+                .HasComment("Суміжний підрозділ (для координації завдань)");
+            entity.Property(e => e.AdjactedTypeId)
+                .HasColumnType("uuid")
+                .HasComment("Тип суміжного підрозділу");
             entity.Property(e => e.UnitTypeId).HasColumnType("uuid");
             entity.Property(e => e.UnitTypeName).HasColumnType("varchar(100)");
             entity.Property(e => e.IsInvolved).HasColumnType("boolean")
@@ -1089,6 +1099,14 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
                 .WithMany()
                 .HasForeignKey(e => e.AssignedUnitId)
                 .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(e => e.AdjactedUnit)
+                .WithMany()
+                .HasForeignKey(e => e.AdjactedUnitId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(e => e.AdjactedType)
+                .WithMany()
+                .HasForeignKey(e => e.AdjactedTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(e => e.UnitType)
                 .WithMany()
                 .HasForeignKey(e => e.UnitTypeId)
@@ -1141,6 +1159,16 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
                 .HasMaxLength(100)
                 .HasColumnType("citext")
                 .HasComment("Приданий до підрозділу");
+            entity.Property(e => e.AdjactedUnitId)
+                .HasColumnType("uuid")
+                .HasComment("Суміжний підрозділ (для координації завдань)");
+            entity.Property(e => e.AdjactedShortName)
+                .HasMaxLength(100)
+                .HasColumnType("citext")
+                .HasComment("Суміжний підрозділ (для координації завдань)");
+            entity.Property(e => e.AdjactedTypeId)
+                .HasColumnType("uuid")
+                .HasComment("Тип суміжного підрозділу");
             entity.Property(e => e.UnitTypeId).HasColumnType("uuid");
             entity.Property(e => e.UnitTypeName).HasColumnType("varchar(100)");
             entity.Property(e => e.IsInvolved).HasColumnType("boolean")
