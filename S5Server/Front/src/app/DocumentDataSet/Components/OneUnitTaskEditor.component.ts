@@ -32,6 +32,7 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { DatePipe } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
+import { UnitDto } from '../../../ServerService/unit.service';
 import {
   DictUnitTasksService,
   DictUnitTask
@@ -45,7 +46,7 @@ import {
   UnitTaskDto,
   UnitTaskService
 } from '../../../ServerService/unit-task.service';
-import { UnitAreasService, UnitAreasDto } from '../../../ServerService/unitAreas.service';
+import { UnitAreasService } from '../../../ServerService/unitAreas.service';
 import {
   DictDroneModelSelectDialogComponent,
   DictDroneModelWithQuantity,
@@ -61,6 +62,7 @@ import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 import { LookupDto } from '../../shared/models/lookup.models';
 import { PPD_AREA_TYPE_GUID } from '../../Unit/unit.constants';
 import { ConfirmDialogComponent } from '../../dialogs/ConfirmDialog.component';
+import { UnitSelectDialogComponent } from '../../dialogs/UnitSelect-dialog.component';
 
 @Component({
   selector: 'app-one-unit-task-editor',
@@ -109,9 +111,15 @@ export class OneUnitTaskEditor implements OnDestroy, AfterViewInit {
   private unitTaskSignal = signal<UnitTaskDto | null>(null);
 
   // Перелік завдань з довідника
+  isLoadingTasks = signal<boolean>(false);
   protected unitTasks = signal<DictUnitTask[]>([]);
   // Перелік областей (РВЗ)
+  isLoadingAreas = signal<boolean>(false);
   protected areas = signal<DictArea[]>([]);
+
+  /** Суміжні підрозділи */
+  adjacentUnits = signal<LookupDto[]>([]);
+  isLoadingAdjacentUnits = signal<boolean>(false);
 
   protected taskSelectState = computed(() => {
     if (this.isLoadingTasks()) { return 'loading'; }
@@ -130,8 +138,12 @@ export class OneUnitTaskEditor implements OnDestroy, AfterViewInit {
   });
 
   // Дані особового складу
+  soldiersPanelOpened = signal(false);
+  isLoadingSoldiers = signal<boolean>(false);
   soldiers = signal<SoldierTaskDto[]>([]);
   soldierDataSource = new MatTableDataSource<SoldierTaskDto>([]);
+  /** Сортування таблиці особового складу */
+  @ViewChild(MatSort) sort!: MatSort;
   soldierDisplayedColumns: string[] = [
     'unitTag',
     'fio',
@@ -146,13 +158,6 @@ export class OneUnitTaskEditor implements OnDestroy, AfterViewInit {
     'involvedUnitShortName',
     'comment',
   ];
-  isLoadingSoldiers = signal<boolean>(false);
-  /** Суміжні підрозділи */
-  adjacentUnits = signal<UnitAreasDto[]>([]);
-  isLoadingAdjacentUnits = signal<boolean>(false);
-  isLoadingTasks = signal<boolean>(false);
-  isLoadingAreas = signal<boolean>(false);
-  soldiersPanelOpened = signal(false);
 
   // Дані засобів (Master-Detail)
   means = signal<DroneModelTaskDto[]>([]);
@@ -183,12 +188,16 @@ export class OneUnitTaskEditor implements OnDestroy, AfterViewInit {
   editingMeanField = signal<'quantity' | null>(null);
   editingMeanValue = signal<number | undefined>(undefined);
 
-  @ViewChild(MatSort) sort!: MatSort;
-
   /** Прапорець: чи завантажено список завдань з довідника */
   private unitTasksLoaded = false;
 
-/** Вхідний параметр для компонента — завдання підрозділу */
+  // Form Controls
+  protected taskControl = new FormControl<{ id: string; value: string; withMeans: boolean } | null>(null);
+  protected areaControl = new FormControl<LookupDto | null>(null);
+  protected adjacentUnitsControl = new FormControl<LookupDto | null>(null);
+  protected adjacentUnitsCtrlBtn = new FormControl<boolean>(false);
+
+  /** Вхідний параметр для компонента — завдання підрозділу */
   @Input({ required: true })
   set unitTask(value: UnitTaskDto) {
     // Reset areas if task changed
@@ -203,10 +212,12 @@ export class OneUnitTaskEditor implements OnDestroy, AfterViewInit {
       this.taskControl.disable();
       this.areaControl.disable();
       this.adjacentUnitsControl.disable();
+      this.adjacentUnitsCtrlBtn.disable();
     } else {
       this.taskControl.enable();
       this.areaControl.enable();
       this.adjacentUnitsControl.enable();
+      this.adjacentUnitsCtrlBtn.enable();
     }
 
     // Встановлюємо заглушки-значення з DTO для відображення поточних значень
@@ -220,7 +231,7 @@ export class OneUnitTaskEditor implements OnDestroy, AfterViewInit {
       { emitEvent: false },
     );
     this.adjacentUnitsControl.setValue(
-      value.adjactedUnitId ? { unitId: value.adjactedUnitId, unitShortName: value.adjactedShortName ?? '' } : null,
+      value.adjactedUnitId ? { id: value.adjactedUnitId, value: value.adjactedShortName ?? '' } : null,
       { emitEvent: false },
     );
   }
@@ -228,18 +239,13 @@ export class OneUnitTaskEditor implements OnDestroy, AfterViewInit {
     return this.unitTaskSignal()!;
   }
 
-  // Form Controls
-  protected taskControl = new FormControl<{ id: string; value: string; withMeans: boolean } | null>(null);
-  protected areaControl = new FormControl<LookupDto | null>(null);
-  protected adjacentUnitsControl = new FormControl<{ unitId: string; unitShortName: string } | null>(null);
-
   /** Порівняння опцій за полем id (для taskControl та areaControl) */
   protected compareById = (a: LookupDto | null, b: LookupDto | null): boolean =>
     a?.id === b?.id;
 
-  /** Порівняння суміжних підрозділів за unitId */
-  protected compareByUnitId = (a: { unitId: string } | null, b: { unitId: string } | null): boolean =>
-    a?.unitId === b?.unitId;
+  /** Порівняння суміжних підрозділів за id */
+  protected compareByUnitId = (a: LookupDto | null, b: LookupDto | null): boolean =>
+    a?.id === b?.id;
 
   /**
    * Завантажує список завдань якщо ще не завантажено.
@@ -289,12 +295,12 @@ export class OneUnitTaskEditor implements OnDestroy, AfterViewInit {
   /** Обробник відкриття дропдауну «Суміжний підрозділ» — ледаче завантаження */
   onAdjacentUnitsDropdownOpened(opened: boolean): void {
     if (!opened || this.adjacentUnits().length > 0) { return; }
-    const areaId = this.unitTask.areaId;
-    if (!areaId) { return; }
+    const unitId = this.unitTask.unitId;
+    if (!unitId) { return; }//Вопрос как сбросить старое значение в NUULL при открытии
 
     this.isLoadingAdjacentUnits.set(true);
     this.unitAreasService
-      .getByArea(areaId, this.unitTask.unitId)
+      .getAdjacentLookup(unitId)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => this.isLoadingAdjacentUnits.set(false)),
@@ -302,10 +308,9 @@ export class OneUnitTaskEditor implements OnDestroy, AfterViewInit {
       .subscribe({
         next: (units) => {
           this.adjacentUnits.set(units);
-          // Оновлюємо контрол повним об'єктом (зі stub → реальний UnitAreasDto)
           const adjId = this.unitTask.adjactedUnitId;
           if (adjId) {
-            const unit = units.find((u) => u.unitId === adjId);
+            const unit = units.find((u) => u.id === adjId);
             if (unit) { this.adjacentUnitsControl.setValue(unit, { emitEvent: false }); }
           }
         },
@@ -903,11 +908,14 @@ export class OneUnitTaskEditor implements OnDestroy, AfterViewInit {
     }
   }
 
-  async onAdjacentUnitChange(unit: { unitId: string; unitShortName: string } | null): Promise<void> {
+  /**
+   * Оновлює інформацію про суміжні підрозділи
+   */
+  async updateAdjacentUnits(unit: LookupDto | null): Promise<boolean> {
     const updatedUnit: UnitTaskDto = {
       ...this.unitTask,
-      adjactedUnitId: unit?.unitId ?? undefined,
-      adjactedShortName: unit?.unitShortName ?? undefined,
+      adjactedUnitId: unit?.id ?? undefined,
+      adjactedShortName: unit?.value ?? undefined,
     };
     this.unitTaskSignal.set(updatedUnit);
 
@@ -917,6 +925,32 @@ export class OneUnitTaskEditor implements OnDestroy, AfterViewInit {
     } else if (errorMsg) {
       this.snackBar.open(errorMsg, 'Закрити', { duration: 5000 });
     }
+    return success;
+  }
+
+  /** Обробник зміни підрозділу
+   * (викликається з LookUp-List)
+   * */
+  async onAdjacentUnitChange(unit: LookupDto | null): Promise<void> {
+    await this.updateAdjacentUnits(unit);
+  }
+
+  /** Обробник вибору підрозділу
+   * (викликається за кнопкою "Додати підрозділ")
+   * */
+  async adjacentUnitSelect(): Promise<void> {
+    const dialogRef = this.dialog.open(UnitSelectDialogComponent, {
+      width: '900px',
+      maxHeight: '90vh',
+      data: { title: 'Вибір підрозділу' },
+    });
+
+    dialogRef.afterClosed().subscribe(async (unit: UnitDto | undefined) => {
+      if (unit) {
+        const adjUnit: LookupDto = { id: unit.id, value: unit.shortName || unit.name };
+        await this.updateAdjacentUnits(adjUnit);
+      }
+    });
   }
 
   /**

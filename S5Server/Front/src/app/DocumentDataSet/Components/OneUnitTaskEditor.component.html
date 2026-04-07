@@ -137,24 +137,33 @@
                 (openedChange)="onAdjacentUnitsDropdownOpened($event)"
                 (selectionChange)="onAdjacentUnitChange($event.value)"
               >
-                <mat-select-trigger>{{ adjacentUnitsControl.value?.unitShortName ?? '— Не очікується —' }}</mat-select-trigger>
+                <mat-select-trigger>{{ adjacentUnitsControl.value?.value ?? '— Не очікується —' }}</mat-select-trigger>
                 @switch (adjacentUnitsSelectState()) {
                   @case ('loading') {
                     <mat-option disabled class="loading-option">Завантаження...</mat-option>
                   }
                   @case ('value') {
                     <mat-option [value]="null">— Не очікується —</mat-option>
-                    <mat-option [value]="adjacentUnitsControl.value">{{ adjacentUnitsControl.value!.unitShortName }}</mat-option>
+                    <mat-option [value]="adjacentUnitsControl.value">{{ adjacentUnitsControl.value!.value }}</mat-option>
                   }
                   @default {
                     <mat-option [value]="null">— Не очікується —</mat-option>
                     @for (unit of adjacentUnits(); track unit.id) {
-                      <mat-option [value]="unit">{{ unit.unitShortName }}</mat-option>
+                      <mat-option [value]="unit">{{ unit.value }}</mat-option>
                     }
                   }
                 }
               </mat-select>
             </mat-form-field>
+            <button
+              mat-raised-button
+              color="primary"
+              [disabled]="adjacentUnitsCtrlBtn.disabled"
+              (click)="adjacentUnitSelect()"
+              matTooltip="Додати підрозділ"
+            >
+              Додати підрозділ <mat-icon>domain</mat-icon>
+            </button>
           </div>
           
         </div>
