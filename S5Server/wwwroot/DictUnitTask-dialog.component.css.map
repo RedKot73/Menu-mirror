@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["angular:styles/component:css;0c7e4db75e319735b26ed26cfc706ddc53d3360d9026c5b5bdd3e7db7fdafd61;/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Front/src/app/dialogs/DictUnitTask-dialog.component.ts"],
-  "sourcesContent": ["\n      .checkbox-group {\n        display: flex;\n        flex-direction: column;\n        gap: 12px;\n      }\n    "],
-  "mappings": ";AACM,CAAC;AACC,WAAS;AACT,kBAAgB;AAChB,OAAK;AACP;",
-  "names": []
-}

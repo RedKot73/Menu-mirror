@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using OtpNet;
 using S5Server.Models;
 using S5Server.Data; // Добавлено для MainDbContext
+using Microsoft.Extensions.Logging;
 
 namespace S5Server.GraphQL;
 
@@ -16,6 +17,22 @@ namespace S5Server.GraphQL;
 /// </summary>
 public class AuthMutation
 {
+    private readonly ILogger<AuthMutation> _logger;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AuthMutation"/> class.
+    /// Logs current 2FA security configuration.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="config">The configuration instance.</param>
+    public AuthMutation(ILogger<AuthMutation> logger, IConfiguration config)
+    {
+        _logger = logger;
+        var requireMandatory = config.GetValue<bool>("REQUIRE_MANDATORY_2FA", false);
+        var twoFactorMode = config["TWO_FACTOR_MODE"] ?? "strict";
+        _logger.LogInformation("[DEBUG] 2FA CONFIGURATION: Mandatory={Mandatory}, Mode={Mode}", requireMandatory, twoFactorMode);
+    }
+
     private string GenerateJwtToken(TVezhaUser user, IList<string> roles, IConfiguration config, bool isInterim = false)
     {
         var jwtSettings = config.GetSection("JwtSettings");
@@ -279,9 +296,9 @@ public class AuthMutation
         // Window (1,1) = allows ±30s clock drift — standardized for all verification steps
         var isValid = totp.VerifyTotp(code, out long matchedStep, new VerificationWindow(1, 1));
 
-
         if (isValid)
         {
+            Console.WriteLine($"[DEBUG] 2FA Enabled successfully for user {user.UserName}. Transitioning to Step 2 without logout.");
             await userManager.SetTwoFactorEnabledAsync(user, true);
         }
 

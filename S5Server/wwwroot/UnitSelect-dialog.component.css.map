@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["angular:styles/component:css;cab65a061b510b7aa53df554cb51ab1562a02eb0affbac369502fe06116ca4ce;/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Front/src/app/dialogs/UnitSelect-dialog.component.ts"],
-  "sourcesContent": ["\n      :host {\n        display: block;\n        width: 100%;\n        height: 100%;\n      }\n\n      .dialog-content {\n        display: flex;\n        flex-direction: column;\n        height: 70vh;\n        max-height: 70vh;\n        min-height: 400px;\n      }\n    "],
-  "mappings": ";AACM;AACE,WAAS;AACT,SAAO;AACP,UAAQ;AACV;AAEA,CAAC;AACC,WAAS;AACT,kBAAgB;AAChB,UAAQ;AACR,cAAY;AACZ,cAAY;AACd;",
-  "names": []
-}

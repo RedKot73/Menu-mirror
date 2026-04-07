@@ -13,3 +13,4 @@ cd "$(dirname "$0")/.."
 dotnet build S5Server/S5Server.csproj --no-incremental --force
 
 echo "--- TOTAL REBUILD COMPLETE ---"
+cd ..

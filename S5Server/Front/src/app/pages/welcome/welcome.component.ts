@@ -50,23 +50,18 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     // Soft mode is now handled without artificial delays
 
     if (this.auth.isNeeds2FASetup()) {
-      console.log('[DEBUG] Mandatory setup mode. Dialog opened automatically.');
+      console.log('[DEBUG] Auto-opening TotpSetupDialog due to Mandatory Policy.');
       const dialogRef = this.dialog.open(TotpSetupDialogComponent, {
         disableClose: true, // Нельзя закрыть пока не завершена настройка
-        width: '450px'
+        width: '450px',
       });
 
       dialogRef.afterClosed().subscribe((success: boolean) => {
         if (success) {
-          console.log('[DEBUG] 2FA successfully configured. Proceeding to verification phase.');
-          // Меняем состояние: настройка завершена, теперь нужна верификация
-          const userId = this.auth.needs2FASetup()?.userId;
-          if (userId) {
-            this.auth.pendingTwoFactor.set({ userId });
-          }
-          this.auth.needs2FASetup.set(null);
+          // Використовуємо безшовний перехід у сервісі
+          this.auth.transitionToVerification();
         } else {
-          // Если как-то закрыли (хотя disableClose=true), можно разлогинить
+          // Якщо як-то закрили (хоча disableClose=true), розлогінюємо для безпеки
           this.auth.logout();
         }
       });
