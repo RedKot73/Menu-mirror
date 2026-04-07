@@ -38,7 +38,7 @@ import * as QRCode from 'qrcode';
       Двофакторна аутентифікація
     </h2>
 
-    <mat-dialog-content style="min-width: 480px; max-width: 560px;">
+    <mat-dialog-content class="auth-dialog-content">
 
       <!-- ── LOADING ── -->
       @if (isLoading()) {
@@ -86,7 +86,7 @@ import * as QRCode from 'qrcode';
 
           <!-- Expanded: show QR + code input -->
           @if (showEnableForm() || this.auth.isNeeds2FASetup()) {
-            <div style="border:1px solid #e0e0e0; border-radius:8px; padding:12px;">
+            <div class="setup-container">
 
               @if (!setupData()) {
                 <!-- Loading setup data -->
@@ -97,7 +97,7 @@ import * as QRCode from 'qrcode';
               } @else {
 
                 <!-- 2-column layout: QR left, controls right -->
-                <div style="display:flex; flex-direction:row; gap:14px; align-items:flex-start;">
+                <div class="qr-setup-layout">
 
                   <div style="flex-shrink:0;">
                     @if (qrDataUrl()) {
@@ -225,6 +225,37 @@ import * as QRCode from 'qrcode';
       </mat-dialog-actions>
     }
   `,
+  styles: [`
+    .auth-dialog-content {
+      min-width: 320px;
+      max-width: 580px;
+      width: 100%;
+      overflow-x: hidden;
+    }
+    .setup-container {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .qr-setup-layout {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-start;
+      justify-content: center;
+    }
+    @media (max-width: 480px) {
+      .auth-dialog-content {
+        min-width: 100%;
+        padding: 8px !important;
+      }
+      .qr-setup-layout {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  `]
 })
 export class TotpSetupDialogComponent implements OnInit {
   private totpService = inject(TotpService);

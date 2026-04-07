@@ -53,7 +53,8 @@ export class WelcomeComponent implements OnInit, OnDestroy {
       console.log('[DEBUG] Auto-opening TotpSetupDialog due to Mandatory Policy.');
       const dialogRef = this.dialog.open(TotpSetupDialogComponent, {
         disableClose: true, // Нельзя закрыть пока не завершена настройка
-        width: '450px',
+        width: '580px',
+        maxWidth: '96vw',
       });
 
       dialogRef.afterClosed().subscribe((success: boolean) => {

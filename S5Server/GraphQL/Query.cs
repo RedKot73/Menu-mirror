@@ -22,6 +22,24 @@ public class Query
     /// </summary>
     [AllowAnonymous]
     public DateTime GetServerTime() => DateTime.UtcNow;
+    
+    /// <summary>
+    /// DTO для метаданих збірки
+    /// </summary>
+    public record AppMetadataDto(string AppVersion, string ImageName, string BuildAt);
+
+    /// <summary>
+    /// Отримати метадані збірки (APP_VERSION, IMAGE_NAME, BUILD_AT)
+    /// </summary>
+    [AllowAnonymous]
+    public AppMetadataDto GetAppMetadata([Service] IConfiguration config)
+    {
+        return new AppMetadataDto(
+            config["APP_VERSION"] ?? "unknown",
+            config["IMAGE_NAME"] ?? "unknown",
+            config["BUILD_AT"] ?? "unknown"
+        );
+    }
 
     /// <summary>
     /// Отримати всі набори даних для шаблонів

@@ -69,6 +69,16 @@ ENV ASPNETCORE_URLS="https://+:8081;http://+:8080"
 ENV ASPNETCORE_Kestrel__Certificates__Default__Password="devpass"
 ENV ASPNETCORE_Kestrel__Certificates__Default__Path="/app/aspnetapp.pfx"
 
+# Аргументы, которые придут из GitLab CI
+ARG APP_VERSION=unknown
+ARG IMAGE_NAME=unknown
+
+# Превращаем их в переменные окружения для приложения
+ENV APP_VERSION=$APP_VERSION
+ENV IMAGE_NAME=$IMAGE_NAME
+ENV BUILD_AT=$BUILD_AT
+# ----------------------
+
 EXPOSE 8080
 EXPOSE 8081
 
