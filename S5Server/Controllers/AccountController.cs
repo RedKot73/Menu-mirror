@@ -188,6 +188,7 @@ public class AccountController : ControllerBase
             var user = new TVezhaUser
             {
                 Id = dto.SoldierId ?? Guid.NewGuid(),
+                SoldierId = dto.SoldierId,
                 UserName = dto.UserName,
                 Email = dto.Email,
                 RegistrationDate = DateTime.UtcNow,
