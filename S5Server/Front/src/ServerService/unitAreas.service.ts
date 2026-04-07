@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+import { LookupDto } from '../app/shared/models/lookup.models';
+
 export interface UnitAreasDto {
   id: string;
   unitId: string;
@@ -50,6 +52,12 @@ export class UnitAreasService {
  */
   getAdjacent(unitId: string): Observable<UnitAreasDto[]> {
     return this.http.get<UnitAreasDto[]>(`${this.api}/adjacent/${unitId}`);
+  }
+/** Отримати суміжні підрозділи у вигляді лукапа (id/value) —
+ * дедуплікація виключена на сервері
+ */
+  getAdjacentLookup(unitId: string): Observable<LookupDto[]> {
+    return this.http.get<LookupDto[]>(`${this.api}/adjacent-lookup/${unitId}`);
   }
 /** Створити зв'язок підрозділ — РВЗ */
   create(dto: UnitAreasUpsertDto): Observable<UnitAreasDto> {

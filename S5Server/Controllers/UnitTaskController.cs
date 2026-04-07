@@ -251,6 +251,14 @@ public class UnitTaskController : ControllerBase
             return (Problem(statusCode: 404, title: "Не знайдено",
                 detail: $"Набір даних з ID '{dto.DataSetId}' не знайдено"));
 
+        var unitId = await _db.Units
+            .Where(t => t.Id == dto.UnitId)
+            .Select(t => t.Id)
+            .FirstOrDefaultAsync(ct);
+        if (unitId == Guid.Empty)
+            return (Problem(statusCode: 404, title: "Не знайдено",
+                detail: $"Підрозділ з ID '{dto.UnitId}' не знайдено"));
+
         try
         {
             var ds = await _set

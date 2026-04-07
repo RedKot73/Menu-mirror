@@ -112,5 +112,15 @@ namespace S5Server.Models
         /// <returns>true if both the unit and area identifiers are equal; otherwise, false.</returns>
         public static bool IsEqualTo(this UnitAreas e, UnitAreasUpsertDto dto) =>
             e.UnitId == dto.UnitId && e.AreaId == dto.AreaId;
+        /// <summary>
+        /// Converts a UnitAreas instance to a LookupDto containing its identifier and unit name.
+        /// </summary>
+        /// <param name="e">The UnitAreas instance to convert.</param>
+        /// <returns>A LookupDto representing the identifier and unit name of the specified UnitAreas instance. The unit name is
+        /// taken from ShortName if available; otherwise, Name is used. If both are null, an empty string is returned.</returns>
+        public static LookupDto ToLookUpDto(this UnitAreas e)
+        {
+            return new LookupDto(e.UnitId, e.Unit.ShortName ?? e.Unit.Name ?? string.Empty);
+        }
     }
 }

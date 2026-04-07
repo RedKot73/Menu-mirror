@@ -152,7 +152,42 @@ public class UnitAreasController : ControllerBase
             .Where(t => sharedAreaIds.Contains(t.AreaId) && t.UnitId != unitId)
             .OrderBy(x => x.Unit.ShortName)
             .Select(x => x.ToDto())
-            //.Distinct()
+            .ToListAsync(ct);
+
+        return Ok(list);
+    }
+
+    /// <summary>
+    /// Retrieves a collection of lookup items representing units that share an area with the specified unit, excluding
+    /// the unit itself.
+    /// </summary>
+    /// <param name="unitId">The unique identifier of the unit for which to find adjacent lookup items. Cannot be an empty GUID.</param>
+    /// <param name="ct">A cancellation token that can be used to cancel the asynchronous operation.</param>
+    /// <returns>An action result containing a collection of lookup DTOs for units adjacent to the specified unit. Returns a 200
+    /// OK response with the collection if successful, or a 400 Bad Request if the unitId is empty.</returns>
+    [HttpGet("adjacent-lookup/{unitId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<IEnumerable<LookupDto>>> GetAdjactedLookUp(Guid unitId,
+        CancellationToken ct = default)
+    {
+        if (unitId == Guid.Empty)
+            return BadRequest("unitId обов'язковий");
+
+        var sharedAreaIds = _set.AsNoTracking()
+            .Where(t => t.UnitId == unitId)
+            .Select(t => t.AreaId);
+
+        var adjacentUnitIds = _set.AsNoTracking()
+            .Where(t => sharedAreaIds.Contains(t.AreaId) && t.UnitId != unitId)
+            .Select(t => t.UnitId)
+            .Distinct();
+
+        var list = await _db.Units
+            .AsNoTracking()
+            .Where(u => adjacentUnitIds.Contains(u.Id))
+            .OrderBy(u => u.ShortName)
+            .Select(u => new LookupDto(u.Id, u.ShortName))
             .ToListAsync(ct);
 
         return Ok(list);
