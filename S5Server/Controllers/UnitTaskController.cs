@@ -406,16 +406,10 @@ public class UnitTaskController : ControllerBase
         task.Publish(setPublish, changedBy);
         if (task.IsPublished)
         {
-            task.Amount = await _db.DictUnitTasks
-                .Where(t => t.Id == task.TaskId)
-                .Select(t => t.Amount)
-                .FirstOrDefaultAsync(ct);
-
             if (!task.AdjactedUnitId.IsNullOrEmptyGuid())
             {
                 var adjUnit = await _db.Units
                    .Where(t => t.Id == task.AdjactedUnitId)
-                   //.Select(t => ( t.ShortName, t.UnitTypeId ))
                    .FirstOrDefaultAsync(ct);
                 if (adjUnit == null)
                     return Problem(statusCode: 404, title: "Не знайдено",
@@ -424,6 +418,10 @@ public class UnitTaskController : ControllerBase
                 task.AdjactedShortName = adjUnit.ShortName;
                 task.AdjactedTypeId = adjUnit.UnitTypeId;
             }
+            task.Amount = await _db.DictUnitTasks
+                .Where(t => t.Id == task.TaskId)
+                .Select(t => t.Amount)
+                .FirstOrDefaultAsync(ct);
 
             await task.CreateSoldierSnapshot(_db, changedBy, ct);
         }
