@@ -16,6 +16,7 @@ rm -rf S5Server/Front/dist
 
 echo "🧹 [3/5] Cleaning server wwwroot..."
 # Keep .gitkeep if it exists, or just clear everything
+mkdir -p S5Server/wwwroot
 find S5Server/wwwroot -mindepth 1 -delete
 
 echo "🚀 [4/5] Building Angular frontend (Development)..."
