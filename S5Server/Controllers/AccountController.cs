@@ -67,11 +67,12 @@ public class AccountController : ControllerBase
                 query = query.Where(u => u.LockoutEnd == null || u.LockoutEnd <= DateTimeOffset.UtcNow);
             }
 
-            var users = await query
+            var dbUsers = await query
                 .OrderBy(u => u.UserName)
-                .Select(u => u.ToDto())
                 .ToListAsync(ct);
             
+            var users = dbUsers.Select(u => u.ToDto()).ToList();
+
             _logger.LogInformation("[DEBUG] Fetching users list. Soldier data included: {IsIncluded}", true);
 
             return Ok(users);
@@ -158,6 +159,29 @@ public class AccountController : ControllerBase
                     statusCode: 409,
                     title: "Конфлікт",
                     detail: $"Email '{email}' вже використовується");
+            }
+
+            if (dto.SoldierId.HasValue)
+            {
+                // 1. Проверка: не занят ли солдат
+                var existingUser = await _userManager.FindByIdAsync(dto.SoldierId.Value.ToString());
+                if (existingUser != null)
+                {
+                    return Problem(
+                        statusCode: 409,
+                        title: "Конфлікт",
+                        detail: "Цей військовослужбовець вже має акаунт.");
+                }
+
+                // 2. Проверка: существует ли солдат физически
+                bool soldierExists = await _db.Set<Soldier>().AnyAsync(s => s.Id == dto.SoldierId.Value, ct);
+                if (!soldierExists)
+                {
+                    return Problem(
+                        statusCode: 404,
+                        title: "Не знайдено",
+                        detail: "Військовослужбовця не знайдено.");
+                }
             }
 
             // 2. Створення нового користувача

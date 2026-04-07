@@ -213,10 +213,11 @@ export class AuthService {
   readonly displayName = computed(() => {
     const u = this.user();
     if (!u?.soldier) {
-      return u?.userName ?? '';
+      return "Системний (без прив'язки)";
     }
     const s = u.soldier as any;
-    return [s.rankShortValue, s.firstName, s.lastName].filter(Boolean).join(' ');
+    const rank = s.rankShortValue ? s.rankShortValue + ' ' : '';
+    return `${rank}${s.lastName} ${s.firstName} ${s.midleName || ''}`.trim();
   });
 
   /** Вихід з системи */
