@@ -11,7 +11,7 @@ export const authGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  if (auth.requiresTwoFactor()) {
+  if (auth.requiresTwoFactor() || auth.isNeeds2FASetup()) {
     return router.createUrlTree(['/welcome']);
   }
 
@@ -30,7 +30,7 @@ export const twoFactorGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  if (auth.requiresTwoFactor()) {
+  if (auth.requiresTwoFactor() || auth.isNeeds2FASetup()) {
     return true;
   }
 
@@ -47,7 +47,7 @@ export function roleGuard(...allowedRoles: string[]): CanActivateFn {
     const auth = inject(AuthService);
     const router = inject(Router);
 
-    if (auth.requiresTwoFactor()) {
+    if (auth.requiresTwoFactor() || auth.isNeeds2FASetup()) {
       return router.createUrlTree(['/welcome']);
     }
 
