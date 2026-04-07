@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["angular:styles/component:css;a10b5a9cf93269f8d74763694b9718f79a6e0605124b254e3876a3aa31f7df07;/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Front/src/app/shared/components/VerticalLayout.component.ts"],
-  "sourcesContent": ["\n      :host {\n        display: flex;\n        flex-direction: column;\n        height: 100%;\n      }\n\n      .vertical-layout-container {\n        display: flex;\n        flex-direction: column;\n        width: 100%;\n        height: 100%;\n      }\n\n      .action-panel {\n        flex: 0 0 auto;\n        background: #fafafa;\n        border-bottom: 1px solid #e0e0e0;\n        padding: 8px;\n      }\n\n      .content-panel {\n        flex: 1 1 auto;\n        overflow: auto;\n        background: white;\n        padding: 8px;\n        min-height: 0;\n      }\n\n      .bottom-panel {\n        flex: 0 0 auto;\n        background: #fafafa;\n        border-top: 1px solid #e0e0e0;\n      }\n    "],
-  "mappings": ";AACM;AACE,WAAS;AACT,kBAAgB;AAChB,UAAQ;AACV;AAEA,CAAC;AACC,WAAS;AACT,kBAAgB;AAChB,SAAO;AACP,UAAQ;AACV;AAEA,CAAC;AACC,QAAM,EAAE,EAAE;AACV,cAAY;AACZ,iBAAe,IAAI,MAAM;AACzB,WAAS;AACX;AAEA,CAAC;AACC,QAAM,EAAE,EAAE;AACV,YAAU;AACV,cAAY;AACZ,WAAS;AACT,cAAY;AACd;AAEA,CAAC;AACC,QAAM,EAAE,EAAE;AACV,cAAY;AACZ,cAAY,IAAI,MAAM;AACxB;",
-  "names": []
-}

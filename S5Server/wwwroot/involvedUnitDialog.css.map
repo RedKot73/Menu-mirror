@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["src/app/dialogs/involvedUnitDialog.scss"],
-  "sourcesContent": [".content {\n  display: grid;\n  gap: 12px;\n  min-width: 420px;\n  max-width: 600px;\n  padding-top: 10px !important;\n}\n\n.content .mat-mdc-form-field {\n  width: 100%;\n}\n\n.actions {\n  gap: 8px;\n}\n\ntextarea {\n  resize: vertical;\n  min-height: 60px;\n}\n"],
-  "mappings": ";AAAA,CAAA;AACE,WAAA;AACA,OAAA;AACA,aAAA;AACA,aAAA;AACA,eAAA;;AAGF,CARA,QAQA,CAAA;AACE,SAAA;;AAGF,CAAA;AACE,OAAA;;AAGF;AACE,UAAA;AACA,cAAA;;",
-  "names": []
-}

@@ -5,4 +5,5 @@ $scriptPath = Join-Path $PSScriptRoot "_rebuild_app.sh"
 echo "--- Redirecting rebuild to bash: $scriptPath ---"
 
 # Запуск через bash
-bash $scriptPath
+#bash $scriptPath
+bash ./ai/_rebuild_app.sh $args

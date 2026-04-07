@@ -39,6 +39,23 @@ export class AuthService {
   readonly roles = computed(() => this.user()?.roles ?? []);
 
   constructor() {
+    // Log 2FA security policy
+    const token = this.token();
+    let mandatory = false;
+    let mode = 'strict';
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        mandatory = payload.needs2FASetup === 'true' || payload.needs2FASetup === true;
+        mode = payload.twoFactorMode ?? 'strict';
+      } catch { }
+    }
+    console.log(
+      '%c[DEBUG] 2FA SECURITY POLICY:',
+      'color: #ff9900; font-weight: bold;',
+      { REQUIRE_MANDATORY_2FA: mandatory, TWO_FACTOR_MODE: mode }
+    );
+
     // Автоматичне збереження токену в localStorage
     const savedToken = localStorage.getItem('auth_token');
     if (savedToken) {
@@ -118,6 +135,19 @@ export class AuthService {
           }
         }),
       );
+  }
+
+  /**
+   * Перехід з режиму налаштування в режим верифікації без логауту.
+   * Викликається після успішної мутації EnableTwoFactor.
+   */
+  transitionToVerification(): void {
+    const userId = this.needs2FASetup()?.userId;
+    if (userId) {
+      console.log('[DEBUG] 2FA Enabled successfully. Transitioning to Step 2 without logout.');
+      this.pendingTwoFactor.set({ userId });
+      this.needs2FASetup.set(null);
+    }
   }
 
   /** Крок 2: Підтвердження TOTP-коду (через GraphQL Mutation) */
