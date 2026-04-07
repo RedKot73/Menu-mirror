@@ -410,10 +410,21 @@ public class UnitTaskController : ControllerBase
                 .Where(t => t.Id == task.TaskId)
                 .Select(t => t.Amount)
                 .FirstOrDefaultAsync(ct);
-            task.AdjactedShortName = await _db.Units
-                .Where(t => t.Id == task.AdjactedUnitId)
-                .Select(t => t.ShortName)
-                .FirstOrDefaultAsync(ct);
+
+            if (!task.AdjactedUnitId.IsNullOrEmptyGuid())
+            {
+                var adjUnit = await _db.Units
+                   .Where(t => t.Id == task.AdjactedUnitId)
+                   //.Select(t => ( t.ShortName, t.UnitTypeId ))
+                   .FirstOrDefaultAsync(ct);
+                if (adjUnit == null)
+                    return Problem(statusCode: 404, title: "Не знайдено",
+                        detail: $"Суміжний підрозділ з ID '{task.AdjactedUnitId}' не знайдено");
+
+                task.AdjactedShortName = adjUnit.ShortName;
+                task.AdjactedTypeId = adjUnit.UnitTypeId;
+            }
+
             await task.CreateSoldierSnapshot(_db, changedBy, ct);
         }
         else
