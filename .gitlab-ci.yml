@@ -39,10 +39,14 @@ stages:
           --local context=. \
           --local dockerfile=. \
           --opt filename=${DOCKER_FILE} \
+          --opt build-arg:APP_VERSION=${CI_COMMIT_SHORT_SHA} \
+          --opt build-arg:IMAGE_NAME=${CI_REGISTRY_IMAGE} \
+          --opt build-arg:BUILD_AT=${CI_JOB_STARTED_AT} \
           --export-cache type=registry,ref=$CACHE_IMAGE,mode=max \
           --import-cache type=registry,ref=$CACHE_IMAGE \
           --output type=image,name=$CI_REGISTRY_IMAGE:$IMAGE_TAG,push=true \
           --output type=image,name=$CI_REGISTRY_IMAGE:$IMAGE_TAG_LATEST,push=true
+
 
 # Сборка основного приложения
 build-app-image:
