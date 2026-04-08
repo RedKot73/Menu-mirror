@@ -249,12 +249,6 @@ public class Unit
     public List<Unit> AssignedUnits { get; set; } = [];
 
     /// <summary>
-    /// Суміжні підрозділи
-    /// </summary>
-    [NotMapped]
-    public List<Unit> AdjacentUnits { get; set; } = [];
-
-    /// <summary>
     /// Особовий склад
     /// </summary>
     [NotMapped]
@@ -271,7 +265,10 @@ public class Unit
     /// </summary>
     [NotMapped]
     public List<Soldier> InvolvedSoldiers { get; set; } = [];
-
+    /// <summary>
+    /// Gets or sets the collection of areas associated with the unit.
+    /// </summary>
+    public List<UnitAreas> Areas { get; set; } = [];
     /// <summary>
     /// Кто внёс изменение (UserId або "System")
     /// </summary>

@@ -38,6 +38,25 @@ import { AuthService } from '../app/auth/auth.service';
       <mat-menu #dictionaries="matMenu">
         <button mat-menu-item [matMenuTriggerFor]="dictDroneForces">Сили безпілотних систем</button>
         <button mat-menu-item [matMenuTriggerFor]="dictGeneralInfo">Загальні</button>
+        <button mat-menu-item [matMenuTriggerFor]="areaMenu">Райони виконання завдань (РВЗ)</button>
+      </mat-menu>
+
+      <mat-menu #areaMenu="matMenu">
+        <button mat-menu-item routerLink="/dictCityCategories" routerLinkActive="active-menu-item">
+          Категорії об'єктів адміністративно-територіальних одиниць
+        </button>
+        <button mat-menu-item routerLink="/dictCityCodes" routerLinkActive="active-menu-item">
+          Кодифікатор об'єктів адміністративно-територіальних одиниць
+        </button>
+        <button mat-menu-item routerLink="/dictAreaTypes" routerLinkActive="active-menu-item">
+          Типи району виконання завдань (РВЗ)
+        </button>
+        <button mat-menu-item routerLink="/dictArea" routerLinkActive="active-menu-item">
+          Райони виконання завдань (РВЗ)
+        </button>
+        <button mat-menu-item routerLink="/dictUnitTasks" routerLinkActive="active-menu-item">
+          Завдання підрозділів
+        </button>
       </mat-menu>
 
       <mat-menu #dictDroneForces="matMenu">
@@ -53,9 +72,6 @@ import { AuthService } from '../app/auth/auth.service';
           routerLinkActive="active-menu-item"
         >
           Категорії шаблонів документів
-        </button>
-        <button mat-menu-item routerLink="/dictUnitTasks" routerLinkActive="active-menu-item">
-          Завдання підрозділів
         </button>
       </mat-menu>
 
@@ -74,18 +90,6 @@ import { AuthService } from '../app/auth/auth.service';
         </button>
         <button mat-menu-item routerLink="/dictRanks" routerLinkActive="active-menu-item">
           Військові звання
-        </button>
-        <button mat-menu-item routerLink="/dictCityCategories" routerLinkActive="active-menu-item">
-          Категорії об'єктів адміністративно-територіальних одиниць
-        </button>
-        <button mat-menu-item routerLink="/dictCityCodes" routerLinkActive="active-menu-item">
-          Кодифікатор об'єктів адміністративно-територіальних одиниць
-        </button>
-        <button mat-menu-item routerLink="/dictAreaTypes" routerLinkActive="active-menu-item">
-          Типи району виконання завдань (РВЗ)
-        </button>
-        <button mat-menu-item routerLink="/dictArea" routerLinkActive="active-menu-item">
-          Райони виконання завдань (РВЗ)
         </button>
       </mat-menu>
     </mat-toolbar>

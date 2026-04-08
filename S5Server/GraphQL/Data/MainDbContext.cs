@@ -1028,7 +1028,7 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
                 .HasColumnType("citext")
                 .HasComment("Штатний підрозділ");
             entity.Property(e => e.ParentId).HasColumnType("uuid");
-            entity.Property(e => e.ParentShortName).IsRequired()
+            entity.Property(e => e.ParentShortName)
                 .HasMaxLength(100)
                 .HasColumnType("citext");
             entity.Property(e => e.AssignedUnitId)
@@ -1038,6 +1038,16 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
                 .HasMaxLength(100)
                 .HasColumnType("citext")
                 .HasComment("Приданий до підрозділу");
+            entity.Property(e => e.AdjactedUnitId)
+                .HasColumnType("uuid")
+                .HasComment("Суміжний підрозділ (для координації завдань)");
+            entity.Property(e => e.AdjactedShortName)
+                .HasMaxLength(100)
+                .HasColumnType("citext")
+                .HasComment("Суміжний підрозділ (для координації завдань)");
+            entity.Property(e => e.AdjactedTypeId)
+                .HasColumnType("uuid")
+                .HasComment("Тип суміжного підрозділу");
             entity.Property(e => e.UnitTypeId).HasColumnType("uuid");
             entity.Property(e => e.UnitTypeName).HasColumnType("varchar(100)");
             entity.Property(e => e.IsInvolved).HasColumnType("boolean")
@@ -1082,6 +1092,14 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
                 .WithMany()
                 .HasForeignKey(e => e.AssignedUnitId)
                 .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(e => e.AdjactedUnit)
+                .WithMany()
+                .HasForeignKey(e => e.AdjactedUnitId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(e => e.AdjactedType)
+                .WithMany()
+                .HasForeignKey(e => e.AdjactedTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(e => e.UnitType)
                 .WithMany()
                 .HasForeignKey(e => e.UnitTypeId)
@@ -1134,6 +1152,16 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
                 .HasMaxLength(100)
                 .HasColumnType("citext")
                 .HasComment("Приданий до підрозділу");
+            entity.Property(e => e.AdjactedUnitId)
+                .HasColumnType("uuid")
+                .HasComment("Суміжний підрозділ (для координації завдань)");
+            entity.Property(e => e.AdjactedShortName)
+                .HasMaxLength(100)
+                .HasColumnType("citext")
+                .HasComment("Суміжний підрозділ (для координації завдань)");
+            entity.Property(e => e.AdjactedTypeId)
+                .HasColumnType("uuid")
+                .HasComment("Тип суміжного підрозділу");
             entity.Property(e => e.UnitTypeId).HasColumnType("uuid");
             entity.Property(e => e.UnitTypeName).HasColumnType("varchar(100)");
             entity.Property(e => e.IsInvolved).HasColumnType("boolean")
@@ -1307,6 +1335,30 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
             entity.Property(e => e.Id).HasColumnType("varchar(20)");
             entity.Property(e => e.Value).HasColumnType("text");
         });
+        modelBuilder.Entity<UnitAreas>(entity =>
+        {
+            entity.ToTable("unit_areas", "core",
+                t => t.HasComment("Зв'язок багато-до-багатьох між підрозділами та РВЗ"));
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnType("uuid");
+            entity.Property(e => e.UnitId).IsRequired().HasColumnType("uuid");
+            entity.Property(e => e.AreaId).IsRequired().HasColumnType("uuid");
+            entity.Property(e => e.ChangedBy).IsRequired().HasColumnType("varchar(100)");
+            entity.Property(e => e.ValidFrom).IsRequired()
+                .HasColumnType("timestamp with time zone")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasOne(e => e.Unit)
+                .WithMany(u => u.Areas)
+                .HasForeignKey(e => e.UnitId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Area)
+                .WithMany(a => a.Units)
+                .HasForeignKey(e => e.AreaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => new { e.UnitId, e.AreaId }).IsUnique();
+        });
     }
 
     /// <summary>
@@ -1413,4 +1465,8 @@ public class MainDbContext : IdentityDbContext<TVezhaUser, IdentityRole<Guid>, G
     /// Сохранённый набор данных для подстановки в шаблон документа (БР/БД)
     /// </summary>
     public DbSet<TemplateDataSet> TemplateDataSets { get; set; }
+    /// <summary>
+    /// Связь многие-ко-многим между подразделениями и районами выполнения задач (РВЗ)
+    /// </summary>
+    public DbSet<UnitAreas> UnitAreas { get; set; }
 }

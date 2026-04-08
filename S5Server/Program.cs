@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
 using S5Server.Data;
 using S5Server.Models;
+using S5Server.Utils;
 using Serilog;
 using System.Globalization;
 using System.Text;
@@ -35,16 +36,6 @@ Log.Information("Запуск приложения с аргументами: {A
 // ✅ Application Insights отримає логи через вбудовану інтеграцію ASP.NET Core
 builder.Host.UseSerilog();
 
-// ✅ Application Insights (тільки для production/Azure)
-if (builder.Environment.IsProduction())
-{
-    builder.Services.AddApplicationInsightsTelemetry();
-}
-
-// --- Environment Initialization ---
-
-
-// 1. Загружаем .env только в Dev-режиме (для локальной работы в VS/Rider)
 if (builder.Environment.IsDevelopment())
 {
     // Используем простой Load(), чтобы не искать файлы за пределами контейнера
@@ -147,11 +138,6 @@ dataSourceBuilder.ConnectionStringBuilder.Options = "-c DateStyle=ISO";
 
 // Совместимость со старым поведением DateTime (важно для миграций)
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
-/* ПРИМЕЧАНИЕ: Блок с 'if (builder.Environment.IsProduction())' и Callback 
-   больше не нужен, так как мы добавили 'TrustServerCertificate = true' 
-   прямо в connBuilder. Это работает во всех средах одинаково надежно.
-*/
 
 // Создаем итоговый DataSource
 var dataSource = dataSourceBuilder.Build();
@@ -333,6 +319,10 @@ builder.Services
     .AddSorting();                          // ✅ Сортування (orderBy)
 // ✅ DbContext вже зареєстрований через AddPooledDbContextFactory!
 
+builder.Services.AddExceptionHandler<ClientCanceledExceptionHandler>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 builder.Services.AddControllers();
 
 builder.Services.AddCors(options =>
@@ -365,12 +355,7 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            // ✅ FALLBACK: дозволити Azure Web App origin
-            policy.SetIsOriginAllowed(origin =>
-                    origin.Contains(".azurewebsites.net", StringComparison.OrdinalIgnoreCase))
-                  .AllowAnyMethod()
-                  .AllowAnyHeader()
-                  .AllowCredentials();
+            Log.Warning("AllowedOrigins не налаштовано — CORS заборонено для production");
         }
     });
 });
@@ -488,9 +473,10 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
+
+app.UseExceptionHandler();
 
 // ✅ Редирект на HTTPS (только если запрос пришел по HTTP через проксі)
 //app.UseHttpsRedirection();

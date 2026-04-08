@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using S5Server.Data;
@@ -11,9 +12,11 @@ using S5Server.Data;
 namespace S5Server.Migrations
 {
     [DbContext(typeof(MainDbContext))]
-    partial class MainDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260407084749_UnitTaskAddAdjactedType")]
+    partial class UnitTaskAddAdjactedType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1455,19 +1458,16 @@ namespace S5Server.Migrations
                     b.Property<bool>("RequirePasswordChange")
                         .HasColumnType("boolean")
                         .HasColumnName("require_password_change")
-                        .HasComment("При наступному вході вимагати зміну пароля (наприклад, после адміністративного скидання)");
+                        .HasComment("При наступному вході вимагати зміну пароля (наприклад, після адміністративного скидання)");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text")
                         .HasColumnName("security_stamp");
 
-                    b.Property<Guid?>("SoldierId")
+                    b.Property<Guid>("SoldierId")
                         .HasColumnType("uuid")
-                        .HasColumnName("soldier_id");
-
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("text")
-                        .HasColumnName("security_stamp");
+                        .HasColumnName("soldier_id")
+                        .HasComment("Посилання на відповідного бійця");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean")
@@ -1490,7 +1490,7 @@ namespace S5Server.Migrations
 
                     b.HasIndex("SoldierId")
                         .IsUnique()
-                        .HasDatabaseName("ix_users_soldier_id");
+                        .HasDatabaseName("aspnetusers_un_soldier_id");
 
                     b.ToTable("users", "identity", t =>
                         {
@@ -2517,10 +2517,11 @@ namespace S5Server.Migrations
             modelBuilder.Entity("S5Server.Models.TVezhaUser", b =>
                 {
                     b.HasOne("S5Server.Models.Soldier", "Soldier")
-                        .WithOne()
+                        .WithOne("VezhaUser")
                         .HasForeignKey("S5Server.Models.TVezhaUser", "SoldierId")
                         .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_users_soldiers_soldier_id");
+                        .IsRequired()
+                        .HasConstraintName("aspnetusers_soldiers_fk");
 
                     b.Navigation("Soldier");
                 });
@@ -2711,6 +2712,11 @@ namespace S5Server.Migrations
             modelBuilder.Entity("S5Server.Models.DictUnitTask", b =>
                 {
                     b.Navigation("UnitTaskItems");
+                });
+
+            modelBuilder.Entity("S5Server.Models.Soldier", b =>
+                {
+                    b.Navigation("VezhaUser");
                 });
 
             modelBuilder.Entity("S5Server.Models.TemplateDataSet", b =>

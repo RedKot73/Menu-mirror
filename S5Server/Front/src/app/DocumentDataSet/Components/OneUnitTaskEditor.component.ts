@@ -3,18 +3,18 @@ import {
   Input,
   Output,
   EventEmitter,
-  OnInit,
   OnDestroy,
   AfterViewInit,
   ViewChild,
   inject,
   signal,
+  computed,
   effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { Subject, firstValueFrom } from 'rxjs';
-import { finalize, takeUntil } from 'rxjs/operators';
+import { Subject, firstValueFrom, of } from 'rxjs';
+import { finalize, takeUntil, tap } from 'rxjs/operators';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -32,14 +32,21 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { DatePipe } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
+import { UnitDto } from '../../../ServerService/unit.service';
+import {
+  DictUnitTasksService,
+  DictUnitTask
+} from '../../../ServerService/dictUnitTasks.service';
+import { DictAreasService, DictArea } from '../../../ServerService/dictAreas.service';
+import {
+  DroneModelTaskDto,
+  DroneModelTaskService
+} from '../../../ServerService/drone-model-task.service';
 import {
   UnitTaskDto,
-  DroneModelTaskDto,
-} from '../models/template-dataset.models';
-import { DictUnitTasksService, DictUnitTask } from '../../../ServerService/dictUnitTasks.service';
-import { DictAreasService, DictArea } from '../../../ServerService/dictAreas.service';
-import { DroneModelTaskService } from '../../../ServerService/drone-model-task.service';
-import { UnitTaskService } from '../../../ServerService/unit-task.service';
+  UnitTaskService
+} from '../../../ServerService/unit-task.service';
+import { UnitAreasService } from '../../../ServerService/unitAreas.service';
 import {
   DictDroneModelSelectDialogComponent,
   DictDroneModelWithQuantity,
@@ -52,8 +59,10 @@ import {
 import { SoldierUtils } from '../../Soldier/soldier.utils';
 import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
+import { LookupDto } from '../../shared/models/lookup.models';
 import { PPD_AREA_TYPE_GUID } from '../../Unit/unit.constants';
 import { ConfirmDialogComponent } from '../../dialogs/ConfirmDialog.component';
+import { UnitSelectDialogComponent } from '../../dialogs/UnitSelect-dialog.component';
 
 @Component({
   selector: 'app-one-unit-task-editor',
@@ -83,18 +92,18 @@ import { ConfirmDialogComponent } from '../../dialogs/ConfirmDialog.component';
     '../../Soldier/Soldier.component.scss',
   ],
 })
-export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
+export class OneUnitTaskEditor implements OnDestroy, AfterViewInit {
   private dictUnitTasksService = inject(DictUnitTasksService);
   private dictAreasService = inject(DictAreasService);
   private droneModelTaskService = inject(DroneModelTaskService);
   private unitTaskService = inject(UnitTaskService);
   private soldierTaskService = inject(SoldierTaskService);
+  private unitAreasService = inject(UnitAreasService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
   private destroy$ = new Subject<void>();
 
   @Output() remove = new EventEmitter<string>();
-  @Output() unitChange = new EventEmitter<UnitTaskDto>();
   /** Еміт події при зміні стану незбережених змін */
   @Output() unsavedChangesChange = new EventEmitter<boolean>();
 
@@ -102,13 +111,39 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   private unitTaskSignal = signal<UnitTaskDto | null>(null);
 
   // Перелік завдань з довідника
+  isLoadingTasks = signal<boolean>(false);
   protected unitTasks = signal<DictUnitTask[]>([]);
   // Перелік областей (РВЗ)
+  isLoadingAreas = signal<boolean>(false);
   protected areas = signal<DictArea[]>([]);
 
-  // Дані особового складу (замінено на SoldierTaskDto)
+  /** Суміжні підрозділи */
+  adjacentUnits = signal<LookupDto[]>([]);
+  isLoadingAdjacentUnits = signal<boolean>(false);
+
+  protected taskSelectState = computed(() => {
+    if (this.isLoadingTasks()) { return 'loading'; }
+    if (this.unitTasks().length > 0) { return 'loaded'; }
+    return this.taskControl.value ? 'value' : 'empty';
+  });
+  protected areaSelectState = computed(() => {
+    if (this.isLoadingAreas()) { return 'loading'; }
+    if (this.areas().length > 0) { return 'loaded'; }
+    return this.areaControl.value ? 'value' : 'empty';
+  });
+  protected adjacentUnitsSelectState = computed(() => {
+    if (this.isLoadingAdjacentUnits()) { return 'loading'; }
+    if (this.adjacentUnits().length === 0 && this.adjacentUnitsControl.value) { return 'value'; }
+    return 'loaded';
+  });
+
+  // Дані особового складу
+  soldiersPanelOpened = signal(false);
+  isLoadingSoldiers = signal<boolean>(false);
   soldiers = signal<SoldierTaskDto[]>([]);
   soldierDataSource = new MatTableDataSource<SoldierTaskDto>([]);
+  /** Сортування таблиці особового складу */
+  @ViewChild(MatSort) sort!: MatSort;
   soldierDisplayedColumns: string[] = [
     'unitTag',
     'fio',
@@ -123,9 +158,6 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     'involvedUnitShortName',
     'comment',
   ];
-  //  soldierCount = signal<number>(0);
-  isLoadingSoldiers = signal<boolean>(false);
-  soldiersPanelOpened = signal(false);
 
   // Дані засобів (Master-Detail)
   means = signal<DroneModelTaskDto[]>([]);
@@ -143,7 +175,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   // Effect для відстеження змін hasUnsavedChanges і емітування батьківському компоненту
   private unsavedChangesEffect = effect(() => {
     this.unsavedChangesChange.emit(this.hasUnsavedChanges());
-  }, { allowSignalWrites: true });
+  });
   /** Контрол для статусу публікації
    * Предотвращает переключение визуального контрола
    * при ошибках в изменении статуса публикации из-за
@@ -156,60 +188,141 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   editingMeanField = signal<'quantity' | null>(null);
   editingMeanValue = signal<number | undefined>(undefined);
 
-  @ViewChild(MatSort) sort!: MatSort;
+  /** Прапорець: чи завантажено список завдань з довідника */
+  private unitTasksLoaded = false;
 
+  // Form Controls
+  protected taskControl = new FormControl<{ id: string; value: string; withMeans: boolean } | null>(null);
+  protected areaControl = new FormControl<LookupDto | null>(null);
+  protected adjacentUnitsControl = new FormControl<LookupDto | null>(null);
+  protected adjacentUnitsCtrlBtn = new FormControl<boolean>(false);
+
+  /** Вхідний параметр для компонента — завдання підрозділу */
   @Input({ required: true })
   set unitTask(value: UnitTaskDto) {
+    // Reset areas if task changed
+    if (value.taskId !== this.taskControl.value?.id) {
+      this.areas.set([]);
+    }
+
     this.unitTaskSignal.set(value);
     this.publishStatusControl.setValue(value.isPublished, { emitEvent: false });
+
+    if (value.isPublished) {
+      this.taskControl.disable();
+      this.areaControl.disable();
+      this.adjacentUnitsControl.disable();
+      this.adjacentUnitsCtrlBtn.disable();
+    } else {
+      this.taskControl.enable();
+      this.areaControl.enable();
+      this.adjacentUnitsControl.enable();
+      this.adjacentUnitsCtrlBtn.enable();
+    }
+
+    // Встановлюємо заглушки-значення з DTO для відображення поточних значень
+    // до завантаження повних списків. compareWith по id забезпечить коректне зіставлення.
+    this.taskControl.setValue(
+      value.taskId ? { id: value.taskId, value: value.taskValue, withMeans: value.taskWithMeans } : null,
+      { emitEvent: false },
+    );
+    this.areaControl.setValue(
+      value.areaId ? { id: value.areaId, value: value.areaValue ?? '' } : null,
+      { emitEvent: false },
+    );
+    this.adjacentUnitsControl.setValue(
+      value.adjactedUnitId ? { id: value.adjactedUnitId, value: value.adjactedShortName ?? '' } : null,
+      { emitEvent: false },
+    );
   }
   get unitTask(): UnitTaskDto {
     return this.unitTaskSignal()!;
   }
 
-  // Form Controls
-  protected taskControl = new FormControl<DictUnitTask | null>(null);
-  protected areaControl = new FormControl<DictArea | null>(null);
+  /** Порівняння опцій за полем id (для taskControl та areaControl) */
+  protected compareById = (a: LookupDto | null, b: LookupDto | null): boolean =>
+    a?.id === b?.id;
 
-  ngOnInit(): void {
-    // Завантажуємо повний список завдань (з areaTypeId)
-    this.dictUnitTasksService.getAll().subscribe({
-      next: (tasks) => {
-        this.unitTasks.set(tasks);
-        // Ініціалізуємо контроли після завантаження довідника
-        this.initializeControls();
-      },
-      error: (error) => {
-        console.error('Помилка завантаження завдань:', error);
-        const errorMessage = S5App_ErrorHandler.handleHttpError(
-          error,
-          'Помилка завантаження завдань',
-        );
-        this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
-      },
-    });
-  }
+  /** Порівняння суміжних підрозділів за id */
+  protected compareByUnitId = (a: LookupDto | null, b: LookupDto | null): boolean =>
+    a?.id === b?.id;
 
   /**
-   * Ініціалізує контроли значеннями з unitTask (без емітів подій)
+   * Завантажує список завдань якщо ще не завантажено.
+   * Повертає кешований результат при повторних викликах.
    */
-  private initializeControls(): void {
-    const unitTask = this.unitTask;
-    const tasks = this.unitTasks();
+  private ensureUnitTasksLoaded() {
+    if (this.unitTasksLoaded) { return of(this.unitTasks()); }
+    return this.dictUnitTasksService.getAll().pipe(
+      tap((tasks) => {
+        this.unitTasks.set(tasks);
+        this.unitTasksLoaded = true;
+      }),
+    );
+  }
 
-    // Ініціалізуємо taskControl якщо завдання вже обрано
-    if (unitTask.taskId && tasks.length > 0) {
-      const task = tasks.find((t) => t.id === unitTask.taskId);
-      if (task) {
-        this.taskControl.setValue(task, { emitEvent: false });
+  /** Обробник відкриття дропдауну «Завдання» — ледаче завантаження довідника */
+  onTaskDropdownOpened(opened: boolean): void {
+    if (!opened || this.unitTasksLoaded) { return; }
+    this.isLoadingTasks.set(true);
+    this.ensureUnitTasksLoaded()
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.isLoadingTasks.set(false)),
+      )
+      .subscribe((tasks) => {
+        const task = tasks.find((t) => t.id === this.unitTask.taskId);
+        if (task) { this.taskControl.setValue(task, { emitEvent: false }); }
+      });
+  }
 
-        // Завантажуємо області для обраного завдання (без емітів)
-        // areaControl буде встановлено в loadAreasByTask після завантаження областей
-        if (task.areaTypeId) {
+  /** Обробник відкриття дропдауну «РВЗ» — ледаче завантаження списку областей */
+  onAreaDropdownOpened(opened: boolean): void {
+    if (!opened || this.areas().length > 0) { return; }
+    const taskId = this.unitTask.taskId;
+    if (!taskId) { return; }
+
+    this.ensureUnitTasksLoaded()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((tasks) => {
+        const task = tasks.find((t) => t.id === taskId);
+        if (task?.areaTypeId) {
           this.loadAreasByTask(task.areaTypeId, true);
         }
-      }
-    }
+      });
+  }
+
+  /** Обробник відкриття дропдауну «Суміжний підрозділ» — ледаче завантаження */
+  onAdjacentUnitsDropdownOpened(opened: boolean): void {
+    if (!opened || this.adjacentUnits().length > 0) { return; }
+    const unitId = this.unitTask.unitId;
+    if (!unitId) { return; }//Вопрос как сбросить старое значение в NUULL при открытии
+
+    this.isLoadingAdjacentUnits.set(true);
+    this.unitAreasService
+      .getAdjacentLookup(unitId)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.isLoadingAdjacentUnits.set(false)),
+      )
+      .subscribe({
+        next: (units) => {
+          this.adjacentUnits.set(units);
+          const adjId = this.unitTask.adjactedUnitId;
+          if (adjId) {
+            const unit = units.find((u) => u.id === adjId);
+            if (unit) { this.adjacentUnitsControl.setValue(unit, { emitEvent: false }); }
+          }
+        },
+        error: (error: unknown) => {
+          console.error('Помилка завантаження суміжних підрозділів:', error);
+          const errorMessage = S5App_ErrorHandler.handleHttpError(
+            error,
+            'Помилка завантаження суміжних підрозділів',
+          );
+          this.snackBar.open(errorMessage, 'Закрити', { duration: 5000 });
+        },
+      });
   }
 
   ngAfterViewInit(): void {
@@ -260,7 +373,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   /**
    * Завантажує засоби (дрони) для завдання підрозділу (Master-Detail)
    */
-  loadMeans(): void {
+  onMeansPanelOpened(): void {
     // Якщо вже завантажено - не перезавантажуємо
     if (this.means().length > 0) {
       return;
@@ -328,10 +441,7 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  /**
-   * Обробник зміни завдання
-   */
-  onTaskChange(task: DictUnitTask | null): void {
+  onTaskChange(task: { id: string; value: string; withMeans: boolean } | null): void {
     if (!task) {
       const updatedUnit: UnitTaskDto = {
         ...this.unitTask,
@@ -347,14 +457,16 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
       this.meansDataSource.data = [];
       this.areas.set([]);
       this.areaControl.setValue(null, { emitEvent: false });
+      this.adjacentUnits.set([]);
+      this.adjacentUnitsControl.setValue(null, { emitEvent: false });
       this.unitTaskSignal.set(updatedUnit);
-      this.unitChange.emit(updatedUnit);
       this.hasUnsavedChanges.set(true);
       return;
     }
 
     // При зміні завдання тип РВЗ міг змінитися — скидаємо вибір
     this.areaControl.setValue(null, { emitEvent: false });
+    this.areas.set([]);
 
     // Засоби завжди скидаємо при зміні завдання —
     // будуть перезавантажені при відкритті панелі (loadMeans)
@@ -372,12 +484,13 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     };
 
     this.unitTaskSignal.set(updatedUnit);
-    this.unitChange.emit(updatedUnit);
     this.hasUnsavedChanges.set(true);
 
-    // Завантажуємо РВЗ для обраного завдання (використовуємо areaTypeId з кешованого об'єкта)
-    if (task.areaTypeId) {
-      this.loadAreasByTask(task.areaTypeId);
+    // Завантажуємо РВЗ для обраного завдання безпосередньо, а не ледачно —
+    // бо користувач вже відкрив завдання і очікує список РВЗ
+    const areaTypeId = this.unitTasks().find((t) => t.id === task.id)?.areaTypeId;
+    if (areaTypeId) {
+      this.loadAreasByTask(areaTypeId);
     }
   }
 
@@ -385,14 +498,13 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
    * Обробник зміни області (РВЗ)
    * Автоматично зберігає на сервері якщо всі обов'язкові поля заповнені
    */
-  async onAreaChange(area: DictArea | null): Promise<void> {
+  async onAreaChange(area: LookupDto | null): Promise<void> {
     const updatedUnit: UnitTaskDto = {
       ...this.unitTask,
       areaId: area ? area.id : '',
       areaValue: area ? area.value : '',
     };
     this.unitTaskSignal.set(updatedUnit);
-    this.unitChange.emit(updatedUnit);
 
     // Зберігаємо автоматично тільки якщо обидва обов'язкові поля заповнені.
     // hasUnsavedChanges НЕ виставляємо тут — saveUnitTask() сам скине в false при успіху
@@ -408,6 +520,10 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
       // Неможливо зберегти (area = null або taskId не вибрано) — позначаємо як незбережено
       this.hasUnsavedChanges.set(true);
     }
+
+    // Скидаємо суміжні підрозділи — будуть завантажені ледачно при відкритті дропдауну
+    this.adjacentUnits.set([]);
+    this.adjacentUnitsControl.setValue(null, { emitEvent: false });
   }
 
   /**
@@ -452,14 +568,17 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
         areaValue: this.unitTask.persistentLocationValue || 'ППД',
       };
       this.unitTaskSignal.set(updatedUnit);
-      this.unitChange.emit(updatedUnit);
     }
   }
 
   private loadAreasFromServer(areaTypeId: string, isInitialization: boolean): void {
+    this.isLoadingAreas.set(true);
     this.dictAreasService
       .getByAreaType(areaTypeId)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.isLoadingAreas.set(false)),
+      )
       .subscribe({
         next: (areas) => {
           this.areas.set(areas);
@@ -539,13 +658,6 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
         this.means.set(updatedMeans);
         this.meansDataSource.data = updatedMeans;
 
-        // Синхронізуємо з батьківським компонентом
-        const updatedUnit = {
-          ...this.unitTask,
-          meansCount: updatedMeans.length,
-          means: updatedMeans,
-        };
-        this.unitChange.emit(updatedUnit);
         this.hasUnsavedChanges.set(true);
       }
     });
@@ -612,13 +724,11 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     this.means.set(updatedMeans);
     this.meansDataSource.data = updatedMeans;
 
-    // Синхронізуємо з батьківським компонентом
     const updatedUnit = {
       ...this.unitTask,
       means: updatedMeans,
     };
     this.unitTaskSignal.set(updatedUnit);
-    this.unitChange.emit(updatedUnit);
     this.hasUnsavedChanges.set(true);
 
     try {
@@ -652,20 +762,9 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
     this.means.set(updatedMeans);
     this.meansDataSource.data = updatedMeans;
 
-    // Синхронізуємо з батьківським компонентом
-    const updatedUnit = {
-      ...this.unitTask,
-      meansCount: updatedMeans.length,
-      means: updatedMeans,
-    };
-    this.unitChange.emit(updatedUnit);
     this.hasUnsavedChanges.set(true);
 
-    try {
-      await this.saveAndReloadMeans(this.unitTask.id);
-    } catch {
-      return;
-    }
+    await this.saveAndReloadMeans(this.unitTask.id);
   }
 
   /**
@@ -755,6 +854,16 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
       this.unitTaskSignal.set(updatedUnitTask);
       this.publishStatusControl.setValue(isPublished, { emitEvent: false });
 
+      if (isPublished) {
+        this.taskControl.disable();
+        this.areaControl.disable();
+        this.adjacentUnitsControl.disable();
+      } else {
+        this.taskControl.enable();
+        this.areaControl.enable();
+        this.adjacentUnitsControl.enable();
+      }
+
       return [true, ''];
     } catch (error) {
       console.error('Error changing publish status:', error);
@@ -800,6 +909,51 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
+   * Оновлює інформацію про суміжні підрозділи
+   */
+  async updateAdjacentUnits(unit: LookupDto | null): Promise<boolean> {
+    const updatedUnit: UnitTaskDto = {
+      ...this.unitTask,
+      adjactedUnitId: unit?.id ?? undefined,
+      adjactedShortName: unit?.value ?? undefined,
+    };
+    this.unitTaskSignal.set(updatedUnit);
+
+    const [success, errorMsg] = await this.saveUnitTask();
+    if (success) {
+      this.snackBar.open('Збережено', 'Закрити', { duration: 2000 });
+    } else if (errorMsg) {
+      this.snackBar.open(errorMsg, 'Закрити', { duration: 5000 });
+    }
+    return success;
+  }
+
+  /** Обробник зміни підрозділу
+   * (викликається з LookUp-List)
+   * */
+  async onAdjacentUnitChange(unit: LookupDto | null): Promise<void> {
+    await this.updateAdjacentUnits(unit);
+  }
+
+  /** Обробник вибору підрозділу
+   * (викликається за кнопкою "Додати підрозділ")
+   * */
+  async adjacentUnitSelect(): Promise<void> {
+    const dialogRef = this.dialog.open(UnitSelectDialogComponent, {
+      width: '900px',
+      maxHeight: '90vh',
+      data: { title: 'Вибір підрозділу' },
+    });
+
+    dialogRef.afterClosed().subscribe(async (unit: UnitDto | undefined) => {
+      if (unit) {
+        const adjUnit: LookupDto = { id: unit.id, value: unit.shortName || unit.name };
+        await this.updateAdjacentUnits(adjUnit);
+      }
+    });
+  }
+
+  /**
    * Отримує читабельну назву статусу публікації
    */
   getStatusLabel(isPublished: boolean): string {
@@ -809,13 +963,16 @@ export class OneUnitTaskEditor implements OnInit, OnDestroy, AfterViewInit {
   getSoldierFIO(soldier: SoldierTaskDto): string {
     return SoldierUtils.formatFIO(soldier.firstName, soldier.midleName, soldier.lastName);
   }
-
+/** Отримати назву підрозділу відносно
+ * основного підрозділу солдата Приданий/Залучений/Відряджений */
   unitTagTitle(soldier: SoldierTaskDto): string {
     return SoldierUtils.getUnitTagLabel(
       SoldierUtils.getUnitTag(soldier, this.unitTask.unitId || ''),
     );
   }
 
+/** Отримати кольоровий статус підрозділу відносно
+ * основного підрозділу солдата Приданий/Залучений/Відряджений */
   getRowClass(soldier: SoldierTaskDto): string {
     return SoldierUtils.getRowClass(soldier, this.unitTask.unitId || '');
   }

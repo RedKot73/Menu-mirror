@@ -74,6 +74,10 @@ public partial class DictArea : SimpleDictBase, ISimpleDict
     /// Координати/Перелік координат Району виконання завдань (РВЗ)
     /// </summary>
     public string? Coords { get; set; }
+    /// <summary>
+    /// Gets or sets the collection of unit areas associated with the current instance.
+    /// </summary>
+    public List<UnitAreas> Units { get; set; } = [];
 }
 
 /// <summary>
