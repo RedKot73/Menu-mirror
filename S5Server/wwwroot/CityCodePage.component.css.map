@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/dictionaries/CityCode/CityCodePage.component.scss"],
+  "sourcesContent": [":host {\n  display: block;\n  height: 100%;\n}\n\nh2 {\n  margin: 0 0 8px 0;\n  font-size: 18px;\n  font-weight: 500;\n}\n\n.action-buttons {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n\n.search-field {\n  width: 300px;\n}\n\n.view-toggle {\n  margin-left: 8px;\n}\n\ndict-city-codes,\ndict-city-code-tree {\n  display: block;\n  height: 100%;\n}\n"],
+  "mappings": ";AAAA;AACE,WAAA;AACA,UAAA;;AAGF;AACE,UAAA,EAAA,EAAA,IAAA;AACA,aAAA;AACA,eAAA;;AAGF,CAAA;AACE,WAAA;AACA,eAAA;AACA,OAAA;AACA,aAAA;;AAGF,CAAA;AACE,SAAA;;AAGF,CAAA;AACE,eAAA;;AAGF;AAAA;AAEE,WAAA;AACA,UAAA;;",
+  "names": []
+}

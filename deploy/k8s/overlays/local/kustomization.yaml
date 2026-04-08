@@ -9,42 +9,58 @@ resources:
 
 namespace: s5-local
 
-# 1. Сначала подтягиваем замены (replacements)
-# Они должны быть ЗДЕСЬ, чтобы видеть финальные значения из .env
+# Подтягиваем замены (replacements) для синхронизации имен БД
 replacements:
   - path: ../../base/db-replacements.yaml
 
-# 1. Генератор Секретов (Для паролей)
+# 1. Единый Генератор Секретов из .env
 secretGenerator:
-  - name: s5-db-credentials
+  - name: s5-app-secrets
+    behavior: merge
     envs:
-      - ../../../../.env # Берём переменные из твоего локального .env
-  - name: s5-https-cert # НОВЫЙ СЕКРЕТ ДЛЯ HTTPS (подтягивает KESTREL_CERT_PATH и KESTREL_CERT_PASSWORD из .env)
+      - ../../../../.env
+  - name: s5-db-credentials # ДОБАВЛЕНО: чтобы база и приложение имели один пароль
+    behavior: merge
+    envs:
+      - ../../../../.env
+  - name: s5-https-cert # Добавлена секция для HTTPS (берет KESTREL_CERT_PATH и KESTREL_CERT_PASSWORD из .env)
     envs:
       - ../../../../.env
 
-# 2. Генератор ConfigMap (Для имен базы, портов и настроек приложения)
+
+
+# 2. Единый Генератор ConfigMap из .env
 configMapGenerator:
-  - name: s5-db-params
-    behavior: merge # ГОВОРИМ: "Возьми тот, что в base, и обнови его"
+  - name: s5-app-config
+    behavior: merge
     envs:
       - ../../../../.env
-  - name: s5-app-config
-    # envs УДАЛЕН отсюда, чтобы не было конфликта ключа DB_HOST с локальным .env
-    literals:
-      - DB_HOST=s5-db-cluster-rw # Хост для подключения внутри кластера (приоритет над .env)
-      #- ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_ENVIRONMENT=Development # Фиксируем окружение для K8s
+  - name: s5-db-params
+    behavior: merge
+    envs:
+      - ../../../../.env
 
-
-# 3. Подмена образов
-# Имена (name) теперь СТРОГО совпадают с манифестами в base
+# 3. Подмена образов для локального запуска
 images:
   - name: s5-db
     newName: s5-db
-    newTag: 18.3-v1.0.0 # # Тег для локальной сборки "1.0.0" # Тег для локальной сборки
+    newTag: 18.3-v1.0.0
   - name: s5-server
     newName: s5-server
-    newTag: "1.0.1" # Тег для локальной сборки
+    newTag: "1.0.3"
 
-# Блок replacements удален отсюда, так как он теперь в base/kustomization.yaml
+# 4. Патчи для переопределения переменных окружения внутри кластера
+patches:
+  - target:
+      kind: ConfigMap
+      name: s5-app-config
+    patch: |-
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: s5-app-config
+      data:
+        # Эти значения ПЕРЕКРОЮТ то, что пришло из .env
+        DB_HOST: s5-db-cluster-rw
+        PrimaryConnection__DB_Host: s5-db-cluster-rw
+        ASPNETCORE_ENVIRONMENT: Development

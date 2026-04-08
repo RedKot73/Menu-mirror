@@ -1,23 +1,54 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
+# Указываем пространство имен один раз для всех ресурсов
+namespace: s5-local
+
+generatorOptions:
+  disableNameSuffixHash: true
+
 resources:
   - k8s-deployment.yaml
   - k8s-service.yaml
   - k8s-db-cluster.yaml
   - db-init-job.yaml
- 
-# Подключаем правила замены имен
-# Теперь они применяются автоматически ко всем, кто использует base
-# Добавляем "заглушку", чтобы replacements видели целевой объект
+
+
 configMapGenerator:
+  - name: s5-app-config
+    literals:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - DB_HOST=s5-db-cluster-rw
+      - DB_PORT=5432
+      # --- ДОБАВЬ ЭТИ ДВЕ СТРОКИ ---
+      - DB_NAME=placeholder_db
+      - DB_USER=placeholder_user
+      # ----------------------------
+      - TWO_FACTOR_MODE=strict
+      - TOTP__Issuer=S5
+      - JwtSettings__Issuer=placeholder
+      - JwtSettings__Audience=placeholder
+      - JwtSettings__ExpiryInMinutes="60"
   - name: s5-db-params
     literals:
       - DB_NAME=placeholder
       - DB_USER=placeholder
-      - DB_HOST=s5-db-cluster-rw  # Устанавливаем системное имя здесь
-      
 
+secretGenerator:
+  # Секрет для Базы Данных и Job (Оператор ищет 'username' и 'password')
+  - name: s5-db-credentials
+    literals:
+      - username=placeholder # Для оператора CNPG
+      - password=placeholder # Для оператора CNPG
+      - DB_PASSWORD=placeholder # Для db-init-job (ключ PGPASSWORD)
 
+  # Секрет для Приложения (JWT, Сертификаты)
+  - name: s5-app-secrets
+    literals:
+      - JwtSettings__Secret=placeholder_change_me
+      - KESTREL_CERT_PASSWORD=placeholder
+      - SERVICE_USER_PASSWORD=placeholder
+      - DB_PASSWORD=placeholder # Приложение тоже берет пароль отсюда
 
 configurations:
   - kustomize-config.yaml

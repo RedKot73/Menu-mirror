@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/dictionaries/UnitTask/dictUnitTask.page.scss"],
+  "sourcesContent": [".page-container {\n  height: calc(100vh - 64px);\n  overflow: hidden;\n}\n\n.left-panel-content,\n.right-panel-content {\n  height: 100%;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n}\n\n.left-panel-content {\n  background: #fafafa;\n}\n\n.right-panel-content {\n  background: white;\n}\n"],
+  "mappings": ";AAAA,CAAA;AACE,UAAA,KAAA,MAAA,EAAA;AACA,YAAA;;AAGF,CAAA;AAAA,CAAA;AAEE,UAAA;AACA,YAAA;AACA,WAAA;AACA,kBAAA;;AAGF,CARA;AASE,cAAA;;AAGF,CAZA;AAaE,cAAA;;",
+  "names": []
+}

@@ -111,7 +111,7 @@ S5Server-*.zip
 S5Server-*.tar.gz
 /Publish/S5Server
 /S5Server/bin
-S5Server/logs/
+S5Server/[Ll]ogs/
 .vs/
 S5Server/Front/dist/
 S5Server/Data/S5_DB.sqlite

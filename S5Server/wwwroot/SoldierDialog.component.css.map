@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["angular:styles/component:css;14d08d2025307268fe1fec73a3ca58d958651388f0baf670cd56cd143e9fae62;/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Front/src/app/dialogs/SoldierDialog.component.ts"],
+  "sourcesContent": ["\n      .dialog-content {\n        display: grid;\n        gap: 4px;\n        min-width: 420px;\n        max-width: 600px;\n      }\n      textarea {\n        resize: vertical;\n        min-height: 60px;\n      }\n    "],
+  "mappings": ";AACM,CAAC;AACC,WAAS;AACT,OAAK;AACL,aAAW;AACX,aAAW;AACb;AACA;AACE,UAAQ;AACR,cAAY;AACd;",
+  "names": []
+}

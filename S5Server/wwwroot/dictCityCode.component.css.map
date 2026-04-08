@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["angular:styles/component:css;975c3cb0a33ab14b31883380852c4699c0b060135e8f0beb9b8340d55f052909;/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Front/src/dictionaries/CityCode/dictCityCode.component.ts"],
+  "sourcesContent": ["\n      :host {\n        display: block;\n        height: 100%;\n      }\n\n      table {\n        width: 100%;\n      }\n      .paginator {\n        min-height: 128px;\n      }\n      .selectable-row {\n        cursor: pointer;\n      }\n      .selectable-row:hover {\n        background-color: rgba(0, 0, 0, 0.04);\n      }\n    "],
+  "mappings": ";AACM;AACE,WAAS;AACT,UAAQ;AACV;AAEA;AACE,SAAO;AACT;AACA,CAAC;AACC,cAAY;AACd;AACA,CAAC;AACC,UAAQ;AACV;AACA,CAHC,cAGc;AACb,oBAAkB,KAAK,CAAC,EAAE,CAAC,EAAE,CAAC,EAAE;AAClC;",
+  "names": []
+}

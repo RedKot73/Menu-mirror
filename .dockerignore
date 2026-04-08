@@ -1,9 +1,21 @@
-**/Properties/launchSettings.json
+# Ignore local build artifacts
+**/bin/
+**/obj/
+**/node_modules/
+**/.angular/
+**/dist/
 
-src/
-*.sln
-bin/
-obj/
+# Ignore local config
+.env
+.env.example
 .git/
-.github/
 .vscode/
+.idea/
+
+# Ignore documentation
+Docs/
+README.md
+TESTING_GUIDE.md
+
+# Ignore debug scripts
+ai/

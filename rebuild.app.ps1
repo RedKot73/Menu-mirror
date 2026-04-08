@@ -1,1 +1,0 @@
-bash "./rebuild.app.sh"

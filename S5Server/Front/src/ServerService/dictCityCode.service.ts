@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LookupDto } from '../app/shared/models/lookup.models';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 
 export interface CityCodeDto {
   id: string;
@@ -168,26 +169,38 @@ export class DictCityCodeService {
    */
   subscribeToImportProgress(): Observable<ImportCityCodesProgress> {
     return new Observable<ImportCityCodesProgress>((observer) => {
-      const eventSource = new EventSource(`${this.api}/imports/stream`);
+      const abortController = new AbortController();
+      const token = localStorage.getItem('auth_token');
 
-      eventSource.onmessage = (event) => {
-        try {
-          const progress: ImportCityCodesProgress = JSON.parse(event.data);
-          observer.next(progress);
-        } catch (error) {
-          console.error('Помилка парсингу SSE події:', error);
+      fetchEventSource(`${this.api}/imports/stream`, {
+        method: 'GET',
+        headers: token ? {
+          'Authorization': `Bearer ${token}`
+        } : {},
+        signal: abortController.signal,
+        onmessage(event) {
+          try {
+            const progress: ImportCityCodesProgress = JSON.parse(event.data);
+            observer.next(progress);
+          } catch (error) {
+            console.error('Помилка парсингу SSE події:', error);
+          }
+        },
+        onerror(error) {
+          console.error('SSE connection error:', error);
+          observer.error(error);
+          throw error;
+        },
+        onclose() {
+          observer.complete();
         }
-      };
-
-      eventSource.onerror = (error) => {
-        console.error('SSE connection error:', error);
-        eventSource.close();
-        observer.error(error);
-      };
+      }).catch(err => {
+        console.error('fetchEventSource error:', err);
+      });
 
       // Cleanup при відписці
       return () => {
-        eventSource.close();
+        abortController.abort();
       };
     });
   }

@@ -153,13 +153,19 @@ public class Soldier
     /// Gets the full name of the person, formatted as a single string.
     /// </summary>
 
-    [Display(Name = "ПІБ")]
+    [NotMapped, Display(Name = "ПІБ")]
     public string FIO => string.IsNullOrEmpty(MidleName + LastName) ? FirstName : $"{FirstName} {MName}.{LName}.";
     /// <summary>
     /// Gets or sets the date of birth.
     /// </summary>
 
     public DateOnly? BirthDate { get; set; }
+
+    /// <summary>
+    /// Коротке звання (для GraphQL)
+    /// </summary>
+    [NotMapped]
+    public string RankShortValue => Rank?.ShortValue ?? Rank?.Value ?? string.Empty;
 
     /// <summary>
     /// Позивний
@@ -234,15 +240,16 @@ public class Soldier
     [ValidateNever, Display(Name = "Статус")]
     public DictSoldierState State { get; set; } = default!;
 
+    /*
     /// <summary>
     /// Мережевий аккаунт
     /// </summary>
+    */
     /*
     [ForeignKey(nameof(VezhaUser)), Display(Name = DictPosition.Caption)]
     public string VezhaUserId { get; set; } = string.Empty;
     */
     //[ValidateNever, InverseProperty("Soldier"), Display(Name = "Мережевий аккаунт")]
-    public TVezhaUser? VezhaUser { get; set; }
 
     /// <summary>
     /// Коментар

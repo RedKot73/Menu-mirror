@@ -12,16 +12,28 @@ import { AuthService } from './auth.service';
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const auth = inject(AuthService);
+  const token = auth.token();
 
-  const authReq = req.clone({ withCredentials: true });
+  let authReq = req.clone({ withCredentials: true });
+
+  if (token) {
+    authReq = authReq.clone({
+      setHeaders: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  }
 
   return next(authReq).pipe(
     catchError((error) => {
-      if (error.status === 401 && !req.url.includes('/api/account/login')) {
-        auth.user.set(null);
-        router.navigate(['/login']);
+      // Don't redirect on login/logout failures to show error messages
+      const isAuthExempt = req.url.includes('/api/account/login') || req.url.includes('/graphql');
+
+      if (error.status === 401 && !isAuthExempt) {
+        auth.logout();
       }
       return throwError(() => error);
     }),
   );
 };
+
