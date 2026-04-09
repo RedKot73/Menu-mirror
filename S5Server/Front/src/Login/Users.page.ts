@@ -136,7 +136,8 @@ export class UsersPage implements OnInit {
 
   onCreateUser(): void {
     const dialogRef = this.dialog.open(CreateUserDialogComponent, {
-      width: '480px',
+      width: '600px',
+      maxWidth: '95vw',
       data: { roles: this.allRoles() },
     });
     dialogRef.afterClosed().subscribe((result) => {

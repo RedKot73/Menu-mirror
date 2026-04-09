@@ -1465,6 +1465,10 @@ namespace S5Server.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("soldier_id");
 
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("text")
+                        .HasColumnName("security_stamp");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean")
                         .HasColumnName("two_factor_enabled");

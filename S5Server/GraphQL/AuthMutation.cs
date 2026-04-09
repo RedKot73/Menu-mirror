@@ -8,6 +8,8 @@ using Microsoft.IdentityModel.Tokens;
 using OtpNet;
 using S5Server.Models;
 using S5Server.Data; // Добавлено для MainDbContext
+using Microsoft.Extensions.Logging;
+using S5Server.Services;
 
 namespace S5Server.GraphQL;
 
@@ -16,6 +18,26 @@ namespace S5Server.GraphQL;
 /// </summary>
 public class AuthMutation
 {
+    private readonly ILogger<AuthMutation> _logger;
+
+    private readonly IAuthDomainService _authService;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AuthMutation"/> class.
+    /// Logs current 2FA security configuration.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="config">The configuration instance.</param>
+    /// <param name="authService">The authentication domain service.</param>
+    public AuthMutation(ILogger<AuthMutation> logger, IConfiguration config, IAuthDomainService authService)
+    {
+        _logger = logger;
+        _authService = authService;
+        var requireMandatory = config.GetValue<bool>("REQUIRE_MANDATORY_2FA", false);
+        var twoFactorMode = config["TWO_FACTOR_MODE"] ?? "strict";
+        _logger.LogInformation("[DEBUG] 2FA CONFIGURATION: Mandatory={Mandatory}, Mode={Mode}", requireMandatory, twoFactorMode);
+    }
+
     private string GenerateJwtToken(TVezhaUser user, IList<string> roles, IConfiguration config, bool isInterim = false)
     {
         var jwtSettings = config.GetSection("JwtSettings");
@@ -58,47 +80,49 @@ public class AuthMutation
     /// </summary>
     /// <param name="userName">The user's login name.</param>
     /// <param name="password">The user's password.</param>
-    /// <param name="userManager">Identity UserManager service.</param>
+    /// <param name="userManager">The identity user manager.</param>
+    /// <param name="context">The database context.</param>
     /// <param name="config">Application configuration service.</param>
-    /// <param name="context">Database context for eager loading.</param>
     /// <returns>An AuthPayload containing a JWT token or 2FA requirement.</returns>
     [AllowAnonymous]
     public async Task<AuthPayload> Login(
         string userName,
         string password,
         [Service] UserManager<TVezhaUser> userManager,
-        [Service] IConfiguration config,
-        [Service] MainDbContext context)
+        [Service] MainDbContext context,
+        [Service] IConfiguration config)
     {
-        var user = await userManager.FindByNameAsync(userName);
-        if (user == null || await userManager.IsLockedOutAsync(user))
+        var authResult = await _authService.AuthenticateAsync(userManager, context, config, userName, password);
+
+        if (!authResult.Success || authResult.User == null)
         {
-            return new AuthPayload();
+            if (authResult.IsLockedOut)
+            {
+                return new AuthPayload(); // Standard behavior for locked out
+            }
+            throw new GraphQLException(authResult.ErrorMessage ?? "Invalid password");
         }
 
-        var result = await userManager.CheckPasswordAsync(user, password);
-        if (!result)
-        {
-            await userManager.AccessFailedAsync(user);
-            throw new GraphQLException("Invalid password");
-        }
+        var user = authResult.User;
+        var roles = authResult.Roles ?? new List<string>();
 
-        await userManager.ResetAccessFailedCountAsync(user);
-        var roles = await userManager.GetRolesAsync(user);
-
-        // Mandatory Eager Loading for Soldier
-        await context.Entry(user).Reference(u => u.Soldier).LoadAsync();
-        if (user.Soldier != null)
-        {
-            await context.Entry(user.Soldier).Reference(s => s.Rank).LoadAsync();
-        }
-
-        if (user.TwoFactorEnabled)
+        if (authResult.RequiresTwoFactor)
         {
             var interimToken = GenerateJwtToken(user, roles, config, isInterim: true);
             return new AuthPayload(
                 Token: interimToken,
                 RequiresTwoFactor: true,
+                UserId: user.Id
+            );
+        }
+        else if (authResult.Needs2FASetup)
+        {
+            Console.WriteLine($"[DEBUG] Mandatory 2FA triggered for user {userName}. Returning SetupRequired status.");
+            var interimToken = GenerateJwtToken(user, roles, config, isInterim: true);
+            return new AuthPayload(
+                Token: interimToken,
+                RequiresTwoFactor: false,
+                Needs2FASetup: true,
                 UserId: user.Id
             );
         }
@@ -115,18 +139,18 @@ public class AuthMutation
     /// Verifies a two-factor authentication code and returns a final authentication payload.
     /// </summary>
     /// <param name="code">The TOTP code from the authenticator app.</param>
-    /// <param name="userManager">Identity UserManager service.</param>
     /// <param name="principal">The current authenticated user principal (interim token).</param>
+    /// <param name="userManager">The identity user manager.</param>
+    /// <param name="context">The database context.</param>
     /// <param name="config">Application configuration service.</param>
-    /// <param name="context">Database context for eager loading.</param>
     /// <returns>An AuthPayload containing the final JWT token.</returns>
     [Authorize]
     public async Task<AuthPayload> VerifyTwoFactor(
         string code,
-        [Service] UserManager<TVezhaUser> userManager,
         ClaimsPrincipal principal,
-        [Service] IConfiguration config,
-        [Service] MainDbContext context)
+        [Service] UserManager<TVezhaUser> userManager,
+        [Service] MainDbContext context,
+        [Service] IConfiguration config)
     {
         var userIdStr = principal.FindFirstValue(ClaimTypes.NameIdentifier) 
                        ?? principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
@@ -134,51 +158,15 @@ public class AuthMutation
         if (string.IsNullOrEmpty(userIdStr)) 
             throw new GraphQLException("Unauthorized");
 
-        var user = await userManager.FindByIdAsync(userIdStr);
-        if (user == null) throw new GraphQLException("User not found");
+        var authResult = await _authService.VerifyTwoFactorAsync(userManager, context, config, userIdStr, code);
 
-        // Verify TOTP via OtpNet
-        var authenticatorKey = await userManager.GetAuthenticatorKeyAsync(user);
-        
-        var isSoftMode = config["TWO_FACTOR_MODE"]?.ToLower() == "soft";
-        bool isValid = false;
-
-        if (!string.IsNullOrEmpty(authenticatorKey))
+        if (!authResult.Success || authResult.User == null)
         {
-            try 
-            {
-                var keyBytes = Base32Encoding.ToBytes(authenticatorKey);
-                var totp = new Totp(keyBytes);
-                isValid = totp.VerifyTotp(code, out _, new VerificationWindow(1, 1));
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ERROR] TOTP verification error: {ex.Message}");
-            }
+            return new AuthPayload();
         }
 
-        if (!isValid)
-        {
-            if (isSoftMode)
-            {
-                // In soft mode, we allow access immediately even if the code is wrong.
-                // This is intended for development convenience.
-                Console.WriteLine($"[DEBUG] 2FA Check Failed for user {user.UserName}, but access granted due to Soft Mode.");
-            }
-            else
-            {
-                return new AuthPayload(); 
-            }
-        }
-
-        var roles = await userManager.GetRolesAsync(user);
-        
-        // Mandatory Eager Loading for Soldier
-        await context.Entry(user).Reference(u => u.Soldier).LoadAsync();
-        if (user.Soldier != null)
-        {
-            await context.Entry(user.Soldier).Reference(s => s.Rank).LoadAsync();
-        }
+        var user = authResult.User;
+        var roles = authResult.Roles ?? new List<string>();
 
         var token = GenerateJwtToken(user, roles, config);
 
@@ -266,9 +254,9 @@ public class AuthMutation
         // Window (1,1) = allows ±30s clock drift — standardized for all verification steps
         var isValid = totp.VerifyTotp(code, out long matchedStep, new VerificationWindow(1, 1));
 
-
         if (isValid)
         {
+            Console.WriteLine($"[DEBUG] 2FA Enabled successfully for user {user.UserName}. Transitioning to Step 2 without logout.");
             await userManager.SetTwoFactorEnabledAsync(user, true);
         }
 

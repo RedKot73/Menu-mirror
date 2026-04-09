@@ -20,6 +20,8 @@ export interface SoldierSelectDialogData {
   unitId?: string;
   /** Заголовок діалогу (опціонально) */
   title?: string;
+  /** Виключити тих у кого вже є User (опціонально) */
+  excludeHasUser?: boolean;
 }
 
 @Component({
@@ -256,8 +258,9 @@ export class SoldierSelectDialogComponent {
     this.isLoading.set(true);
     const search = this.searchTerm() || undefined;
     const unitId = this.data?.unitId;
+    const excludeHasUser = this.data?.excludeHasUser;
 
-    this.soldierService.getAll(search, unitId).subscribe({
+    this.soldierService.getAll(search, unitId, excludeHasUser).subscribe({
       next: (soldiers) => {
         this.items.set(soldiers);
         this.dataSource.data = soldiers;

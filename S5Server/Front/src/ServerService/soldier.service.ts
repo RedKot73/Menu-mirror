@@ -73,16 +73,19 @@ export class SoldierService {
   }
 
   /**
-   * Отримати всіх військовослужбовців (з фільтрацією)
-   * GET /api/Soldier?search={search}&unitId={unitId}
+   * Отримати всех військовослужбовців (з фільтрацією)
+   * GET /api/Soldier?search={search}&unitId={unitId}&excludeHasUser={excludeHasUser}
    */
-  getAll(search?: string, unitId?: string): Observable<SoldierDto[]> {
+  getAll(search?: string, unitId?: string, excludeHasUser?: boolean): Observable<SoldierDto[]> {
     let params = new HttpParams();
     if (search) {
       params = params.set('search', search);
     }
     if (unitId) {
       params = params.set('unitId', unitId);
+    }
+    if (excludeHasUser) {
+      params = params.set('excludeHasUser', 'true');
     }
 
     return this.http.get<SoldierDto[]>(this.baseUrl, { params }).pipe(

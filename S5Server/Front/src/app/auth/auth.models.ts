@@ -38,6 +38,7 @@ export interface AuthUser {
 export interface AuthPayload {
   token: string | null;
   requiresTwoFactor: boolean;
+  needs2FASetup?: boolean;
   userId: string | null;
   user: AuthUser | null;
 }

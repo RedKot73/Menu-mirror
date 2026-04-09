@@ -15,7 +15,7 @@ import {
   ChangePasswordDialogComponent,
   ChangePasswordDialogData,
 } from './dialogs/ChangePasswordDialog.component';
-import { SystemTimeService } from '../app/core/services/system-time.service';
+import { AppMetadataService } from '../app/core/services/app-metadata.service';
 
 @Component({
   selector: 's5-page-login',
@@ -66,8 +66,14 @@ import { SystemTimeService } from '../app/core/services/system-time.service';
         </button>
       </form>
     </div>
-    <div class="version-info">Версія: 1.0.0</div>
-    <div class="utc-clock">UTC: {{ utcTime$ | async | date:'yyyy-MM-dd HH:mm:ss':'UTC' }}</div>`,
+    @if (metadata$ | async; as meta) {
+      <div class="build-info">
+        <div class="info-line">{{ meta.appVersion }}</div>
+        <div class="info-line">{{ meta.imageName }}</div>
+        <div class="info-line">Built at: {{ meta.buildAt | date:'dd.MM.yyyy HH:mm' }}</div>
+      </div>
+    }
+  `,
   imports: [
     ReactiveFormsModule,
     AsyncPipe,
@@ -82,17 +88,17 @@ import { SystemTimeService } from '../app/core/services/system-time.service';
   ],
   styles: [
     `
-      .utc-clock {
+      .build-info {
         position: fixed;
         bottom: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 12px;
-        font-weight: 500;
-        font-family: 'Roboto', sans-serif;
-        color: rgba(63, 81, 181, 0.75);
-        letter-spacing: 0.5px;
-        white-space: nowrap;
+        right: 10px;
+        font-size: 10px;
+        color: gray;
+        opacity: 0.8;
+        line-height: 1.2;
+        text-align: right;
+        pointer-events: none;
+        z-index: 1000;
       }
       .login-container {
         max-width: 400px;
@@ -116,13 +122,6 @@ import { SystemTimeService } from '../app/core/services/system-time.service';
         font-size: 16px;
         margin-top: 8px;
       }
-      .version-info {
-        position: fixed;
-        bottom: 10px;
-        right: 10px;
-        font-size: 12px;
-        color: #aaa;
-      }
     `,
   ],
 })
@@ -132,11 +131,11 @@ export class LoginPage {
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private usersService = inject(UsersService);
-  private systemTimeService = inject(SystemTimeService);
+  private appMetadataService = inject(AppMetadataService);
 
   readonly isLoading = signal(false);
   readonly errorMessage = signal('');
-  readonly utcTime$ = this.systemTimeService.utcTime$;
+  readonly metadata$ = this.appMetadataService.metadata$;
 
   loginForm = new FormGroup({
     login: new FormControl('', Validators.required),

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["angular:styles/component:css;23a11187aebebed908f661312ee2bc856ac47c612356f63689ab30322b00380c;/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Front/src/dictionaries/UnitTask/dictUnitTask.component.ts"],
-  "sourcesContent": ["\n      :host {\n        display: block;\n        height: 100%;\n      }\n\n      table {\n        width: 100%;\n      }\n\n      .inline-select {\n        width: 150px;\n        font-size: 14px;\n      }\n\n      .inline-select ::ng-deep .mat-mdc-form-field-infix {\n        min-height: 40px;\n      }\n    "],
-  "mappings": ";AACM;AACE,WAAS;AACT,UAAQ;AACV;AAEA;AACE,SAAO;AACT;AAEA,CAAC;AACC,SAAO;AACP,aAAW;AACb;AAEA,CALC,cAKc,UAAU,CAAC;AACxB,cAAY;AACd;",
-  "names": []
-}

@@ -7,6 +7,7 @@ import {
   MatDialog,
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -39,109 +40,117 @@ export interface CreateUserDialogData {
     MatIconModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
+    MatSnackBarModule,
   ],
   template: `
     <h2 mat-dialog-title>Створити користувача</h2>
-    <mat-dialog-content class="dialog-content">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Військовослужбовець</mat-label>
-        <input matInput [value]="soldierDisplay" readonly required />
-        <button
-          mat-icon-button
-          matSuffix
-          color="primary"
-          (click)="openSoldierSelect()"
-          matTooltip="Вибрати"
-        >
-          <mat-icon>person_search</mat-icon>
+    <form #form="ngForm" (ngSubmit)="save(form)">
+      <mat-dialog-content class="dialog-content">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Військовослужбовець</mat-label>
+          <input matInput [value]="soldierDisplay" readonly required name="soldierDisplay" />
+          <button
+            type="button"
+            mat-icon-button
+            matSuffix
+            color="primary"
+            (click)="openSoldierSelect()"
+            matTooltip="Вибрати"
+          >
+            <mat-icon>person_search</mat-icon>
+          </button>
+          <mat-error>Військовослужбовець обов'язковий</mat-error>
+        </mat-form-field>
+
+        <!-- Логін з перевіркою доступності -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Логін</mat-label>
+          <input
+            matInput
+            [(ngModel)]="model.userName"
+            name="userName"
+            required
+            (ngModelChange)="onUserNameChange($event)"
+          />
+          @if (checkingUserName) {
+            <mat-spinner matSuffix diameter="18"></mat-spinner>
+          } @else if (userNameError) {
+            <mat-icon matSuffix color="warn" [matTooltip]="userNameError">error</mat-icon>
+          } @else if (model.userName && userNameAvailable) {
+            <mat-icon matSuffix class="icon-success" matTooltip="Логін доступний"
+              >check_circle</mat-icon
+            >
+          }
+          @if (userNameError) {
+            <mat-error>{{ userNameError }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" [(ngModel)]="model.email" name="email" />
+        </mat-form-field>
+
+        <!-- Пароль з перевіркою вимог -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Пароль</mat-label>
+          <input
+            matInput
+            type="password"
+            [(ngModel)]="model.password"
+            name="password"
+            required
+            (ngModelChange)="onPasswordChange($event)"
+          />
+          @if (checkingPassword) {
+            <mat-spinner matSuffix diameter="18"></mat-spinner>
+          } @else if (passwordErrors.length) {
+            <mat-icon matSuffix color="warn" [matTooltip]="passwordErrors.join('\\n')"
+              >error</mat-icon
+            >
+          } @else if (model.password && passwordValid) {
+            <mat-icon matSuffix class="icon-success" matTooltip="Пароль відповідає вимогам"
+              >check_circle</mat-icon
+            >
+          }
+        </mat-form-field>
+        @if (passwordErrors.length) {
+          <div class="validation-errors">
+            @for (err of passwordErrors; track err) {
+              <p class="error-text">{{ err }}</p>
+            }
+          </div>
+        }
+        @if (passwordHints) {
+          <p class="hint-text">{{ passwordHints }}</p>
+        }
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Підтвердження пароля</mat-label>
+          <input matInput type="password" [(ngModel)]="confirmPassword" name="confirmPassword" required />
+        </mat-form-field>
+
+        @if (passwordMismatch) {
+          <p class="error-text">Паролі не збігаються</p>
+        }
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Роль</mat-label>
+          <mat-select [(ngModel)]="selectedRole" name="selectedRole" required>
+            @for (role of data.roles; track role.id) {
+              <mat-option [value]="role.value">{{ role.value }}</mat-option>
+            }
+          </mat-select>
+          <mat-error>Роль обов'язкова</mat-error>
+        </mat-form-field>
+      </mat-dialog-content>
+      <mat-dialog-actions align="end">
+        <button mat-button type="button" mat-dialog-close>Скасувати</button>
+        <button mat-flat-button type="submit" color="primary" [disabled]="!canSave || form.invalid">
+          Створити
         </button>
-      </mat-form-field>
-
-      <!-- Логін з перевіркою доступності -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Логін</mat-label>
-        <input
-          matInput
-          [(ngModel)]="model.userName"
-          required
-          (ngModelChange)="onUserNameChange($event)"
-        />
-        @if (checkingUserName) {
-          <mat-spinner matSuffix diameter="18"></mat-spinner>
-        } @else if (userNameError) {
-          <mat-icon matSuffix color="warn" [matTooltip]="userNameError">error</mat-icon>
-        } @else if (model.userName && userNameAvailable) {
-          <mat-icon matSuffix class="icon-success" matTooltip="Логін доступний"
-            >check_circle</mat-icon
-          >
-        }
-        @if (userNameError) {
-          <mat-error>{{ userNameError }}</mat-error>
-        }
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Email</mat-label>
-        <input matInput type="email" [(ngModel)]="model.email" />
-      </mat-form-field>
-
-      <!-- Пароль з перевіркою вимог -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Пароль</mat-label>
-        <input
-          matInput
-          type="password"
-          [(ngModel)]="model.password"
-          required
-          (ngModelChange)="onPasswordChange($event)"
-        />
-        @if (checkingPassword) {
-          <mat-spinner matSuffix diameter="18"></mat-spinner>
-        } @else if (passwordErrors.length) {
-          <mat-icon matSuffix color="warn" [matTooltip]="passwordErrors.join('\\n')"
-            >error</mat-icon
-          >
-        } @else if (model.password && passwordValid) {
-          <mat-icon matSuffix class="icon-success" matTooltip="Пароль відповідає вимогам"
-            >check_circle</mat-icon
-          >
-        }
-      </mat-form-field>
-      @if (passwordErrors.length) {
-        <div class="validation-errors">
-          @for (err of passwordErrors; track err) {
-            <p class="error-text">{{ err }}</p>
-          }
-        </div>
-      }
-      @if (passwordHints) {
-        <p class="hint-text">{{ passwordHints }}</p>
-      }
-
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Підтвердження пароля</mat-label>
-        <input matInput type="password" [(ngModel)]="confirmPassword" required />
-      </mat-form-field>
-
-      @if (passwordMismatch) {
-        <p class="error-text">Паролі не збігаються</p>
-      }
-
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Роль</mat-label>
-        <mat-select [(ngModel)]="selectedRole">
-          @for (role of data.roles; track role.id) {
-            <mat-option [value]="role.value">{{ role.value }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Скасувати</button>
-      <button mat-flat-button color="primary" [disabled]="!canSave" (click)="save()">
-        Створити
-      </button>
-    </mat-dialog-actions>
+      </mat-dialog-actions>
+    </form>
   `,
   styleUrls: ['./dialog-shared.scss'],
   styles: [
@@ -156,15 +165,17 @@ export class CreateUserDialogComponent implements OnInit, OnDestroy {
   private dialogRef = inject(MatDialogRef<CreateUserDialogComponent>);
   private dialog = inject(MatDialog);
   private usersService = inject(UsersService);
+  private snackBar = inject(MatSnackBar);
   data = inject<CreateUserDialogData>(MAT_DIALOG_DATA);
 
   model: CreateUserDto = {
     userName: '',
     password: '',
+    soldierId: ''
   };
 
   selectedSoldier: SoldierDto | null = null;
-  selectedRole = '';
+  selectedRole = 'operator';
   confirmPassword = '';
 
   // Validation state
@@ -268,8 +279,10 @@ export class CreateUserDialogComponent implements OnInit, OnDestroy {
 
   openSoldierSelect(): void {
     const dialogRef = this.dialog.open(SoldierSelectDialogComponent, {
-      width: '900px',
+      width: '1000px',
+      maxWidth: '96vw',
       maxHeight: '90vh',
+      data: { excludeHasUser: true }
     });
     dialogRef.afterClosed().subscribe((soldier: SoldierDto | undefined) => {
       if (soldier) {
@@ -294,17 +307,31 @@ export class CreateUserDialogComponent implements OnInit, OnDestroy {
       this.userNameAvailable &&
       !!this.model.password &&
       this.passwordValid &&
-      this.model.password === this.confirmPassword
-      // soldierId is optional — system admin accounts may not have a linked soldier
+      this.model.password === this.confirmPassword &&
+      !!this.model.soldierId && // Обязательный выбор солдата
+      !!this.selectedRole // Обязательная роль
     );
   }
 
-  save(): void {
-    if (this.canSave) {
+  save(form: any): void {
+    if (this.canSave && form.valid) {
       if (this.selectedRole) {
         this.model.roles = [this.selectedRole];
       }
-      this.dialogRef.close(this.model);
+
+      console.log(`[USER_MGMT] Creating user '${this.model.userName}' for soldier '${this.model.soldierId}'...`);
+
+      this.usersService.create(this.model).subscribe({
+        next: (result) => {
+          console.log(`[USER_MGMT] Success: user '${this.model.userName}' created with role '${this.selectedRole}'.`);
+          this.dialogRef.close(result);
+        },
+        error: (err: any) => {
+          const errorMessage = err.error?.detail || err.message || 'Помилка сервера';
+          console.error(`[USER_MGMT] Failed to create user '${this.model.userName}':`, errorMessage);
+          this.snackBar.open(errorMessage, 'OK', { duration: 5000 });
+        }
+      });
     }
   }
 
