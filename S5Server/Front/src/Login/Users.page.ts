@@ -142,16 +142,8 @@ export class UsersPage implements OnInit {
     });
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.usersService.create(result).subscribe({
-          next: () => {
-            this.notify('Користувача створено');
-            this.loadUsers();
-          },
-          error: (err) => {
-            const msg = err.error?.detail || 'Помилка створення користувача';
-            this.notify(msg);
-          },
-        });
+        this.notify('Користувача створено');
+        this.loadUsers();
       }
     });
   }

@@ -136,7 +136,7 @@ export interface CreateUserDialogData {
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Роль</mat-label>
-          <mat-select [(ngModel)]="selectedRole" name="selectedRole" required>
+          <mat-select [(ngModel)]="selectedRole" name="selectedRole" required placeholder="Оберіть роль...">
             @for (role of data.roles; track role.id) {
               <mat-option [value]="role.value">{{ role.value }}</mat-option>
             }
@@ -175,7 +175,7 @@ export class CreateUserDialogComponent implements OnInit, OnDestroy {
   };
 
   selectedSoldier: SoldierDto | null = null;
-  selectedRole = 'operator';
+  selectedRole = '';
   confirmPassword = '';
 
   // Validation state

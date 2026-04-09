@@ -57,11 +57,11 @@ COMMAND=$1
 case "$COMMAND" in
     "watch")
         echo "--- [WATCH MODE] Starting dotnet watch ---"
-        eval "$DOTNET_CMD watch run --project S5Server/S5Server.csproj --no-restore --non-interactive --no-launch-profile "
+        eval "$DOTNET_CMD watch run --project S5Server/S5Server.csproj --urls=\"http://0.0.0.0:$APP_PORT\" --no-restore --non-interactive"
         ;;
     "run")
         echo "--- [RUN MODE] Standard startup ---"
-        eval "$DOTNET_CMD run --project S5Server/S5Server.csproj --no-restore --no-launch-profile "
+        eval "$DOTNET_CMD run --project S5Server/S5Server.csproj --urls=\"http://0.0.0.0:$APP_PORT\" --no-restore"
         ;;
     *)
         echo "Usage: $0 {run|watch}"
