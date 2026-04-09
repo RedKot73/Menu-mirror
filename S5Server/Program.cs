@@ -38,8 +38,25 @@ builder.Host.UseSerilog();
 
 if (builder.Environment.IsDevelopment())
 {
-    // Используем простой Load(), чтобы не искать файлы за пределами контейнера
-    DotNetEnv.Env.Load(); 
+    var currentDir = Directory.GetCurrentDirectory();
+    var envPath = System.IO.Path.Combine(currentDir, ".env");
+    var parentEnvPath = System.IO.Path.Combine(currentDir, "..", ".env");
+
+    if (System.IO.File.Exists(envPath))
+    {
+        Log.Information("✅ [INIT] .env file found at {Path}. Loading variables.", envPath);
+        DotNetEnv.Env.Load(envPath);
+    }
+     else if (System.IO.File.Exists(parentEnvPath))
+     {
+         var fullParentPath = System.IO.Path.GetFullPath(parentEnvPath);
+         Log.Information("✅ [INIT] .env file found at {Path}. Loading variables.", fullParentPath);
+         DotNetEnv.Env.Load(fullParentPath);
+     }
+    else
+    {
+        Log.Warning("⚠️ [INIT] .env file NOT found at {Path} or {ParentPath}.", envPath, parentEnvPath);
+    }
 }
 
 // 2. ВАЖНО: Всегда загружаем переменные окружения из системы (Kubernetes)
@@ -182,12 +199,15 @@ for (int i = 1; i <= maxRetries; i++)
 }
 
 // ✅ Використати DataSource замість connectionString
+builder.Services.AddScoped<S5Server.Services.IAuthDomainService, S5Server.Services.AuthDomainService>();
+builder.Services.AddScoped<S5Server.Services.ITemplateDataSetService, S5Server.Services.TemplateDataSetService>();
+
 builder.Services.AddPooledDbContextFactory<MainDbContext>(options =>
     options.UseNpgsql(dataSource, npgsql =>
             // ← Явно вказати ім'я таблиці міграцій (UseSnakeCaseNamingConvention змінює його на __ef_migrations_history)
             npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "public"))
         .UseSnakeCaseNamingConvention()
-        .EnableSensitiveDataLogging(builder.Environment.IsDevelopment())
+        .EnableSensitiveDataLogging(false)
         .EnableDetailedErrors(builder.Environment.IsDevelopment())
         .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
 builder.Services.AddScoped<MainDbContext>(sp =>
@@ -529,6 +549,16 @@ CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 try
 {
     Log.Information("Starting S5Server");
+    
+    // Log key security parameters for audit
+    var audit2faMode = builder.Configuration["TWO_FACTOR_MODE"] ?? "strict (default)";
+    var auditMandatory2fa = builder.Configuration["REQUIRE_MANDATORY_2FA"] ?? "false (default)";
+    
+    Log.Information("--- [AUDIT] SECURITY CONFIGURATION ---");
+    Log.Information("TWO_FACTOR_MODE: {Mode}", audit2faMode);
+    Log.Information("REQUIRE_MANDATORY_2FA: {Mandatory}", auditMandatory2fa);
+    Log.Information("--------------------------------------");
+
     var lifetime = app.Lifetime;
     lifetime.ApplicationStarted.Register(() =>
     {

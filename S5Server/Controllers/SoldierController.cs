@@ -22,7 +22,7 @@ public class SoldierController : ControllerBase
     private readonly ILogger<SoldierController> _logger;
 
     /// <summary>
-    /// API контролер для управління особовим складом (військовослужбовцями), включаючи операції отримання, створення, оновлення, видалення та призначення до підрозділів.
+    /// API контролер для управління особовим складом (військовослужбовцями), включаючи операції отримання, створення, оновлення, видалення та призначення до подрозділів.
     /// </summary>
     public SoldierController(MainDbContext db, ILogger<SoldierController> logger)
     {
@@ -34,9 +34,10 @@ public class SoldierController : ControllerBase
     /// <summary>
     /// Перелік військовослужбовців з фільтрацією.
     /// </summary>
-    /// <param name="search">Пошук по ПІБ / позивному / номеру частини підрозділу.</param>
+    /// <param name="search">Пошук по ПІБ / позивному / номеру частини подрозділу.</param>
     /// <param name="unitId">Фільтр по основному підрозділу.</param>
     /// <param name="limit">Обмеження кількості результатів.</param>
+    /// <param name="excludeHasUser">Виключити військовослужбовців, які вже мають обліковий запис користувача.</param>
     /// <param name="ct">Токен відміни.</param>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -44,6 +45,7 @@ public class SoldierController : ControllerBase
         [FromQuery] string? search,
         [FromQuery] Guid? unitId,
         [FromQuery] int? limit,
+        [FromQuery] bool excludeHasUser = false,
         CancellationToken ct = default)
     {
         try
@@ -53,11 +55,18 @@ public class SoldierController : ControllerBase
             if (!string.IsNullOrWhiteSpace(search))
             {
                 search = search.Trim();
-                q = q.Where(s => s.FirstName.Contains(search));
+                q = q.Where(s => s.FirstName.Contains(search) || (s.LastName != null && s.LastName.Contains(search)) || (s.NickName != null && s.NickName.Contains(search)));
             }
 
             if (unitId.HasValueGuid())
                 q = q.Where(s => s.UnitId == unitId);
+
+            if (excludeHasUser)
+            {
+                var usersSoldierIds = _db.Users.Select(u => u.SoldierId).Where(id => id != null);
+                var usersIds = _db.Users.Select(u => u.Id);
+                q = q.Where(s => !usersSoldierIds.Contains(s.Id) && !usersIds.Contains(s.Id));
+            }
             
             if (limit is > 0 and <= 100)
                 q = q.Take(limit.Value);
@@ -161,7 +170,7 @@ public class SoldierController : ControllerBase
         catch (Exception ex)
         {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Помилка при отриманні Soldier за приданим підрозділом AssignedUnitId={AssignedUnitId}",
+                _logger.LogError(ex, "Помилка при отриманні Soldier за приданим подрозділом AssignedUnitId={AssignedUnitId}",
                     assignedUnitId);
             return Problem(statusCode: 500, title: "Внутрішня помилка сервера");
         }
@@ -543,7 +552,7 @@ public class SoldierController : ControllerBase
         {
             if (_logger.IsEnabled(LogLevel.Error))
             {
-                _logger.LogError(ex, "Помилка при зміні підрозділу Soldier Id={Id} UnitKind={UnitKind}",
+                _logger.LogError(ex, "Помилка при зміні подрозділу Soldier Id={Id} UnitKind={UnitKind}",
                     id, unitKind);
                 if (ex.InnerException != null)
                     _logger.LogError("Inner exception {Msg}", ex.InnerException.Message);
