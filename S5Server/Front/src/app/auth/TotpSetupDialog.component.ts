@@ -11,6 +11,7 @@ import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { TotpService } from './totp.service';
+import { AuthService } from './auth.service';
 import * as QRCode from 'qrcode';
 
 /**
@@ -37,7 +38,7 @@ import * as QRCode from 'qrcode';
       Двофакторна аутентифікація
     </h2>
 
-    <mat-dialog-content style="min-width: 480px; max-width: 560px;">
+    <mat-dialog-content class="auth-dialog-content">
 
       <!-- ── LOADING ── -->
       @if (isLoading()) {
@@ -76,7 +77,7 @@ import * as QRCode from 'qrcode';
           </div>
 
           <!-- Collapsed: show [Увімкнути 2FA] button -->
-          @if (!showEnableForm()) {
+          @if (!showEnableForm() && !this.auth.isNeeds2FASetup()) {
             <button mat-raised-button color="primary" (click)="showEnableForm.set(true)">
               <mat-icon>lock</mat-icon>
               Увімкнути 2FA
@@ -84,8 +85,8 @@ import * as QRCode from 'qrcode';
           }
 
           <!-- Expanded: show QR + code input -->
-          @if (showEnableForm()) {
-            <div style="border:1px solid #e0e0e0; border-radius:8px; padding:12px;">
+          @if (showEnableForm() || this.auth.isNeeds2FASetup()) {
+            <div class="setup-container">
 
               @if (!setupData()) {
                 <!-- Loading setup data -->
@@ -96,7 +97,7 @@ import * as QRCode from 'qrcode';
               } @else {
 
                 <!-- 2-column layout: QR left, controls right -->
-                <div style="display:flex; flex-direction:row; gap:14px; align-items:flex-start;">
+                <div class="qr-setup-layout">
 
                   <div style="flex-shrink:0;">
                     @if (qrDataUrl()) {
@@ -159,7 +160,9 @@ import * as QRCode from 'qrcode';
                         }
                         Підтвердити
                       </button>
-                      <button mat-button (click)="cancelEnable()">Скасувати</button>
+                      @if (!this.auth.isNeeds2FASetup()) {
+                        <button mat-button (click)="cancelEnable()">Скасувати</button>
+                      }
                     </div>
 
                   </div>
@@ -216,26 +219,60 @@ import * as QRCode from 'qrcode';
 
     </mat-dialog-content>
 
-    <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Закрити</button>
-    </mat-dialog-actions>
+    @if (!this.auth.isNeeds2FASetup()) {
+      <mat-dialog-actions align="end">
+        <button mat-button mat-dialog-close>Закрити</button>
+      </mat-dialog-actions>
+    }
   `,
+  styles: [`
+    .auth-dialog-content {
+      min-width: 320px;
+      max-width: 580px;
+      width: 100%;
+      overflow-x: hidden;
+    }
+    .setup-container {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .qr-setup-layout {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-start;
+      justify-content: center;
+    }
+    @media (max-width: 480px) {
+      .auth-dialog-content {
+        min-width: 100%;
+        padding: 8px !important;
+      }
+      .qr-setup-layout {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  `]
 })
 export class TotpSetupDialogComponent implements OnInit {
   private totpService = inject(TotpService);
   private snackBar = inject(MatSnackBar);
+  public auth = inject(AuthService);
   public dialogRef = inject(MatDialogRef<TotpSetupDialogComponent>);
 
   // ── state signals ──────────────────────────────────────────
-  readonly isLoading   = signal(true);
+  readonly isLoading = signal(true);
   readonly isVerifying = signal(false);
   readonly errorMessage = signal('');
   readonly isTwoFactorEnabled = signal(false);
-  readonly setupData   = signal<{ sharedKey: string; authenticatorUri: string; serverTimeIso: string } | null>(null);
-  readonly showEnableForm  = signal(false);
+  readonly setupData = signal<{ sharedKey: string; authenticatorUri: string; serverTimeIso: string } | null>(null);
+  readonly showEnableForm = signal(false);
   readonly showDisableForm = signal(false);
-  readonly qrDataUrl       = signal<string | null>(null);
-  readonly timeDrift       = signal<number>(0);
+  readonly qrDataUrl = signal<string | null>(null);
+  readonly timeDrift = signal<number>(0);
 
   // ── form controls ──────────────────────────────────────────
   readonly verificationCodeControl = new FormControl('', [
@@ -253,24 +290,24 @@ export class TotpSetupDialogComponent implements OnInit {
 
     forkJoin({
       status: this.totpService.getStatus().pipe(catchError((err) => {
-          this.errorMessage.set(`Помилка статусу: ${err.message || '400 (Check Schema)'}`);
-          return of({ isTwoFactorEnabled: false });
+        this.errorMessage.set(`Помилка статусу: ${err.message || '400 (Check Schema)'}`);
+        return of({ isTwoFactorEnabled: false });
       })),
-      setup:  this.totpService.getSetup().pipe(catchError((err) => {
-          this.errorMessage.set(`Помилка завантаження QR: ${err.message || '400 (Check Schema)'}`);
-          return of(null);
+      setup: this.totpService.getSetup().pipe(catchError((err) => {
+        this.errorMessage.set(`Помилка завантаження QR: ${err.message || '400 (Check Schema)'}`);
+        return of(null);
       })),
     }).subscribe(({ status, setup }) => {
       this.isTwoFactorEnabled.set(status.isTwoFactorEnabled);
       if (setup) {
         this.setupData.set(setup);
-        
+
         // Time Drift Calculation
         const serverTime = new Date(setup.serverTimeIso).getTime();
         const clientTime = new Date().getTime();
         const drift = Math.abs(serverTime - clientTime);
         this.timeDrift.set(drift);
-        
+
         this.generateQrCode(setup.authenticatorUri);
       }
       this.isLoading.set(false);
@@ -299,7 +336,7 @@ export class TotpSetupDialogComponent implements OnInit {
   enableTotp(): void {
     if (this.verificationCodeControl.invalid) return;
     const code = this.verificationCodeControl.value!;
-    
+
     this.isVerifying.set(true);
     this.errorMessage.set('');
     this.totpService.enable(code).subscribe({
@@ -310,6 +347,7 @@ export class TotpSetupDialogComponent implements OnInit {
           this.isTwoFactorEnabled.set(true);
           this.showEnableForm.set(false);
           this.verificationCodeControl.reset();
+          this.dialogRef.close(true);
         } else {
           this.errorMessage.set('Невірний код. Перевірте синхронізацію часу в додатку і спробуйте знову.');
         }
@@ -330,7 +368,7 @@ export class TotpSetupDialogComponent implements OnInit {
 
   disableTotp(): void {
     if (this.passwordControl.invalid) return;
-    
+
     this.isVerifying.set(true);
     this.errorMessage.set('');
     this.totpService.disable(this.passwordControl.value!).subscribe({

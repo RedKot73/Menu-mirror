@@ -45,6 +45,8 @@ public record UnitTaskCreateDto(
 /// <param name="ParentShortName">Коротка назва вищого підрозділу.</param>
 /// <param name="AssignedUnitId">ID приданого підрозділу.</param>
 /// <param name="AssignedShortName">Коротка назва приданого підрозділу.</param>
+/// <param name="AdjactedUnitId">ID суміжного підрозділу.</param>
+/// <param name="AdjactedShortName">Коротка назва суміжного підрозділу.</param>
 /// <param name="UnitTypeId">ID типу підрозділу.</param>
 /// <param name="UnitTypeName">Назва типу підрозділу.</param>
 /// <param name="IsInvolved">Ознака задіяності.</param>
@@ -65,9 +67,11 @@ public record UnitTaskDto(
     Guid UnitId,
     string UnitShortName,
     Guid? ParentId,
-    string ParentShortName,
+    string? ParentShortName,
     Guid? AssignedUnitId,
     string? AssignedShortName,
+    Guid? AdjactedUnitId,
+    string? AdjactedShortName,
     Guid? UnitTypeId,
     string? UnitTypeName,
     bool IsInvolved,
@@ -138,8 +142,8 @@ public class UnitTask
     /// <summary>
     /// Основний підрозділ
     /// </summary>
-    [StringLength(100), Required]
-    public string ParentShortName { get; set; } = string.Empty;
+    [StringLength(100)]
+    public string? ParentShortName { get; set; }
 
     /// <summary>
     /// Приданий до підрозділу
@@ -155,6 +159,30 @@ public class UnitTask
     /// </summary>
     [StringLength(100)]
     public string? AssignedShortName { get; set; }
+
+    /// <summary>
+    /// Суміжний підрозділ (для координації завдань)
+    /// </summary>
+    public Guid? AdjactedUnitId { get; set; }
+    /// <summary>
+    /// Gets or sets the unit that is adjacent to the current unit, if any.
+    /// </summary>
+    [ValidateNever]
+    public Unit? AdjactedUnit { get; set; }
+    /// <summary>
+    /// Gets or sets the abbreviated or short name associated with the entity.
+    /// </summary>
+    [StringLength(100)]
+    public string? AdjactedShortName { get; set; }
+    /// <summary>
+    /// Gets or sets the identifier of the adjacent type associated with this entity.
+    /// </summary>
+    public Guid? AdjactedTypeId { get; set; }
+    /// <summary>
+    /// Тип підрозділу Бригада, Полк, Батальйон, Рота
+    /// </summary>
+    [ValidateNever]
+    public DictUnitType? AdjactedType { get; set; }
 
     /// <summary>
     /// Тип підрозділу Бригада, Полк, Батальйон, Рота
@@ -293,7 +321,7 @@ public static class UnitTaskExtensions
             UnitId = unit.Id,
             UnitShortName = unit.ShortName,
             ParentId = unit.ParentId,
-            ParentShortName = unit.Parent?.ShortName ?? string.Empty,
+            ParentShortName = unit.Parent?.ShortName,
             AssignedUnitId = unit.AssignedUnitId,
             AssignedShortName = unit.AssignedUnit?.ShortName,
             UnitTypeId = unit.UnitTypeId,
@@ -329,16 +357,17 @@ public static class UnitTaskExtensions
             // ✅ Smart: snapshot або actual
             useActualData ? task.Unit!.ShortName : task.UnitShortName,
             useActualData ? task.Unit!.ParentId : task.ParentId,
-            useActualData ? (task.Unit!.Parent?.ShortName ?? string.Empty) : task.ParentShortName,
+            useActualData ? task.Unit!.Parent?.ShortName : task.ParentShortName,
             useActualData ? task.Unit!.AssignedUnitId : task.AssignedUnitId,
             useActualData ? task.Unit!.AssignedUnit?.ShortName : task.AssignedShortName,
+            task.AdjactedUnitId,
+            useActualData ? task.AdjactedUnit?.ShortName : task.AdjactedShortName,
             useActualData ? task.Unit!.UnitTypeId : task.UnitTypeId,
             useActualData ? (task.Unit!.UnitType?.ShortValue ?? task.Unit!.UnitType?.Value) : task.UnitTypeName,
             useActualData ? task.Unit!.IsInvolved : task.IsInvolved,
             useActualData ? task.Unit!.PersistentLocationId : task.PersistentLocationId,
             useActualData ? task.Unit!.PersistentLocation?.Value : task.PersistentLocationValue,
             task.TaskId,
-            //task.TaskValue ? task.Task.Value,
             task.TaskValue ?? task.Task.Value,
             task.Task.WithMeans,
             task.AreaId,
@@ -360,6 +389,7 @@ public static class UnitTaskExtensions
     public static bool IsEqualTo(this UnitTask task, UnitTaskDto dto) =>
         task.TaskId == dto.TaskId &&
         task.AreaId == dto.AreaId &&
+        task.AdjactedUnitId == dto.AdjactedUnitId &&
         task.IsPublished == dto.IsPublished;
     /// <summary>
     /// Updates the properties of a unit task based on the values provided in the data transfer object.
@@ -384,6 +414,7 @@ public static class UnitTaskExtensions
         task.TaskId = dto.TaskId;
         task.TaskValue = dto.TaskValue;
         task.AreaId = dto.AreaId;
+        task.AdjactedUnitId = dto.AdjactedUnitId;
         task.ChangedBy = changedBy;
     }
 

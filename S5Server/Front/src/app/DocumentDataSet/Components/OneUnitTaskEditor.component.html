@@ -65,14 +65,33 @@
               <mat-select
                 placeholder="Оберіть завдання"
                 [formControl]="taskControl"
+                [compareWith]="compareById"
+                (openedChange)="onTaskDropdownOpened($event)"
                 (selectionChange)="onTaskChange($event.value)"
-                [disabled]="readOnly"
               >
-                @for (task of unitTasks(); track task.id) {
-                  <mat-option [value]="task"
-                    >{{ task.value }} ({{ task.areaType }}
-                    {{ task.withMeans ? 'Засоби' : '' }})</mat-option
-                  >
+                <mat-select-trigger>
+                  {{ taskControl.value?.value }}{{ taskControl.value?.withMeans ? ' (Засоби)' : '' }}
+                </mat-select-trigger>
+                @switch (taskSelectState()) {
+                  @case ('loading') {
+                    <mat-option disabled class="loading-option">Завантаження...</mat-option>
+                  }
+                  @case ('value') {
+                    <mat-option [value]="taskControl.value">
+                      {{ taskControl.value!.value }}{{ taskControl.value!.withMeans ? ' (Засоби)' : '' }}
+                    </mat-option>
+                  }
+                  @case ('empty') {
+                    <mat-option disabled class="loading-option">Оберіть завдання...</mat-option>
+                  }
+                  @default {
+                    @for (task of unitTasks(); track task.id) {
+                      <mat-option [value]="task"
+                        >{{ task.value }} ({{ task.areaType }}
+                        {{ task.withMeans ? 'Засоби' : '' }})</mat-option
+                      >
+                    }
+                  }
                 }
               </mat-select>
             </mat-form-field>
@@ -83,15 +102,70 @@
               <mat-select
                 placeholder="Оберіть РВЗ"
                 [formControl]="areaControl"
+                [compareWith]="compareById"
+                (openedChange)="onAreaDropdownOpened($event)"
                 (selectionChange)="onAreaChange($event.value)"
-                [disabled]="readOnly"
               >
-                @for (area of areas(); track area.id) {
-                  <mat-option [value]="area">{{ area.value }}</mat-option>
+                <mat-select-trigger>{{ areaControl.value?.value }}</mat-select-trigger>
+                @switch (areaSelectState()) {
+                  @case ('loading') {
+                    <mat-option disabled class="loading-option">Завантаження...</mat-option>
+                  }
+                  @case ('value') {
+                    <mat-option [value]="areaControl.value">{{ areaControl.value!.value }}</mat-option>
+                  }
+                  @case ('empty') {
+                    <mat-option disabled class="loading-option">Оберіть РВЗ...</mat-option>
+                  }
+                  @default {
+                    @for (area of areas(); track area.id) {
+                      <mat-option [value]="area">{{ area.value }}</mat-option>
+                    }
+                  }
                 }
               </mat-select>
             </mat-form-field>
           </div>
+
+          <div class="task-item">
+            <strong>В зоні відповідальності підрозділу:</strong>
+            <mat-form-field appearance="outline" class="task-select">
+              <mat-select
+                placeholder="Оберіть підрозділ"
+                [formControl]="adjacentUnitsControl"
+                [compareWith]="compareByUnitId"
+                (openedChange)="onAdjacentUnitsDropdownOpened($event)"
+                (selectionChange)="onAdjacentUnitChange($event.value)"
+              >
+                <mat-select-trigger>{{ adjacentUnitsControl.value?.value ?? '— Не очікується —' }}</mat-select-trigger>
+                @switch (adjacentUnitsSelectState()) {
+                  @case ('loading') {
+                    <mat-option disabled class="loading-option">Завантаження...</mat-option>
+                  }
+                  @case ('value') {
+                    <mat-option [value]="null">— Не очікується —</mat-option>
+                    <mat-option [value]="adjacentUnitsControl.value">{{ adjacentUnitsControl.value!.value }}</mat-option>
+                  }
+                  @default {
+                    <mat-option [value]="null">— Не очікується —</mat-option>
+                    @for (unit of adjacentUnits(); track unit.id) {
+                      <mat-option [value]="unit">{{ unit.value }}</mat-option>
+                    }
+                  }
+                }
+              </mat-select>
+            </mat-form-field>
+            <button
+              mat-raised-button
+              color="primary"
+              [disabled]="adjacentUnitsCtrlBtn.disabled"
+              (click)="adjacentUnitSelect()"
+              matTooltip="Додати підрозділ"
+            >
+              Додати підрозділ <mat-icon>domain</mat-icon>
+            </button>
+          </div>
+          
         </div>
       </mat-card-content>
     </mat-card>
@@ -99,7 +173,7 @@
     <mat-accordion class="sections-accordion">
       <!-- Засоби (Дрони) - показуємо тільки якщо завдання має withMeans = true -->
       @if (taskControl.value?.withMeans) {
-        <mat-expansion-panel class="unit-section-panel" (opened)="loadMeans()">
+        <mat-expansion-panel class="unit-section-panel" (opened)="onMeansPanelOpened()">
           <mat-expansion-panel-header>
             <mat-panel-title>
               <mat-icon color="primary">flight</mat-icon>

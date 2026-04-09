@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { catchError } from 'rxjs/operators';
 import { SoldierDto } from '../../../ServerService/soldier.service';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
@@ -107,26 +108,38 @@ export class ImportUnitService {
    */
   subscribeToImportProgress(): Observable<ImportProgress> {
     return new Observable<ImportProgress>((observer) => {
-      const eventSource = new EventSource(`${this.api}/imports/stream`);
+      const abortController = new AbortController();
+      const token = localStorage.getItem('auth_token');
 
-      eventSource.onmessage = (event) => {
-        try {
-          const progress: ImportProgress = JSON.parse(event.data);
-          observer.next(progress);
-        } catch (error) {
-          console.error('Помилка парсингу SSE події:', error);
+      fetchEventSource(`${this.api}/imports/stream`, {
+        method: 'GET',
+        headers: token ? {
+          'Authorization': `Bearer ${token}`
+        } : {},
+        signal: abortController.signal,
+        onmessage(event) {
+          try {
+            const progress: ImportProgress = JSON.parse(event.data);
+            observer.next(progress);
+          } catch (error) {
+            console.error('Помилка парсингу SSE події:', error);
+          }
+        },
+        onerror(error) {
+          console.error('SSE connection error:', error);
+          observer.error(error);
+          throw error;
+        },
+        onclose() {
+          observer.complete();
         }
-      };
-
-      eventSource.onerror = (error) => {
-        console.error('SSE connection error:', error);
-        eventSource.close();
-        observer.error(error);
-      };
+      }).catch(err => {
+        console.error('fetchEventSource error:', err);
+      });
 
       // Cleanup при відписці
       return () => {
-        eventSource.close();
+        abortController.abort();
       };
     });
   }

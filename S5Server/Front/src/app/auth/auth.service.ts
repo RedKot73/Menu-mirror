@@ -19,20 +19,43 @@ export class AuthService {
 
   /** Стан очікування 2FA (зберігаємо UserId) */
   readonly pendingTwoFactor = signal<{ userId: string } | null>(null);
-  
+
+  /** Стан очікування налаштування 2FA (зберігаємо UserId) */
+  readonly needs2FASetup = signal<{ userId: string } | null>(null);
+
   /** Режим 2FA (soft/strict) витягнутий з токену */
   readonly twoFactorMode = signal<'soft' | 'strict'>('strict');
 
   /** Чи авторизований користувач повністю */
-  readonly isAuthenticated = computed(() => this.user() !== null && !this.requiresTwoFactor());
+  readonly isAuthenticated = computed(() => this.user() !== null && !this.requiresTwoFactor() && !this.isNeeds2FASetup());
 
   /** Чи очікує користувач на 2FA верифікацію */
   readonly requiresTwoFactor = computed(() => this.pendingTwoFactor() !== null);
+
+  /** Чи очікує користувач на обов'язкове налаштування 2FA */
+  readonly isNeeds2FASetup = computed(() => this.needs2FASetup() !== null);
 
   /** Ролі поточного користувача */
   readonly roles = computed(() => this.user()?.roles ?? []);
 
   constructor() {
+    // Log 2FA security policy
+    const token = this.token();
+    let mandatory = false;
+    let mode = 'strict';
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        mandatory = payload.needs2FASetup === 'true' || payload.needs2FASetup === true;
+        mode = payload.twoFactorMode ?? 'strict';
+      } catch { }
+    }
+    console.log(
+      '%c[DEBUG] 2FA SECURITY POLICY:',
+      'color: #ff9900; font-weight: bold;',
+      { REQUIRE_MANDATORY_2FA: mandatory, TWO_FACTOR_MODE: mode }
+    );
+
     // Автоматичне збереження токену в localStorage
     const savedToken = localStorage.getItem('auth_token');
     if (savedToken) {
@@ -60,6 +83,7 @@ export class AuthService {
         login(userName: $userName, password: $password) {
           token
           requiresTwoFactor
+          needs2FASetup
           userId
           user {
             id
@@ -88,24 +112,42 @@ export class AuthService {
         variables: { userName: dto.userName, password: dto.password },
       })
       .pipe(
-        map((res) => {
+        map((res: GqlResponse<{ login: AuthPayload }>) => {
           if (!res.data?.login) {
             throw new Error('Authentication failed');
           }
           return res.data.login;
         }),
-        tap((payload) => {
+        tap((payload: AuthPayload) => {
           if (payload.token) {
             this.setToken(payload.token);
           }
-          if (payload.requiresTwoFactor) {
+          if (payload.needs2FASetup) {
+            this.needs2FASetup.set({ userId: payload.userId! });
+            this.pendingTwoFactor.set(null);
+          } else if (payload.requiresTwoFactor) {
             this.pendingTwoFactor.set({ userId: payload.userId! });
+            this.needs2FASetup.set(null);
           } else if (payload.user) {
             this.user.set(payload.user);
             this.pendingTwoFactor.set(null);
+            this.needs2FASetup.set(null);
           }
         }),
       );
+  }
+
+  /**
+   * Перехід з режиму налаштування в режим верифікації без логауту.
+   * Викликається після успішної мутації EnableTwoFactor.
+   */
+  transitionToVerification(): void {
+    const userId = this.needs2FASetup()?.userId;
+    if (userId) {
+      console.log('[DEBUG] 2FA Enabled successfully. Transitioning to Step 2 without logout.');
+      this.pendingTwoFactor.set({ userId });
+      this.needs2FASetup.set(null);
+    }
   }
 
   /** Крок 2: Підтвердження TOTP-коду (через GraphQL Mutation) */
@@ -143,14 +185,14 @@ export class AuthService {
         variables: { code },
       })
       .pipe(
-        map((res) => {
+        map((res: GqlResponse<{ verifyTwoFactor: AuthPayload }>) => {
           if (!res.data?.verifyTwoFactor) {
-             // Return an empty payload if structural error but not 401
-             return { token: null, requiresTwoFactor: false, userId: null, user: null };
+            // Return an empty payload if structural error but not 401
+            return { token: null, requiresTwoFactor: false, userId: null, user: null } as AuthPayload;
           }
           return res.data.verifyTwoFactor;
         }),
-        tap((payload) => {
+        tap((payload: AuthPayload) => {
           if (payload.token && !payload.requiresTwoFactor) {
             this.setToken(payload.token);
             this.user.set(payload.user);
@@ -171,10 +213,11 @@ export class AuthService {
   readonly displayName = computed(() => {
     const u = this.user();
     if (!u?.soldier) {
-      return u?.userName ?? '';
+      return "Системний (без прив'язки)";
     }
     const s = u.soldier as any;
-    return [s.rankShortValue, s.firstName, s.lastName].filter(Boolean).join(' ');
+    const rank = s.rankShortValue ? s.rankShortValue + ' ' : '';
+    return `${rank}${s.lastName} ${s.firstName} ${s.midleName || ''}`.trim();
   });
 
   /** Вихід з системи */
@@ -183,6 +226,7 @@ export class AuthService {
     this.token.set(null);
     this.user.set(null);
     this.pendingTwoFactor.set(null);
+    this.needs2FASetup.set(null);
     this.router.navigate(['/login']);
     return of(undefined);
   }
@@ -211,13 +255,13 @@ export class AuthService {
 
     // Secondary guard: also check the signal state (covers edge cases where token was
     // already parsed and pendingTwoFactor signal is in sync).
-    if (this.requiresTwoFactor()) {
+    if (this.requiresTwoFactor() || this.isNeeds2FASetup()) {
       return of(null);
     }
 
     // Для перевірки сесії JWT використовуємо /api/account/me або GraphQL запит Query.GetCurrentUser
     return this.http.get<AuthUser>(`${this.api}/me`).pipe(
-      tap((user) => this.user.set(user)),
+      tap((user: AuthUser) => this.user.set(user)),
       catchError(() => {
         this.logout();
         return of(null);

@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
 using S5Server.Data;
 using S5Server.Models;
+using S5Server.Utils;
 using Serilog;
 using System.Globalization;
 using System.Text;
@@ -35,19 +36,32 @@ Log.Information("Запуск приложения с аргументами: {A
 // ✅ Application Insights отримає логи через вбудовану інтеграцію ASP.NET Core
 builder.Host.UseSerilog();
 
-// ✅ Application Insights (тільки для production/Azure)
-if (builder.Environment.IsProduction())
-{
-    builder.Services.AddApplicationInsightsTelemetry();
-}
-
-// --- Environment Initialization ---
-// Load .env only if we are working locally (Development)
 if (builder.Environment.IsDevelopment())
 {
-    DotNetEnv.Env.TraversePath().Load();
-    builder.Configuration.AddEnvironmentVariables();
+    var currentDir = Directory.GetCurrentDirectory();
+    var envPath = System.IO.Path.Combine(currentDir, ".env");
+    var parentEnvPath = System.IO.Path.Combine(currentDir, "..", ".env");
+
+    if (System.IO.File.Exists(envPath))
+    {
+        Log.Information("✅ [INIT] .env file found at {Path}. Loading variables.", envPath);
+        DotNetEnv.Env.Load(envPath);
+    }
+     else if (System.IO.File.Exists(parentEnvPath))
+     {
+         var fullParentPath = System.IO.Path.GetFullPath(parentEnvPath);
+         Log.Information("✅ [INIT] .env file found at {Path}. Loading variables.", fullParentPath);
+         DotNetEnv.Env.Load(fullParentPath);
+     }
+    else
+    {
+        Log.Warning("⚠️ [INIT] .env file NOT found at {Path} or {ParentPath}.", envPath, parentEnvPath);
+    }
 }
+
+// 2. ВАЖНО: Всегда загружаем переменные окружения из системы (Kubernetes)
+// Ставим этот вызов ПОСЛЕ DotNetEnv, чтобы K8s перекрывал значения из .env файла
+builder.Configuration.AddEnvironmentVariables();
 
 // ✅ JWT Validation & Fail-Safe Mechanism
 const string DEV_JWT_SECRET = "S5_DEV_SECRET_2026_DO_NOT_USE_IN_PROD_999";
@@ -142,11 +156,6 @@ dataSourceBuilder.ConnectionStringBuilder.Options = "-c DateStyle=ISO";
 // Совместимость со старым поведением DateTime (важно для миграций)
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-/* ПРИМЕЧАНИЕ: Блок с 'if (builder.Environment.IsProduction())' и Callback 
-   больше не нужен, так как мы добавили 'TrustServerCertificate = true' 
-   прямо в connBuilder. Это работает во всех средах одинаково надежно.
-*/
-
 // Создаем итоговый DataSource
 var dataSource = dataSourceBuilder.Build();
 
@@ -190,12 +199,15 @@ for (int i = 1; i <= maxRetries; i++)
 }
 
 // ✅ Використати DataSource замість connectionString
+builder.Services.AddScoped<S5Server.Services.IAuthDomainService, S5Server.Services.AuthDomainService>();
+builder.Services.AddScoped<S5Server.Services.ITemplateDataSetService, S5Server.Services.TemplateDataSetService>();
+
 builder.Services.AddPooledDbContextFactory<MainDbContext>(options =>
     options.UseNpgsql(dataSource, npgsql =>
             // ← Явно вказати ім'я таблиці міграцій (UseSnakeCaseNamingConvention змінює його на __ef_migrations_history)
             npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "public"))
         .UseSnakeCaseNamingConvention()
-        .EnableSensitiveDataLogging(builder.Environment.IsDevelopment())
+        .EnableSensitiveDataLogging(false)
         .EnableDetailedErrors(builder.Environment.IsDevelopment())
         .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
 builder.Services.AddScoped<MainDbContext>(sp =>
@@ -327,6 +339,10 @@ builder.Services
     .AddSorting();                          // ✅ Сортування (orderBy)
 // ✅ DbContext вже зареєстрований через AddPooledDbContextFactory!
 
+builder.Services.AddExceptionHandler<ClientCanceledExceptionHandler>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 builder.Services.AddControllers();
 
 builder.Services.AddCors(options =>
@@ -359,12 +375,7 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            // ✅ FALLBACK: дозволити Azure Web App origin
-            policy.SetIsOriginAllowed(origin =>
-                    origin.Contains(".azurewebsites.net", StringComparison.OrdinalIgnoreCase))
-                  .AllowAnyMethod()
-                  .AllowAnyHeader()
-                  .AllowCredentials();
+            Log.Warning("AllowedOrigins не налаштовано — CORS заборонено для production");
         }
     });
 });
@@ -482,9 +493,10 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
+
+app.UseExceptionHandler();
 
 // ✅ Редирект на HTTPS (только если запрос пришел по HTTP через проксі)
 //app.UseHttpsRedirection();
@@ -537,6 +549,16 @@ CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 try
 {
     Log.Information("Starting S5Server");
+    
+    // Log key security parameters for audit
+    var audit2faMode = builder.Configuration["TWO_FACTOR_MODE"] ?? "strict (default)";
+    var auditMandatory2fa = builder.Configuration["REQUIRE_MANDATORY_2FA"] ?? "false (default)";
+    
+    Log.Information("--- [AUDIT] SECURITY CONFIGURATION ---");
+    Log.Information("TWO_FACTOR_MODE: {Mode}", audit2faMode);
+    Log.Information("REQUIRE_MANDATORY_2FA: {Mandatory}", auditMandatory2fa);
+    Log.Information("--------------------------------------");
+
     var lifetime = app.Lifetime;
     lifetime.ApplicationStarted.Register(() =>
     {

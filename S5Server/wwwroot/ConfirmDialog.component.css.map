@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["angular:styles/component:css;2fb02ea0232d57f6159dc1cc9544cf15d830546870df75d86ae5609ed8e6897e;/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Front/src/app/dialogs/ConfirmDialog.component.ts"],
-  "sourcesContent": ["\n    .title { display: flex; align-items: center; gap: 8px; margin: 0; }\n    .icon { font-size: 22px; height: 22px; width: 22px; }\n    .content { white-space: pre-line; }\n  "],
-  "mappings": ";AACI,CAAC;AAAQ,WAAS;AAAM,eAAa;AAAQ,OAAK;AAAK,UAAQ;AAAG;AAClE,CAAC;AAAO,aAAW;AAAM,UAAQ;AAAM,SAAO;AAAM;AACpD,CAAC;AAAU,eAAa;AAAU;",
-  "names": []
-}

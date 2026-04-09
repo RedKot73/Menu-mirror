@@ -6,7 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
 	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
     
-    <!-- ✅ .NET 10 оптимізації для Azure -->
     <PublishTrimmed>false</PublishTrimmed>
     <PublishReadyToRun>true</PublishReadyToRun>
     <InvariantGlobalization>false</InvariantGlobalization>
@@ -15,7 +14,6 @@
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
     <UserSecretsId>ef5aa0a8-6487-4a74-9cf5-ef0d2e7090bd</UserSecretsId>
-    <ApplicationInsightsResourceId>/subscriptions/f44d35d7-4673-40fa-a517-790afdd81e69/resourceGroups/S5_ResGroup/providers/microsoft.insights/components/S5Server20260224141205</ApplicationInsightsResourceId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,11 +30,10 @@
     <!-- PostgreSQL + Entity Framework Core -->
     <!-- ═══════════════════════════════════════════════════════════ -->
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
-    <PackageReference Include="HotChocolate.AspNetCore" Version="15.1.12" />
-    <PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="15.1.12" />
-    <PackageReference Include="HotChocolate.Data" Version="15.1.12" />
-    <PackageReference Include="HotChocolate.Data.EntityFramework" Version="15.1.12" />
-    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="3.0.0" />
+    <PackageReference Include="HotChocolate.AspNetCore" Version="15.1.13" />
+    <PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="15.1.13" />
+    <PackageReference Include="HotChocolate.Data" Version="15.1.13" />
+    <PackageReference Include="HotChocolate.Data.EntityFramework" Version="15.1.13" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -56,14 +53,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.17.0" />
-    <PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="5.0.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0" />
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- Azure (мінімум для обмеженого бюджету) -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <PackageReference Include="Azure.Identity" Version="1.19.0" />
-    <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.5.0" />
 
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- Logging (БЕЗКОШТОВНО) -->
@@ -73,7 +63,6 @@
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="Serilog.Exceptions" Version="8.4.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.AzureAppServices" Version="10.0.5" />
 
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- OpenXML (для документів БР/БД) -->
@@ -85,7 +74,7 @@
     <PackageReference Include="Otp.NET" Version="1.4.1" />
     <!-- TypeScript (тільки для розробки) -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.9.3">
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="6.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

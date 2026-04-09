@@ -1,0 +1,60 @@
+<div class="action-container">
+  <div class="action-buttons">
+    <button mat-raised-button color="primary" (click)="reload()">
+      <mat-icon>refresh</mat-icon>
+      Оновити
+    </button>
+    @if (!isReadOnly()) {
+      <button mat-raised-button color="accent" (click)="add()">
+        <mat-icon>person_add</mat-icon>
+        Додати
+      </button>
+    }
+  </div>
+</div>
+
+<div class="table-container">
+  <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+
+    <!-- Menu Column -->
+    <ng-container matColumnDef="menu">
+      <th mat-header-cell *matHeaderCellDef style="width: 60px">Дії</th>
+      <td mat-cell *matCellDef="let area">
+          <button mat-menu-item (click)="delete(area)" class="delete-action">
+            <mat-icon>delete</mat-icon>
+            <!--
+            <span>Видалити</span>
+            -->
+          </button>
+      </td>
+    </ng-container>
+
+
+    <!-- Area Value Column -->
+    <ng-container matColumnDef="areaValue">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Район виконання завдань</th>
+      <td mat-cell *matCellDef="let area">{{ area.areaValue }}</td>
+    </ng-container>
+
+    <!-- Area Type Value Column -->
+    <ng-container matColumnDef="areaTypeValue">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Тип району</th>
+      <td mat-cell *matCellDef="let area">{{ area.areaTypeValue }}</td>
+    </ng-container>
+
+    <!-- Valid From Column -->
+    <ng-container matColumnDef="validFrom">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Дата призначення</th>
+      <td mat-cell *matCellDef="let area">{{ area.validFrom | date: 'dd.MM.yyyy' }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+
+    <tr class="mat-row" *matNoDataRow>
+      <td class="mat-cell no-data-cell" [attr.colspan]="displayedColumns.length">
+        Райони виконання завдань не знайдені
+      </td>
+    </tr>
+  </table>
+</div>

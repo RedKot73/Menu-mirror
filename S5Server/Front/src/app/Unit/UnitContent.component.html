@@ -85,8 +85,38 @@
         </div>
       </mat-expansion-panel>
 
+      <mat-expansion-panel class="unit-section-panel" (opened)="unitAreasPanelOpened.set(true)">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon color="primary">gavel</mat-icon>
+            Райони виконання завдань (РВЗ)
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="section-content">
+          @if (unitAreasPanelOpened()) {
+            <app-unit-areas [unitId]="unit.id"></app-unit-areas>
+          }
+        </div>
+      </mat-expansion-panel>
+
+      <mat-expansion-panel class="unit-section-panel" (opened)="adjacentPanelOpened.set(true)">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon color="primary">gavel</mat-icon>
+            Суміжні підрозділи
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="section-content">
+          @if (adjacentPanelOpened()) {
+            <app-unit-adjacent [unitId]="unit.id"></app-unit-adjacent>
+          }
+        </div>
+      </mat-expansion-panel>
+
       <!-- Дополнительные секции с expansion panels -->
-      <mat-expansion-panel class="unit-section-panel">
+      <mat-expansion-panel class="unit-section-panel" (opened)="tasksPanelOpened.set(true)">
         <mat-expansion-panel-header>
           <mat-panel-title>
             <mat-icon color="primary">gavel</mat-icon>
@@ -95,7 +125,9 @@
         </mat-expansion-panel-header>
 
         <div class="section-content">
-          <p class="todo-placeholder">[TODO: Тут буде список бойових розпоряджень підрозділу]</p>
+          @if (tasksPanelOpened()) {
+            <app-unit-tasks [unitId]="unit.id"></app-unit-tasks>
+          }
         </div>
       </mat-expansion-panel>
 

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["src/app/Personnel/Personnel.page.scss"],
-  "sourcesContent": ["//@use '../Soldier/Soldier.component.scss';\n/*\n.table-container {\n  margin-top: 1em;\n  height: calc(100vh - 150px);\n  overflow: auto;\n  position: relative;\n}\n*/\n.table-container {\n  flex: 1 1 auto; // Таблица занимает всё оставшееся место\n  overflow: auto; // Вот здесь появляется и вертикальный, и горизонтальный скролл\n  border: 1px solid #ccc; // Для визуальной границы (опционально)\n\n  table {\n    width: 100%;\n    min-width: 800px; // Гарантирует появление горизонтального скролла на узких экранах\n  }\n}"],
-  "mappings": ";AASA,CAAA;AACE,QAAA,EAAA,EAAA;AACA,YAAA;AACA,UAAA,IAAA,MAAA;;AAEA,CALF,gBAKE;AACE,SAAA;AACA,aAAA;;",
-  "names": []
-}

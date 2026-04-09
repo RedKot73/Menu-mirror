@@ -1,1 +1,9 @@
-*.sql text eol=lf
+# Делаем так, чтобы все текстовые файлы нормализовались при коммите
+* text=auto
+
+# Явно указываем, что shell-скрипты ВСЕГДА должны иметь LF (Unix) окончания
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Файлы PowerShell пусть остаются с CRLF или как удобно Windows
+*.ps1 text eol=crlf

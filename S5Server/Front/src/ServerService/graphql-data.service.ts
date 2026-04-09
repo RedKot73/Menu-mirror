@@ -29,6 +29,17 @@ const GET_SERVER_TIME = gql`
   }
 `;
 
+/** Метадані збірки */
+const GET_APP_METADATA = gql`
+  query GetAppMetadata {
+    appMetadata {
+      appVersion
+      imageName
+      buildAt
+    }
+  }
+`;
+
 const GET_COMPLETE_DATA_SET = gql`
   query GetCompleteDataSet($dataSetId: UUID!, $templateCategoryId: UUID!) {
     templateDataSetForDoc(dataSetId: $dataSetId, templateCategoryId: $templateCategoryId) {
@@ -46,9 +57,11 @@ const GET_COMPLETE_DATA_SET = gql`
         unitShortName
         parentShortName
         assignedShortName
+        adjactedShortName
         unitTypeName
         isInvolved
         persistentLocationValue
+        amount
         taskValue
         task{
             unitTaskItems{
@@ -186,6 +199,12 @@ const GET_UNITS = gql`
 // Types
 // ═══════════════════════════════════════════════════════════
 
+export interface GqlAppMetadata {
+  appVersion: string;
+  imageName: string;
+  buildAt: string;
+}
+
 export interface GqlTemplateDataSet {
   id: string;
   name: string;
@@ -244,6 +263,18 @@ export class GraphqlDataService {
         fetchPolicy: 'network-only',
       })
       .pipe(map((result) => result.data!.serverTime));
+  }
+
+  /**
+   * Отримати метадані збірки
+   */
+  getAppMetadata(): Observable<GqlAppMetadata> {
+    return this.apollo
+      .query<{ appMetadata: GqlAppMetadata }>({
+        query: GET_APP_METADATA,
+        fetchPolicy: 'cache-first',
+      })
+      .pipe(map((result) => result.data!.appMetadata));
   }
 
   /**

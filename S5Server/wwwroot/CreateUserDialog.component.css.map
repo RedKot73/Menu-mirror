@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["angular:styles/component:css;d41978f454f8445fd780e3d2eaacd18435752233bf8a4f06a1a456523d42661d;/home/havrok/projects/work/411/s5/s5app/Menu/S5Server/Front/src/Login/dialogs/CreateUserDialog.component.ts"],
-  "sourcesContent": ["\n      .dialog-content {\n        min-width: 360px;\n      }\n    "],
-  "mappings": ";AACM,CAAC;AACC,aAAW;AACb;",
-  "names": []
-}

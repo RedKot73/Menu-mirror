@@ -23,9 +23,8 @@ import { Observable, of, switchMap, tap } from 'rxjs';
 import { map as rxMap } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { UnitTaskDto } from '../../DocumentDataSet/models/template-dataset.models';
 import { TemplateDataSetService } from '../../../ServerService/template-dataset.service';
-import { UnitTaskService } from '../../../ServerService/unit-task.service';
+import { UnitTaskDto, UnitTaskService } from '../../../ServerService/unit-task.service';
 import { OneUnitTaskViewer } from './OneUnitTaskViewer.component';
 import { S5App_ErrorHandler } from '../../shared/models/ErrorHandler';
 import { TemplateDataSetDto } from '../../DocumentDataSet/models/template-dataset.models';
