@@ -1,0 +1,40 @@
+<div class="action-container">
+  <div class="action-buttons">
+    <button mat-raised-button color="primary" (click)="reload()">
+      <mat-icon>refresh</mat-icon>
+      Оновити
+    </button>
+  </div>
+</div>
+
+<div class="table-container">
+  <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z2">
+
+    <!-- Unit Short Name Column -->
+    <ng-container matColumnDef="unitShortName">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Підрозділ</th>
+      <td mat-cell *matCellDef="let row">{{ row.unitShortName }}</td>
+    </ng-container>
+
+    <!-- Area Value Column -->
+    <ng-container matColumnDef="areaValue">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Спільний РВЗ</th>
+      <td mat-cell *matCellDef="let row">{{ row.areaValue }}</td>
+    </ng-container>
+
+    <!-- Area Type Value Column -->
+    <ng-container matColumnDef="areaTypeValue">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Тип району</th>
+      <td mat-cell *matCellDef="let row">{{ row.areaTypeValue }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+
+    <tr class="mat-row" *matNoDataRow>
+      <td class="mat-cell no-data-cell" [attr.colspan]="displayedColumns.length">
+        Суміжних підрозділів не знайдено
+      </td>
+    </tr>
+  </table>
+</div>

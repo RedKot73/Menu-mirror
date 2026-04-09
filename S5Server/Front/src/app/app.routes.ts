@@ -57,7 +57,7 @@ export const routes: Routes = [
     path: 'dictAreaTypes',
     loadComponent: () =>
       import('../dictionaries/dictAreaType.component').then((m) => m.DictAreaTypeComponent),
-    title: 'Типи Напрямку ЛБЗ',
+    title: 'Типи району виконання завдань (РВЗ)',
     canActivate: [authGuard],
   },
   {
@@ -80,7 +80,7 @@ export const routes: Routes = [
     path: 'dictArea',
     loadComponent: () =>
       import('../dictionaries/dictAreaPage.component').then((m) => m.DictAreaPage),
-    title: 'Напрямок ЛБЗ',
+    title: 'Райони виконання завдань (РВЗ)',
     canActivate: [authGuard],
   },
   {

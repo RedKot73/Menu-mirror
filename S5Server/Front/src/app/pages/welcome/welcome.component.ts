@@ -8,9 +8,11 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { AuthService } from '../../auth/auth.service';
 import { SystemTimeService } from '../../core/services/system-time.service';
 import { Subscription, interval } from 'rxjs';
+import { TotpSetupDialogComponent } from '../../auth/TotpSetupDialog.component';
 
 @Component({
   selector: 'app-welcome',
@@ -23,7 +25,8 @@ import { Subscription, interval } from 'rxjs';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatDialogModule
   ],
   templateUrl: './welcome.component.html',
   styleUrls: ['./welcome.component.scss']
@@ -33,6 +36,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   public auth = inject(AuthService);
   private router = inject(Router);
   public timeService = inject(SystemTimeService);
+  private dialog = inject(MatDialog);
 
   readonly welcomeForm = this.fb.group({
     code: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]]
@@ -44,6 +48,29 @@ export class WelcomeComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Soft mode is now handled without artificial delays
+
+    if (this.auth.isNeeds2FASetup()) {
+      console.log('[DEBUG] Mandatory setup mode. Dialog opened automatically.');
+      const dialogRef = this.dialog.open(TotpSetupDialogComponent, {
+        disableClose: true, // Нельзя закрыть пока не завершена настройка
+        width: '450px'
+      });
+
+      dialogRef.afterClosed().subscribe((success: boolean) => {
+        if (success) {
+          console.log('[DEBUG] 2FA successfully configured. Proceeding to verification phase.');
+          // Меняем состояние: настройка завершена, теперь нужна верификация
+          const userId = this.auth.needs2FASetup()?.userId;
+          if (userId) {
+            this.auth.pendingTwoFactor.set({ userId });
+          }
+          this.auth.needs2FASetup.set(null);
+        } else {
+          // Если как-то закрыли (хотя disableClose=true), можно разлогинить
+          this.auth.logout();
+        }
+      });
+    }
   }
 
   ngOnDestroy(): void {
@@ -53,7 +80,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     if (this.welcomeForm.invalid) return;
     const { code } = this.welcomeForm.value;
     if (!code) return;
-    
+
     this.submitCode(code);
   }
 

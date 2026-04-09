@@ -1465,6 +1465,10 @@ namespace S5Server.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("soldier_id");
 
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("text")
+                        .HasColumnName("security_stamp");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean")
                         .HasColumnName("two_factor_enabled");
@@ -1681,6 +1685,49 @@ namespace S5Server.Migrations
                         });
                 });
 
+            modelBuilder.Entity("S5Server.Models.UnitAreas", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AreaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("area_id");
+
+                    b.Property<string>("ChangedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("changed_by");
+
+                    b.Property<Guid>("UnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("unit_id");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valid_from")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("Id")
+                        .HasName("pk_unit_areas");
+
+                    b.HasIndex("AreaId")
+                        .HasDatabaseName("ix_unit_areas_area_id");
+
+                    b.HasIndex("UnitId", "AreaId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_unit_areas_unit_id_area_id");
+
+                    b.ToTable("unit_areas", "core", t =>
+                        {
+                            t.HasComment("Зв'язок багато-до-багатьох між підрозділами та РВЗ");
+                        });
+                });
+
             modelBuilder.Entity("S5Server.Models.UnitHist", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1815,6 +1862,22 @@ namespace S5Server.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("AdjactedShortName")
+                        .HasMaxLength(100)
+                        .HasColumnType("citext")
+                        .HasColumnName("adjacted_short_name")
+                        .HasComment("Суміжний підрозділ (для координації завдань)");
+
+                    b.Property<Guid?>("AdjactedTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("adjacted_type_id")
+                        .HasComment("Тип суміжного підрозділу");
+
+                    b.Property<Guid?>("AdjactedUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("adjacted_unit_id")
+                        .HasComment("Суміжний підрозділ (для координації завдань)");
+
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric(18, 2)")
                         .HasColumnName("amount")
@@ -1866,7 +1929,6 @@ namespace S5Server.Migrations
                         .HasColumnName("parent_id");
 
                     b.Property<string>("ParentShortName")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("citext")
                         .HasColumnName("parent_short_name");
@@ -1928,6 +1990,12 @@ namespace S5Server.Migrations
                     b.HasKey("Id")
                         .HasName("pk_units_task");
 
+                    b.HasIndex("AdjactedTypeId")
+                        .HasDatabaseName("ix_units_task_adjacted_type_id");
+
+                    b.HasIndex("AdjactedUnitId")
+                        .HasDatabaseName("ix_units_task_adjacted_unit_id");
+
                     b.HasIndex("AreaId")
                         .HasDatabaseName("ix_units_task_area_id");
 
@@ -1970,6 +2038,22 @@ namespace S5Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<string>("AdjactedShortName")
+                        .HasMaxLength(100)
+                        .HasColumnType("citext")
+                        .HasColumnName("adjacted_short_name")
+                        .HasComment("Суміжний підрозділ (для координації завдань)");
+
+                    b.Property<Guid?>("AdjactedTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("adjacted_type_id")
+                        .HasComment("Тип суміжного підрозділу");
+
+                    b.Property<Guid?>("AdjactedUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("adjacted_unit_id")
+                        .HasComment("Суміжний підрозділ (для координації завдань)");
 
                     b.Property<Guid>("AreaId")
                         .HasColumnType("uuid")
@@ -2484,8 +2568,41 @@ namespace S5Server.Migrations
                     b.Navigation("UnitType");
                 });
 
+            modelBuilder.Entity("S5Server.Models.UnitAreas", b =>
+                {
+                    b.HasOne("S5Server.Models.DictArea", "Area")
+                        .WithMany("Units")
+                        .HasForeignKey("AreaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_unit_areas_dict_area_area_id");
+
+                    b.HasOne("S5Server.Models.Unit", "Unit")
+                        .WithMany("Areas")
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_unit_areas_units_unit_id");
+
+                    b.Navigation("Area");
+
+                    b.Navigation("Unit");
+                });
+
             modelBuilder.Entity("S5Server.Models.UnitTask", b =>
                 {
+                    b.HasOne("S5Server.Models.DictUnitType", "AdjactedType")
+                        .WithMany()
+                        .HasForeignKey("AdjactedTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_units_task_dict_unit_type_adjacted_type_id");
+
+                    b.HasOne("S5Server.Models.Unit", "AdjactedUnit")
+                        .WithMany()
+                        .HasForeignKey("AdjactedUnitId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_units_task_units_adjacted_unit_id");
+
                     b.HasOne("S5Server.Models.DictArea", "Area")
                         .WithMany()
                         .HasForeignKey("AreaId")
@@ -2538,6 +2655,10 @@ namespace S5Server.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_units_task_dict_unit_type_unit_type_id");
 
+                    b.Navigation("AdjactedType");
+
+                    b.Navigation("AdjactedUnit");
+
                     b.Navigation("Area");
 
                     b.Navigation("AssignedUnit");
@@ -2553,6 +2674,11 @@ namespace S5Server.Migrations
                     b.Navigation("Unit");
 
                     b.Navigation("UnitType");
+                });
+
+            modelBuilder.Entity("S5Server.Models.DictArea", b =>
+                {
+                    b.Navigation("Units");
                 });
 
             modelBuilder.Entity("S5Server.Models.DictAreaType", b =>
@@ -2594,6 +2720,8 @@ namespace S5Server.Migrations
 
             modelBuilder.Entity("S5Server.Models.Unit", b =>
                 {
+                    b.Navigation("Areas");
+
                     b.Navigation("AssignedSoldiers");
 
                     b.Navigation("AssignedUnits");

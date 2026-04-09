@@ -16,21 +16,29 @@ replacements:
 # 1. Единый Генератор Секретов из .env
 secretGenerator:
   - name: s5-app-secrets
-    behavior: replace
+    behavior: merge
     envs:
       - ../../../../.env
+  - name: s5-db-credentials # ДОБАВЛЕНО: чтобы база и приложение имели один пароль
+    behavior: merge
+    envs:
+      - ../../../../.env
+  - name: s5-https-cert # Добавлена секция для HTTPS (берет KESTREL_CERT_PATH и KESTREL_CERT_PASSWORD из .env)
+    envs:
+      - ../../../../.env
+
+
 
 # 2. Единый Генератор ConfigMap из .env
 configMapGenerator:
   - name: s5-app-config
-    behavior: replace
+    behavior: merge
     envs:
       - ../../../../.env
-    literals:
-      # Переопределяем хост БД для работы ВНУТРИ кластера
-      - DB_HOST=s5-db-cluster-rw
-      # Фиксируем окружение для этой сборки
-      - ASPNETCORE_ENVIRONMENT=Development
+  - name: s5-db-params
+    behavior: merge
+    envs:
+      - ../../../../.env
 
 # 3. Подмена образов для локального запуска
 images:
@@ -39,4 +47,20 @@ images:
     newTag: 18.3-v1.0.0
   - name: s5-server
     newName: s5-server
-    newTag: "1.0.1"
+    newTag: "1.0.3"
+
+# 4. Патчи для переопределения переменных окружения внутри кластера
+patches:
+  - target:
+      kind: ConfigMap
+      name: s5-app-config
+    patch: |-
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: s5-app-config
+      data:
+        # Эти значения ПЕРЕКРОЮТ то, что пришло из .env
+        DB_HOST: s5-db-cluster-rw
+        PrimaryConnection__DB_Host: s5-db-cluster-rw
+        ASPNETCORE_ENVIRONMENT: Development

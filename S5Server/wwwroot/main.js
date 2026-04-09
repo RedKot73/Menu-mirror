@@ -1,12 +1,12 @@
 import {
   AuthService
-} from "./chunk-BPVAGNWP.js";
+} from "./chunk-OM737Y4K.js";
 import {
   ApolloLink,
   InMemoryCache,
   print,
   provideApollo
-} from "./chunk-7NYEY34V.js";
+} from "./chunk-QUPL34FG.js";
 import {
   MAT_DATE_FORMATS,
   MatMenu,
@@ -14,17 +14,16 @@ import {
   MatMenuModule,
   MatMenuTrigger,
   provideNativeDateAdapter
-} from "./chunk-SNKAS4TF.js";
-import "./chunk-JONXD3QV.js";
+} from "./chunk-OJBPKYH5.js";
+import "./chunk-JGYX5BI4.js";
 import {
   Router,
   RouterLink,
   RouterLinkActive,
   RouterOutlet,
   provideRouter
-} from "./chunk-O3M7BV3X.js";
-import "./chunk-MGHM5LON.js";
-import "./chunk-N27GZOTW.js";
+} from "./chunk-RTUOVG6V.js";
+import "./chunk-S3MSKHER.js";
 import {
   BidiModule,
   ChangeDetectionStrategy,
@@ -90,7 +89,7 @@ import {
   ɵɵrestoreView,
   ɵɵtext,
   ɵɵtextInterpolate
-} from "./chunk-CK6AJVHQ.js";
+} from "./chunk-6223PFVC.js";
 
 // node_modules/@angular/common/locales/uk.js
 var u = void 0;
@@ -641,7 +640,7 @@ var HttpLink = class _HttpLink {
 var authGuard = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  if (auth.requiresTwoFactor()) {
+  if (auth.requiresTwoFactor() || auth.isNeeds2FASetup()) {
     return router.createUrlTree(["/welcome"]);
   }
   if (auth.isAuthenticated()) {
@@ -652,7 +651,7 @@ var authGuard = () => {
 var twoFactorGuard = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  if (auth.requiresTwoFactor()) {
+  if (auth.requiresTwoFactor() || auth.isNeeds2FASetup()) {
     return true;
   }
   return router.createUrlTree(["/login"]);
@@ -662,127 +661,127 @@ var twoFactorGuard = () => {
 var routes = [
   {
     path: "dictDroneTypes",
-    loadComponent: () => import("./chunk-354MFVHW.js").then((m) => m.DictDroneTypeComponent),
+    loadComponent: () => import("./chunk-AWKSWAOT.js").then((m) => m.DictDroneTypeComponent),
     title: "\u0422\u0438\u043F\u0438 \u0411\u041F\u041B\u0410",
     canActivate: [authGuard]
   },
   {
     path: "dictDroneModels",
-    loadComponent: () => import("./chunk-ZOUZO4FV.js").then((m) => m.DictDroneModelComponent),
+    loadComponent: () => import("./chunk-OU3LIJWC.js").then((m) => m.DictDroneModelComponent),
     title: "\u041C\u043E\u0434\u0435\u043B\u0456 \u0411\u041F\u041B\u0410",
     canActivate: [authGuard]
   },
   {
     path: "dictForcesTypes",
-    loadComponent: () => import("./chunk-AEHKEJS4.js").then((m) => m.DictForcesTypeComponent),
+    loadComponent: () => import("./chunk-HLOI4DX2.js").then((m) => m.DictForcesTypeComponent),
     title: "\u0412\u0438\u0434\u0438 \u0437\u0431\u0440\u043E\u0439\u043D\u0438\u0445 \u0441\u0438\u043B",
     canActivate: [authGuard]
   },
   {
     path: "dictPosition",
-    loadComponent: () => import("./chunk-F7TMTDUN.js").then((m) => m.DictPositionComponent),
+    loadComponent: () => import("./chunk-OFKZUPRW.js").then((m) => m.DictPositionComponent),
     title: "\u041F\u043E\u0441\u0430\u0434\u0438",
     canActivate: [authGuard]
   },
   {
     path: "dictRanks",
-    loadComponent: () => import("./chunk-XONXQF32.js").then((m) => m.DictRanksComponent),
+    loadComponent: () => import("./chunk-VMPI2AUE.js").then((m) => m.DictRanksComponent),
     title: "\u0412\u0456\u0439\u0441\u044C\u043A\u043E\u0432\u0456 \u0437\u0432\u0430\u043D\u043D\u044F",
     canActivate: [authGuard]
   },
   {
     path: "dictSoldierStates",
-    loadComponent: () => import("./chunk-FEY3P5XW.js").then((m) => m.DictSoldierStatesComponent),
+    loadComponent: () => import("./chunk-QWRDA423.js").then((m) => m.DictSoldierStatesComponent),
     title: "\u0421\u0442\u0430\u0442\u0443\u0441\u0438 \u043E\u0441\u043E\u0431\u043E\u0432\u043E\u0433\u043E \u0441\u043A\u043B\u0430\u0434\u0443",
     canActivate: [authGuard]
   },
   {
     path: "dictUnitTypes",
-    loadComponent: () => import("./chunk-DY3LVIFH.js").then((m) => m.DictUnitTypesComponent),
+    loadComponent: () => import("./chunk-UUACFMKS.js").then((m) => m.DictUnitTypesComponent),
     title: "\u0422\u0438\u043F\u0438 \u043F\u0456\u0434\u0440\u043E\u0437\u0434\u0456\u043B\u0456\u0432",
     canActivate: [authGuard]
   },
   {
     path: "dictAreaTypes",
-    loadComponent: () => import("./chunk-EPJQIKAA.js").then((m) => m.DictAreaTypeComponent),
+    loadComponent: () => import("./chunk-O7I3Z62H.js").then((m) => m.DictAreaTypeComponent),
     title: "\u0422\u0438\u043F\u0438 \u041D\u0430\u043F\u0440\u044F\u043C\u043A\u0443 \u041B\u0411\u0417",
     canActivate: [authGuard]
   },
   {
     path: "dictCityCategories",
-    loadComponent: () => import("./chunk-2ECE7IAH.js").then((m) => m.DictCityCategoryComponent),
+    loadComponent: () => import("./chunk-673SQEBM.js").then((m) => m.DictCityCategoryComponent),
     title: "\u041A\u0430\u0442\u0435\u0433\u043E\u0440\u0456\u0457 \u043E\u0431'\u0454\u043A\u0442\u0456\u0432 \u0430\u0434\u043C\u0456\u043D\u0456\u0441\u0442\u0440\u0430\u0442\u0438\u0432\u043D\u043E-\u0442\u0435\u0440\u0438\u0442\u043E\u0440\u0456\u0430\u043B\u044C\u043D\u0438\u0445 \u043E\u0434\u0438\u043D\u0438\u0446\u044C",
     canActivate: [authGuard]
   },
   {
     path: "dictCityCodes",
-    loadComponent: () => import("./chunk-QSWRTVIU.js").then((m) => m.CityCodePageComponent),
+    loadComponent: () => import("./chunk-Y4Z63V5H.js").then((m) => m.CityCodePageComponent),
     title: "\u041A\u043E\u0434\u0438\u0444\u0456\u043A\u0430\u0442\u043E\u0440 \u0430\u0434\u043C\u0456\u043D\u0456\u0441\u0442\u0440\u0430\u0442\u0438\u0432\u043D\u043E-\u0442\u0435\u0440\u0438\u0442\u043E\u0440\u0456\u0430\u043B\u044C\u043D\u0438\u0445 \u043E\u0434\u0438\u043D\u0438\u0446\u044C",
     canActivate: [authGuard]
   },
   {
     path: "dictArea",
-    loadComponent: () => import("./chunk-THAEVADA.js").then((m) => m.DictAreaPage),
+    loadComponent: () => import("./chunk-ZGETMN6R.js").then((m) => m.DictAreaPage),
     title: "\u041D\u0430\u043F\u0440\u044F\u043C\u043E\u043A \u041B\u0411\u0417",
     canActivate: [authGuard]
   },
   {
     path: "dictTemplateCategories",
-    loadComponent: () => import("./chunk-7H2WR5OK.js").then((m) => m.DictTemplateCategoriesComponent),
+    loadComponent: () => import("./chunk-EHD5IQIN.js").then((m) => m.DictTemplateCategoriesComponent),
     title: "\u041A\u0430\u0442\u0435\u0433\u043E\u0440\u0456\u0457 \u0448\u0430\u0431\u043B\u043E\u043D\u0456\u0432 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0456\u0432",
     canActivate: [authGuard]
   },
   {
     path: "dictUnitTasks",
-    loadComponent: () => import("./chunk-U4EPMISY.js").then((m) => m.DictUnitTaskPage),
+    loadComponent: () => import("./chunk-LBDSK4DV.js").then((m) => m.DictUnitTaskPage),
     title: "\u0417\u0430\u0432\u0434\u0430\u043D\u043D\u044F \u043F\u0456\u0434\u0440\u043E\u0437\u0434\u0456\u043B\u0456\u0432",
     canActivate: [authGuard]
   },
   {
     path: "units",
     title: "\u041F\u0456\u0434\u0440\u043E\u0437\u0434\u0456\u043B\u0438",
-    loadComponent: () => import("./chunk-5J2CFSER.js").then((m) => m.UnitsComponent),
+    loadComponent: () => import("./chunk-AFQK6GIC.js").then((m) => m.UnitsComponent),
     canActivate: [authGuard]
   },
   {
     path: "unit/import",
     title: "\u0406\u043C\u043F\u043E\u0440\u0442 \u043E\u0441\u043E\u0431\u043E\u0432\u043E\u0433\u043E \u0441\u043A\u043B\u0430\u0434\u0443",
-    loadComponent: () => import("./chunk-ZOSRTHAV.js").then((m) => m.ImportProgressPage),
+    loadComponent: () => import("./chunk-PVAMNW3S.js").then((m) => m.ImportProgressPage),
     canActivate: [authGuard]
   },
   {
     path: "personnel",
     title: "\u041E\u0441\u043E\u0431\u043E\u0432\u0438\u0439 \u0441\u043A\u043B\u0430\u0434",
-    loadComponent: () => import("./chunk-YK6T2DCT.js").then((m) => m.PersonnelPage),
+    loadComponent: () => import("./chunk-HQM5RDVS.js").then((m) => m.PersonnelPage),
     canActivate: [authGuard]
   },
   {
     path: "DocumentDataSet",
-    loadComponent: () => import("./chunk-KYF36OYZ.js").then((m) => m.DocumentDataSetComponent),
+    loadComponent: () => import("./chunk-6NLGWDNI.js").then((m) => m.DocumentDataSetComponent),
     title: "\u0414\u0430\u043D\u0456 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0456\u0432",
     canActivate: [authGuard]
   },
   {
     path: "templates",
     title: "\u0428\u0430\u0431\u043B\u043E\u043D\u0438 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0456\u0432",
-    loadComponent: () => import("./chunk-RWLRPFIT.js").then((m) => m.DocTemplatesTree),
+    loadComponent: () => import("./chunk-G2USFQOF.js").then((m) => m.DocTemplatesTree),
     canActivate: [authGuard]
   },
   {
     path: "users",
     title: "\u041A\u043E\u0440\u0438\u0441\u0442\u0443\u0432\u0430\u0447\u0456",
-    loadComponent: () => import("./chunk-P2U5AAN6.js").then((m) => m.UsersPage),
+    loadComponent: () => import("./chunk-GZLSZWIJ.js").then((m) => m.UsersPage),
     canActivate: [authGuard]
   },
   {
     path: "login",
     title: "\u0412\u0445\u0456\u0434 \u0432 \u0441\u0438\u0441\u0442\u0435\u043C\u0443",
-    loadComponent: () => import("./chunk-IH7BNQJK.js").then((m) => m.LoginPage)
+    loadComponent: () => import("./chunk-H3JEOW6G.js").then((m) => m.LoginPage)
   },
   {
     path: "welcome",
     title: "\u0414\u0432\u043E\u0444\u0430\u043A\u0442\u043E\u0440\u043D\u0430 \u0430\u0432\u0442\u0435\u043D\u0442\u0438\u0444\u0456\u043A\u0430\u0446\u0456\u044F",
-    loadComponent: () => import("./chunk-KOGEQSW4.js").then((m) => m.WelcomeComponent),
+    loadComponent: () => import("./chunk-7YFGTZ5W.js").then((m) => m.WelcomeComponent),
     canActivate: [twoFactorGuard]
   },
   { path: "", pathMatch: "full", redirectTo: "login" },

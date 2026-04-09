@@ -93,12 +93,25 @@ public class AuthMutation
             await context.Entry(user.Soldier).Reference(s => s.Rank).LoadAsync();
         }
 
+        var requireMandatory2fa = config.GetValue<bool>("REQUIRE_MANDATORY_2FA", false);
+
         if (user.TwoFactorEnabled)
         {
             var interimToken = GenerateJwtToken(user, roles, config, isInterim: true);
             return new AuthPayload(
                 Token: interimToken,
                 RequiresTwoFactor: true,
+                UserId: user.Id
+            );
+        }
+        else if (requireMandatory2fa)
+        {
+            Console.WriteLine($"[DEBUG] Mandatory 2FA triggered for user {userName}. Returning SetupRequired status.");
+            var interimToken = GenerateJwtToken(user, roles, config, isInterim: true);
+            return new AuthPayload(
+                Token: interimToken,
+                RequiresTwoFactor: false,
+                Needs2FASetup: true,
                 UserId: user.Id
             );
         }

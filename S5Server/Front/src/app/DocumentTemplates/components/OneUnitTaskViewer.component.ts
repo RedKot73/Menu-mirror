@@ -31,25 +31,14 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { DatePipe } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import {
-  UnitTaskDto,
-//  UnitTaskCreateDto,
-  DroneModelTaskDto,
-} from '../../DocumentDataSet/models/template-dataset.models';
+import { UnitTaskDto } from '../../../ServerService/unit-task.service';
+import { DroneModelTaskDto } from '../../../ServerService/drone-model-task.service';
 import { DictUnitTasksService, DictUnitTask } from '../../../ServerService/dictUnitTasks.service';
 import { DictAreasService, DictArea } from '../../../ServerService/dictAreas.service';
 import { DroneModelTaskService } from '../../../ServerService/drone-model-task.service';
-/*
-import { UnitTaskService } from '../../../ServerService/unit-task.service';
-import {
-  DictDroneModelSelectDialogComponent,
-  DictDroneModelWithQuantity,
-} from '../../dialogs/DictDroneModelSelect-dialog.component';
-*/
 import {
   SoldierTaskService,
   SoldierTaskDto,
-//  SoldierCountDto,
 } from '../../../ServerService/soldierTask.service';
 import { SoldierUtils } from '../../Soldier/soldier.utils';
 import { DocTemplateUtils } from '../../DocumentTemplates/models/shared.models';

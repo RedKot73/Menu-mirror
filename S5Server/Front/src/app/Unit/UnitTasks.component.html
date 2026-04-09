@@ -1,0 +1,40 @@
+<div class="action-container">
+  <div class="action-buttons">
+    <button mat-raised-button color="primary" (click)="reload()">
+      <mat-icon>refresh</mat-icon>
+      Оновити
+    </button>
+  </div>
+</div>
+
+<div class="table-container">
+  <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z2">
+
+    <!-- Task Value Column -->
+    <ng-container matColumnDef="taskValue">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Завдання</th>
+      <td mat-cell *matCellDef="let row">{{ row.taskValue }}</td>
+    </ng-container>
+
+    <!-- Area Value Column -->
+    <ng-container matColumnDef="areaValue">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Район виконання завдань</th>
+      <td mat-cell *matCellDef="let row">{{ row.areaValue }}</td>
+    </ng-container>
+
+    <!-- Published At Column -->
+    <ng-container matColumnDef="publishedAtUtc">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Дата публікації</th>
+      <td mat-cell *matCellDef="let row">{{ row.publishedAtUtc | date: 'dd.MM.yyyy' }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+
+    <tr class="mat-row" *matNoDataRow>
+      <td class="mat-cell no-data-cell" [attr.colspan]="displayedColumns.length">
+        Бойових завдань не знайдено
+      </td>
+    </tr>
+  </table>
+</div>

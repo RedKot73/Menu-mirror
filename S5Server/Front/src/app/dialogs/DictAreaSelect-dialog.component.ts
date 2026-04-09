@@ -1,4 +1,4 @@
-import { Component, signal, Inject, inject } from '@angular/core';
+import { Component, signal, Inject, inject, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -8,7 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatSortModule } from '@angular/material/sort';
+import { MatSort, MatSortModule } from '@angular/material/sort';
 
 import { DictAreasService, DictArea } from '../../ServerService/dictAreas.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -74,52 +74,51 @@ export interface DictAreaSelectDialogData {
 
         <!-- Таблиця -->
         <div class="table-container">
+          <table mat-table [dataSource]="dataSource" matSort class="selection-table">
+            <!-- Value Column -->
+            <ng-container matColumnDef="value">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Назва</th>
+              <td mat-cell *matCellDef="let item">{{ item.value }}</td>
+            </ng-container>
+
+            <!-- AreaType Column -->
+            <ng-container matColumnDef="areaType">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Тип РВЗ</th>
+              <td mat-cell *matCellDef="let item">{{ item.areaType }}</td>
+            </ng-container>
+
+            <!-- CityCode Column -->
+            <ng-container matColumnDef="cityCode">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Кодифікатор</th>
+              <td mat-cell *matCellDef="let item">{{ getCityCodeDisplay(item.cityCodeInfo) }}</td>
+            </ng-container>
+
+            <!-- Coords Column -->
+            <ng-container matColumnDef="coords">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Координати</th>
+              <td mat-cell *matCellDef="let item" class="coords-column">{{ item.coords }}</td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+            <tr
+              mat-row
+              *matRowDef="let row; columns: displayedColumns"
+              (click)="selectArea(row)"
+              class="selectable-row"
+            ></tr>
+          </table>
+
           @if (isLoading()) {
             <div class="loading-container">
               <mat-icon class="loading-spinner">refresh</mat-icon>
               <p>Завантаження...</p>
             </div>
-          } @else {
-            <table mat-table [dataSource]="dataSource" matSort class="selection-table">
-              <!-- Value Column -->
-              <ng-container matColumnDef="value">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Назва</th>
-                <td mat-cell *matCellDef="let item">{{ item.value }}</td>
-              </ng-container>
-
-              <!-- AreaType Column -->
-              <ng-container matColumnDef="areaType">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Тип РВЗ</th>
-                <td mat-cell *matCellDef="let item">{{ item.areaType }}</td>
-              </ng-container>
-
-              <!-- CityCode Column -->
-              <ng-container matColumnDef="cityCode">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Кодифікатор</th>
-                <td mat-cell *matCellDef="let item">{{ getCityCodeDisplay(item.cityCodeInfo) }}</td>
-              </ng-container>
-
-              <!-- Coords Column -->
-              <ng-container matColumnDef="coords">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Координати</th>
-                <td mat-cell *matCellDef="let item" class="coords-column">{{ item.coords }}</td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-              <tr
-                mat-row
-                *matRowDef="let row; columns: displayedColumns"
-                (click)="selectArea(row)"
-                class="selectable-row"
-              ></tr>
-            </table>
-
-            @if (items().length === 0) {
-              <div class="no-data">
-                <mat-icon>folder_open</mat-icon>
-                <p>Райони не знайдено</p>
-              </div>
-            }
+          }
+          @if (!isLoading() && items().length === 0) {
+            <div class="no-data">
+              <mat-icon>folder_open</mat-icon>
+              <p>Райони не знайдено</p>
+            </div>
           }
         </div>
       </div>
@@ -235,9 +234,11 @@ export interface DictAreaSelectDialogData {
     `,
   ],
 })
-export class DictAreaSelectDialogComponent {
+export class DictAreaSelectDialogComponent implements AfterViewInit {
   private dictAreasService = inject(DictAreasService);
   private snackBar = inject(MatSnackBar);
+
+  @ViewChild(MatSort) sort!: MatSort;
 
   items = signal<DictArea[]>([]);
   dataSource = new MatTableDataSource<DictArea>([]);
@@ -258,6 +259,10 @@ export class DictAreaSelectDialogComponent {
     this.reload();
   }
 
+  ngAfterViewInit() {
+    this.dataSource.sort = this.sort;
+  }
+
   reload() {
     this.isLoading.set(true);
     const search = this.searchTerm() || undefined;
@@ -265,9 +270,10 @@ export class DictAreaSelectDialogComponent {
 
     this.dictAreasService.getAll(search, areaTypeId).subscribe({
       next: (areas) => {
+        this.isLoading.set(false);
         this.items.set(areas);
         this.dataSource.data = areas;
-        this.isLoading.set(false);
+        this.dataSource.sort = this.sort;
       },
       error: (error) => {
         console.error('Помилка завантаження районів:', error);

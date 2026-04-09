@@ -22,7 +22,12 @@ stages:
     - mkdir -p ~/.docker
     # Аутентификация в GitLab Container Registry через переменные окружения CI
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > ~/.docker/config.json
+    - git config --global http.sslCAInfo "${SELFSIGNED_CA_PATH}/ca.crt"
+    - git config --global --add safe.directory ${CI_PROJECT_DIR}
   script:
+    - git submodule set-url config https://${GROUP_AT_NAME}:${GROUP_AT_TOKEN}@${CI_SERVER_HOST}/s5-group/s5-config.git
+    - git submodule sync
+    - git submodule update --init
     - |
       buildctl \
         --addr "${BUILDKIT_ADDR}" \
@@ -44,7 +49,7 @@ build-app-image:
   extends:
     - .build_image_template
   variables:
-    # Формирование уникального тега (ветка + короткий SHA) 
+    # Формирование уникального тега (ветка + короткий SHA)
     IMAGE_TAG: "app-${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}"
     IMAGE_TAG_LATEST: "app-latest"
     DOCKER_FILE: "Dockerfile"
@@ -117,7 +122,7 @@ build-db-image:
 
 # Задача для обновления манифестов окружения development
 update_manifest-development-job:
-  extends: 
+  extends:
     - .update_manifest_template
   rules:
     - if: $CI_COMMIT_BRANCH == "development"
